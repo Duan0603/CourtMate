@@ -21,7 +21,7 @@ export const SPORTS_LIST: SportItem[] = [
 
 interface SportScrollProps {
   selectedSportId: string;
-  onSelectSport: (id: string) => void;
+  onSelectSport: (id: any) => void;
 }
 
 export default function SportScroll({ 

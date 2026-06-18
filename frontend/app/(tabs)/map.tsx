@@ -1,20 +1,24 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, TouchableOpacity } from 'react-native';
 import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
 import BottomSheet from '@gorhom/bottom-sheet';
-import { Compass, RefreshCw, Layers } from 'lucide-react-native';
-import { Colors } from '@/constants/Colors';
-import { useMockData, Arena } from '@/hooks/useMockData';
+import { Compass, RefreshCw, Check, Navigation } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { useMockData } from '@/hooks/useMockData';
+import { Venue, MatchKeo } from '@/types';
 import MatchRadar from '@/components/Map/MatchRadar';
 import MatchBottomSheet from '@/components/Map/MatchBottomSheet';
 
 export default function MapScreen() {
-  const { userLocation, arenas } = useMockData();
-  const [selectedArena, setSelectedArena] = useState<Arena | null>(arenas[0]); // default to first arena to show bottom sheet
-  const [joinedMatchIds, setJoinedMatchIds] = useState<string[]>([]);
+  const { userLocation, venues, keos } = useMockData();
+  const router = useRouter();
+
+  // State
+  const [selectedVenue, setSelectedVenue] = useState<Venue | null>(venues[0]);
   const [isScanning, setIsScanning] = useState(true);
-  
+  const [showSuccessSplash, setShowSuccessSplash] = useState(false);
+  const [joinedMatch, setJoinedMatch] = useState<MatchKeo | null>(null);
+
   const mapRef = useRef<MapView>(null);
   const sheetRef = useRef<BottomSheet>(null);
 
@@ -29,15 +33,26 @@ export default function MapScreen() {
     }
   }, []);
 
-  const handleArenaPress = (arena: Arena) => {
-    setSelectedArena(arena);
-    // Expand bottom sheet to peek or details
-    sheetRef.current?.snapToIndex(1); // open to index 1 (55% height)
+  // Auto scanning countdown of 3 seconds on mount or refresh
+  useEffect(() => {
+    let timer: any;
+    if (isScanning) {
+      timer = setTimeout(() => {
+        setIsScanning(false);
+      }, 3000);
+    }
+    return () => clearTimeout(timer);
+  }, [isScanning]);
+
+  const handleVenuePress = (venue: Venue) => {
+    setSelectedVenue(venue);
+    // Expand bottom sheet to details
+    sheetRef.current?.snapToIndex(1); // Open to index 1 (55% height)
     
-    // Focus map on selected arena
-    if (mapRef.current) {
+    // Focus map on selected venue
+    if (mapRef.current && venue.location) {
       mapRef.current.animateToRegion({
-        ...arena.location,
+        ...venue.location,
         latitudeDelta: 0.015,
         longitudeDelta: 0.015,
       }, 600);
@@ -54,43 +69,43 @@ export default function MapScreen() {
     }
   };
 
-  const handleToggleJoin = (matchId: string) => {
-    const isJoined = joinedMatchIds.includes(matchId);
+  const handleCloseSheet = () => {
+    sheetRef.current?.snapToIndex(0); // Minimize to index 0 (20% height)
+  };
+
+  const handleRefreshRadar = () => {
+    setIsScanning(true);
+  };
+
+  const handleJoinSuccess = (match: MatchKeo) => {
+    setJoinedMatch(match);
+    setShowSuccessSplash(true);
     
-    if (isJoined) {
-      // Show destructive confirmation as per copywriting contract in UI-SPEC.md
-      Alert.alert(
-        'Hủy tìm kiếm',
-        'Bạn có chắc chắn muốn hủy tìm đồng đội? Kèo hiện tại sẽ bị xóa.',
-        [
-          { text: 'Quay lại', style: 'cancel' },
-          { 
-            text: 'Xác nhận hủy', 
-            style: 'destructive',
-            onPress: () => {
-              setJoinedMatchIds(prev => prev.filter(id => id !== matchId));
-            }
-          }
-        ]
-      );
-    } else {
-      // Join match
-      setJoinedMatchIds(prev => [...prev, matchId]);
-      Alert.alert('Thành công', 'Bạn đã đăng ký tham gia kèo đấu chờ. Hệ thống sẽ thông báo khi đủ thành viên.');
+    // Transition to chat screen after 2 seconds
+    setTimeout(() => {
+      setShowSuccessSplash(false);
+      router.push('/chat');
+    }, 2000);
+  };
+
+  // Get sport emoji
+  const getSportEmoji = (sport: string) => {
+    switch (sport) {
+      case 'badminton': return '🏸';
+      case 'soccer': return '⚽';
+      case 'basketball': return '🏀';
+      case 'tennis': return '🎾';
+      case 'tabletennis': return '🏓';
+      default: return '⚽';
     }
   };
 
-  const handleCloseSheet = () => {
-    // Minimize sheet instead of closing completely so user can still see there is a card
-    sheetRef.current?.snapToIndex(0); // minimize to index 0 (20% height)
-  };
-
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-black">
       {/* Full screen Map */}
       <MapView
         ref={mapRef}
-        style={styles.map}
+        className="flex-1"
         provider={PROVIDER_DEFAULT}
         customMapStyle={darkMapStyle}
         initialRegion={{
@@ -99,7 +114,7 @@ export default function MapScreen() {
           latitudeDelta: 0.03,
           longitudeDelta: 0.03,
         }}
-        showsUserLocation={false} // We show custom radar marker instead
+        showsUserLocation={false}
         showsMyLocationButton={false}
       >
         {/* User Location Radar Marker */}
@@ -113,30 +128,51 @@ export default function MapScreen() {
           </Marker>
         )}
 
-        {/* Arenas Markers */}
-        {arenas.map((arena) => {
-          const isSelected = selectedArena?.id === arena.id;
+        {/* User static custom marker when NOT scanning */}
+        {!isScanning && (
+          <Marker 
+            coordinate={userLocation}
+            anchor={{ x: 0.5, y: 0.5 }}
+            zIndex={3}
+          >
+            <View className="relative items-center justify-center">
+              <View className="w-6 h-6 rounded-full bg-accent border-2 border-[#121212] items-center justify-center shadow-lg shadow-accent/40">
+                <View className="w-2 h-2 rounded-full bg-black" />
+              </View>
+              {/* Floating mini-banner */}
+              <View className="absolute top-7 bg-accent px-2 py-0.5 rounded-full flex-row items-center gap-1 shadow-md whitespace-nowrap min-w-[70px]">
+                <View className="w-1 h-1 rounded-full bg-destructive animate-pulse" />
+                <Text className="text-[8px] font-black text-black uppercase">Bạn tại đây</Text>
+              </View>
+            </View>
+          </Marker>
+        )}
+
+        {/* Venues Markers (Only show if not scanning) */}
+        {!isScanning && venues.map((venue) => {
+          if (!venue.location) return null;
+          const isSelected = selectedVenue?.id === venue.id;
           return (
             <Marker
-              key={arena.id}
-              coordinate={arena.location}
-              onPress={() => handleArenaPress(arena)}
+              key={venue.id}
+              coordinate={venue.location}
+              onPress={() => handleVenuePress(venue)}
               zIndex={isSelected ? 10 : 1}
             >
-              <View style={[
-                styles.markerBubble,
-                isSelected && styles.markerBubbleSelected
-              ]}>
-                <Text style={[
-                  styles.markerText,
-                  isSelected && styles.markerTextSelected
-                ]}>
-                  {arena.name.split(' ').slice(-1)[0]} {/* Show last word of arena name */}
-                </Text>
-                <View style={[
-                  styles.markerArrow,
-                  isSelected && styles.markerArrowSelected
-                ]} />
+              <View className="items-center justify-center">
+                <View className={`py-1.5 px-2.5 rounded-xl border border-solid items-center justify-center shadow-md ${
+                  isSelected ? 'border-accent bg-background' : 'border-borderGray bg-secondary'
+                }`}>
+                  <Text className={`text-[10px] font-bold ${
+                    isSelected ? 'text-accent' : 'text-textGray'
+                  }`}>
+                    {venue.name.split(' ').slice(-1)[0]}
+                  </Text>
+                </View>
+                {/* Arrow indicator */}
+                <View className={`w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] border-l-transparent border-r-transparent ${
+                  isSelected ? 'border-t-accent' : 'border-t-borderGray'
+                }`} />
               </View>
             </Marker>
           );
@@ -144,43 +180,63 @@ export default function MapScreen() {
       </MapView>
 
       {/* Floating Action Buttons */}
-      <View style={styles.floatingControls}>
+      <View className="absolute top-12 right-4 gap-3 z-10">
         <TouchableOpacity 
-          style={styles.controlButton} 
+          className="w-11 h-11 rounded-full bg-[#1C1C1E]/90 justify-center items-center border border-borderGray shadow-md"
           onPress={handleRecenter}
           activeOpacity={0.7}
         >
-          <Compass size={22} color={Colors.dark.text} />
+          <Compass size={20} color="#FFFFFF" />
         </TouchableOpacity>
 
         <TouchableOpacity 
-          style={styles.controlButton} 
-          onPress={() => setIsScanning(prev => !prev)}
+          className="w-11 h-11 rounded-full bg-[#1C1C1E]/90 justify-center items-center border border-borderGray shadow-md"
+          onPress={handleRefreshRadar}
           activeOpacity={0.7}
         >
           <RefreshCw 
-            size={22} 
-            color={isScanning ? Colors.dark.accent : Colors.dark.textGray} 
+            size={20} 
+            color={isScanning ? '#39FF14' : '#8E8E93'} 
           />
         </TouchableOpacity>
       </View>
 
       {/* Radar scanning indicator overlay */}
       {isScanning && (
-        <View style={styles.scanningToast}>
-          <View style={styles.scanningDot} />
-          <Text style={styles.scanningText}>Đang quét tìm đối thủ lân cận...</Text>
+        <View className="absolute top-12 left-4 flex-row items-center bg-[#1C1C1E]/95 py-2.5 px-4 rounded-full border border-borderGray z-10">
+          <View className="w-2 h-2 rounded-full bg-accent mr-2" />
+          <Text className="text-white text-xs font-bold">Đang quét tìm đối thủ lân cận...</Text>
         </View>
       )}
 
       {/* Interactive Bottom Sheet */}
       <MatchBottomSheet
         sheetRef={sheetRef}
-        selectedArena={selectedArena}
-        joinedMatchIds={joinedMatchIds}
-        onToggleJoin={handleToggleJoin}
+        selectedVenue={selectedVenue}
         onClose={handleCloseSheet}
+        onJoinSuccess={handleJoinSuccess}
       />
+
+      {/* SUCCESS SPLASH OVERLAY */}
+      {showSuccessSplash && (
+        <View className="absolute inset-0 bg-[#121212]/95 backdrop-blur-md justify-center items-center p-6 z-50">
+          <View className="w-20 h-20 rounded-full bg-accent items-center justify-center shadow-xl shadow-accent/30 mb-6">
+            <Check size={40} color="#000000" strokeWidth={4} />
+          </View>
+
+          <Text className="text-[10px] text-accent font-black uppercase tracking-widest mb-1">
+            Ghép kèo thành công!
+          </Text>
+          
+          <Text className="text-base font-black text-white text-center max-w-[240px] leading-snug mb-2">
+            Đã tham gia nhóm {joinedMatch?.hostName}
+          </Text>
+
+          <Text className="text-xs text-textGray text-center max-w-[200px]">
+            Đang chuyển hướng sang hộp thư chat nhóm thể thao để chia kèo...
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -208,107 +264,3 @@ const darkMapStyle = [
   { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#000000" }] },
   { "featureType": "water", "elementType": "labels.text.fill", "stylers": [{ "color": "#3d3d3d" }] }
 ];
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000000',
-  },
-  map: {
-    ...StyleSheet.absoluteFill,
-  },
-  floatingControls: {
-    position: 'absolute',
-    top: 50,
-    right: 16,
-    gap: 12,
-    zIndex: 5,
-  },
-  controlButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(28, 28, 30, 0.9)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.dark.border,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  scanningToast: {
-    position: 'absolute',
-    top: 54,
-    left: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(28, 28, 30, 0.95)',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: Colors.dark.border,
-    zIndex: 5,
-  },
-  scanningDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: Colors.dark.accent,
-    marginRight: 8,
-    // Add pulsing state or color
-  },
-  scanningText: {
-    color: Colors.dark.text,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  markerBubble: {
-    backgroundColor: Colors.dark.secondary,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: Colors.dark.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  markerBubbleSelected: {
-    borderColor: Colors.dark.accent,
-    backgroundColor: Colors.dark.background,
-  },
-  markerText: {
-    color: Colors.dark.textGray,
-    fontSize: 11,
-    fontWeight: 'bold',
-  },
-  markerTextSelected: {
-    color: Colors.dark.accent,
-  },
-  markerArrow: {
-    width: 0,
-    height: 0,
-    backgroundColor: 'transparent',
-    borderStyle: 'solid',
-    borderLeftWidth: 5,
-    borderRightWidth: 5,
-    borderTopWidth: 5,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderTopColor: Colors.dark.border,
-    position: 'absolute',
-    bottom: -5,
-    alignSelf: 'center',
-  },
-  markerArrowSelected: {
-    borderTopColor: Colors.dark.accent,
-  },
-});

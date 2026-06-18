@@ -11,6 +11,12 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.duan0603.courtmate",
+      "config": {
+        "googleMaps": {
+          "apiKey": "YOUR_GOOGLE_MAPS_API_KEY_HERE"
+        }
+      },
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",

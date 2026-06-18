@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Home, Map, Calendar, User } from 'lucide-react-native';
+import { Home, Map, Calendar, MessageSquare } from 'lucide-react-native';
 import React from 'react';
 import { Colors } from '@/constants/Colors';
 
@@ -30,22 +30,22 @@ export default function TabLayout() {
       <Tabs.Screen
         name="map"
         options={{
-          title: 'Tìm bạn',
+          title: 'Tìm Kèo',
           tabBarIcon: ({ color, size }) => <Map color={color} size={size} />,
         }}
       />
       <Tabs.Screen
-        name="schedule"
+        name="booking"
         options={{
-          title: 'Lịch trình',
+          title: 'Đặt Sân',
           tabBarIcon: ({ color, size }) => <Calendar color={color} size={size} />,
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="chat"
         options={{
-          title: 'Hồ sơ',
-          tabBarIcon: ({ color, size }) => <User color={color} size={size} />,
+          title: 'Lịch & Chat',
+          tabBarIcon: ({ color, size }) => <MessageSquare color={color} size={size} />,
         }}
       />
     </Tabs>

@@ -1,375 +1,217 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity } from 'react-native';
+import React from 'react';
+import { Text, View, ScrollView, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '@/constants/Colors';
-import GPSHeader from '@/components/Home/GPSHeader';
-import SportScroll from '@/components/Home/SportScroll';
-import MatchmakerCTA from '@/components/Home/MatchmakerCTA';
-import { Users, MapPin, Calendar, ArrowRight } from 'lucide-react-native';
+import { useMockData } from '@/hooks/useMockData';
+import { SPORTS_LIST } from '@/constants/MockData';
+import { ArrowRight, Star, Flame, Navigation, Bell, MapPin } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 
 export default function HomeScreen() {
-  const [selectedSportId, setSelectedSportId] = useState('badminton');
-  const [searchText, setSearchText] = useState('');
+  const { 
+    venues,
+    selectedSportFilter, 
+    setSelectedSportFilter,
+  } = useMockData();
 
-  const handleSearch = (text: string) => {
-    setSearchText(text);
+  const router = useRouter();
+
+  const handleFindTeammates = () => {
+    router.push('/map');
   };
 
-  // Mock data for featured matches nearby based on selected sport
-  const getMockMatches = (sportId: string) => {
-    const allMatches = [
-      {
-        id: '1',
-        sportId: 'badminton',
-        title: 'Giao lưu cầu lông đôi nam nữ',
-        location: 'Sân Cầu Lông Kỳ Đồng, Q3',
-        distance: '0.8 km',
-        players: '3/4',
-        time: '19:00 - 21:00 Hôm nay',
-        level: 'Trung bình',
-      },
-      {
-        id: '2',
-        sportId: 'badminton',
-        title: 'Tìm 1 nam gánh kèo trình khá',
-        location: 'Sân Cầu Lông Viettel, Hẻm 285 CMT8',
-        distance: '1.5 km',
-        players: '3/4',
-        time: '20:00 - 22:00 Hôm nay',
-        level: 'Khá / Tốt',
-      },
-      {
-        id: '3',
-        sportId: 'basketball',
-        title: 'Bóng rổ 3v3 nửa sân hội người cao tuổi',
-        location: 'Sân Bóng Rổ Phú Thọ, Q11',
-        distance: '2.1 km',
-        players: '5/6',
-        time: '17:30 - 19:30 Hôm nay',
-        level: 'Mọi trình độ',
-      },
-      {
-        id: '4',
-        sportId: 'football',
-        title: 'Cần 2 măng non đá sân 7 tối nay',
-        location: 'Sân Bóng Đá mini HCA, Tân Bình',
-        distance: '3.4 km',
-        players: '12/14',
-        time: '20:30 - 22:00 Hôm nay',
-        level: 'Trung bình',
-      },
-      {
-        id: '5',
-        sportId: 'tennis',
-        title: 'Kèo đơn nam tennis cuối tuần',
-        location: 'CLB Tennis Lan Anh, Q10',
-        distance: '1.2 km',
-        players: '1/2',
-        time: '08:00 - 10:00 Chủ Nhật',
-        level: 'Khá',
-      },
-    ];
-
-    return allMatches.filter(match => match.sportId === sportId);
+  const handleSportClick = (sportId: any) => {
+    setSelectedSportFilter(sportId);
+    router.push('/booking');
   };
 
-  const matches = getMockMatches(selectedSportId);
+  const handleVenueClick = (sportId: any) => {
+    setSelectedSportFilter(sportId);
+    router.push('/booking');
+  };
+
+  const formatPrice = (p: number) => {
+    return (p / 1000) + 'k';
+  };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* GPS Header & Search Bar */}
-      <GPSHeader onSearch={handleSearch} />
-
-      <ScrollView 
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {/* Banner Quick Matchmaking Introduction */}
-        <View style={styles.bannerCard}>
-          <View style={styles.bannerInfo}>
-            <Text style={styles.bannerTag}>ON-DEMAND MATCHING</Text>
-            <Text style={styles.bannerTitle}>Tìm Bạn Chơi Thể Thao Tức Thì</Text>
-            <Text style={styles.bannerDesc}>
-              Hệ thống tự động tìm và kết nối những người chơi xung quanh vị trí của bạn trong bán kính 5km.
+    <SafeAreaView className="flex-1 bg-background" edges={['top', 'left', 'right']}>
+      {/* Upper Status bar subheader */}
+      <View className="px-[16px] py-[12px] flex-row items-center justify-between border-b border-borderGray bg-secondary">
+        <View className="flex-row items-center gap-2 flex-1">
+          <View className="w-8 h-8 rounded-full bg-accent/10 items-center justify-center">
+            <MapPin size={16} color="#39FF14" />
+          </View>
+          <View className="flex-col flex-1">
+            <Text className="text-[10px] text-textGray font-bold uppercase tracking-wider">Vị trí hiện tại</Text>
+            <Text className="text-xs font-semibold text-white max-w-[160px]" numberOfLines={1}>
+              Hẻm 285 CMT8, Quận 10, TP.HCM
             </Text>
           </View>
-          <View style={styles.bannerStats}>
-            <View style={styles.statBox}>
-              <Users size={16} color={Colors.dark.accent} />
-              <Text style={styles.statVal}>342</Text>
-              <Text style={styles.statLabel}>Online</Text>
-            </View>
-            <View style={styles.statBox}>
-              <MapPin size={16} color={Colors.dark.accent} />
-              <Text style={styles.statVal}>12</Text>
-              <Text style={styles.statLabel}>Sân mở</Text>
-            </View>
-          </View>
         </View>
-
-        {/* Sport Selection Slider */}
-        <SportScroll 
-          selectedSportId={selectedSportId} 
-          onSelectSport={setSelectedSportId} 
-        />
-
-        {/* Recommended Match Cards Section */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Kèo chờ quanh đây</Text>
-          <TouchableOpacity style={styles.seeAllBtn}>
-            <Text style={styles.seeAllText}>Xem thêm</Text>
-            <ArrowRight size={14} color={Colors.dark.accent} />
-          </TouchableOpacity>
-        </View>
-
-        {matches.length > 0 ? (
-          matches.map((match) => (
-            <View key={match.id} style={styles.matchCard}>
-              <View style={styles.matchHeader}>
-                <Text style={styles.matchTitle} numberOfLines={1}>{match.title}</Text>
-                <View style={styles.levelBadge}>
-                  <Text style={styles.levelText}>{match.level}</Text>
-                </View>
-              </View>
-
-              <View style={styles.matchDetails}>
-                <View style={styles.detailItem}>
-                  <MapPin size={14} color={Colors.dark.textGray} />
-                  <Text style={styles.detailText} numberOfLines={1}>
-                    {match.location} ({match.distance})
-                  </Text>
-                </View>
-                <View style={styles.detailItem}>
-                  <Calendar size={14} color={Colors.dark.textGray} />
-                  <Text style={styles.detailText}>{match.time}</Text>
-                </View>
-              </View>
-
-              <View style={styles.matchFooter}>
-                <View style={styles.playerStats}>
-                  <Users size={14} color={Colors.dark.accent} style={{ marginRight: 6 }} />
-                  <Text style={styles.playerCount}>
-                    Đang có <Text style={styles.boldText}>{match.players}</Text> thành viên
-                  </Text>
-                </View>
-                
-                <TouchableOpacity style={styles.joinBtn}>
-                  <Text style={styles.joinBtnText}>Xem chi tiết</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))
-        ) : (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyStateHeading}>Không tìm thấy kèo nào gần bạn</Text>
-            <Text style={styles.emptyStateBody}>
-              Không có sân chơi nào hoạt động xung quanh vị trí của bạn lúc này. Hãy thử chọn môn thể thao khác hoặc thay đổi phạm vi quét.
-            </Text>
-          </View>
-        )}
-        
-        {/* Extra space for scrolling layout */}
-        <View style={{ height: 100 }} />
-      </ScrollView>
-
-      {/* Primary CTA in Thumb Zone */}
-      <View style={styles.ctaWrapper}>
-        <MatchmakerCTA selectedSportId={selectedSportId} />
+        <TouchableOpacity 
+          className="relative w-8 h-8 rounded-full bg-background border border-borderGray items-center justify-center"
+          activeOpacity={0.7}
+        >
+          <Bell size={16} color="#8E8E93" />
+          <View className="absolute top-1 right-1 w-2 h-2 rounded-full bg-accent" />
+        </TouchableOpacity>
       </View>
+
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+        {/* Hero promo card */}
+        <View className="mx-[16px] mt-[16px] p-[16px] rounded-2xl bg-gradient-to-r from-accent/20 to-emerald-500/10 border border-accent/20 relative overflow-hidden">
+          <View className="relative z-10">
+            <View className="flex-row items-center bg-accent rounded-full px-2 py-0.5 self-start mb-2">
+              <Flame size={10} color="#000000" style={{ marginRight: 2 }} />
+              <Text className="text-[9px] font-bold text-black uppercase">ĐIỂM THƯỞNG x2</Text>
+            </View>
+            <Text className="text-sm font-bold text-white mb-1">Giờ vàng đặt sân</Text>
+            <Text className="text-[11px] text-textGray">
+              Hoàn tiền 20% khi rủ nhóm chơi thành công khung giờ 17:00 - 20:00!
+            </Text>
+          </View>
+        </View>
+
+        {/* Main Big Thumb Dashboard Area */}
+        <View className="px-[16px] mt-[20px] items-center">
+          <View className="w-full bg-secondary border border-borderGray rounded-3xl p-[24px] items-center relative overflow-hidden">
+            <Text className="text-base font-bold text-white tracking-tight mb-1 text-center">
+              Thiếu đồng đội thi đấu?
+            </Text>
+            <Text className="text-xs text-textGray mb-[24px] text-center max-w-[240px]">
+              Tìm người chơi cùng trình độ xung quanh ngay lập tức theo mô hình On-Demand
+            </Text>
+
+            {/* GIANT BUTTON - THUMB ZONE CENTRAL DESIGN */}
+            <View className="relative mb-[20px] items-center justify-center">
+              {/* Pulsing ring background */}
+              <View className="absolute w-[160px] h-[160px] bg-accent/5 rounded-full" />
+              <View className="absolute w-[144px] h-[144px] bg-accent/10 rounded-full" />
+              
+              <TouchableOpacity 
+                onPress={handleFindTeammates}
+                className="w-[128px] h-[128px] rounded-full bg-accent items-center justify-center p-3 shadow-lg shadow-accent/25"
+                activeOpacity={0.85}
+              >
+                <View className="w-8 h-8 rounded-full bg-black/10 items-center justify-center mb-1">
+                  <Navigation size={16} color="#000000" style={{ transform: [{ rotate: '45deg' }] }} />
+                </View>
+                <Text className="text-center font-black text-black leading-tight text-xs tracking-wider">
+                  TÌM BẠN{"\n"}
+                  <Text className="text-lg font-black">NGAY</Text>
+                </Text>
+                <Text className="text-[9px] text-black/80 font-semibold mt-1">Hỗ trợ 5 môn</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View className="flex-row items-center gap-2 bg-background border border-borderGray rounded-full py-1.5 px-4">
+              <View className="w-2 h-2 rounded-full bg-emerald-400" />
+              <Text className="text-[11px] text-textGray">
+                Đang có <Text className="text-accent font-bold">83</Text> người chơi sẵn sàng ghép kèo
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Horizontal Sports Scrolling Category */}
+        <View className="mt-[24px]">
+          <View className="px-[16px] flex-row items-center justify-between mb-3">
+            <View className="flex-row items-center gap-1.5">
+              <View className="w-[6px] h-3 bg-accent rounded-sm" />
+              <Text className="text-xs font-bold text-slate-350 uppercase tracking-widest">Danh mục Thể Thao</Text>
+            </View>
+            <Text className="text-[11px] text-textGray">Vuốt ngang ➔</Text>
+          </View>
+          
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
+          >
+            {SPORTS_LIST.map((sport) => (
+              <TouchableOpacity
+                key={sport.id}
+                onPress={() => handleSportClick(sport.id)}
+                className="flex-col items-center justify-center w-[96px] h-[96px] rounded-2xl bg-secondary border border-borderGray p-3"
+                activeOpacity={0.7}
+              >
+                <Text className="text-2xl mb-2">{sport.emoji}</Text>
+                <Text className="text-xs font-medium text-slate-300 text-center truncate w-full">{sport.name}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Suggested Venues Quick List */}
+        <View className="mt-[24px] px-[16px]">
+          <View className="flex-row items-center justify-between mb-3">
+            <View className="flex-row items-center gap-1.5">
+              <View className="w-[6px] h-3 bg-accent rounded-sm" />
+              <Text className="text-xs font-bold text-slate-350 uppercase tracking-widest">Sân gần bạn có slot trống</Text>
+            </View>
+            <TouchableOpacity 
+              onPress={() => router.push('/booking')}
+              className="flex-row items-center"
+              activeOpacity={0.7}
+            >
+              <Text className="text-[11px] text-accent font-semibold mr-0.5">Tất cả</Text>
+              <ArrowRight size={10} color="#39FF14" />
+            </TouchableOpacity>
+          </View>
+
+          <View className="gap-3">
+            {/* Sân 1 */}
+            <TouchableOpacity 
+              onPress={() => handleVenueClick('badminton')}
+              className="flex-row items-center gap-3 p-3 bg-secondary/40 border border-borderGray/40 rounded-xl"
+              activeOpacity={0.8}
+            >
+              <Image source={{ uri: 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=150' }} className="w-16 h-16 rounded-lg" />
+              <View className="flex-1 min-w-0">
+                <Text className="text-xs font-bold text-white truncate">Sân Cầu Lông Viettel Hẻm 285</Text>
+                <Text className="text-[10px] text-textGray truncate mt-0.5">Hẻm 285 Cách Mạng Tháng Tám, Q10</Text>
+                <View className="flex-row items-center gap-2 mt-1">
+                  <View className="flex-row items-center gap-0.5">
+                    <Star size={10} color="#FFD700" fill="#FFD700" />
+                    <Text className="text-[10px] text-slate-300 font-semibold">4.8</Text>
+                  </View>
+                  <Text className="text-[10px] text-textGray">•</Text>
+                  <Text className="text-[10px] text-accent font-semibold">Cách 0.8km</Text>
+                </View>
+              </View>
+              <View className="items-end justify-center">
+                <Text className="text-[10px] text-textGray">Chỉ từ</Text>
+                <Text className="text-xs font-bold text-accent">80k<Text className="text-[8px] text-textGray">/h</Text></Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Sân 2 */}
+            <TouchableOpacity 
+              onPress={() => handleVenueClick('soccer')}
+              className="flex-row items-center gap-3 p-3 bg-secondary/40 border border-borderGray/40 rounded-xl"
+              activeOpacity={0.8}
+            >
+              <Image source={{ uri: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=150' }} className="w-16 h-16 rounded-lg" />
+              <View className="flex-1 min-w-0">
+                <Text className="text-xs font-bold text-white truncate">Sân Bóng Đá Kỳ Hòa Landmark</Text>
+                <Text className="text-[10px] text-textGray truncate mt-0.5">Sư Vạn Hạnh, Phường 12, Q10</Text>
+                <View className="flex-row items-center gap-2 mt-1">
+                  <View className="flex-row items-center gap-0.5">
+                    <Star size={10} color="#FFD700" fill="#FFD700" />
+                    <Text className="text-[10px] text-slate-300 font-semibold">4.9</Text>
+                  </View>
+                  <Text className="text-[10px] text-textGray">•</Text>
+                  <Text className="text-[10px] text-accent font-semibold">Cách 1.2km</Text>
+                </View>
+              </View>
+              <View className="items-end justify-center">
+                <Text className="text-[10px] text-textGray">Chỉ từ</Text>
+                <Text className="text-xs font-bold text-accent">350k<Text className="text-[8px] text-textGray">/h</Text></Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.dark.background,
-  },
-  scrollContent: {
-    paddingBottom: 20,
-  },
-  bannerCard: {
-    marginHorizontal: 20,
-    marginTop: 10,
-    backgroundColor: Colors.dark.secondary,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: Colors.dark.border,
-    padding: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  bannerInfo: {
-    flex: 2,
-    marginRight: 10,
-  },
-  bannerTag: {
-    color: Colors.dark.accent,
-    fontSize: 9,
-    fontWeight: 'bold',
-    letterSpacing: 1.5,
-    marginBottom: 6,
-  },
-  bannerTitle: {
-    color: Colors.dark.text,
-    fontSize: 18,
-    fontWeight: 'bold',
-    lineHeight: 22,
-    marginBottom: 6,
-  },
-  bannerDesc: {
-    color: Colors.dark.textGray,
-    fontSize: 12,
-    lineHeight: 16,
-  },
-  bannerStats: {
-    flex: 1,
-    justifyContent: 'space-around',
-    alignItems: 'flex-end',
-    borderLeftWidth: 1,
-    borderLeftColor: Colors.dark.border,
-    paddingLeft: 12,
-  },
-  statBox: {
-    alignItems: 'center',
-    marginVertical: 4,
-  },
-  statVal: {
-    color: Colors.dark.text,
-    fontSize: 15,
-    fontWeight: 'bold',
-    marginTop: 2,
-  },
-  statLabel: {
-    color: Colors.dark.textGray,
-    fontSize: 9,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    marginTop: 15,
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    color: Colors.dark.text,
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  seeAllBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  seeAllText: {
-    color: Colors.dark.accent,
-    fontSize: 12,
-    fontWeight: '600',
-    marginRight: 4,
-  },
-  matchCard: {
-    backgroundColor: Colors.dark.secondary,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.dark.border,
-    marginHorizontal: 20,
-    marginBottom: 12,
-    padding: 16,
-  },
-  matchHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  matchTitle: {
-    color: Colors.dark.text,
-    fontSize: 14,
-    fontWeight: 'bold',
-    flex: 1,
-    marginRight: 10,
-  },
-  levelBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 8,
-  },
-  levelText: {
-    color: Colors.dark.text,
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  matchDetails: {
-    marginBottom: 14,
-    gap: 6,
-  },
-  detailItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  detailText: {
-    color: Colors.dark.textGray,
-    fontSize: 12,
-    flex: 1,
-  },
-  matchFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: Colors.dark.border,
-    paddingTop: 12,
-  },
-  playerStats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  playerCount: {
-    color: Colors.dark.textGray,
-    fontSize: 11,
-  },
-  boldText: {
-    color: Colors.dark.text,
-    fontWeight: 'bold',
-  },
-  joinBtn: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: Colors.dark.border,
-  },
-  joinBtnText: {
-    color: Colors.dark.text,
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  emptyState: {
-    paddingHorizontal: 30,
-    paddingVertical: 40,
-    alignItems: 'center',
-  },
-  emptyStateHeading: {
-    color: Colors.dark.text,
-    fontSize: 15,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  emptyStateBody: {
-    color: Colors.dark.textGray,
-    fontSize: 12,
-    lineHeight: 18,
-    textAlign: 'center',
-  },
-  ctaWrapper: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(18, 18, 18, 0.85)',
-    paddingTop: 10,
-  },
-});

@@ -1,137 +1,174 @@
 import React, { useMemo } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
+import { Text, View, TouchableOpacity, Alert } from 'react-native';
 import BottomSheet, { BottomSheetView, BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import { MapPin, Star, Calendar, Users, Info, X } from 'lucide-react-native';
-import { Colors } from '@/constants/Colors';
-import { Arena, MatchPending } from '@/hooks/useMockData';
+import { MapPin, Star, Calendar, Users, X, Award } from 'lucide-react-native';
+import { useMockData } from '@/hooks/useMockData';
+import { Venue, MatchKeo } from '@/types';
 
 interface MatchBottomSheetProps {
   sheetRef: React.RefObject<BottomSheet | null>;
-  selectedArena: Arena | null;
-  joinedMatchIds: string[];
-  onToggleJoin: (matchId: string) => void;
+  selectedVenue: Venue | null;
   onClose?: () => void;
+  onJoinSuccess: (match: MatchKeo) => void;
 }
 
 export default function MatchBottomSheet({
   sheetRef,
-  selectedArena,
-  joinedMatchIds,
-  onToggleJoin,
+  selectedVenue,
   onClose,
+  onJoinSuccess,
 }: MatchBottomSheetProps) {
-  // Snap points: 18% (mini peek), 55% (half screen details)
+  const { keos, joinedMatchIds, toggleJoinKeo } = useMockData();
+
+  // Snap points: 20% (peek), 55% (details)
   const snapPoints = useMemo(() => ['20%', '55%'], []);
 
-  if (!selectedArena) {
+  if (!selectedVenue) {
     return null;
   }
+
+  // Filter keos at this venue
+  const activeMatches = keos.filter(k => k.venueName === selectedVenue.name);
+
+  const handleToggleJoin = (keo: MatchKeo) => {
+    const isJoined = joinedMatchIds.includes(keo.id);
+    if (isJoined) {
+      Alert.alert(
+        'Hủy tìm kiếm',
+        'Bạn có chắc chắn muốn hủy tìm đồng đội? Kèo hiện tại sẽ bị xóa khỏi lịch trình.',
+        [
+          { text: 'Quay lại', style: 'cancel' },
+          { 
+            text: 'Xác nhận hủy', 
+            style: 'destructive',
+            onPress: () => {
+              toggleJoinKeo(keo.id);
+            }
+          }
+        ]
+      );
+    } else {
+      toggleJoinKeo(keo.id);
+      onJoinSuccess(keo);
+    }
+  };
 
   return (
     <BottomSheet
       ref={sheetRef}
       index={1}
       snapPoints={snapPoints}
-      backgroundStyle={styles.sheetBackground}
-      handleIndicatorStyle={styles.sheetIndicator}
+      backgroundStyle={{
+        backgroundColor: '#1C1C1E',
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        borderWidth: 1,
+        borderColor: '#2C2C2E',
+      }}
+      handleIndicatorStyle={{
+        backgroundColor: '#8E8E93',
+        width: 40,
+        height: 4,
+      }}
       enablePanDownToClose={false}
     >
-      <BottomSheetView style={styles.container}>
+      <BottomSheetView className="flex-1 px-5 pt-2">
         {/* Header Section */}
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.arenaName} numberOfLines={1}>
-              {selectedArena.name}
+        <View className="flex-row justify-between items-start mb-2">
+          <View className="flex-1 mr-2">
+            <Text className="text-white text-base font-bold" numberOfLines={1}>
+              {selectedVenue.name}
             </Text>
-            <View style={styles.ratingRow}>
+            <View className="flex-row items-center mt-1">
               <Star size={14} color="#FFD700" fill="#FFD700" />
-              <Text style={styles.ratingText}>{selectedArena.rating}</Text>
-              <Text style={styles.dot}>•</Text>
-              <Text style={styles.distanceText}>Cách {selectedArena.distance} km</Text>
+              <Text className="text-yellow-400 text-xs font-semibold ml-1">{selectedVenue.rating}</Text>
+              <Text className="text-textGray mx-1.5">•</Text>
+              <Text className="text-textGray text-xs">Cách {selectedVenue.distance} km</Text>
             </View>
           </View>
           {onClose && (
-            <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.7}>
-              <X size={18} color={Colors.dark.text} />
+            <TouchableOpacity 
+              className="w-7 h-7 rounded-full bg-background border border-borderGray justify-center items-center" 
+              onPress={onClose} 
+              activeOpacity={0.7}
+            >
+              <X size={14} color="#FFFFFF" />
             </TouchableOpacity>
           )}
         </View>
 
         {/* Address and details */}
-        <View style={styles.addressContainer}>
-          <MapPin size={14} color={Colors.dark.textGray} />
-          <Text style={styles.addressText} numberOfLines={1}>
-            {selectedArena.address}
+        <View className="flex-row items-center gap-1.5 mb-4 pb-3 border-b border-borderGray">
+          <MapPin size={12} color="#8E8E93" />
+          <Text className="text-textGray text-xs flex-1" numberOfLines={1}>
+            {selectedVenue.address}
           </Text>
         </View>
 
         {/* Matches Section Scrollable */}
         <BottomSheetScrollView 
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={{ paddingBottom: 24 }}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.sectionTitle}>Các kèo đang chờ ghép</Text>
+          <Text className="text-white text-xs font-bold uppercase tracking-wider mb-3">
+            Các kèo đang chờ ghép
+          </Text>
 
-          {selectedArena.activeMatches.length > 0 ? (
-            selectedArena.activeMatches.map((match) => {
+          {activeMatches.length > 0 ? (
+            activeMatches.map((match) => {
               const isJoined = joinedMatchIds.includes(match.id);
               
               return (
-                <View key={match.id} style={styles.matchCard}>
-                  <View style={styles.matchMeta}>
-                    <Text style={styles.matchTitle}>{match.title}</Text>
-                    <View style={styles.levelBadge}>
-                      <Text style={styles.levelText}>{match.level}</Text>
+                <View 
+                  key={match.id} 
+                  className="bg-background border border-borderGray rounded-2xl p-4 mb-3 relative overflow-hidden"
+                >
+                  <View className="flex-row justify-between items-start mb-2">
+                    <Text className="text-white text-xs font-bold flex-1 mr-2">{match.title}</Text>
+                    <View className="bg-secondary px-2 py-0.5 rounded-lg flex-row items-center gap-0.5">
+                      <Award size={10} color="#39FF14" />
+                      <Text className="text-white text-[9px] font-semibold">{match.level}</Text>
                     </View>
                   </View>
 
-                  <View style={styles.hostRow}>
-                    <Text style={styles.hostLabel}>Trưởng nhóm: </Text>
-                    <Text style={styles.hostName}>{match.hostName}</Text>
+                  <View className="flex-row items-center mb-2.5">
+                    <Text className="text-textGray text-xs">Trưởng nhóm: </Text>
+                    <Text className="text-white text-xs font-semibold">{match.hostName}</Text>
                   </View>
 
-                  <View style={styles.infoRow}>
-                    <View style={styles.infoItem}>
-                      <Calendar size={14} color={Colors.dark.textGray} />
-                      <Text style={styles.infoText}>{match.time}</Text>
+                  <View className="flex-row gap-4 mb-3">
+                    <View className="flex-row items-center gap-1.5">
+                      <Calendar size={12} color="#8E8E93" />
+                      <Text className="text-textGray text-xs">{match.timeSlot}</Text>
                     </View>
-                    <View style={styles.infoItem}>
-                      <Users size={14} color={Colors.dark.textGray} />
-                      <Text style={styles.infoText}>
-                        Sĩ số: {isJoined ? match.playersCount + 1 : match.playersCount}/{match.maxPlayers}
+                    <View className="flex-row items-center gap-1.5">
+                      <Users size={12} color="#8E8E93" />
+                      <Text className="text-textGray text-xs">
+                        Sĩ số: {isJoined ? 4 - match.missingPlayers + 1 : 4 - match.missingPlayers}/4
                       </Text>
                     </View>
                   </View>
 
-                  {match.note ? (
-                    <View style={styles.noteContainer}>
-                      <Info size={12} color={Colors.dark.textGray} style={{ marginTop: 2 }} />
-                      <Text style={styles.noteText}>{match.note}</Text>
-                    </View>
-                  ) : null}
-
                   {/* One-touch Join/Cancel Button */}
                   <TouchableOpacity
-                    style={[
-                      styles.actionBtn,
-                      isJoined ? styles.cancelBtn : styles.joinBtn
-                    ]}
-                    onPress={() => onToggleJoin(match.id)}
-                    activeOpacity={0.8}
+                    className={`w-full h-11 rounded-2xl justify-center items-center mt-1 active:scale-95 ${
+                      isJoined ? 'bg-destructive' : 'bg-accent'
+                    }`}
+                    onPress={() => handleToggleJoin(match)}
+                    activeOpacity={0.85}
                   >
-                    <Text style={[
-                      styles.actionBtnText,
-                      isJoined ? styles.cancelBtnText : styles.joinBtnText
-                    ]}>
-                      {isJoined ? 'HỦY KÈO CHỜ' : 'THAM GIA NGAY'}
+                    <Text className={`text-xs font-bold tracking-wider ${
+                      isJoined ? 'text-white' : 'text-black'
+                    }`}>
+                      {isJoined ? 'HỦY KÈO CHỜ' : 'THAM GIA NGAY (1 CHẠM)'}
                     </Text>
                   </TouchableOpacity>
                 </View>
               );
             })
           ) : (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>Hiện chưa có kèo đấu nào đang chờ.</Text>
+            <View className="py-6 items-center">
+              <Text className="text-textGray text-xs">Hiện chưa có kèo đấu nào tại địa điểm này.</Text>
             </View>
           )}
         </BottomSheetScrollView>
@@ -139,196 +176,3 @@ export default function MatchBottomSheet({
     </BottomSheet>
   );
 }
-
-const styles = StyleSheet.create({
-  sheetBackground: {
-    backgroundColor: Colors.dark.secondary,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    borderWidth: 1,
-    borderColor: Colors.dark.border,
-  },
-  sheetIndicator: {
-    backgroundColor: Colors.dark.textGray,
-    width: 40,
-    height: 4,
-  },
-  container: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 10,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 8,
-  },
-  headerLeft: {
-    flex: 1,
-    marginRight: 10,
-  },
-  arenaName: {
-    color: Colors.dark.text,
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  ratingText: {
-    color: '#FFD700',
-    fontSize: 13,
-    fontWeight: '600',
-    marginLeft: 4,
-  },
-  dot: {
-    color: Colors.dark.textGray,
-    marginHorizontal: 6,
-  },
-  distanceText: {
-    color: Colors.dark.textGray,
-    fontSize: 13,
-  },
-  closeBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: Colors.dark.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.dark.border,
-  },
-  addressContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 16,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.dark.border,
-  },
-  addressText: {
-    color: Colors.dark.textGray,
-    fontSize: 12,
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 24,
-  },
-  sectionTitle: {
-    color: Colors.dark.text,
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 12,
-  },
-  matchCard: {
-    backgroundColor: Colors.dark.background,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: Colors.dark.border,
-    padding: 14,
-    marginBottom: 12,
-  },
-  matchMeta: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 8,
-  },
-  matchTitle: {
-    color: Colors.dark.text,
-    fontSize: 13,
-    fontWeight: 'bold',
-    flex: 1,
-    marginRight: 8,
-  },
-  levelBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    paddingVertical: 2,
-    paddingHorizontal: 6,
-    borderRadius: 6,
-  },
-  levelText: {
-    color: Colors.dark.text,
-    fontSize: 9,
-    fontWeight: '600',
-  },
-  hostRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  hostLabel: {
-    color: Colors.dark.textGray,
-    fontSize: 12,
-  },
-  hostName: {
-    color: Colors.dark.text,
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  infoRow: {
-    flexDirection: 'row',
-    marginBottom: 10,
-    gap: 16,
-  },
-  infoItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  infoText: {
-    color: Colors.dark.textGray,
-    fontSize: 12,
-  },
-  noteContainer: {
-    flexDirection: 'row',
-    backgroundColor: Colors.dark.secondary,
-    borderRadius: 8,
-    padding: 10,
-    gap: 8,
-    marginBottom: 14,
-  },
-  noteText: {
-    color: Colors.dark.textGray,
-    fontSize: 11,
-    lineHeight: 15,
-    flex: 1,
-  },
-  actionBtn: {
-    width: '100%',
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  joinBtn: {
-    backgroundColor: Colors.dark.accent,
-  },
-  cancelBtn: {
-    backgroundColor: Colors.dark.destructive,
-  },
-  actionBtnText: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    letterSpacing: 0.5,
-  },
-  joinBtnText: {
-    color: '#000000',
-  },
-  cancelBtnText: {
-    color: '#FFFFFF',
-  },
-  emptyState: {
-    paddingVertical: 20,
-    alignItems: 'center',
-  },
-  emptyText: {
-    color: Colors.dark.textGray,
-    fontSize: 13,
-  },
-});
