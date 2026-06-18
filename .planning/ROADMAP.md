@@ -24,8 +24,7 @@ Dự án thiết kế và xây dựng mẫu thử tương tác Mobile UI/UX cho 
   5. Bottom Sheet hiển thị đầy đủ thông tin kèo chờ và cho phép Tham gia/Hủy bằng 1 chạm.
 **Plans**: 3 plans
 
-Plans:
-- [ ] 01-01: Khởi tạo dự án React Native/Expo, cấu hình Safe Area và thanh điều hướng Bottom Navigation Bar.
+- [x] 01-01: Khởi tạo dự án React Native/Expo, cấu hình Safe Area và thanh điều hướng Bottom Navigation Bar.
 - [ ] 01-02: Thiết kế giao diện Trang chủ (Home Screen) với GPS location và Sport Horizontal Scroll.
 - [ ] 01-03: Thiết kế Bản đồ tìm kiếm, hiệu ứng Radar quét sóng và Bottom Sheet kèo chờ tương tác.
 
@@ -52,5 +51,5 @@ Phases execute in numeric order: 1 → 2
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 1. Foundation & Matchmaking | v1.0 MVP | 0/3 | Not started | - |
+| 1. Foundation & Matchmaking | v1.0 MVP | 1/3 | In progress | - |
 | 2. Booking & Control Center | v1.0 MVP | 0/2 | Not started | - |
