@@ -25,7 +25,7 @@ Dự án thiết kế và xây dựng mẫu thử tương tác Mobile UI/UX cho 
 **Plans**: 3 plans
 
 - [x] 01-01: Khởi tạo dự án React Native/Expo, cấu hình Safe Area và thanh điều hướng Bottom Navigation Bar.
-- [ ] 01-02: Thiết kế giao diện Trang chủ (Home Screen) với GPS location và Sport Horizontal Scroll.
+- [x] 01-02: Thiết kế giao diện Trang chủ (Home Screen) với GPS location và Sport Horizontal Scroll.
 - [ ] 01-03: Thiết kế Bản đồ tìm kiếm, hiệu ứng Radar quét sóng và Bottom Sheet kèo chờ tương tác.
 
 ### Phase 2: Venue Booking & Match Control Center
@@ -51,5 +51,5 @@ Phases execute in numeric order: 1 → 2
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 1. Foundation & Matchmaking | v1.0 MVP | 1/3 | In progress | - |
+| 1. Foundation & Matchmaking | v1.0 MVP | 2/3 | In progress | - |
 | 2. Booking & Control Center | v1.0 MVP | 0/2 | Not started | - |
