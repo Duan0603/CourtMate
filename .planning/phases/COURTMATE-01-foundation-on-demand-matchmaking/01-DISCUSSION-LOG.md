@@ -57,6 +57,18 @@
 
 ---
 
+## Styling & Design System
+
+| Option | Description | Selected |
+|--------|-------------|----------|
+| NativeWind (Tailwind CSS) | Sử dụng đồng nhất NativeWind cho các styles tĩnh, cấm inline style trừ hoạt ảnh động | ✓ |
+| Hybrid / StyleSheet | Cho phép kết hợp tự do giữa NativeWind và React Native StyleSheet thông thường | |
+
+**User's choice:** NativeWind (Tailwind CSS)
+**Notes:** Ép buộc sử dụng NativeWind để tăng tính đồng nhất giao diện và dễ bảo trì. Sử dụng các kích thước chữ mặc định của Tailwind (text-xs, text-sm, v.v.) thay vì tự định nghĩa tùy chỉnh.
+
+---
+
 ## Agent's Discretion
 
 - Quyết định về cấu trúc thư mục chi tiết (components, hooks, constants) và các quy chuẩn viết code chi tiết.

@@ -30,6 +30,10 @@ Thiết kế khung ứng dụng React Native/Expo, Trang chủ GPS và màn hìn
 - **D-09:** Sử dụng dữ liệu giả lập (mock data) hoàn toàn trên Client, bao gồm mock tọa độ của người dùng và các sân/đối thủ lân cận để hiển thị trên bản đồ.
 - **D-10:** Thiết kế Bottom Sheet vuốt lên hiển thị thông tin kèo chờ (thể thao, khoảng cách, trình độ, slots trống) và cho phép Tham gia/Hủy bằng 1 chạm.
 
+### Styling & Design System
+- **D-11:** Sử dụng đồng nhất NativeWind (Tailwind CSS) cho toàn bộ các styles tĩnh. Cấm sử dụng thuộc tính inline `style` trừ các giá trị động/hoạt ảnh (như từ `react-native-reanimated`) hoặc tính toán vị trí động.
+- **D-12:** Sử dụng các tiện ích kích thước chuẩn của Tailwind (ví dụ: `text-xs`, `text-sm`, `text-base`, `text-lg`) để xây dựng kiểu chữ thay vì mở rộng cấu hình Tailwind bằng các phím kiểu chữ tùy chỉnh.
+
 ### Agent's Discretion
 - Kiến trúc thư mục chi tiết (components, hooks, constants) và các chi tiết cài đặt code style cụ thể được giao hoàn toàn cho agent quyết định, miễn là tuân thủ TypeScript strict và Expo Router.
 
