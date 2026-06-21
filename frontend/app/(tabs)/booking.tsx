@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Text, View, ScrollView, Image, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Star, MapPin, Calendar, Clock, Check, ChevronRight, Info, CreditCard } from 'lucide-react-native';
@@ -11,7 +11,9 @@ export default function BookingScreen() {
     venues, 
     selectedSportFilter, 
     setSelectedSportFilter, 
-    bookVenueSlot 
+    bookVenueSlot,
+    selectedDate,
+    setSelectedDate
   } = useMockData();
 
   // Filter venues by sport
@@ -24,10 +26,29 @@ export default function BookingScreen() {
   
   const activeVenue = venues.find(v => v.id === selectedVenueId) || (filteredVenues.length > 0 ? filteredVenues[0] : null);
 
-  const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
+  const [selectedSlots, setSelectedSlots] = useState<TimeSlot[]>([]);
   const [showCheckout, setShowCheckout] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'momo' | 'visa' | 'wallet'>('wallet');
   const [isSuccessLocal, setIsSuccessLocal] = useState(false);
+
+  // Generate next 7 days for horizontal calendar selector
+  const next7Days = useMemo(() => {
+    const days = [];
+    const weekdays = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+      const dateString = d.toISOString().split('T')[0];
+      const dayName = i === 0 ? 'H.nay' : weekdays[d.getDay()];
+      const dayNum = d.getDate();
+      days.push({
+        dateString,
+        dayName,
+        dayNum,
+      });
+    }
+    return days;
+  }, []);
 
   const handleSportChange = (sportId: any) => {
     setSelectedSportFilter(sportId);
@@ -35,42 +56,82 @@ export default function BookingScreen() {
     if (matching.length > 0) {
       setSelectedVenueId(matching[0].id);
     }
-    setSelectedSlot(null);
+    setSelectedSlots([]);
   };
 
   const handleVenueChange = (venueId: string) => {
     setSelectedVenueId(venueId);
-    setSelectedSlot(null);
+    setSelectedSlots([]);
+  };
+
+  // Helper to check if selected slots are consecutive
+  const isConsecutive = (slots: TimeSlot[]) => {
+    if (slots.length <= 1) return true;
+    const sorted = [...slots].sort((a, b) => {
+      const startA = a.time.split(' - ')[0];
+      const startB = b.time.split(' - ')[0];
+      return startA.localeCompare(startB);
+    });
+    
+    for (let i = 1; i < sorted.length; i++) {
+      const prevEnd = sorted[i - 1].time.split(' - ')[1];
+      const currentStart = sorted[i].time.split(' - ')[0];
+      if (prevEnd !== currentStart) {
+        return false;
+      }
+    }
+    return true;
   };
 
   const handleSlotSelect = (slot: TimeSlot) => {
     if (slot.isBooked) return;
-    if (selectedSlot?.time === slot.time) {
-      setSelectedSlot(null);
+    
+    const isAlreadySelected = selectedSlots.some(s => s.time === slot.time);
+    if (isAlreadySelected) {
+      const nextSelection = selectedSlots.filter(s => s.time !== slot.time);
+      if (nextSelection.length === 0 || isConsecutive(nextSelection)) {
+        setSelectedSlots(nextSelection);
+      } else {
+        Alert.alert(
+          'Thông báo',
+          'Không thể bỏ chọn khung giờ ở giữa. Lựa chọn sẽ được đặt lại từ khung giờ này.',
+          [{ text: 'OK', onPress: () => setSelectedSlots([slot]) }]
+        );
+      }
     } else {
-      setSelectedSlot(slot);
+      const nextSelection = [...selectedSlots, slot];
+      if (isConsecutive(nextSelection)) {
+        setSelectedSlots(nextSelection);
+      } else {
+        Alert.alert(
+          'Thông báo',
+          'Vui lòng chọn các khung giờ liền kề nhau. Lịch đặt của bạn đã được thiết lập lại từ khung giờ mới này.',
+          [{ text: 'OK', onPress: () => setSelectedSlots([slot]) }]
+        );
+      }
     }
   };
 
   const handleBookNowInit = () => {
-    if (!selectedSlot) return;
+    if (selectedSlots.length === 0) return;
     setShowCheckout(true);
   };
 
   const handleConfirmBooking = () => {
-    if (!activeVenue || !selectedSlot) return;
+    if (!activeVenue || selectedSlots.length === 0) return;
 
-    const success = bookVenueSlot(activeVenue.id, selectedSlot.time);
+    const slotTimes = selectedSlots.map(s => s.time);
+    const success = bookVenueSlot(activeVenue.id, slotTimes, selectedDate);
     
     if (success) {
       setIsSuccessLocal(true);
       setTimeout(() => {
         setIsSuccessLocal(false);
         setShowCheckout(false);
-        setSelectedSlot(null);
+        setSelectedSlots([]);
       }, 2200);
     } else {
-      Alert.alert('Lỗi', 'Khung giờ này đã bị người khác đặt trước. Vui lòng chọn khung giờ khác.');
+      Alert.alert('Lỗi', 'Một trong các khung giờ đã được chọn trước đó. Vui lòng chọn khung giờ khác.');
     }
   };
 
@@ -78,10 +139,20 @@ export default function BookingScreen() {
     return p.toLocaleString('vi-VN') + ' đ';
   };
 
+  const totalPrice = useMemo(() => {
+    return selectedSlots.reduce((sum, slot) => sum + slot.price, 0);
+  }, [selectedSlots]);
+
+  const displayDateStr = useMemo(() => {
+    if (!selectedDate) return '';
+    const [year, month, day] = selectedDate.split('-');
+    return `${day}/${month}/${year}`;
+  }, [selectedDate]);
+
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top', 'left', 'right']}>
       {/* 1. Horizontal Sport Filter Tabs at top */}
-      <View className="flex-shrink-0 bg-secondary border-b border-borderGray py-2">
+      <View className="flex-shrink-0 bg-secondary border-b border-borderGray/30 py-2">
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -101,6 +172,41 @@ export default function BookingScreen() {
                 <Text className="text-xs">{sport.emoji}</Text>
                 <Text className={`text-xs font-semibold ${isActive ? 'text-black font-bold' : 'text-textGray'}`}>
                   {sport.name}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
+
+      {/* 2. 7-Day Horizontal Calendar Slider */}
+      <View className="flex-shrink-0 bg-secondary/80 border-b border-borderGray/40 py-2.5">
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }}
+        >
+          {next7Days.map((day) => {
+            const isActive = selectedDate === day.dateString;
+            return (
+              <TouchableOpacity
+                key={day.dateString}
+                onPress={() => {
+                  setSelectedDate(day.dateString);
+                  setSelectedSlots([]); // Clear selections when changing date
+                }}
+                className={`w-14 h-16 rounded-xl flex items-center justify-center border ${
+                  isActive 
+                    ? 'bg-accent border-accent text-black' 
+                    : 'bg-background border-borderGray/80'
+                }`}
+                activeOpacity={0.75}
+              >
+                <Text className={`text-[9px] font-black uppercase ${isActive ? 'text-black' : 'text-textGray'}`}>
+                  {day.dayName}
+                </Text>
+                <Text className={`text-base font-black mt-0.5 ${isActive ? 'text-black' : 'text-white'}`}>
+                  {day.dayNum}
                 </Text>
               </TouchableOpacity>
             );
@@ -192,7 +298,7 @@ export default function BookingScreen() {
               {/* Grid 2x4 Slots */}
               <View className="flex-row flex-wrap justify-between gap-y-2.5">
                 {activeVenue.slots.map((slot) => {
-                  const isSelected = selectedSlot?.time === slot.time;
+                  const isSelected = selectedSlots.some(s => s.time === slot.time);
                   return (
                     <TouchableOpacity
                       key={slot.time}
@@ -212,16 +318,25 @@ export default function BookingScreen() {
                           {slot.time}
                         </Text>
                         {slot.isBooked ? (
-                          <Text className="text-[9px] text-textGray uppercase font-bold">X</Text>
+                          <Text className="text-[9px] text-textGray/60 uppercase font-bold">Bận</Text>
                         ) : isSelected ? (
                           <View className="w-3.5 h-3.5 rounded-full bg-black items-center justify-center">
                             <Check size={8} color="#39FF14" strokeWidth={3} />
                           </View>
+                        ) : slot.isPeak ? (
+                          <Text className="text-[10px]">🔥</Text>
                         ) : null}
                       </View>
-                      <Text className={`text-[10px] ${isSelected ? 'text-black font-black' : 'text-textGray font-semibold'}`}>
-                        {formatPrice(slot.price)}
-                      </Text>
+                      <View className="flex-row items-center gap-1.5">
+                        <Text className={`text-[10px] ${isSelected ? 'text-black font-black' : 'text-textGray font-semibold'}`}>
+                          {formatPrice(slot.price)}
+                        </Text>
+                        {slot.isPeak && !slot.isBooked && (
+                          <Text className={`text-[8px] font-extrabold uppercase tracking-widest ${isSelected ? 'text-black/70' : 'text-accent'}`}>
+                            Peak
+                          </Text>
+                        )}
+                      </View>
                     </TouchableOpacity>
                   );
                 })}
@@ -243,27 +358,27 @@ export default function BookingScreen() {
         <View>
           <Text className="text-[9px] text-textGray uppercase tracking-widest">Tổng tiền thanh toán</Text>
           <Text className="text-sm font-black text-accent mt-0.5">
-            {selectedSlot ? formatPrice(selectedSlot.price) : '0 đ'}
+            {selectedSlots.length > 0 ? formatPrice(totalPrice) : '0 đ'}
           </Text>
         </View>
         
         <TouchableOpacity
-          disabled={!selectedSlot}
+          disabled={selectedSlots.length === 0}
           onPress={handleBookNowInit}
           className={`py-3 px-6 rounded-2xl flex-row items-center gap-1 ${
-            selectedSlot ? 'bg-accent' : 'bg-secondary border border-borderGray opacity-55'
+            selectedSlots.length > 0 ? 'bg-accent' : 'bg-secondary border border-borderGray opacity-55'
           }`}
           activeOpacity={0.8}
         >
-          <Text className={`text-xs font-black uppercase tracking-wider ${selectedSlot ? 'text-black' : 'text-textGray'}`}>
+          <Text className={`text-xs font-black uppercase tracking-wider ${selectedSlots.length > 0 ? 'text-black' : 'text-textGray'}`}>
             Đặt sân ngay
           </Text>
-          <ChevronRight size={14} color={selectedSlot ? '#000000' : '#8E8E93'} />
+          <ChevronRight size={14} color={selectedSlots.length > 0 ? '#000000' : '#8E8E93'} />
         </TouchableOpacity>
       </View>
 
       {/* 4. OVERLAY CHECKOUT SHEET */}
-      {showCheckout && activeVenue && selectedSlot && (
+      {showCheckout && activeVenue && selectedSlots.length > 0 && (
         <View className="absolute inset-0 bg-black/60 z-40 justify-end">
           {/* Backdrop Tap to close */}
           <TouchableOpacity className="absolute inset-0" onPress={() => setShowCheckout(false)} />
@@ -287,16 +402,18 @@ export default function BookingScreen() {
                 <Text className="text-xs font-semibold text-white max-w-[150px] truncate" numberOfLines={1}>{activeVenue.name}</Text>
               </View>
               <View className="flex-row justify-between">
-                <Text className="text-xs text-textGray">🗓️ Khung giờ:</Text>
-                <Text className="text-xs font-semibold text-accent">{selectedSlot.time}</Text>
+                <Text className="text-xs text-textGray">🗓️ Ngày đặt:</Text>
+                <Text className="text-xs font-semibold text-white">{displayDateStr}</Text>
               </View>
               <View className="flex-row justify-between">
-                <Text className="text-xs text-textGray">💸 Đơn giá slot:</Text>
-                <Text className="text-xs font-semibold text-white">{formatPrice(selectedSlot.price)}</Text>
+                <Text className="text-xs text-textGray">🕒 Khung giờ ({selectedSlots.length} slot):</Text>
+                <Text className="text-xs font-semibold text-accent text-right max-w-[180px]">
+                  {selectedSlots.map(s => s.time).join(', ')}
+                </Text>
               </View>
               <View className="flex-row justify-between border-t border-borderGray/30 pt-2">
                 <Text className="text-sm font-bold text-slate-200">Tổng thanh toán:</Text>
-                <Text className="text-sm font-black text-accent">{formatPrice(selectedSlot.price)}</Text>
+                <Text className="text-sm font-black text-accent">{formatPrice(totalPrice)}</Text>
               </View>
             </View>
 
@@ -380,3 +497,4 @@ export default function BookingScreen() {
     </SafeAreaView>
   );
 }
+

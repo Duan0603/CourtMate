@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { 
   Text, 
   View, 
@@ -30,6 +30,7 @@ import { ChatChannel, UserMatch, SportType } from '@/types';
 
 export default function ChatScreen() {
   const { 
+    venues,
     userMatches, 
     activeConversations, 
     sendChatMessage,
@@ -102,6 +103,16 @@ export default function ChatScreen() {
   const currentChat = selectedChat 
     ? activeConversations.find(c => c.id === selectedChat.id) || selectedChat 
     : null;
+
+  const matchedVenue = useMemo(() => {
+    if (!currentChat) return null;
+    return venues.find(v => v.name === currentChat.venueNameList || currentChat.title.includes(v.name));
+  }, [currentChat, venues]);
+
+  const matchedUserMatch = useMemo(() => {
+    if (!currentChat) return null;
+    return userMatches.find(m => m.venueName === (matchedVenue?.name || currentChat.venueNameList));
+  }, [currentChat, userMatches, matchedVenue]);
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top', 'left', 'right']}>
@@ -525,49 +536,80 @@ export default function ChatScreen() {
             <View className="flex-row justify-between items-center mb-4">
               <View className="flex-row items-center gap-1.5">
                 <Compass size={14} color="#39FF14" className="animate-pulse" />
-                <Text className="text-white text-xs font-bold uppercase">Vị trí đồng đội</Text>
+                <Text className="text-white text-xs font-bold uppercase">Vị trí thực tế</Text>
               </View>
               <TouchableOpacity onPress={() => setShowLocationModal(false)} className="p-1">
                 <X size={16} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
 
-            {/* Simulated Map */}
-            <View className="h-44 bg-background border border-borderGray rounded-xl relative overflow-hidden mb-3">
-              {/* Dot Grid background */}
-              <View className="absolute inset-0 opacity-10 bg-[radial-gradient(#ccff00_1px,transparent_1px)]" style={{ backgroundSize: '12px 12px' } as any} />
-              
-              {/* Me central position */}
-              <View className="absolute top-[45%] left-[50%] -translate-x-1/2 -translate-y-1/2 items-center">
-                <View className="relative">
-                  <View className="absolute -inset-2 bg-sky-400/20 rounded-full animate-ping" />
-                  <View className="w-3.5 h-3.5 rounded-full bg-sky-400 border-2 border-background" />
+            {currentChat?.title.includes('Đặt Sân') ? (
+              <>
+                {/* Simulated Map for Venue */}
+                <View className="h-44 bg-background border border-borderGray rounded-xl relative overflow-hidden mb-3">
+                  <View className="absolute inset-0 opacity-10 bg-[radial-gradient(#ccff00_1px,transparent_1px)]" style={{ backgroundSize: '12px 12px' } as any} />
+                  
+                  {/* Me central position */}
+                  <View className="absolute top-[50%] left-[30%] -translate-x-1/2 -translate-y-1/2 items-center">
+                    <View className="relative">
+                      <View className="absolute -inset-2 bg-sky-400/20 rounded-full animate-ping" />
+                      <View className="w-3.5 h-3.5 rounded-full bg-sky-400 border-2 border-background" />
+                    </View>
+                    <Text className="text-[7px] text-white bg-slate-900 border border-slate-800 px-1 py-0.2 rounded mt-0.5 font-bold">Bạn</Text>
+                  </View>
+
+                  {/* Venue location pin */}
+                  <View className="absolute top-[35%] left-[70%] items-center">
+                    <View className="w-6 h-6 rounded-full bg-accent items-center justify-center border border-black shadow-lg">
+                      <Text className="text-xs">🏟️</Text>
+                    </View>
+                    <Text className="text-[7px] bg-background border border-borderGray px-1 py-0.2 rounded text-white mt-0.5 font-bold">
+                      {matchedVenue?.name.substring(0, 15) || 'Sân Cầu Lông'}... ({matchedVenue?.distance || '0.8'}km)
+                    </Text>
+                  </View>
                 </View>
-                <Text className="text-[7px] text-white bg-slate-900 border border-slate-800 px-1 py-0.2 rounded mt-0.5">Bạn</Text>
-              </View>
+                <Text className="text-[10px] text-textGray leading-4 text-center">
+                  Vị trí của bạn so với sân đặt. Khoảng cách địa lý thực tế là {matchedVenue?.distance || '0.8'} km. Đường đi thuận tiện qua Google Maps.
+                </Text>
+              </>
+            ) : (
+              <>
+                {/* Simulated Map for Matchmaking Group */}
+                <View className="h-44 bg-background border border-borderGray rounded-xl relative overflow-hidden mb-3">
+                  <View className="absolute inset-0 opacity-10 bg-[radial-gradient(#ccff00_1px,transparent_1px)]" style={{ backgroundSize: '12px 12px' } as any} />
+                  
+                  {/* Me central position */}
+                  <View className="absolute top-[45%] left-[50%] -translate-x-1/2 -translate-y-1/2 items-center">
+                    <View className="relative">
+                      <View className="absolute -inset-2 bg-sky-400/20 rounded-full animate-ping" />
+                      <View className="w-3.5 h-3.5 rounded-full bg-sky-400 border-2 border-background" />
+                    </View>
+                    <Text className="text-[7px] text-white bg-slate-900 border border-slate-800 px-1 py-0.2 rounded mt-0.5">Bạn</Text>
+                  </View>
 
-              {/* Person 1 location pin */}
-              <View className="absolute top-[20%] left-[20%] items-center">
-                <Image 
-                  source={{ uri: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=40" }} 
-                  className="w-6 h-6 rounded-full border border-accent object-cover"
-                />
-                <Text className="text-[7px] bg-background border border-borderGray px-1 py-0.2 rounded text-white mt-0.5">Quân (0.6km)</Text>
-              </View>
+                  {/* Person 1 location pin */}
+                  <View className="absolute top-[20%] left-[20%] items-center">
+                    <Image 
+                      source={{ uri: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=40" }} 
+                      className="w-6 h-6 rounded-full border border-accent object-cover"
+                    />
+                    <Text className="text-[7px] bg-background border border-borderGray px-1 py-0.2 rounded text-white mt-0.5">Quân (0.6km)</Text>
+                  </View>
 
-              {/* Person 2 location pin */}
-              <View className="absolute top-[60%] left-[70%] items-center">
-                <Image 
-                  source={{ uri: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40" }} 
-                  className="w-6 h-6 rounded-full border border-accent object-cover"
-                />
-                <Text className="text-[7px] bg-background border border-borderGray px-1 py-0.2 rounded text-white mt-0.5">Sơn (1.1km)</Text>
-              </View>
-            </View>
-
-            <Text className="text-[10px] text-textGray leading-4 text-center">
-              Các thành viên đều bật GPS chia sẻ vị trí thực tế trên sân giúp đồng đội dễ dàng định vị tìm nhau.
-            </Text>
+                  {/* Person 2 location pin */}
+                  <View className="absolute top-[60%] left-[75%] items-center">
+                    <Image 
+                      source={{ uri: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40" }} 
+                      className="w-6 h-6 rounded-full border border-accent object-cover"
+                    />
+                    <Text className="text-[7px] bg-background border border-borderGray px-1 py-0.2 rounded text-white mt-0.5">Sơn (1.1km)</Text>
+                  </View>
+                </View>
+                <Text className="text-[10px] text-textGray leading-4 text-center">
+                  Các thành viên đều bật GPS chia sẻ vị trí thực tế trên sân giúp đồng đội dễ dàng định vị tìm nhau.
+                </Text>
+              </>
+            )}
           </View>
         </View>
       </Modal>
@@ -594,37 +636,49 @@ export default function ChatScreen() {
             {currentChat && (
               <View className="space-y-3">
                 <Image 
-                  source={{ uri: "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=300" }}
+                  source={{ uri: matchedVenue?.imageUrl || "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=300" }}
                   className="h-24 w-full rounded-xl bg-background object-cover mb-2"
                 />
                 
                 <View className="mb-2">
-                  <Text className="text-xs font-bold text-white">{currentChat.venueNameList}</Text>
-                  <Text className="text-[10px] text-textGray mt-0.5">Hẻm 285 Cách Mạng Tháng Tám, Quận 10, TP.HCM</Text>
+                  <Text className="text-xs font-bold text-white">{matchedVenue?.name || currentChat.venueNameList}</Text>
+                  <Text className="text-[10px] text-textGray mt-0.5">{matchedVenue?.address || 'Hẻm 285 Cách Mạng Tháng Tám, Quận 10, TP.HCM'}</Text>
                 </View>
 
                 <View className="p-3 bg-background rounded-xl border border-borderGray space-y-1.5 mb-3">
                   <View className="flex-row justify-between items-center">
-                    <Text className="text-[11px] text-textGray">📅 Hôm nay:</Text>
-                    <Text className="text-[11px] font-semibold text-accent">18:00 - 20:00 (Sân số 3)</Text>
+                    <Text className="text-[11px] text-textGray">📅 Thời gian:</Text>
+                    <Text className="text-[11px] font-semibold text-accent">
+                      {matchedUserMatch?.timeSlot || '18:00 - 20:00 Hôm nay'}
+                    </Text>
                   </View>
                   <View className="flex-row justify-between items-center mt-1">
-                    <Text className="text-[11px] text-textGray">💵 Trạng thái:</Text>
+                    <Text className="text-[11px] text-textGray">🏟️ Chi tiết sân:</Text>
+                    <Text className="text-[11px] font-semibold text-white">
+                      {matchedUserMatch?.type === 'booking' ? 'Sân số 3' : 'Khu vực thi đấu'}
+                    </Text>
+                  </View>
+                  <View className="flex-row justify-between items-center mt-1">
+                    <Text className="text-[11px] text-textGray">💵 Thanh toán:</Text>
                     <View className="flex-row items-center gap-0.5">
                       <Check size={10} color="#10B981" />
-                      <Text className="text-[11px] font-semibold text-emerald-400">Đã trả trước</Text>
+                      <Text className="text-[11px] font-semibold text-emerald-400">
+                        {matchedUserMatch?.type === 'booking' ? 'Đã trả trước' : 'Trả sau / Chia đầu người'}
+                      </Text>
                     </View>
                   </View>
                 </View>
 
                 {/* Call reception button */}
                 <TouchableOpacity 
-                  onPress={() => handleCallHost('0901234567')}
-                  className="w-full py-2.5 bg-background hover:bg-secondary border border-borderGray rounded-xl flex-row items-center justify-center gap-1.5"
+                  onPress={() => handleCallHost(currentChat.title.includes('Đặt Sân') ? 'Tiếp tân đại lý' : 'Host / Trưởng nhóm')}
+                  className="w-full py-2.5 bg-background border border-borderGray rounded-xl flex-row items-center justify-center gap-1.5 active:scale-95"
                   activeOpacity={0.8}
                 >
                   <PhoneCall size={12} color="#39FF14" />
-                  <Text className="text-white text-[10px] font-bold">Liên hệ Tiếp tân đại lý</Text>
+                  <Text className="text-white text-[10px] font-bold">
+                    Gọi điện {currentChat.title.includes('Đặt Sân') ? 'Tiếp tân đại lý' : 'Host / Trưởng nhóm'}
+                  </Text>
                 </TouchableOpacity>
               </View>
             )}
