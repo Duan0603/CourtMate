@@ -17,9 +17,11 @@ interface MockDataContextType {
   selectedSportFilter: SportType;
   setSelectedSportFilter: (sport: SportType) => void;
   toggleJoinKeo: (keoId: string) => void;
-  bookVenueSlot: (venueId: string, slotTime: string) => boolean;
+  bookVenueSlot: (venueId: string, slotTimes: string[], dateString: string) => boolean;
   sendChatMessage: (channelId: string, text: string) => void;
   triggerMockIncomingMessage: () => void;
+  selectedDate: string;
+  setSelectedDate: (date: string) => void;
 }
 
 const MockDataContext = createContext<MockDataContextType | undefined>(undefined);
@@ -30,9 +32,36 @@ export const USER_MOCK_LOCATION: Location = {
 };
 
 export function MockDataProvider({ children }: { children: React.ReactNode }) {
-  const [venues, setVenues] = useState<Venue[]>(INITIAL_VENUES);
+  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [keos, setKeos] = useState<MatchKeo[]>(INITIAL_KEO_LIST);
   const [joinedMatchIds, setJoinedMatchIds] = useState<string[]>([]);
+
+  // Track booked slots: dateString -> { venueId -> Array of booked slot times }
+  const [bookedSlotsByDate, setBookedSlotsByDate] = useState<Record<string, Record<string, string[]>>>(() => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const initial: Record<string, string[]> = {};
+    INITIAL_VENUES.forEach(v => {
+      const booked = v.slots.filter(s => s.isBooked).map(s => s.time);
+      if (booked.length > 0) {
+        initial[v.id] = booked;
+      }
+    });
+    return { [todayStr]: initial };
+  });
+
+  const venues = useMemo(() => {
+    const bookedForDate = bookedSlotsByDate[selectedDate] || {};
+    return INITIAL_VENUES.map(venue => {
+      const bookedTimes = bookedForDate[venue.id] || [];
+      return {
+        ...venue,
+        slots: venue.slots.map(slot => ({
+          ...slot,
+          isBooked: bookedTimes.includes(slot.time)
+        }))
+      };
+    });
+  }, [selectedDate, bookedSlotsByDate]);
   const [selectedSportFilter, setSelectedSportFilter] = useState<SportType>('badminton');
   
   // Real active user states synced across features
@@ -155,26 +184,34 @@ export function MockDataProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Book a slot at a venue
-  const bookVenueSlot = (venueId: string, slotTime: string): boolean => {
-    const venue = venues.find(v => v.id === venueId);
+  const bookVenueSlot = (venueId: string, slotTimes: string[], dateString: string): boolean => {
+    const venue = INITIAL_VENUES.find(v => v.id === venueId);
     if (!venue) return false;
 
     // Check if slot is already booked
-    const slotIndex = venue.slots.findIndex(s => s.time === slotTime);
-    if (slotIndex === -1 || venue.slots[slotIndex].isBooked) return false;
+    const bookedForDate = bookedSlotsByDate[dateString] || {};
+    const bookedTimes = bookedForDate[venueId] || [];
+    
+    const isAnyAlreadyBooked = slotTimes.some(time => bookedTimes.includes(time));
+    if (isAnyAlreadyBooked) return false;
 
     sound.playSuccess();
 
     // Mark slot as booked
-    setVenues(prev => prev.map(v => {
-      if (v.id === venueId) {
-        return {
-          ...v,
-          slots: v.slots.map(s => s.time === slotTime ? { ...s, isBooked: true } : s)
-        };
-      }
-      return v;
-    }));
+    setBookedSlotsByDate(prev => {
+      const dateBookings = prev[dateString] || {};
+      const venueBookings = dateBookings[venueId] || [];
+      return {
+        ...prev,
+        [dateString]: {
+          ...dateBookings,
+          [venueId]: [...venueBookings, ...slotTimes]
+        }
+      };
+    });
+
+    const formattedDate = dateString.split('-').reverse().slice(0, 2).join('/');
+    const slotTimesStr = slotTimes.join(', ');
 
     // Add to scheduled list
     const newMatch: UserMatch = {
@@ -182,7 +219,7 @@ export function MockDataProvider({ children }: { children: React.ReactNode }) {
       sport: venue.sport,
       venueName: venue.name,
       address: venue.address,
-      timeSlot: `${slotTime} - Hôm nay`,
+      timeSlot: `${slotTimesStr} ngày ${formattedDate}`,
       status: 'upcoming',
       type: 'booking',
       playersCount: 1
@@ -195,7 +232,7 @@ export function MockDataProvider({ children }: { children: React.ReactNode }) {
       title: `Đặt Sân - ${venue.name}`,
       sport: venue.sport,
       venueNameList: venue.name,
-      lastMessage: `Tiếp tân: Đã nhận booking khung giờ ${slotTime}!`,
+      lastMessage: `Tiếp tân: Đã nhận booking khung giờ ${slotTimes.join(' & ')}!`,
       time: 'Vừa xong',
       unread: true,
       messages: [
@@ -203,7 +240,7 @@ export function MockDataProvider({ children }: { children: React.ReactNode }) {
           id: '1', 
           sender: 'Tiếp tân đại lý', 
           isMe: false, 
-          text: `Chào bạn! Cảm ơn đã đặt sân tại ${venue.name}. Khung giờ ${slotTime} đã được kích hoạt, mã khóa check-in QR của bạn cũng đã khả dụng.`, 
+          text: `Chào bạn! Cảm ơn đã đặt sân tại ${venue.name}. Khung giờ ${slotTimes.join(' & ')} ngày ${formattedDate} đã được kích hoạt, mã khóa check-in QR của bạn cũng đã khả dụng.`, 
           timestamp: 'Vừa xong',
           avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120'
         }
@@ -292,7 +329,9 @@ export function MockDataProvider({ children }: { children: React.ReactNode }) {
     bookVenueSlot,
     sendChatMessage,
     triggerMockIncomingMessage,
-  }), [venues, keos, joinedMatchIds, userMatches, activeConversations, selectedSportFilter]);
+    selectedDate,
+    setSelectedDate,
+  }), [venues, keos, joinedMatchIds, userMatches, activeConversations, selectedSportFilter, selectedDate]);
 
   return (
     <MockDataContext.Provider value={value}>

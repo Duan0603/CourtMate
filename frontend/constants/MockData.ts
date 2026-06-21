@@ -33,10 +33,10 @@ export const INITIAL_VENUES: Venue[] = [
       { time: '08:00 - 09:00', isBooked: true, price: 80000 },
       { time: '15:00 - 16:00', isBooked: false, price: 85000 },
       { time: '16:00 - 17:00', isBooked: true, price: 90000 },
-      { time: '17:00 - 18:00', isBooked: false, price: 110000 },
-      { time: '18:00 - 19:00', isBooked: false, price: 110000 },
-      { time: '19:00 - 20:00', isBooked: false, price: 110000 },
-      { time: '20:00 - 21:00', isBooked: true, price: 100000 },
+      { time: '17:00 - 18:00', isBooked: false, price: 110000, isPeak: true },
+      { time: '18:00 - 19:00', isBooked: false, price: 110000, isPeak: true },
+      { time: '19:00 - 20:00', isBooked: false, price: 110000, isPeak: true },
+      { time: '20:00 - 21:00', isBooked: true, price: 100000, isPeak: true },
     ],
     location: {
       latitude: 21.0315,
@@ -55,11 +55,11 @@ export const INITIAL_VENUES: Venue[] = [
     imageUrl: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=500&auto=format&fit=crop&q=60',
     slots: [
       { time: '16:00 - 17:00', isBooked: false, price: 300000 },
-      { time: '17:00 - 18:00', isBooked: true, price: 380000 },
-      { time: '18:00 - 19:00', isBooked: false, price: 420000 },
-      { time: '19:00 - 20:00', isBooked: false, price: 420000 },
-      { time: '20:00 - 21:00', isBooked: false, price: 380000 },
-      { time: '21:00 - 22:00', isBooked: true, price: 300000 },
+      { time: '17:00 - 18:00', isBooked: true, price: 380000, isPeak: true },
+      { time: '18:00 - 19:00', isBooked: false, price: 420000, isPeak: true },
+      { time: '19:00 - 20:00', isBooked: false, price: 420000, isPeak: true },
+      { time: '20:00 - 21:00', isBooked: false, price: 380000, isPeak: true },
+      { time: '21:00 - 22:00', isBooked: true, price: 300000, isPeak: true },
     ],
     location: {
       latitude: 21.0245,
@@ -77,10 +77,10 @@ export const INITIAL_VENUES: Venue[] = [
     pricePerHour: 200000,
     imageUrl: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=500&auto=format&fit=crop&q=60',
     slots: [
-      { time: '17:00 - 18:00', isBooked: false, price: 180000 },
-      { time: '18:00 - 19:00', isBooked: false, price: 200000 },
-      { time: '19:00 - 20:00', isBooked: true, price: 200000 },
-      { time: '20:00 - 21:00', isBooked: false, price: 200000 },
+      { time: '17:00 - 18:00', isBooked: false, price: 180000, isPeak: true },
+      { time: '18:00 - 19:00', isBooked: false, price: 200000, isPeak: true },
+      { time: '19:00 - 20:00', isBooked: true, price: 200000, isPeak: true },
+      { time: '20:00 - 21:00', isBooked: false, price: 200000, isPeak: true },
     ],
     location: {
       latitude: 21.0185,
@@ -100,8 +100,8 @@ export const INITIAL_VENUES: Venue[] = [
     slots: [
       { time: '06:00 - 08:00', isBooked: false, price: 150000 },
       { time: '08:00 - 10:00', isBooked: true, price: 150000 },
-      { time: '16:00 - 18:00', isBooked: false, price: 180000 },
-      { time: '18:00 - 20:00', isBooked: false, price: 220000 },
+      { time: '16:00 - 18:00', isBooked: false, price: 180000, isPeak: true },
+      { time: '18:00 - 20:00', isBooked: false, price: 220000, isPeak: true },
     ],
     location: {
       latitude: 21.0365,
@@ -122,7 +122,7 @@ export const INITIAL_VENUES: Venue[] = [
       { time: '14:00 - 15:00', isBooked: false, price: 50000 },
       { time: '15:00 - 16:00', isBooked: false, price: 50000 },
       { time: '16:00 - 17:00', isBooked: true, price: 50000 },
-      { time: '17:00 - 18:00', isBooked: false, price: 50000 },
+      { time: '17:00 - 18:00', isBooked: false, price: 50000, isPeak: true },
     ],
     location: {
       latitude: 21.0265,

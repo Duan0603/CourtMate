@@ -32,6 +32,7 @@ export interface TimeSlot {
   time: string;
   isBooked: boolean;
   price: number;
+  isPeak?: boolean;
 }
 
 export interface MatchKeo {
