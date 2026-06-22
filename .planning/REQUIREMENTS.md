@@ -1,81 +1,100 @@
 # Requirements: CourtMate
 
-**Defined:** 2026-06-18
-**Core Value:** Giúp người dùng di động nhanh chóng tìm được bạn chơi thể thao xung quanh vị trí của họ tức thì (On-demand matchmaking).
+**Defined:** 2026-06-22
+**Core Value:** Giúp người chơi thể thao phong trào nhanh chóng nắm bắt và tìm kiếm thông tin thể thao, đối tác, giải đấu tại địa phương từ một Hub thông tin duy nhất.
 
 ## v1 Requirements
 
-### Home Dashboard (Trang Chủ)
+Requirements for initial release. Each maps to roadmap phases.
 
-- [ ] **HOME-01**: Thiết kế Trang chủ di động có hiển thị định vị GPS và thanh tìm kiếm nhanh.
-- [ ] **HOME-02**: Danh sách môn thể thao (Cầu lông, Bóng rổ, Bóng đá...) trượt ngang (Horizontal Scroll).
-- [ ] **HOME-03**: Nút "TÌM ĐỒNG ĐỘI NGAY" lớn ở trung tâm, dễ chạm bằng một ngón cái.
+### Authentication & Preferences
 
-### Matchmaking (Tìm kiếm On-demand)
+- [ ] **AUTH-01**: User can log in/out of the application.
+- [ ] **AUTH-02**: User can select sports of interest (e.g. Badminton, Football, Pickleball, Tennis) to personalize their experience.
 
-- [ ] **MAP-01**: Bản đồ toàn màn hình hiển thị vị trí người dùng và các sân/đối thủ lân cận.
-- [ ] **MAP-02**: Hiệu ứng Radar quét sóng thời gian thực khi đang tìm trận.
-- [ ] **MAP-03**: Bottom Sheet vuốt lên hiển thị thông tin kèo chờ gồm môn thể thao, khoảng cách, trình độ, số slots thiếu.
-- [ ] **MAP-04**: Thao tác 1 chạm để tham gia hoặc hủy tham gia trận tìm kiếm.
+### Aggregated Feed
 
-### Venue Booking (Đặt Sân)
+- [ ] **FEED-01**: User can view a feed of sports activities gathered from public communities (looking for players, team recruitment, matches).
+- [ ] **FEED-02**: Home feed prioritizes items based on the user's selected sports interests.
+- [ ] **FEED-03**: Interactive CTA button placed for single-hand touch target ease of use.
 
-- [ ] **BOOK-01**: Giao diện Card UI hiển thị hình ảnh sân, đánh giá sao và khoảng cách.
-- [ ] **BOOK-02**: Lưới chọn giờ (Time-slot grid) phân biệt rõ slot trống (Xanh) và slot đã đặt (Xám).
-- [ ] **BOOK-03**: Nút "Đặt sân ngay" được cố định ở đáy màn hình (Sticky Bottom Button).
+### Tournament Hub
 
-### Match & Chat (Lịch Hẹn & Nhóm Chat)
+- [ ] **TOUR-01**: User can browse list of upcoming local tournaments with key info: Title, Time, Location, Organizer, Rules, and Registration link.
+- [ ] **TOUR-02**: Detailed view showing comprehensive tournament information.
 
-- [ ] **CHAT-01**: Giao diện Tab đôi (Segmented Control) cho phép chuyển đổi giữa Lịch hẹn và Hộp chat.
-- [ ] **CHAT-02**: Hộp thoại chat nhóm kích hoạt tự động sau khi kết nối trận thành công.
-- [ ] **CHAT-03**: Nút thao tác nhanh trong khung chat: xem vị trí đồng đội và thông tin chi tiết sân đã đặt.
+### Smart Search & Filter
 
-### UI/UX Guidelines (Quy Chuẩn Giao Diện)
+- [ ] **FILT-01**: User can search activities by keyword.
+- [ ] **FILT-02**: User can filter search results by Sport Type, Region, Time, and Activity Type.
 
-- [ ] **DSGN-01**: Giao diện Dark Mode chủ đạo kết hợp màu xanh Neon/Lime Green làm điểm nhấn nổi bật.
-- [ ] **DSGN-02**: Bố cục các nút hành động quan trọng nằm trong vùng dễ chạm của ngón cái (Thumb Zone).
-- [ ] **DSGN-03**: Thanh điều hướng đáy (Bottom Navigation Bar) cố định gồm 4 tab: Trang chủ, Bản đồ tìm kiếm, Lịch trình, Hồ sơ.
+### Bookmark & Interactions
+
+- [ ] **BOOK-01**: User can bookmark posts or tournaments to view them later.
+- [ ] **BOOK-02**: Dedicated screen showing saved bookmarks.
+
+### Quality Control & Moderation
+
+- [ ] **VERI-01**: Trusted and verified profiles (Clubs, Organizers) display a distinct "Verified Source" badge next to their names.
+- [ ] **REPT-01**: User can report post (spam, incorrect info, expired content).
+- [ ] **REPT-02**: System changes visibility of reported posts if threshold reports are met.
+
+### Scaling & Hyper-Local Routing
+
+- [ ] **ROUT-01**: Application auto-detects user city/location and prioritizes hyper-local content for that city.
+- [ ] **ADMN-01**: Decoupled Admin Dashboard allowing regional admins to manage posts, approve verified status, and process reports for their respective cities.
+- [ ] **ADMN-02**: Scale infrastructure to handle concurrent user traffic peaks without app crashes.
 
 ## v2 Requirements
 
-### Syncing & Services
+Deferred to future release. Tracked but not in current roadmap.
 
-- **SYNC-01**: Tích hợp cơ sở dữ liệu thực tế và Backend API.
-- **PAY-01**: Tích hợp cổng thanh toán trực tuyến để thanh toán đặt sân.
+### AI Integration
+
+- **AI-01**: AI-based automatic content categorization and tagging.
+- **AI-02**: AI summary for lengthy tournament rules and announcements.
+
+### Direct Booking & Partnerships
+
+- **BOOK-03**: Direct booking integration with local sport facilities.
+- **PART-01**: Automated API integrations with Facebook / Zalo groups for instant aggregation syncing.
 
 ## Out of Scope
 
+Explicitly excluded. Documented to prevent scope creep.
+
 | Feature | Reason |
 |---------|--------|
-| Tích hợp cơ sở dữ liệu và API thực tế | Đơn giản hóa cấu trúc dữ liệu ở v1, tập trung hoàn thiện UI/UX và luồng trải nghiệm trước |
-| Hệ thống thanh toán thực tế | Tránh chi phí và độ phức tạp tích hợp trong giai đoạn thiết kế mẫu thử |
+| Real-time Messaging | Users direct message each other in-app. Deferring to keep development focused on information hubs. |
+| In-app Payment Gateway | Paying tournament fees directly through CourtMate. Registration links will point to external organizer links. |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| HOME-01 | Phase 1 | Pending |
-| HOME-02 | Phase 1 | Pending |
-| HOME-03 | Phase 1 | Pending |
-| MAP-01 | Phase 1 | Pending |
-| MAP-02 | Phase 1 | Pending |
-| MAP-03 | Phase 1 | Pending |
-| MAP-04 | Phase 1 | Pending |
-| BOOK-01 | Phase 2 | Pending |
-| BOOK-02 | Phase 2 | Pending |
-| BOOK-03 | Phase 2 | Pending |
-| CHAT-01 | Phase 2 | Pending |
-| CHAT-02 | Phase 2 | Pending |
-| CHAT-03 | Phase 2 | Pending |
-| DSGN-01 | Phase 1 | Pending |
-| DSGN-02 | Phase 1 | Pending |
-| DSGN-03 | Phase 1 | Pending |
+| AUTH-01 | Phase 1 | Pending |
+| AUTH-02 | Phase 1 | Pending |
+| FEED-01 | Phase 1 | Pending |
+| FEED-02 | Phase 1 | Pending |
+| FEED-03 | Phase 1 | Pending |
+| TOUR-01 | Phase 1 | Pending |
+| TOUR-02 | Phase 1 | Pending |
+| BOOK-01 | Phase 1 | Pending |
+| BOOK-02 | Phase 1 | Pending |
+| FILT-01 | Phase 2 | Pending |
+| FILT-02 | Phase 2 | Pending |
+| VERI-01 | Phase 2 | Pending |
+| REPT-01 | Phase 2 | Pending |
+| REPT-02 | Phase 2 | Pending |
+| ROUT-01 | Phase 3 | Pending |
+| ADMN-01 | Phase 3 | Pending |
+| ADMN-02 | Phase 3 | Pending |
 
 **Coverage:**
-- v1 requirements: 16 total
-- Mapped to phases: 16
+- v1 requirements: 17 total
+- Mapped to phases: 17
 - Unmapped: 0 ✓
 
 ---
-*Requirements defined: 2026-06-18*
-*Last updated: 2026-06-18 after initial definition*
+*Requirements defined: 2026-06-22*
+*Last updated: 2026-06-22 after initial definition*

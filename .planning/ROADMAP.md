@@ -2,54 +2,68 @@
 
 ## Overview
 
-Dự án thiết kế và xây dựng mẫu thử tương tác Mobile UI/UX cho ứng dụng tìm bạn chơi thể thao CourtMate bằng React Native/Expo. Bản thử nghiệm tập trung tối ưu hóa "Vùng ngón cái" (Thumb Zone), hỗ trợ giao diện tối (Dark Mode) và điểm nhấn Neon Green, hoạt động trên cơ sở dữ liệu giả lập (mock data).
+CourtMate's roadmap spans a 3-month cycle focusing on establishing localized market fit in Da Nang, optimizing content quality and user preferences, and finally scaling hyper-local routing and delegation tools to expand nationally (starting with Hanoi and Ho Chi Minh City).
 
 ## Phases
 
-- [ ] **Phase 1: Foundation & On-Demand Matchmaking** - Thiết kế điều hướng tab, Trang chủ GPS, bản đồ tìm kiếm Radar và Bottom Sheet kèo chờ.
-- [ ] **Phase 2: Venue Booking & Match Control Center** - Thiết kế giao diện đặt sân theo slot, quản lý lịch hẹn và nhóm chat tích hợp nút thao tác nhanh.
+- [ ] **Phase 1: Foundation & Local Fit (Da Nang MVP)** - Establish the core feed, personalization settings, and tournament directory using seeded Da Nang data.
+- [ ] **Phase 2: Optimization, Verification & Notifications** - Enhance the content filters, implement the source verification system, and add notification capabilities.
+- [ ] **Phase 3: Scale-up & Regional Expansion** - Implement location-based routing, build decentralized admin tools, and optimize system load capability.
 
 ## Phase Details
 
-### Phase 1: Foundation & On-Demand Matchmaking
-**Goal**: Thiết kế khung ứng dụng React Native/Expo, Trang chủ GPS và màn hình tìm kiếm matchmaking On-demand (radar quét, bottom sheet).
-**Mode**: mvp
-**Depends on**: Nothing (first phase)
-**Requirements**: HOME-01, HOME-02, HOME-03, MAP-01, MAP-02, MAP-03, MAP-04, DSGN-01, DSGN-02, DSGN-03
-**Success Criteria** (what must be TRUE):
-  1. Người dùng thấy thanh điều hướng đáy (Bottom Navigation Bar) 4 tab hoạt động mượt mà.
-  2. Trang chủ hiển thị định vị GPS và danh sách các icon môn thể thao cuộn ngang.
-  3. Người dùng bấm được nút "TÌM ĐỒNG ĐỘI NGAY" lớn trong tầm với ngón cái ở Home Screen để kích hoạt tìm kiếm.
-  4. Màn hình tìm kiếm hiển thị bản đồ toàn màn hình cùng hiệu ứng sóng quét Radar thời gian thực.
-  5. Bottom Sheet hiển thị đầy đủ thông tin kèo chờ và cho phép Tham gia/Hủy bằng 1 chạm.
+### Phase 1: Foundation & Local Fit (Da Nang MVP)
+**Goal**: Launch the MVP version dedicated to the Da Nang community, featuring aggregated feeds, tournament hub, personalization, and bookmarking.
+**Depends on**: Nothing
+**Requirements**: AUTH-01, AUTH-02, FEED-01, FEED-02, FEED-03, TOUR-01, TOUR-02, BOOK-01, BOOK-02
+**Success Criteria**:
+  1. User can choose sport interests and log in to view a feed of sports activities filtered according to their sports selection.
+  2. User can view a detailed page for sports tournaments, including the registration link.
+  3. User can bookmark posts/tournaments and retrieve them from a saved screen.
+  4. The layout adapts properly on mobile devices with touch targets positioned in comfortable reach of the thumb.
 **Plans**: 3 plans
 
-- [x] 01-01: Khởi tạo dự án React Native/Expo, cấu hình Safe Area và thanh điều hướng Bottom Navigation Bar.
-- [x] 01-02: Thiết kế giao diện Trang chủ (Home Screen) với GPS location và Sport Horizontal Scroll.
-- [x] 01-03: Thiết kế Bản đồ tìm kiếm, hiệu ứng Radar quét sóng và Bottom Sheet kèo chờ tương tác.
+Plans:
+- [ ] 01-01: Set up core app shell with mock data provider and basic routing
+- [ ] 01-02: Implement personalized aggregated Home Feed and single-hand touch navigation
+- [ ] 01-03: Implement Tournament Hub and Bookmark storage feature
 
-### Phase 2: Venue Booking & Match Control Center
-**Goal**: Thiết kế chi tiết giao diện Đặt sân và Hộp thoại chat quản lý lịch hẹn tích hợp.
-**Mode**: mvp
+---
+
+### Phase 2: Optimization, Verification & Notifications
+**Goal**: Optimize the discovery workflow with smart filtering, introduce community reporting, flag trusted verified sources, and launch notification settings.
 **Depends on**: Phase 1
-**Requirements**: BOOK-01, BOOK-02, BOOK-03, CHAT-01, CHAT-02, CHAT-03
-**Success Criteria** (what must be TRUE):
-  1. Người dùng chạm xem được Card UI thông tin sân và lưới chọn slot giờ (Time-slot grid) đổi màu Xanh/Xám tương ứng.
-  2. Nút "Đặt sân ngay" hiển thị cố định ở đáy màn hình (Sticky Bottom Button) hoạt động khi chọn slot.
-  3. Người dùng chuyển đổi được giữa Lịch hẹn và Hộp chat bằng Tab đôi (Segmented Control).
-  4. Giao diện chat nhóm hiển thị các nút thao tác nhanh: xem vị trí đồng đội và thông tin sân đã đặt.
+**Requirements**: FILT-01, FILT-02, VERI-01, REPT-01, REPT-02
+**Success Criteria**:
+  1. User can search posts by text and apply multiple filters (sport, area, time, category) concurrently.
+  2. Posts from recognized/partner accounts are highlighted with a "Verified Source" badge.
+  3. User can report a post, and posts exceeding a threshold of reports are hidden.
 **Plans**: 2 plans
 
 Plans:
-- [ ] 02-01: Thiết kế giao diện Đặt sân (Venue Booking Screen) dạng Card UI và lưới chọn ma trận Slot giờ.
-- [ ] 02-02: Thiết kế Giao diện tab đôi Lịch hẹn & Hộp chat nhóm (Chat Screen) kèm các nút thao tác nhanh.
+- [ ] 02-01: Implement multi-criteria search filters and source verification indicators
+- [ ] 02-02: Integrate community report workflow and post notification reminders
+
+---
+
+### Phase 3: Scale-up & Regional Expansion
+**Goal**: Transition from a single-city app to a nationwide multi-region platform by introducing city-based routing, decentralized moderation, and performance scaling.
+**Depends on**: Phase 2
+**Requirements**: ROUT-01, ADMN-01, ADMN-02
+**Success Criteria**:
+  1. The app automatically recognizes the user's city/location and loads local sports feeds and tournaments.
+  2. Regional admins can access a dashboard to moderate posts and manage reports from their designated city.
+  3. System processes search and feed rendering efficiently with minimal lag.
+**Plans**: 2 plans
+
+Plans:
+- [ ] 03-01: Implement city-based routing and regional geolocation detection
+- [ ] 03-02: Build decentralized regional admin panel and optimize database indexing for scaling
 
 ## Progress
 
-**Execution Order:**
-Phases execute in numeric order: 1 → 2
-
-| Phase | Milestone | Plans Complete | Status | Completed |
-|-------|-----------|----------------|--------|-----------|
-| 1. Foundation & Matchmaking | v1.0 MVP | 3/3 | Completed | 2026-06-18 |
-| 2. Booking & Control Center | v1.0 MVP | 0/2 | Not started | - |
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 1. Foundation & Local Fit (Da Nang MVP) | 0/3 | Not started | - |
+| 2. Optimization & Verification | 0/2 | Not started | - |
+| 3. Scale-up & Regional Expansion | 0/2 | Not started | - |

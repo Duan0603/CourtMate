@@ -2,11 +2,17 @@
 
 ## What This Is
 
-CourtMate is a mobile application built using React Native/Expo designed to help sports enthusiasts find sports matches on-demand (Grab-like matchmaking) and book court slots in real-time. The initial focus is on designing the Mobile UI/UX and Mobile User Flow.
+CourtMate is a mobile-first sports information aggregation and personalization platform. It serves as a unified hub that automatically collects and customizes public sports activities (looking for players, recruiting members, tournament announcements) from scattered social media sources (Facebook, Zalo, websites) into a single hyper-local feed.
 
 ## Core Value
 
-Giúp người dùng di động nhanh chóng tìm được bạn chơi thể thao xung quanh vị trí của họ tức thì (On-demand matchmaking).
+Giúp người chơi thể thao phong trào nhanh chóng nắm bắt và tìm kiếm thông tin thể thao, đối tác, giải đấu tại địa phương từ một Hub thông tin duy nhất.
+
+## Business Context
+
+- **Customer**: Sports enthusiasts, tournament organizers, and sports clubs.
+- **Revenue model**: Sponsor advertisements, premium verified badges for organizers, and booking commissions.
+- **Success metric**: User retention rate, daily active users (DAU), and volume of aggregated postings.
 
 ## Requirements
 
@@ -16,34 +22,39 @@ Giúp người dùng di động nhanh chóng tìm được bạn chơi thể tha
 
 ### Active
 
-- [ ] Thiết kế Trang chủ di động (Home Screen) tích hợp định vị GPS, thanh tìm kiếm nhanh, Dashboard trung tâm với nút "TÌM ĐỒNG ĐỘI NGAY" lớn dễ chạm bằng một tay và menu trượt ngang chọn môn thể thao.
-- [ ] Thiết kế Luồng tìm bạn On-demand (Matchmaking Screen) hiển thị Bản đồ toàn màn hình, hiệu ứng Radar quét thời gian thực và Bottom Sheet hiển thị thông tin kèo chờ kèm thao tác 1 chạm để Tham gia/Hủy.
-- [ ] Thiết kế Trang chi tiết sân & Đặt slot (Venue Booking Screen) dạng Card UI có lưới ma trận chọn giờ (Time-slot grid) phân biệt trạng thái trống (Xanh) hoặc hết (Xám), cùng nút "Đặt sân ngay" cố định ở đáy màn hình.
-- [ ] Thiết kế Quản lý lịch trình & Chat (My Match & Chat) sử dụng tab đôi (Segmented Control), kích hoạt chat nhóm khi tìm kèo thành công cùng hai nút thao tác nhanh: xem vị trí bạn chơi và thông tin sân đã đặt.
-- [ ] Áp dụng quy chuẩn thiết kế Mobile (Mobile Design Guidelines): Bố cục trong vùng dễ chạm (Thumb Zone), chủ đạo Dark Mode kết hợp Neon Green (Lime Green) làm nổi bật các nút quan trọng, thanh điều hướng đáy (Bottom Navigation Bar) 4 tab.
+- [ ] **AUTH-01**: User can log in/out and set sport preferences.
+- [ ] **FEED-01**: User can view aggregated feed of local sports activities (finding players, recruitment, etc.).
+- [ ] **TOUR-01**: User can view detailed tournament information and registration links.
+- [ ] **FILT-01**: User can search and filter feed content by sport type, area, time, and activity type.
+- [ ] **BOOK-01**: User can bookmark posts and tournaments.
+- [ ] **NOTF-01**: User receives notifications when new content matching preferences is posted.
+- [ ] **VERI-01**: Trusted sources (Clubs, Organizers) are marked with a Verified badge.
+- [ ] **REPT-01**: User can report spam, expired, or incorrect posts.
+- [ ] **ROUT-01**: Automatic location-based routing displaying content relevant to the user's city.
+- [ ] **ADMN-01**: Region-based admin dashboard to manage regional content and moderate reports.
 
 ### Out of Scope
 
-- Tích hợp Backend API và Cơ sở dữ liệu thực tế — Tạm thời hoãn lại (sử dụng dữ liệu giả lập hoạt động động trên giao diện ở v1).
+- **Real-time Chat Engine**: Direct communication between users is deferred to focus on information discovery and aggregation first.
+- **Direct Venue Booking**: Native court reservation engine is out of scope for the MVP phase, focusing on tournament links and aggregator posts first.
+- **Native AI Tagging/Summarization**: Auto-tagging and announcement text summarization are deferred to future scope.
 
 ## Context
 
-- Môi trường phát triển: React Native kết hợp Expo để dễ dàng xem trước và kiểm thử trên thiết bị di động.
-- Tập trung vào tính tương tác cao của luồng di động (Radar quét thực tế, Bottom Sheet vuốt chạm, Lưới slot giờ, Chuyển đổi tab lịch hẹn/chat).
+- **Local Market**: Initial pilot launching in Da Nang to test local fit, before scaling to Hanoi and Ho Chi Minh City.
+- **Data aggregation**: System aggregates public data from various social sources, demanding strong validation tools and community report mechanisms to maintain high content quality.
 
 ## Constraints
 
-- **Tech Stack**: React Native / Expo — Định hướng đa nền tảng iOS & Android.
-- **Dữ liệu**: Mock Data — Đơn giản hóa backend để tập trung hoàn thiện trải nghiệm UI/UX.
-- **Thiết kế**: Mobile Responsive & Single-hand touch targets — Nút CTA lớn nằm trong vùng dễ với của ngón cái.
+- **Tech Stack**: React Native / Expo for multi-platform iOS & Android.
+- **Data Layer**: Mock Data approach for the initial frontend presentation layer to speed up UI/UX iterations.
+- **Design Layout**: Mobile responsive with large CTA single-hand touch targets placed within comfortable reach of the user's thumb.
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| React Native / Expo | Đảm bảo tính nhất quán đa nền tảng và dễ dàng phát triển Mobile UI/UX mẫu nhanh chóng. | — Pending |
-| Dữ liệu giả lập (Mock data) | Tập trung hoàn thiện giao diện người dùng và luồng trải nghiệm trước khi kết nối API Backend. | — Pending |
-| Chế độ YOLO | Tiết kiệm thời gian tương tác giữa người dùng và Agent trong quá trình viết mã. | — Pending |
+| Greenfield Aggregator | Standardize scattered sports posts into a local aggregator instead of building another booking app. | — Pending |
 
 ## Evolution
 
@@ -63,4 +74,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-18 after initialization*
+*Last updated: 2026-06-22 after initialization*
