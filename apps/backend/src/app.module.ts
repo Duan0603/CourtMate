@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CacheModule } from '@nestjs/cache-manager';
+import { ArticlesModule } from './modules/articles/articles.module';
 
 @Module({
   imports: [
@@ -28,6 +29,9 @@ import { CacheModule } from '@nestjs/cache-manager';
       isGlobal: true,
       ttl: 60 * 10, // 10 minutes cache TTL
     }),
+
+    // Feature Modules
+    ArticlesModule,
   ],
 })
 export class AppModule {}
