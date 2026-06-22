@@ -11,6 +11,10 @@
     "frontend:dev": "npm run start -w apps/frontend",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
+    "migration": "npm run migrate:up -w apps/backend",
+    "migration:status": "npm run migrate:status -w apps/backend",
+    "migration:down": "npm run migrate:down -w apps/backend",
+    "migration:create": "npm run migrate:create -w apps/backend",
     "typecheck": "npm run typecheck --workspaces --if-present"
   },
   "overrides": {

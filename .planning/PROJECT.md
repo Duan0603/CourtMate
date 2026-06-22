@@ -22,22 +22,23 @@ Giúp người chơi thể thao phong trào nhanh chóng nắm bắt và tìm ki
 
 ### Active
 
-- [ ] **AUTH-01**: User can log in/out and set sport preferences.
-- [ ] **FEED-01**: User can view aggregated feed of local sports activities (finding players, recruitment, etc.).
-- [ ] **TOUR-01**: User can view detailed tournament information and registration links.
-- [ ] **FILT-01**: User can search and filter feed content by sport type, area, time, and activity type.
-- [ ] **BOOK-01**: User can bookmark posts and tournaments.
-- [ ] **NOTF-01**: User receives notifications when new content matching preferences is posted.
-- [ ] **VERI-01**: Trusted sources (Clubs, Organizers) are marked with a Verified badge.
-- [ ] **REPT-01**: User can report spam, expired, or incorrect posts.
-- [ ] **ROUT-01**: Automatic location-based routing displaying content relevant to the user's city.
-- [ ] **ADMN-01**: Region-based admin dashboard to manage regional content and moderate reports.
+- [ ] **AUTH-01**: User can log in/out and select role (Player vs Organizer).
+- [ ] **TOUR-01**: User can view detailed tournament information and registration schedules.
+- [ ] **TOUR-02**: Tournament Organizers can create sports tournaments specifying rules, categories, fees, and location.
+- [ ] **REG-01**: Players can register for a tournament (e.g. doubles partners details, skill level).
+- [ ] **REG-02**: Organizers can view, approve/reject, and manage player registration records.
+- [ ] **FILT-01**: User can search and filter tournaments by sport type, city, date, and price.
+- [ ] **BOOK-01**: User can bookmark tournaments to a saved directory.
+- [ ] **VERI-01**: Trusted organizers and official sports clubs are marked with a "Verified Source" badge.
+- [ ] **REPT-01**: User can report fake, spam, or incorrect tournament postings.
+- [ ] **ROUT-01**: Automatic location-based routing displaying tournaments matching the user's current city.
+- [ ] **ADMN-01**: Regional administrator dashboard to moderate local tournaments and process reports.
 
 ### Out of Scope
 
-- **Real-time Chat Engine**: Direct communication between users is deferred to focus on information discovery and aggregation first.
-- **Direct Venue Booking**: Native court reservation engine is out of scope for the MVP phase, focusing on tournament links and aggregator posts first.
-- **Native AI Tagging/Summarization**: Auto-tagging and announcement text summarization are deferred to future scope.
+- **On-Demand Matchmaking Feed**: Aggregating raw posts/Zalo listings seeking instant player finders is deferred to v2.
+- **Real-time Chat Engine**: Direct communication between players and organizers is deferred.
+- **Native Payment Gateways**: Processing tournament fees via real monetary systems is deferred; the MVP uses a mock status payment flow.
 
 ## Context
 

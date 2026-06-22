@@ -3,16 +3,16 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 current_phase: 1
-current_phase_name: Foundation & Local Fit (Da Nang MVP
+current_phase_name: Authentication & Profiles
 status: planning
 stopped_at: Initialized GSD planning files (.planning/)
-last_updated: "2026-06-22T16:54:39.226Z"
-last_activity: 2026-06-22
-last_activity_desc: Project planning initialized
+last_updated: "2026-06-23T00:34:00.000Z"
+last_activity: 2026-06-23
+last_activity_desc: Shifted project scope entirely to Tournament Creation & Registration
 progress:
-  total_phases: 3
+  total_phases: 8
   completed_phases: 0
-  total_plans: 0
+  total_plans: 16
   completed_plans: 0
   percent: 0
 ---
@@ -23,15 +23,15 @@ progress:
 
 See: .planning/PROJECT.md (updated 2026-06-22)
 
-**Core value:** Giúp người chơi thể thao phong trào nhanh chóng nắm bắt và tìm kiếm thông tin thể thao, đối tác, giải đấu tại địa phương từ một Hub thông tin duy nhất.
-**Current focus:** Phase 1: Foundation & Local Fit (Da Nang MVP)
+**Core value:** Giúp Ban tổ chức phong trào dễ dàng tạo giải đấu, và giúp Vận động viên tìm kiếm, đăng ký giải đấu tại địa phương một cách tập trung, nhanh chóng.
+**Current focus:** Phase 1: Authentication & Profiles (Duẫn)
 
 ## Current Position
 
-Phase: 1 of 3 (Foundation & Local Fit (Da Nang MVP))
-Plan: 0 of 3 in current phase
+Phase: 1 of 8 (Authentication & Profiles)
+Plan: 0 of 2 in current phase
 Status: Ready to plan
-Last activity: 2026-06-22 — Project planning initialized
+Last activity: 2026-06-23 — Shifted project scope entirely to Tournament Creation & Registration
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -45,11 +45,16 @@ Progress: [░░░░░░░░░░] 0%
 
 **By Phase:**
 
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| 1. Foundation & Local Fit | 3 | - | - |
-| 2. Optimization & Verification | 2 | - | - |
-| 3. Scale-up & Regional Expansion | 2 | - | - |
+| Phase | Developer | Plans | Total | Avg/Plan |
+|-------|-----------|-------|-------|----------|
+| 1. Authentication & Profiles | Duẫn | 2 | - | - |
+| 2. Tournament Hub - Discovery | Đông | 2 | - | - |
+| 3. Tournament Creation Workflow | Phúc | 2 | - | - |
+| 4. Player Registration Forms | Thịnh | 2 | - | - |
+| 5. Registration Management & Bookmarks | Duẫn | 2 | - | - |
+| 6. Advanced Filter & Smart Search | Đông | 2 | - | - |
+| 7. Community Trust & Reports | Phúc | 2 | - | - |
+| 8. Multi-Region Scaling & Admin | Thịnh | 2 | - | - |
 
 **Recent Trend:**
 
@@ -66,6 +71,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
 - [Phase 1]: Initialized Greenfield Aggregator architecture using React Native/Expo and Mock Data.
+- [Scoping]: Shifted project scope entirely to Tournament Creation & Registration, relegating matchmaking to v2.
 
 ### Pending Todos
 

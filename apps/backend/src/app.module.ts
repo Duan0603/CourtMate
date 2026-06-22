@@ -9,7 +9,7 @@ import { ArticlesModule } from './modules/articles/articles.module';
     // Load config globally
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
+      envFilePath: ['apps/backend/.env', '.env'],
     }),
     
     // Connect to MongoDB
