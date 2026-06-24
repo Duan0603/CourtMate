@@ -15,6 +15,8 @@ export enum ActivityType {
 
 export enum UserRole {
   USER = 'USER',
+  PLAYER = 'PLAYER',
+  ORGANIZER = 'ORGANIZER',
   REGIONAL_ADMIN = 'REGIONAL_ADMIN',
   SUPER_ADMIN = 'SUPER_ADMIN',
 }
@@ -22,6 +24,8 @@ export enum UserRole {
 export interface UserPreferences {
   sports: SportType[];
   location?: string; // e.g. "Da Nang", "Ha Noi", "Ho Chi Minh"
+  skillLevel?: string; // e.g. "Beginner", "Intermediate", "Advanced"
+  clubName?: string; // e.g. "Da Nang Badminton Club"
 }
 
 export interface User {
