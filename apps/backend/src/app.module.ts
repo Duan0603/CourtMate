@@ -3,6 +3,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ArticlesModule } from './modules/articles/articles.module';
+import { UsersModule } from './modules/users/users.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -32,6 +34,8 @@ import { ArticlesModule } from './modules/articles/articles.module';
 
     // Feature Modules
     ArticlesModule,
+    UsersModule,
+    AuthModule,
   ],
 })
 export class AppModule {}
