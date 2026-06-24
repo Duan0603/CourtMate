@@ -3,16 +3,16 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 current_phase: 1
-current_phase_name: Authentication & Profiles
+current_phase_name: foundation-local-fit-da-nang-mvp
 status: executing
 stopped_at: Phase 1 context gathered
-last_updated: "2026-06-24T03:50:47.860Z"
-last_activity: 2026-06-23
-last_activity_desc: Shifted project scope entirely to Tournament Creation & Registration
+last_updated: "2026-06-24T03:51:34.370Z"
+last_activity: 2026-06-24
+last_activity_desc: Phase 1 execution started
 progress:
   total_phases: 8
   completed_phases: 0
-  total_plans: 0
+  total_plans: 2
   completed_plans: 0
   percent: 0
 ---
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-22)
 
 **Core value:** Giúp Ban tổ chức phong trào dễ dàng tạo giải đấu, và giúp Vận động viên tìm kiếm, đăng ký giải đấu tại địa phương một cách tập trung, nhanh chóng.
-**Current focus:** Phase 1: Authentication & Profiles (Duẫn)
+**Current focus:** Phase 1 — foundation-local-fit-da-nang-mvp
 
 ## Current Position
 
-Phase: 1 of 8 (Authentication & Profiles)
-Plan: 0 of 2 in current phase
-Status: Ready to execute
-Last activity: 2026-06-23 — Shifted project scope entirely to Tournament Creation & Registration
+Phase: 1 (foundation-local-fit-da-nang-mvp) — EXECUTING
+Plan: 1 of 2
+Status: Executing Phase 1
+Last activity: 2026-06-24 — Phase 1 execution started
 
 Progress: [░░░░░░░░░░] 0%
 
