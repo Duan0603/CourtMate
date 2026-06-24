@@ -10,7 +10,7 @@ The roadmap is divided into exactly **8 phases** to match the team's 4-person st
 
 ## Phases Overview
 
-- [ ] **Phase 1: Authentication & Profiles (Duẫn - 1)** - Setup auth, profiles, and roles (Player vs Organizer).
+- [x] **Phase 1: Authentication & Profiles (Duẫn - 1)** - Setup auth, profiles, and roles (Player vs Organizer). (completed 2026-06-24)
 - [ ] **Phase 2: Tournament Hub - Discovery (Đông - 1)** - Browse list and detailed pages of local tournaments.
 - [ ] **Phase 3: Tournament Creation Workflow (Phúc - 1)** - Form and API for organizers to create sports tournaments.
 - [ ] **Phase 4: Player Registration Forms (Thịnh - 1)** - Player tournament registration forms (singles/doubles partner info, skill rating) and tracking.
@@ -36,11 +36,11 @@ The roadmap is divided into exactly **8 phases** to match the team's 4-person st
 **Plans**:
 **Wave 1**
 
-- [ ] 01-01: Build backend User schemas, Mongoose connection, and NestJS controllers.
+- [x] 01-01: Build backend User schemas, Mongoose connection, and NestJS controllers.
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 01-02: Create frontend sign up, login, and profile role onboarding screens.
+- [x] 01-02: Create frontend sign up, login, and profile role onboarding screens.
 
 ---
 
@@ -167,7 +167,7 @@ The roadmap is divided into exactly **8 phases** to match the team's 4-person st
 
 | Phase | Developer | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 1. Authentication & Profiles | Duẫn | 0/2 | Not started | - |
+| 1. Authentication & Profiles | Duẫn | 2/2 | Complete    | 2026-06-24 |
 | 2. Tournament Hub - Discovery | Đông | 0/2 | Not started | - |
 | 3. Tournament Creation Workflow | Phúc | 0/2 | Not started | - |
 | 4. Player Registration Forms | Thịnh | 0/2 | Not started | - |
