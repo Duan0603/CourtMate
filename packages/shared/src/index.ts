@@ -56,6 +56,13 @@ export interface FeedItem {
   createdAt: Date;
 }
 
+export interface TournamentCategory {
+  id: string;
+  name: string;
+  fee: number;
+  maxParticipants?: number;
+}
+
 export interface Tournament {
   id: string;
   title: string;
@@ -69,9 +76,26 @@ export interface Tournament {
     name: string;
     isVerified: boolean;
   };
-  rules: string;
-  registrationLink: string;
+  rulesText?: string;
+  rulesFileUrl?: string;
+  categories: TournamentCategory[];
   createdAt: Date;
+}
+
+export interface CreateTournamentDto {
+  title: string;
+  description: string;
+  sport: SportType;
+  time: string;
+  location: string;
+  city: string;
+  categories: {
+    name: string;
+    fee: number;
+    maxParticipants?: number;
+  }[];
+  rulesText?: string;
+  // rulesFile will be handled as multipart/form-data on the backend
 }
 
 export interface CreateReportDto {

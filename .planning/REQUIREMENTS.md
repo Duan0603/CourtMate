@@ -73,35 +73,35 @@ Deferred to future release. Tracked but not in current roadmap.
 
 Explicitly excluded. Documented to prevent scope creep.
 
-| Feature | Reason |
-|---------|--------|
-| Real-time Messaging | Direct messaging in-app. Deferring to keep focus on tournament hubs first. |
+| Feature                | Reason                                                                                                                   |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Real-time Messaging    | Direct messaging in-app. Deferring to keep focus on tournament hubs first.                                               |
 | In-app Payment Gateway | Processing registration fees directly via real-money transactions. Registration uses a mock payment status flow for MVP. |
 
 ---
 
 ## Traceability
 
-| Requirement | Phase | Status |
-|-------------|-------|--------|
-| AUTH-01 | Phase 1 | Complete |
-| AUTH-02 | Phase 1 | Complete |
-| TOUR-01 | Phase 2 | Pending |
-| TOUR-02 | Phase 2 | Pending |
-| TOUR-03 | Phase 3 | Pending |
-| REG-01 | Phase 4 | Pending |
-| REG-02 | Phase 4 | Pending |
-| REG-03 | Phase 5 | Pending |
-| BOOK-01 | Phase 5 | Pending |
-| BOOK-02 | Phase 5 | Pending |
-| FILT-01 | Phase 6 | Pending |
-| FILT-02 | Phase 6 | Pending |
-| VERI-01 | Phase 7 | Pending |
-| REPT-01 | Phase 7 | Pending |
-| REPT-02 | Phase 7 | Pending |
-| ROUT-01 | Phase 8 | Pending |
-| ADMN-01 | Phase 8 | Pending |
-| ADMN-02 | Phase 8 | Pending |
+| Requirement | Phase   | Status   |
+| ----------- | ------- | -------- |
+| AUTH-01     | Phase 1 | Complete |
+| AUTH-02     | Phase 1 | Complete |
+| TOUR-01     | Phase 2 | Pending  |
+| TOUR-02     | Phase 2 | Pending  |
+| TOUR-03     | Phase 3 | Pending  |
+| REG-01      | Phase 4 | Pending  |
+| REG-02      | Phase 4 | Pending  |
+| REG-03      | Phase 5 | Pending  |
+| BOOK-01     | Phase 5 | Pending  |
+| BOOK-02     | Phase 5 | Pending  |
+| FILT-01     | Phase 6 | Pending  |
+| FILT-02     | Phase 6 | Pending  |
+| VERI-01     | Phase 7 | Pending  |
+| REPT-01     | Phase 7 | Pending  |
+| REPT-02     | Phase 7 | Pending  |
+| ROUT-01     | Phase 8 | Pending  |
+| ADMN-01     | Phase 8 | Pending  |
+| ADMN-02     | Phase 8 | Pending  |
 
 **Coverage:**
 
@@ -110,5 +110,6 @@ Explicitly excluded. Documented to prevent scope creep.
 - Unmapped: 0 ✓
 
 ---
-*Requirements defined: 2026-06-22*
-*Last updated: 2026-06-23 after scoping pivot*
+
+_Requirements defined: 2026-06-22_
+_Last updated: 2026-06-23 after scoping pivot_
