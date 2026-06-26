@@ -31,7 +31,7 @@ const AppContent: React.FC = () => {
   // Fully authenticated and onboarded
   return (
     <YStack f={1} ai="center" jc="center" bg="$background" p="$6" gap="$4">
-      <YStack w="100%" maxW={340} ai="center" gap="$4">
+      <YStack w="100%" maxWidth={340} ai="center" gap="$4">
         <H2 col="$color" ta="center">Xin chào, {user.name}!</H2>
         <Paragraph col="$colorMuted" ta="center">
           Bạn đã đăng nhập và hoàn thành onboarding thành công.

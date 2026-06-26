@@ -19,5 +19,8 @@
   },
   "overrides": {
     "@types/react": "~18.2.45"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.3"
   }
 }
