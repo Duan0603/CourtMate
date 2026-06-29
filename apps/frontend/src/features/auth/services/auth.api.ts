@@ -73,5 +73,32 @@ export const authApi = {
     }
     return response.json();
   },
-};
 
+  addBookmark: async (token: string, tournamentId: string): Promise<User> => {
+    const response = await fetch(`${API_URL}/users/bookmarks/${tournamentId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(errText || `Failed to add bookmark. status: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  removeBookmark: async (token: string, tournamentId: string): Promise<User> => {
+    const response = await fetch(`${API_URL}/users/bookmarks/${tournamentId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(errText || `Failed to remove bookmark. status: ${response.status}`);
+    }
+    return response.json();
+  },
+};

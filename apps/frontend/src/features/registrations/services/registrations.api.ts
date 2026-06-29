@@ -34,4 +34,13 @@ export const registrationsApi = {
       throw new Error(e.message || 'Cập nhật trạng thái thất bại');
     }
   },
+
+  getRegistrationsByTournament: async (tournamentId: string): Promise<Registration[]> => {
+    const url = `${BASE_URL}/registrations/tournament/${tournamentId}`;
+    try {
+      return await apiClient.get<Registration[]>(url);
+    } catch (e: any) {
+      throw new Error(e.message || 'Không thể lấy danh sách đăng ký');
+    }
+  },
 };

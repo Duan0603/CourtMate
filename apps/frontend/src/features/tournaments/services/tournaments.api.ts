@@ -88,5 +88,41 @@ export const tournamentsApi = {
       console.error('Error fetching tournament details:', error);
       throw error;
     }
+  },
+
+  async getBookmarkedTournaments(token: string, ids: string[]): Promise<{ data: Tournament[] }> {
+    try {
+      const url = new URL(`${API_URL}/tournaments/bookmarked`);
+      if (ids.length > 0) {
+        url.searchParams.append('ids', ids.join(','));
+      }
+      const response = await fetch(url.toString(), {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch bookmarked tournaments');
+      return response.json();
+    } catch (error) {
+      console.error('Error fetching bookmarked tournaments:', error);
+      throw error;
+    }
+  },
+
+  async getMyOrganizedTournaments(token: string): Promise<{ data: Tournament[] }> {
+    try {
+      const response = await fetch(`${API_URL}/tournaments/my-organized`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch organized tournaments');
+      return response.json();
+    } catch (error) {
+      console.error('Error fetching organized tournaments:', error);
+      throw error;
+    }
   }
 };

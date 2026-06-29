@@ -39,6 +39,19 @@ export class TournamentsService {
     return tournament.save();
   }
 
+  async findByOrganizerId(organizerId: string): Promise<TournamentDocument[]> {
+    return this.tournamentModel
+      .find({ 'organizer.id': organizerId })
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+
+  async findByIds(ids: string[]): Promise<TournamentDocument[]> {
+    return this.tournamentModel
+      .find({ _id: { $in: ids }, isHidden: false })
+      .exec();
+  }
+
   async findAll(city?: string): Promise<TournamentDocument[]> {
     // 1. If a specific city is provided, try fetching tournaments for that city
     let filter: any = { isHidden: false };

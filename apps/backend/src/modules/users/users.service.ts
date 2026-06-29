@@ -73,4 +73,23 @@ export class UsersService {
     user.isVerified = true;
     return user.save();
   }
+
+  async addBookmark(email: string, tournamentId: string): Promise<User | null> {
+    const user = await this.findByEmail(email);
+    if (!user) return null;
+    
+    if (!user.bookmarkedTournaments.includes(tournamentId)) {
+      user.bookmarkedTournaments.push(tournamentId);
+      return user.save();
+    }
+    return user;
+  }
+
+  async removeBookmark(email: string, tournamentId: string): Promise<User | null> {
+    const user = await this.findByEmail(email);
+    if (!user) return null;
+    
+    user.bookmarkedTournaments = user.bookmarkedTournaments.filter(id => id !== tournamentId);
+    return user.save();
+  }
 }
