@@ -1,13 +1,33 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
-import { SportType } from '@courtmate/shared';
+import { Document, Schema as MongooseSchema } from 'mongoose';
+import { Tournament as ITournament, SportType, TournamentStatus, TournamentCategory } from '@courtmate/shared';
 
-@Schema()
-class TournamentCategorySchema {
+export type TournamentDocument = Tournament & Document;
+
+@Schema({ _id: false })
+export class OrganizerInfo {
+  @Prop({ required: true })
+  id!: string;
+
   @Prop({ required: true })
   name!: string;
 
-  @Prop({ required: true, type: Number })
+  @Prop({ required: false })
+  avatar?: string;
+
+  @Prop({ required: true, default: false })
+  isVerified!: boolean;
+}
+
+@Schema({ _id: true })
+export class CategoryInfo implements TournamentCategory {
+  @Prop({ required: true })
+  id!: string;
+
+  @Prop({ required: true })
+  name!: string;
+
+  @Prop({ required: true })
   fee!: number;
 
   @Prop({ type: Number, required: false })
@@ -15,31 +35,42 @@ class TournamentCategorySchema {
 }
 
 @Schema({ timestamps: true })
-export class Tournament extends Document {
+export class Tournament implements Omit<ITournament, 'id' | 'createdAt'> {
   @Prop({ required: true })
   title!: string;
 
   @Prop({ required: true })
   description!: string;
 
-  @Prop({ type: String, enum: SportType, required: true })
+  @Prop({ required: true, enum: SportType })
   sport!: SportType;
 
+  @Prop({ required: false })
+  time?: string;
+
+  @Prop({ required: false })
+  coverImage?: string;
+
   @Prop({ required: true })
-  time!: string;
+  startDate!: Date;
+
+  @Prop({ required: true })
+  endDate!: Date;
 
   @Prop({ required: true })
   location!: string;
 
+  @Prop({ required: false })
+  district?: string;
+
   @Prop({ required: true })
   city!: string;
 
-  @Prop({ type: Object, required: true })
-  organizer!: {
-    id: string;
-    name: string;
-    isVerified: boolean;
-  };
+  @Prop({ type: OrganizerInfo, required: true })
+  organizer!: OrganizerInfo;
+
+  @Prop({ required: true, enum: TournamentStatus, default: TournamentStatus.UPCOMING })
+  status!: TournamentStatus;
 
   @Prop({ required: false })
   rulesText?: string;
@@ -47,8 +78,17 @@ export class Tournament extends Document {
   @Prop({ required: false })
   rulesFileUrl?: string;
 
-  @Prop({ type: [TournamentCategorySchema], required: true })
-  categories!: TournamentCategorySchema[];
+  @Prop({ required: false })
+  rules?: string;
+
+  @Prop({ type: [CategoryInfo], required: true, default: [] })
+  categories!: CategoryInfo[];
+
+  @Prop({ type: [String], required: false })
+  schedule?: string[];
+
+  @Prop({ required: false })
+  registrationLink?: string;
 
   @Prop({ default: 0 })
   reportsCount!: number;
@@ -58,3 +98,7 @@ export class Tournament extends Document {
 }
 
 export const TournamentSchema = SchemaFactory.createForClass(Tournament);
+
+// Create indexes to optimize location and status queries
+TournamentSchema.index({ city: 1, startDate: 1 });
+TournamentSchema.index({ status: 1 });

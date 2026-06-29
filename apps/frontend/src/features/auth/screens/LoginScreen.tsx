@@ -39,7 +39,7 @@ export const LoginScreen: React.FC = () => {
 
   return (
     <YStack f={1} ai="center" jc="center" bg="$background" p="$6" gap="$4">
-      <YStack w="100%" maxW={320} gap="$5">
+      <YStack w="100%" maxWidth={320} gap="$5">
         <YStack ai="center" gap="$2" mb="$2">
           <H2 col="$color" fontWeight="800">CourtMate</H2>
           <Paragraph col="$colorMuted" ta="center">

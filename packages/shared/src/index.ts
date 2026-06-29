@@ -57,10 +57,18 @@ export interface FeedItem {
   createdAt: Date;
 }
 
+export enum TournamentStatus {
+  UPCOMING = 'UPCOMING',
+  OPEN = 'OPEN',
+  FULL = 'FULL',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+}
+
 export interface TournamentCategory {
   id: string;
-  name: string;
-  fee: number;
+  name: string; // e.g., "Men's Singles", "Mixed Doubles"
+  fee: number; // in VND
   maxParticipants?: number;
 }
 
@@ -69,16 +77,24 @@ export interface Tournament {
   title: string;
   description: string;
   sport: SportType;
-  time: string; // Date or friendly range
-  location: string; // Specific venue
-  city: string;
+  coverImage?: string; // URL to the image
+  startDate: Date;
+  endDate: Date;
+  location: string; // Specific venue/address
+  district?: string; // e.g., "Son Tra"
+  city: string; // e.g., "Da Nang"
   organizer: {
     id: string;
     name: string;
+    avatar?: string;
     isVerified: boolean;
   };
+  status: TournamentStatus;
   rulesText?: string;
   rulesFileUrl?: string;
+  rules?: string;
+  schedule?: string[]; // Basic array of strings for schedule items
+  registrationLink?: string;
   categories: TournamentCategory[];
   reportsCount: number;
   isHidden: boolean;

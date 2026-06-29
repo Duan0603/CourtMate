@@ -148,7 +148,7 @@ export const OnboardingScreen: React.FC = () => {
 
   return (
     <YStack f={1} bg="$background" p="$6" jc="center" ai="center">
-      <YStack w="100%" maxW={340} gap="$5">
+      <YStack w="100%" maxWidth={340} gap="$5">
         
         {/* Step Indicator */}
         <XStack jc="center" gap="$2" mb="$2">
