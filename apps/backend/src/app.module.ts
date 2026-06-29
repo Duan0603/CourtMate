@@ -7,6 +7,7 @@ import { RegistrationsModule } from './modules/registrations/registrations.modul
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { TournamentsModule } from './modules/tournaments/tournaments.module';
+import { ReportsModule } from './modules/reports/reports.module';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { TournamentsModule } from './modules/tournaments/tournaments.module';
       isGlobal: true,
       envFilePath: ['apps/backend/.env', '.env'],
     }),
-    
+
     // Connect to MongoDB
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
@@ -40,7 +41,7 @@ import { TournamentsModule } from './modules/tournaments/tournaments.module';
     UsersModule,
     AuthModule,
     TournamentsModule,
+    ReportsModule,
   ],
 })
 export class AppModule {}
-

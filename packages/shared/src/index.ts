@@ -52,6 +52,7 @@ export interface FeedItem {
     isVerified: boolean;
   };
   reportsCount: number;
+  isHidden: boolean;
   isExpired: boolean;
   createdAt: Date;
 }
@@ -65,8 +66,10 @@ export enum TournamentStatus {
 }
 
 export interface TournamentCategory {
+  id: string;
   name: string; // e.g., "Men's Singles", "Mixed Doubles"
   fee: number; // in VND
+  maxParticipants?: number;
 }
 
 export interface Tournament {
@@ -87,13 +90,33 @@ export interface Tournament {
     isVerified: boolean;
   };
   status: TournamentStatus;
+  rulesText?: string;
+  rulesFileUrl?: string;
+  rules?: string;
   categories: TournamentCategory[];
-  rules: string;
-  registrationFee: number;
-  slotsLimit: number;
+  registrationFee?: number;
+  slotsLimit?: number;
   schedule?: string[]; // Basic array of strings for schedule items
   registrationLink?: string;
+  reportsCount: number;
+  isHidden: boolean;
   createdAt: Date;
+}
+
+export interface CreateTournamentDto {
+  title: string;
+  description: string;
+  sport: SportType;
+  time: string;
+  location: string;
+  city: string;
+  categories: {
+    name: string;
+    fee: number;
+    maxParticipants?: number;
+  }[];
+  rulesText?: string;
+  // rulesFile will be handled as multipart/form-data on the backend
 }
 
 export interface CreateReportDto {
@@ -135,4 +158,3 @@ export interface CreateRegistrationDto {
   contactPhone: string;
   skillLevel: SkillLevel;
 }
-

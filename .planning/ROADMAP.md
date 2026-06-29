@@ -12,7 +12,7 @@ The roadmap is divided into exactly **8 phases** to match the team's 4-person st
 
 - [x] **Phase 1: Authentication & Profiles (Duẫn - 1)** - Setup auth, profiles, and roles (Player vs Organizer). (completed 2026-06-24)
 - [ ] **Phase 2: Tournament Hub - Discovery (Đông - 1)** - Browse list and detailed pages of local tournaments.
-- [ ] **Phase 3: Tournament Creation Workflow (Phúc - 1)** - Form and API for organizers to create sports tournaments.
+- [x] **Phase 3: Tournament Creation Workflow (Phúc - 1)** - Form and API for organizers to create sports tournaments.
 - [ ] **Phase 4: Player Registration Forms (Thịnh - 1)** - Player tournament registration forms (singles/doubles partner info, skill rating) and tracking.
 - [ ] **Phase 5: Registration Management & Bookmarks (Duẫn - 2)** - Organizer panel to approve/reject registrations, and player bookmarks.
 - [ ] **Phase 6: Advanced Filter & Smart Search (Đông - 2)** - Smart text search indexing and multi-criteria filter sheets.

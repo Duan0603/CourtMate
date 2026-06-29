@@ -6,9 +6,7 @@ import { Tournament, TournamentSchema } from './tournament.schema';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: Tournament.name, schema: TournamentSchema },
-    ]),
+    MongooseModule.forFeature([{ name: Tournament.name, schema: TournamentSchema }]),
   ],
   controllers: [TournamentsController],
   providers: [TournamentsService],

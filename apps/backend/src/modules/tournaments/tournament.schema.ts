@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
 import { Tournament as ITournament, SportType, TournamentStatus, TournamentCategory } from '@courtmate/shared';
 
-export type TournamentDocument = Tournament & Document;
+export type TournamentDocument = Tournament & Document & { createdAt: Date; updatedAt: Date };
 
 @Schema({ _id: false })
 export class OrganizerInfo {
@@ -19,17 +19,23 @@ export class OrganizerInfo {
   isVerified!: boolean;
 }
 
-@Schema({ _id: false })
+@Schema({ _id: true })
 export class CategoryInfo implements TournamentCategory {
+  @Prop({ required: true })
+  id!: string;
+
   @Prop({ required: true })
   name!: string;
 
   @Prop({ required: true })
   fee!: number;
+
+  @Prop({ type: Number, required: false })
+  maxParticipants?: number;
 }
 
 @Schema({ timestamps: true })
-export class Tournament implements Omit<ITournament, 'id'> {
+export class Tournament implements Omit<ITournament, 'id' | 'createdAt'> {
   @Prop({ required: true })
   title!: string;
 
@@ -38,6 +44,9 @@ export class Tournament implements Omit<ITournament, 'id'> {
 
   @Prop({ required: true, enum: SportType })
   sport!: SportType;
+
+  @Prop({ required: false })
+  time?: string;
 
   @Prop({ required: false })
   coverImage?: string;
@@ -63,20 +72,29 @@ export class Tournament implements Omit<ITournament, 'id'> {
   @Prop({ required: true, enum: TournamentStatus, default: TournamentStatus.UPCOMING })
   status!: TournamentStatus;
 
+  @Prop({ required: false })
+  rulesText?: string;
+
+  @Prop({ required: false })
+  rulesFileUrl?: string;
+
+  @Prop({ required: false })
+  rules?: string;
+
   @Prop({ type: [CategoryInfo], required: true, default: [] })
   categories!: CategoryInfo[];
-
-  @Prop({ required: true })
-  rules!: string;
 
   @Prop({ type: [String], required: false })
   schedule?: string[];
 
   @Prop({ required: false })
   registrationLink?: string;
-  
-  @Prop()
-  createdAt!: Date;
+
+  @Prop({ default: 0 })
+  reportsCount!: number;
+
+  @Prop({ default: false })
+  isHidden!: boolean;
 }
 
 export const TournamentSchema = SchemaFactory.createForClass(Tournament);

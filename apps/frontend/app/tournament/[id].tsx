@@ -9,15 +9,15 @@ export default function TournamentDetailRoute() {
 
   // Determine mock title based on ID if possible to match seed data
   const isPickleball = id?.toLowerCase().includes('pickleball') || id === '64957e841234567890abcdef2';
-  const title = isPickleball 
+  const title = isPickleball
     ? 'Danang Pickleball Open 2026'
     : 'Giải vô địch Cầu lông Phong trào Đà Nẵng 2026';
-  
+
   const sport = isPickleball ? 'PICKLEBALL' : 'BADMINTON';
   const fee = isPickleball ? 150000 : 200000;
   const slotsLimit = isPickleball ? 24 : 32;
-  const location = isPickleball 
-    ? 'Sân Pickleball Sơn Trà, Đà Nẵng' 
+  const location = isPickleball
+    ? 'Sân Pickleball Sơn Trà, Đà Nẵng'
     : 'Nhà thi đấu Thể dục Thể thao Đà Nẵng, Phan Đăng Lưu';
   const time = isPickleball ? '30/08/2026' : '15/07/2026 - 18/07/2026';
   const rules = isPickleball

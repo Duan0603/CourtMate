@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Tournament, TournamentDocument } from './tournament.schema';
-import { SportType, TournamentStatus } from '@courtmate/shared';
+import { SportType, TournamentStatus, CreateTournamentDto } from '@courtmate/shared';
 
 @Injectable()
 export class TournamentsService {
@@ -10,9 +10,38 @@ export class TournamentsService {
     @InjectModel(Tournament.name) private tournamentModel: Model<TournamentDocument>,
   ) {}
 
+  async create(createDto: CreateTournamentDto, rulesFileUrl?: string, organizerInfo?: any): Promise<TournamentDocument> {
+    const createdTournament = new this.tournamentModel({
+      ...createDto,
+      rulesFileUrl,
+      organizer: organizerInfo || {
+        id: 'mock-organizer-id',
+        name: 'Mock Organizer',
+        isVerified: true
+      }
+    });
+    return createdTournament.save();
+  }
+
+  async incrementReportCount(id: string): Promise<TournamentDocument | null> {
+    const tournament = await this.tournamentModel.findById(id);
+    if (!tournament) {
+      return null;
+    }
+
+    tournament.reportsCount += 1;
+    
+    // Auto-hide threshold
+    if (tournament.reportsCount >= 5) {
+      tournament.isHidden = true;
+    }
+
+    return tournament.save();
+  }
+
   async findAll(city?: string): Promise<TournamentDocument[]> {
     // 1. If a specific city is provided, try fetching tournaments for that city
-    let filter: any = {};
+    let filter: any = { isHidden: false };
     if (city) {
       filter.city = city;
     }
@@ -26,7 +55,7 @@ export class TournamentsService {
     // 2. Fallback to national view (all cities) if local city is empty
     if (tournaments.length === 0 && city) {
       tournaments = await this.tournamentModel
-        .find({})
+        .find({ isHidden: false })
         .sort({ startDate: 1 })
         .exec();
     }

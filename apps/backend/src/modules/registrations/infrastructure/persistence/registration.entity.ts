@@ -19,18 +19,18 @@ export class Registration extends Document {
   @Prop({ required: true })
   contactPhone!: string;
 
-  @Prop({ 
-    required: true, 
-    type: String, 
-    enum: Object.values(SkillLevel) 
+  @Prop({
+    required: true,
+    type: String,
+    enum: Object.values(SkillLevel)
   })
   skillLevel!: SkillLevel;
 
-  @Prop({ 
-    required: true, 
-    type: String, 
-    enum: Object.values(RegistrationStatus), 
-    default: RegistrationStatus.PENDING 
+  @Prop({
+    required: true,
+    type: String,
+    enum: Object.values(RegistrationStatus),
+    default: RegistrationStatus.PENDING
   })
   status!: RegistrationStatus;
 }
