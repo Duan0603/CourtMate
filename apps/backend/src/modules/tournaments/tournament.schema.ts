@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
 import { Tournament as ITournament, SportType, TournamentStatus, TournamentCategory } from '@courtmate/shared';
 
-export type TournamentDocument = Tournament & Document;
+export type TournamentDocument = Tournament & Document & { createdAt: Date; updatedAt: Date };
 
 @Schema({ _id: false })
 export class OrganizerInfo {
