@@ -80,7 +80,50 @@ export class TournamentsController {
       }
     };
   }
+  @Get('my-organized')
+  async findMyOrganized() {
+    // TODO: Retrieve from req.user
+    const mockOrganizerId = 'org-123';
+    const tournaments = await this.tournamentsService.findByOrganizerId(mockOrganizerId);
+    
+    return {
+      data: tournaments.map(t => ({
+        id: t._id,
+        title: t.title,
+        sport: t.sport,
+        coverImage: t.coverImage,
+        startDate: t.startDate,
+        location: t.location,
+        district: t.district,
+        city: t.city,
+        status: t.status,
+        categories: t.categories,
+      }))
+    };
+  }
 
+  @Get('bookmarked')
+  async findBookmarked(@Query('ids') ids?: string) {
+    if (!ids) return { data: [] };
+    const idArray = ids.split(',').map(id => id.trim()).filter(Boolean);
+    const tournaments = await this.tournamentsService.findByIds(idArray);
+    
+    return {
+      data: tournaments.map(t => ({
+        id: t._id,
+        title: t.title,
+        sport: t.sport,
+        coverImage: t.coverImage,
+        startDate: t.startDate,
+        location: t.location,
+        district: t.district,
+        city: t.city,
+        organizer: t.organizer,
+        status: t.status,
+        categories: t.categories,
+      }))
+    };
+  }
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const t = await this.tournamentsService.findById(id);

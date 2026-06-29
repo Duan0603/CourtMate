@@ -34,6 +34,7 @@ export interface User {
   name: string;
   role: UserRole;
   preferences: UserPreferences;
+  bookmarkedTournaments?: string[];
   isVerified: boolean;
   createdAt: Date;
 }

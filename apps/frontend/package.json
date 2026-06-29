@@ -13,6 +13,7 @@
     "@courtmate/shared": "*",
     "@react-native-async-storage/async-storage": "1.23.1",
     "@tamagui/config": "^1.90.0",
+    "@tamagui/lucide-icons": "^1.144.4",
     "expo": "~51.0.0",
     "expo-location": "~17.0.1",
     "expo-router": "~3.5.0",
