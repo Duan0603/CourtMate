@@ -20,6 +20,9 @@
   "overrides": {
     "@types/react": "~18.2.45"
   },
+  "dependencies": {
+    "react-native-web": "^0.21.0"
+  },
   "devDependencies": {
     "concurrently": "^10.0.3"
   }

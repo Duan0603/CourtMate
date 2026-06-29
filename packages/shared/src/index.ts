@@ -93,9 +93,11 @@ export interface Tournament {
   rulesText?: string;
   rulesFileUrl?: string;
   rules?: string;
+  categories: TournamentCategory[];
+  registrationFee?: number;
+  slotsLimit?: number;
   schedule?: string[]; // Basic array of strings for schedule items
   registrationLink?: string;
-  categories: TournamentCategory[];
   reportsCount: number;
   isHidden: boolean;
   createdAt: Date;
@@ -122,4 +124,37 @@ export interface CreateReportDto {
   targetType: 'FEED_ITEM' | 'TOURNAMENT';
   reason: string;
   notes?: string;
+}
+
+export enum SkillLevel {
+  BEGINNER = 'BEGINNER',
+  INTERMEDIATE = 'INTERMEDIATE',
+  ADVANCED = 'ADVANCED',
+}
+
+export enum RegistrationStatus {
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  PAID = 'PAID',
+  REJECTED = 'REJECTED',
+}
+
+export interface Registration {
+  id: string;
+  tournamentId: string;
+  playerId: string;
+  playerName: string;
+  partnerName?: string;
+  contactPhone: string;
+  skillLevel: SkillLevel;
+  status: RegistrationStatus;
+  createdAt: Date;
+}
+
+export interface CreateRegistrationDto {
+  tournamentId: string;
+  playerName: string;
+  partnerName?: string;
+  contactPhone: string;
+  skillLevel: SkillLevel;
 }
