@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ArticlesModule } from './modules/articles/articles.module';
+import { RegistrationsModule } from './modules/registrations/registrations.module';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { TournamentsModule } from './modules/tournaments/tournaments.module';
@@ -35,9 +36,11 @@ import { TournamentsModule } from './modules/tournaments/tournaments.module';
 
     // Feature Modules
     ArticlesModule,
+    RegistrationsModule,
     UsersModule,
     AuthModule,
     TournamentsModule,
   ],
 })
 export class AppModule {}
+
