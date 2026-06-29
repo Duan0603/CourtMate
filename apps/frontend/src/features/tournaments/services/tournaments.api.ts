@@ -1,4 +1,4 @@
-import { CreateTournamentDto, Tournament, TournamentStatus, TournamentCategory, SportType } from '@courtmate/shared';
+import { CreateTournamentDto, Tournament, TournamentStatus, TournamentCategory, SportType, TournamentFilterDto } from '@courtmate/shared';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Lấy BACKEND_URL từ biến môi trường hoặc config (MVP dùng localhost/LAN IP)
@@ -47,11 +47,16 @@ export const createTournament = async (
 };
 
 export const tournamentsApi = {
-  async getTournaments(city?: string): Promise<{ data: Tournament[], meta: any }> {
+  async getTournaments(filters?: TournamentFilterDto): Promise<{ data: Tournament[], meta: any }> {
     try {
       const url = new URL(`${API_URL}/tournaments`);
-      if (city) {
-        url.searchParams.append('city', city);
+      if (filters) {
+        if (filters.city) url.searchParams.append('city', filters.city);
+        if (filters.sport) url.searchParams.append('sport', filters.sport);
+        if (filters.status) url.searchParams.append('status', filters.status);
+        if (filters.keyword) url.searchParams.append('keyword', filters.keyword);
+        if (filters.minFee !== undefined) url.searchParams.append('minFee', filters.minFee.toString());
+        if (filters.maxFee !== undefined) url.searchParams.append('maxFee', filters.maxFee.toString());
       }
       
       const response = await fetch(url.toString(), {

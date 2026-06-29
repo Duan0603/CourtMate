@@ -55,10 +55,10 @@ export class TournamentsController {
   }
 
   @Get()
-  async findAll(@Query('city') city?: string) {
-    const tournaments = await this.tournamentsService.findAll(city);
+  async findAll(@Query() query: any) {
+    const tournaments = await this.tournamentsService.findAll(query);
     // Determine if we are returning local or national fallback
-    const isFallback = city && tournaments.length > 0 && tournaments[0].city !== city;
+    const isFallback = query.city && tournaments.length > 0 && tournaments[0].city !== query.city;
     
     return {
       data: tournaments.map(t => ({
