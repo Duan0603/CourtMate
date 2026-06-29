@@ -1,0 +1,11 @@
+{
+  "backed_up_at": "2026-06-24T03:49:04.922Z",
+  "from_version": "1.5.0",
+  "from_manifest_timestamp": "2026-06-18T04:12:51.060Z",
+  "files": [
+    "gsd-core/bin/lib/phase-id.cjs"
+  ],
+  "pristine_hashes": {
+    "gsd-core/bin/lib/phase-id.cjs": "9c389fc19a1fac976ccc329c788b7acdec87aec447a41159700e99a205d11134"
+  }
+}

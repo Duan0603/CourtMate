@@ -9,8 +9,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Authentication, Profiles & Roles
 
-- [ ] **AUTH-01**: User can log in/out of the application.
-- [ ] **AUTH-02**: Onboarding allows users to set their role (**Player** or **Organizer**) and primary city.
+- [x] **AUTH-01**: User can log in/out of the application.
+- [x] **AUTH-02**: Onboarding allows users to set their role (**Player** or **Organizer**) and primary city.
 
 ### Tournament Discovery
 
@@ -59,10 +59,12 @@ Requirements for initial release. Each maps to roadmap phases.
 Deferred to future release. Tracked but not in current roadmap.
 
 ### On-Demand Matchmaking
+
 - **MATCH-01**: Local aggregated feed of public postings looking for players/opponents.
 - **MATCH-02**: Instant hosting and joining system for custom matches ("Grab for Sports").
 
 ### AI Integrations
+
 - **AI-01**: AI-based automatic content categorization and rules extraction.
 
 ---
@@ -82,8 +84,8 @@ Explicitly excluded. Documented to prevent scope creep.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | Phase 1 | Pending |
-| AUTH-02 | Phase 1 | Pending |
+| AUTH-01 | Phase 1 | Complete |
+| AUTH-02 | Phase 1 | Complete |
 | TOUR-01 | Phase 2 | Pending |
 | TOUR-02 | Phase 2 | Pending |
 | TOUR-03 | Phase 3 | Pending |
@@ -102,6 +104,7 @@ Explicitly excluded. Documented to prevent scope creep.
 | ADMN-02 | Phase 8 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 18 total
 - Mapped to phases: 18
 - Unmapped: 0 ✓

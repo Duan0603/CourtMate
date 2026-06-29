@@ -17,7 +17,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, isLoading }) => 
   };
 
   return (
-    <YStack gap="$3" w="100%" maxW={300}>
+    <YStack gap="$3" w="100%" maxWidth={300}>
       <YStack>
         <Label col="$color">Email</Label>
         <Input 

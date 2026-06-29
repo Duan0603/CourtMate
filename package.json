@@ -22,5 +22,7 @@
   },
   "dependencies": {
     "react-native-web": "~0.19.10"
+  "devDependencies": {
+    "concurrently": "^10.0.3"
   }
 }
