@@ -49,6 +49,12 @@ export class Tournament extends Document {
 
   @Prop({ type: [TournamentCategorySchema], required: true })
   categories!: TournamentCategorySchema[];
+
+  @Prop({ default: 0 })
+  reportsCount!: number;
+
+  @Prop({ default: false })
+  isHidden!: boolean;
 }
 
 export const TournamentSchema = SchemaFactory.createForClass(Tournament);

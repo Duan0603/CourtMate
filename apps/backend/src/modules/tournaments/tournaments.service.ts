@@ -24,6 +24,22 @@ export class TournamentsService {
   }
 
   async findAll(): Promise<Tournament[]> {
-    return this.tournamentModel.find().exec();
+    return this.tournamentModel.find({ isHidden: false }).exec();
+  }
+
+  async incrementReportCount(id: string): Promise<Tournament | null> {
+    const tournament = await this.tournamentModel.findById(id);
+    if (!tournament) {
+      return null;
+    }
+
+    tournament.reportsCount += 1;
+    
+    // Auto-hide threshold
+    if (tournament.reportsCount >= 5) {
+      tournament.isHidden = true;
+    }
+
+    return tournament.save();
   }
 }

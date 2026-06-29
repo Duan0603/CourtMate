@@ -52,6 +52,7 @@ export interface FeedItem {
     isVerified: boolean;
   };
   reportsCount: number;
+  isHidden: boolean;
   isExpired: boolean;
   createdAt: Date;
 }
@@ -79,6 +80,8 @@ export interface Tournament {
   rulesText?: string;
   rulesFileUrl?: string;
   categories: TournamentCategory[];
+  reportsCount: number;
+  isHidden: boolean;
   createdAt: Date;
 }
 

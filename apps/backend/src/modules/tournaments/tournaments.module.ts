@@ -10,5 +10,6 @@ import { Tournament, TournamentSchema } from './tournament.schema';
   ],
   controllers: [TournamentsController],
   providers: [TournamentsService],
+  exports: [TournamentsService],
 })
 export class TournamentsModule {}
