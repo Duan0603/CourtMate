@@ -3,12 +3,20 @@
     "target": "esnext",
     "module": "commonjs",
     "jsx": "react-native",
-    "lib": ["dom", "esnext"],
+    "lib": [
+      "dom",
+      "esnext"
+    ],
     "strict": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true
   },
-  "include": ["src/**/*", "app/**/*", "components/**/*"]
+  "include": [
+    "src/**/*",
+    "app/**/*",
+    "components/**/*"
+  ],
+  "extends": "expo/tsconfig.base"
 }

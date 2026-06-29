@@ -67,6 +67,8 @@ export interface Tournament {
   };
   rules: string;
   registrationLink: string;
+  registrationFee: number;
+  slotsLimit: number;
   createdAt: Date;
 }
 
@@ -76,3 +78,37 @@ export interface CreateReportDto {
   reason: string;
   notes?: string;
 }
+
+export enum SkillLevel {
+  BEGINNER = 'BEGINNER',
+  INTERMEDIATE = 'INTERMEDIATE',
+  ADVANCED = 'ADVANCED',
+}
+
+export enum RegistrationStatus {
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  PAID = 'PAID',
+  REJECTED = 'REJECTED',
+}
+
+export interface Registration {
+  id: string;
+  tournamentId: string;
+  playerId: string;
+  playerName: string;
+  partnerName?: string;
+  contactPhone: string;
+  skillLevel: SkillLevel;
+  status: RegistrationStatus;
+  createdAt: Date;
+}
+
+export interface CreateRegistrationDto {
+  tournamentId: string;
+  playerName: string;
+  partnerName?: string;
+  contactPhone: string;
+  skillLevel: SkillLevel;
+}
+

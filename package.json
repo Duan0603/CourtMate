@@ -19,5 +19,8 @@
   },
   "overrides": {
     "@types/react": "~18.2.45"
+  },
+  "dependencies": {
+    "react-native-web": "~0.19.10"
   }
 }
