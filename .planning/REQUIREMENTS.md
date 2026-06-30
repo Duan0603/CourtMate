@@ -32,8 +32,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Smart Search & Filter
 
-- [ ] **FILT-01**: User can search tournaments by title or organizer.
-- [ ] **FILT-02**: User can filter tournament listings concurrently by Sport Type, Region, Time, and Registration Fee.
+- [x] **FILT-01**: User can search tournaments by title or organizer.
+- [x] **FILT-02**: User can filter tournament listings concurrently by Sport Type, Region, Time, and Registration Fee.
 
 ### Bookmarks
 
@@ -94,8 +94,8 @@ Explicitly excluded. Documented to prevent scope creep.
 | REG-03      | Phase 5 | Pending  |
 | BOOK-01     | Phase 5 | Pending  |
 | BOOK-02     | Phase 5 | Pending  |
-| FILT-01     | Phase 6 | Pending  |
-| FILT-02     | Phase 6 | Pending  |
+| FILT-01     | Phase 6 | Complete |
+| FILT-02     | Phase 6 | Complete |
 | VERI-01     | Phase 7 | Pending  |
 | REPT-01     | Phase 7 | Pending  |
 | REPT-02     | Phase 7 | Pending  |

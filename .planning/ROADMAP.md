@@ -15,7 +15,7 @@ The roadmap is divided into exactly **8 phases** to match the team's 4-person st
 - [x] **Phase 3: Tournament Creation Workflow (Phúc - 1)** - Form and API for organizers to create sports tournaments.
 - [ ] **Phase 4: Player Registration Forms (Thịnh - 1)** - Player tournament registration forms (singles/doubles partner info, skill rating) and tracking.
 - [ ] **Phase 5: Registration Management & Bookmarks (Duẫn - 2)** - Organizer panel to approve/reject registrations, and player bookmarks.
-- [ ] **Phase 6: Advanced Filter & Smart Search (Đông - 2)** - Smart text search indexing and multi-criteria filter sheets.
+- [x] **Phase 6: Advanced Filter & Smart Search (Đông - 2)** - Smart text search indexing and multi-criteria filter sheets. (completed 2026-06-29)
 - [ ] **Phase 7: Community Trust & Reports (Phúc - 2)** - Verification badges for official clubs/organizers and tournament report system.
 - [ ] **Phase 8: Multi-Region Scaling & Administration (Thịnh - 2)** - Geolocation routing, performance scaling, and regional admin dashboards.
 
@@ -124,7 +124,7 @@ The roadmap is divided into exactly **8 phases** to match the team's 4-person st
 
 **Plans**:
 
-- [ ] 06-01: Build text search indexes in MongoDB and handle advanced query filtering.
+- [x] 06-01: Build text search indexes in MongoDB and handle advanced query filtering.
 - [ ] 06-02: Implement search bar UI and interactive multi-select filtering sheet.
 
 ---
@@ -172,6 +172,6 @@ The roadmap is divided into exactly **8 phases** to match the team's 4-person st
 | 3. Tournament Creation Workflow | Phúc | 0/2 | Not started | - |
 | 4. Player Registration Forms | Thịnh | 0/2 | Not started | - |
 | 5. Registration Management & Bookmarks | Duẫn | 0/2 | Not started | - |
-| 6. Advanced Filter & Smart Search | Đông | 0/2 | Not started | - |
+| 6. Advanced Filter & Smart Search | Đông | 1/2 | Complete    | 2026-06-29 |
 | 7. Community Trust & Reports | Phúc | 0/2 | Not started | - |
 | 8. Multi-Region Scaling & Admin | Thịnh | 0/2 | Not started | - |

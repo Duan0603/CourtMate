@@ -159,3 +159,12 @@ export interface CreateRegistrationDto {
   contactPhone: string;
   skillLevel: SkillLevel;
 }
+
+export interface TournamentFilterDto {
+  keyword?: string;
+  sport?: SportType;
+  city?: string;
+  minFee?: number;
+  maxFee?: number;
+  status?: TournamentStatus;
+}

@@ -52,21 +52,36 @@ export class TournamentsService {
       .exec();
   }
 
-  async findAll(city?: string): Promise<TournamentDocument[]> {
-    // 1. If a specific city is provided, try fetching tournaments for that city
-    let filter: any = { isHidden: false };
-    if (city) {
-      filter.city = city;
+  async findAll(filters?: any): Promise<TournamentDocument[]> {
+    let filterObj: any = { isHidden: false };
+    
+    if (filters) {
+      if (filters.city) filterObj.city = filters.city;
+      if (filters.sport) filterObj.sport = filters.sport;
+      if (filters.status) filterObj.status = filters.status;
+      
+      if (filters.keyword) {
+        filterObj.$or = [
+          { title: { $regex: filters.keyword, $options: 'i' } },
+          { 'organizer.name': { $regex: filters.keyword, $options: 'i' } }
+        ];
+      }
+
+      if (filters.minFee !== undefined || filters.maxFee !== undefined) {
+        const feeQuery: any = {};
+        if (filters.minFee !== undefined) feeQuery.$gte = Number(filters.minFee);
+        if (filters.maxFee !== undefined) feeQuery.$lte = Number(filters.maxFee);
+        filterObj.categories = { $elemMatch: { fee: feeQuery } };
+      }
     }
 
     let tournaments = await this.tournamentModel
-      .find(filter)
-      // Custom sort: open for registration first, then chronological
+      .find(filterObj)
       .sort({ startDate: 1 })
       .exec();
 
-    // 2. Fallback to national view (all cities) if local city is empty
-    if (tournaments.length === 0 && city) {
+    // 2. Fallback to national view (all cities) if local city is empty and no other strict filters applied
+    if (tournaments.length === 0 && filters?.city && !filters.keyword && !filters.sport) {
       tournaments = await this.tournamentModel
         .find({ isHidden: false })
         .sort({ startDate: 1 })
