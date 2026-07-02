@@ -1,13 +1,15 @@
 import React from 'react';
-import { Button as TamaguiButton, ButtonProps } from 'tamagui';
+import { Button as TamaguiButton } from 'tamagui';
 
-export const Button: React.FC<ButtonProps> = (props) => {
+type AppButtonProps = React.PropsWithChildren<Record<string, unknown>>;
+
+export const Button: React.FC<AppButtonProps> = (props) => {
   return (
     <TamaguiButton 
       theme="active" 
       size="$4" 
       br="$4" 
-      {...props} 
+      {...(props as any)}
     />
   );
 };

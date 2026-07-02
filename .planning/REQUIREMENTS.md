@@ -9,8 +9,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Authentication, Profiles & Roles
 
-- [ ] **AUTH-01**: User can log in/out of the application.
-- [ ] **AUTH-02**: Onboarding allows users to set their role (**Player** or **Organizer**) and primary city.
+- [x] **AUTH-01**: User can log in/out of the application.
+- [x] **AUTH-02**: Onboarding allows users to set their role (**Player** or **Organizer**) and primary city.
 
 ### Tournament Discovery
 
@@ -32,8 +32,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Smart Search & Filter
 
-- [ ] **FILT-01**: User can search tournaments by title or organizer.
-- [ ] **FILT-02**: User can filter tournament listings concurrently by Sport Type, Region, Time, and Registration Fee.
+- [x] **FILT-01**: User can search tournaments by title or organizer.
+- [x] **FILT-02**: User can filter tournament listings concurrently by Sport Type, Region, Time, and Registration Fee.
 
 ### Bookmarks
 
@@ -59,10 +59,12 @@ Requirements for initial release. Each maps to roadmap phases.
 Deferred to future release. Tracked but not in current roadmap.
 
 ### On-Demand Matchmaking
+
 - **MATCH-01**: Local aggregated feed of public postings looking for players/opponents.
 - **MATCH-02**: Instant hosting and joining system for custom matches ("Grab for Sports").
 
 ### AI Integrations
+
 - **AI-01**: AI-based automatic content categorization and rules extraction.
 
 ---
@@ -71,41 +73,43 @@ Deferred to future release. Tracked but not in current roadmap.
 
 Explicitly excluded. Documented to prevent scope creep.
 
-| Feature | Reason |
-|---------|--------|
-| Real-time Messaging | Direct messaging in-app. Deferring to keep focus on tournament hubs first. |
+| Feature                | Reason                                                                                                                   |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Real-time Messaging    | Direct messaging in-app. Deferring to keep focus on tournament hubs first.                                               |
 | In-app Payment Gateway | Processing registration fees directly via real-money transactions. Registration uses a mock payment status flow for MVP. |
 
 ---
 
 ## Traceability
 
-| Requirement | Phase | Status |
-|-------------|-------|--------|
-| AUTH-01 | Phase 1 | Pending |
-| AUTH-02 | Phase 1 | Pending |
-| TOUR-01 | Phase 2 | Pending |
-| TOUR-02 | Phase 2 | Pending |
-| TOUR-03 | Phase 3 | Pending |
-| REG-01 | Phase 4 | Pending |
-| REG-02 | Phase 4 | Pending |
-| REG-03 | Phase 5 | Pending |
-| BOOK-01 | Phase 5 | Pending |
-| BOOK-02 | Phase 5 | Pending |
-| FILT-01 | Phase 6 | Pending |
-| FILT-02 | Phase 6 | Pending |
-| VERI-01 | Phase 7 | Pending |
-| REPT-01 | Phase 7 | Pending |
-| REPT-02 | Phase 7 | Pending |
-| ROUT-01 | Phase 8 | Pending |
-| ADMN-01 | Phase 8 | Pending |
-| ADMN-02 | Phase 8 | Pending |
+| Requirement | Phase   | Status   |
+| ----------- | ------- | -------- |
+| AUTH-01     | Phase 1 | Complete |
+| AUTH-02     | Phase 1 | Complete |
+| TOUR-01     | Phase 2 | Pending  |
+| TOUR-02     | Phase 2 | Pending  |
+| TOUR-03     | Phase 3 | Pending  |
+| REG-01      | Phase 4 | Pending  |
+| REG-02      | Phase 4 | Pending  |
+| REG-03      | Phase 5 | Pending  |
+| BOOK-01     | Phase 5 | Pending  |
+| BOOK-02     | Phase 5 | Pending  |
+| FILT-01     | Phase 6 | Complete |
+| FILT-02     | Phase 6 | Complete |
+| VERI-01     | Phase 7 | Pending  |
+| REPT-01     | Phase 7 | Pending  |
+| REPT-02     | Phase 7 | Pending  |
+| ROUT-01     | Phase 8 | Pending  |
+| ADMN-01     | Phase 8 | Pending  |
+| ADMN-02     | Phase 8 | Pending  |
 
 **Coverage:**
+
 - v1 requirements: 18 total
 - Mapped to phases: 18
 - Unmapped: 0 ✓
 
 ---
-*Requirements defined: 2026-06-22*
-*Last updated: 2026-06-23 after scoping pivot*
+
+_Requirements defined: 2026-06-22_
+_Last updated: 2026-06-23 after scoping pivot_

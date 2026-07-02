@@ -3,11 +3,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ArticlesModule } from './modules/articles/articles.module';
-import { UsersModule } from './modules/users/users.module';
-import { TournamentsModule } from './modules/tournaments/tournaments.module';
 import { AdminModule } from './modules/admin/admin.module';
-import { AuthModule } from './core/auth/auth.module';
 import { CityRoutingMiddleware } from './core/middleware/city-routing.middleware';
+import { RegistrationsModule } from './modules/registrations/registrations.module';
+import { UsersModule } from './modules/users/users.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { TournamentsModule } from './modules/tournaments/tournaments.module';
+import { ReportsModule } from './modules/reports/reports.module';
 
 @Module({
   imports: [
@@ -16,7 +18,7 @@ import { CityRoutingMiddleware } from './core/middleware/city-routing.middleware
       isGlobal: true,
       envFilePath: ['apps/backend/.env', '.env'],
     }),
-    
+
     // Connect to MongoDB
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
@@ -39,10 +41,12 @@ import { CityRoutingMiddleware } from './core/middleware/city-routing.middleware
     ArticlesModule,
 
     // Phase 8: Multi-Region & Admin
-    AuthModule,
-    UsersModule,
-    TournamentsModule,
     AdminModule,
+    RegistrationsModule,
+    UsersModule,
+    AuthModule,
+    TournamentsModule,
+    ReportsModule,
   ],
 })
 export class AppModule implements NestModule {

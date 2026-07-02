@@ -1,8 +1,8 @@
-import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
 import { Tournament, TournamentSchema } from './infrastructure/persistence/tournament.entity';
 import { TournamentsService } from './domains/services/tournaments.service';
 import { TournamentsController } from './controllers/http/tournaments.controller';
+import { Module, OnModuleInit } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
 
 @Module({
   imports: [
@@ -12,4 +12,10 @@ import { TournamentsController } from './controllers/http/tournaments.controller
   providers: [TournamentsService],
   exports: [TournamentsService, MongooseModule],
 })
-export class TournamentsModule {}
+export class TournamentsModule implements OnModuleInit {
+  constructor(private readonly tournamentsService: TournamentsService) {}
+
+  async onModuleInit() {
+    await this.tournamentsService.seedMockData();
+  }
+}
