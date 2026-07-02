@@ -127,44 +127,52 @@ export interface CreateReportDto {
   notes?: string;
 }
 
-export enum SkillLevel {
-  BEGINNER = 'BEGINNER',
-  INTERMEDIATE = 'INTERMEDIATE',
-  ADVANCED = 'ADVANCED',
+// --- Phase 8: Multi-Region & Admin ---
+
+export enum ProfileType {
+  PLAYER = 'PLAYER',
+  ORGANIZER = 'ORGANIZER',
 }
 
-export enum RegistrationStatus {
-  PENDING = 'PENDING',
-  APPROVED = 'APPROVED',
-  PAID = 'PAID',
-  REJECTED = 'REJECTED',
+export enum ModerationAction {
+  HIDE = 'HIDE',
+  UNHIDE = 'UNHIDE',
+  FEATURE = 'FEATURE',
+  UNFEATURE = 'UNFEATURE',
+  VERIFY_ORGANIZER = 'VERIFY_ORGANIZER',
+  REVOKE_VERIFICATION = 'REVOKE_VERIFICATION',
 }
 
-export interface Registration {
-  id: string;
-  tournamentId: string;
-  playerId: string;
-  playerName: string;
-  partnerName?: string;
-  contactPhone: string;
-  skillLevel: SkillLevel;
-  status: RegistrationStatus;
-  createdAt: Date;
+export const SUPPORTED_CITIES = ['Da Nang', 'Ha Noi', 'Ho Chi Minh'] as const;
+export type SupportedCity = (typeof SUPPORTED_CITIES)[number];
+
+export interface RegionConfig {
+  city: SupportedCity;
+  displayName: string;
+  isActive: boolean;
 }
 
-export interface CreateRegistrationDto {
-  tournamentId: string;
-  playerName: string;
-  partnerName?: string;
-  contactPhone: string;
-  skillLevel: SkillLevel;
+export const REGION_CONFIGS: RegionConfig[] = [
+  { city: 'Da Nang', displayName: 'Đà Nẵng', isActive: true },
+  { city: 'Ha Noi', displayName: 'Hà Nội', isActive: true },
+  { city: 'Ho Chi Minh', displayName: 'TP. Hồ Chí Minh', isActive: true },
+];
+
+export interface AdminStats {
+  city: string;
+  totalTournaments: number;
+  activeTournaments: number;
+  totalUsers: number;
+  totalRegistrations: number;
+  pendingReports: number;
+  tournamentsBySport: Record<string, number>;
 }
 
-export interface TournamentFilterDto {
-  keyword?: string;
-  sport?: SportType;
-  city?: string;
-  minFee?: number;
-  maxFee?: number;
-  status?: TournamentStatus;
+export interface ModerationRecord {
+  targetId: string;
+  targetType: 'TOURNAMENT' | 'USER';
+  action: ModerationAction;
+  adminId: string;
+  reason: string;
+  timestamp: Date;
 }
