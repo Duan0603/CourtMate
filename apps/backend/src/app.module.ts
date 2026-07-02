@@ -1,8 +1,13 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ArticlesModule } from './modules/articles/articles.module';
+import { UsersModule } from './modules/users/users.module';
+import { TournamentsModule } from './modules/tournaments/tournaments.module';
+import { AdminModule } from './modules/admin/admin.module';
+import { AuthModule } from './core/auth/auth.module';
+import { CityRoutingMiddleware } from './core/middleware/city-routing.middleware';
 
 @Module({
   imports: [
@@ -32,6 +37,16 @@ import { ArticlesModule } from './modules/articles/articles.module';
 
     // Feature Modules
     ArticlesModule,
+
+    // Phase 8: Multi-Region & Admin
+    AuthModule,
+    UsersModule,
+    TournamentsModule,
+    AdminModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(CityRoutingMiddleware).forRoutes('*');
+  }
+}

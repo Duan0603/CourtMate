@@ -76,3 +76,53 @@ export interface CreateReportDto {
   reason: string;
   notes?: string;
 }
+
+// --- Phase 8: Multi-Region & Admin ---
+
+export enum ProfileType {
+  PLAYER = 'PLAYER',
+  ORGANIZER = 'ORGANIZER',
+}
+
+export enum ModerationAction {
+  HIDE = 'HIDE',
+  UNHIDE = 'UNHIDE',
+  FEATURE = 'FEATURE',
+  UNFEATURE = 'UNFEATURE',
+  VERIFY_ORGANIZER = 'VERIFY_ORGANIZER',
+  REVOKE_VERIFICATION = 'REVOKE_VERIFICATION',
+}
+
+export const SUPPORTED_CITIES = ['Da Nang', 'Ha Noi', 'Ho Chi Minh'] as const;
+export type SupportedCity = (typeof SUPPORTED_CITIES)[number];
+
+export interface RegionConfig {
+  city: SupportedCity;
+  displayName: string;
+  isActive: boolean;
+}
+
+export const REGION_CONFIGS: RegionConfig[] = [
+  { city: 'Da Nang', displayName: 'Đà Nẵng', isActive: true },
+  { city: 'Ha Noi', displayName: 'Hà Nội', isActive: true },
+  { city: 'Ho Chi Minh', displayName: 'TP. Hồ Chí Minh', isActive: true },
+];
+
+export interface AdminStats {
+  city: string;
+  totalTournaments: number;
+  activeTournaments: number;
+  totalUsers: number;
+  totalRegistrations: number;
+  pendingReports: number;
+  tournamentsBySport: Record<string, number>;
+}
+
+export interface ModerationRecord {
+  targetId: string;
+  targetType: 'TOURNAMENT' | 'USER';
+  action: ModerationAction;
+  adminId: string;
+  reason: string;
+  timestamp: Date;
+}
