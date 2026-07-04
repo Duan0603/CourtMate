@@ -1,5 +1,5 @@
 import { Controller, Get, Put, Body, UseGuards, Req, NotFoundException, Param, Delete } from '@nestjs/common';
-import { UsersService } from './users.service';
+import { UsersService } from './domains/services/users.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UserRole } from '@courtmate/shared';
 

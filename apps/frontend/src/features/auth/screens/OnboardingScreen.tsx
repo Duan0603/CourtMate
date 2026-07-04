@@ -1,26 +1,26 @@
 import React, { useState } from 'react';
-import { YStack, XStack, H2, H3, H4, Paragraph, Label, Spinner } from 'tamagui';
+import { YStack, XStack, H2, H3, H4, Paragraph, Label, Spinner, View, Text } from 'tamagui';
 import * as Location from 'expo-location';
 import { Button, Input } from '../../../components';
 import { useLogin } from '../hooks/useLogin';
 import { UserRole, SportType } from '@courtmate/shared';
+import { MapPin, Trophy, User as UserIcon, CheckCircle2, ChevronRight, ChevronLeft } from 'lucide-react-native';
 
 export const OnboardingScreen: React.FC = () => {
-  const { updateProfile, isLoading } = useLogin();
+  const { updateProfile } = useLogin();
   
-  // Wizard steps: 1 = Role, 2 = Details & Location, 3 = Preferences
   const [step, setStep] = useState<number>(1);
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form State
-  const [role, setRole] = useState<UserRole.PLAYER | UserRole.ORGANIZER>(UserRole.PLAYER);
+  const [role, setRole] = useState<UserRole.PLAYER | UserRole.ORGANIZER | null>(null);
   const [name, setName] = useState('');
   const [city, setCity] = useState<'Da Nang' | 'Ha Noi' | 'Ho Chi Minh' | ''>('');
   
   // GPS State
   const [isGpsLoading, setIsGpsLoading] = useState(false);
   const [gpsError, setGpsError] = useState<string | null>(null);
-  const [gpsSuccess, setGpsSuccess] = useState<boolean>(false);
 
   // Player Prefs
   const [selectedSports, setSelectedSports] = useState<SportType[]>([]);
@@ -29,49 +29,26 @@ export const OnboardingScreen: React.FC = () => {
   // Organizer Prefs
   const [clubName, setClubName] = useState('');
 
-  // Location request helper
   const detectLocation = async () => {
     setIsGpsLoading(true);
     setGpsError(null);
-    setGpsSuccess(false);
-    
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        setGpsError('Quyền truy cập GPS bị từ chối. Vui lòng chọn thành phố thủ công.');
-        setIsGpsLoading(false);
+        setGpsError('Vui lòng chọn thủ công.');
         return;
       }
-
-      const locationData = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
-
+      const locationData = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
       const { latitude, longitude } = locationData.coords;
-
-      // Pilot cities coordinates mapping
-      // Da Nang: ~16.0, ~108.2
-      // Hanoi: ~21.0, ~105.8
-      // Ho Chi Minh: ~10.8, ~106.6
       let detected: 'Da Nang' | 'Ha Noi' | 'Ho Chi Minh' | null = null;
+      if (latitude >= 15.5 && latitude <= 16.5) detected = 'Da Nang';
+      else if (latitude >= 20.5 && latitude <= 21.5) detected = 'Ha Noi';
+      else if (latitude >= 10.0 && latitude <= 11.5) detected = 'Ho Chi Minh';
 
-      if (latitude >= 15.5 && latitude <= 16.5 && longitude >= 107.5 && longitude <= 108.5) {
-        detected = 'Da Nang';
-      } else if (latitude >= 20.5 && latitude <= 21.5 && longitude >= 105.0 && longitude <= 106.5) {
-        detected = 'Ha Noi';
-      } else if (latitude >= 10.0 && latitude <= 11.5 && longitude >= 106.0 && longitude <= 107.5) {
-        detected = 'Ho Chi Minh';
-      }
-
-      if (detected) {
-        setCity(detected);
-        setGpsSuccess(true);
-      } else {
-        setGpsError('Bạn đang ở ngoài khu vực hỗ trợ của CourtMate (Đà Nẵng, Hà Nội, TP.HCM). Vui lòng chọn thành phố thủ công.');
-      }
+      if (detected) setCity(detected);
+      else setGpsError('Ngoài vùng phục vụ.');
     } catch (err) {
-      console.error('Error detecting location', err);
-      setGpsError('Không thể tự động phát hiện vị trí. Vui lòng chọn thủ công.');
+      setGpsError('Lỗi GPS.');
     } finally {
       setIsGpsLoading(false);
     }
@@ -79,58 +56,31 @@ export const OnboardingScreen: React.FC = () => {
 
   const handleNextStep = () => {
     setError(null);
-    if (step === 1) {
-      setStep(2);
-    } else if (step === 2) {
-      if (!name.trim()) {
-        setError('Vui lòng nhập họ và tên của bạn');
-        return;
-      }
-      if (!city) {
-        setError('Vui lòng chọn thành phố hoạt động chính');
-        return;
-      }
+    if (step === 1 && role) setStep(2);
+    else if (step === 2) {
+      if (!name.trim()) return setError('Vui lòng nhập tên của bạn');
+      if (!city) return setError('Vui lòng chọn thành phố');
       setStep(3);
     }
   };
 
-  const handlePrevStep = () => {
-    setError(null);
-    if (step > 1) {
-      setStep(step - 1);
-    }
-  };
-
   const handleSportToggle = (sport: SportType) => {
-    if (selectedSports.includes(sport)) {
-      setSelectedSports(selectedSports.filter((s) => s !== sport));
-    } else {
-      setSelectedSports([...selectedSports, sport]);
-    }
+    if (selectedSports.includes(sport)) setSelectedSports(selectedSports.filter((s) => s !== sport));
+    else setSelectedSports([...selectedSports, sport]);
   };
 
   const handleSubmit = async () => {
     setError(null);
-
-    // Validate Step 3
     if (role === UserRole.PLAYER) {
-      if (selectedSports.length === 0) {
-        setError('Vui lòng chọn ít nhất 1 môn thể thao');
-        return;
-      }
-      if (!skillLevel) {
-        setError('Vui lòng chọn trình độ chơi của bạn');
-        return;
-      }
+      if (selectedSports.length === 0) return setError('Chọn ít nhất 1 môn');
+      if (!skillLevel) return setError('Chọn trình độ');
     } else {
-      if (!clubName.trim()) {
-        setError('Vui lòng nhập tên câu lạc bộ hoặc tổ chức');
-        return;
-      }
+      if (!clubName.trim()) return setError('Nhập tên CLB');
     }
 
+    setIsSubmitting(true);
     try {
-      const payload = {
+      await updateProfile({
         name: name.trim(),
         role,
         preferences: {
@@ -139,295 +89,268 @@ export const OnboardingScreen: React.FC = () => {
           skillLevel: role === UserRole.PLAYER ? skillLevel : undefined,
           clubName: role === UserRole.ORGANIZER ? clubName.trim() : undefined,
         },
-      };
-      await updateProfile(payload);
+      });
     } catch (err: any) {
-      setError(err.message || 'Lỗi lưu thông tin onboarding. Vui lòng thử lại.');
+      setError(err.message || 'Lỗi lưu thông tin');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  const renderProgressBar = () => (
+    <XStack jc="space-between" ai="center" w="100%" mb="$6">
+      {[1, 2, 3].map((s) => (
+        <YStack key={s} f={1} mx="$1" h={4} br="$2" bg={s <= step ? '#C4F82A' : 'rgba(255,255,255,0.1)'} animation="quick" />
+      ))}
+    </XStack>
+  );
+
   return (
-    <YStack f={1} bg="$background" p="$6" jc="center" ai="center">
-      <YStack w="100%" maxWidth={340} gap="$5">
-        
-        {/* Step Indicator */}
-        <XStack jc="center" gap="$2" mb="$2">
-          {[1, 2, 3].map((s) => (
-            <YStack
-              key={s}
-              w={s === step ? 32 : 12}
-              h={6}
-              br="$1"
-              bg={s === step ? '$themeColor' : '$borderColor'}
-              animation="quick"
-            />
-          ))}
-        </XStack>
-
-        {error && (
-          <YStack bg="$red3" p="$3" br="$4" borderWidth={1} borderColor="$red7">
-            <Paragraph col="$red10" fow="600" fos="$3" ta="center">{error}</Paragraph>
-          </YStack>
-        )}
-
-        {/* STEP 1: ROLE SELECTION */}
-        {step === 1 && (
-          <YStack gap="$4">
-            <YStack ai="center" gap="$1" mb="$2">
-              <H3 col="$color" fontWeight="800" ta="center">Bạn tham gia với tư cách nào?</H3>
-              <Paragraph col="$colorMuted" ta="center" fos="$2">
-                Vai trò này sẽ được khóa cố định sau khi hoàn thành.
-              </Paragraph>
+    <YStack f={1} bg="#0A0A0A" position="relative">
+      <View position="absolute" top={-50} right={-50} w={200} h={200} br={100} bg="#3B82F6" opacity={0.08} />
+      
+      <YStack f={1} p="$6" pt="$10" pb="$8" jc="space-between">
+        <YStack>
+          {renderProgressBar()}
+          
+          {error && (
+            <YStack bg="rgba(239, 68, 68, 0.1)" p="$3" br="$4" mb="$4" borderWidth={1} borderColor="rgba(239, 68, 68, 0.3)">
+              <Paragraph color="#F87171" fow="600" fos="$3" ta="center">{error}</Paragraph>
             </YStack>
+          )}
 
-            <YStack gap="$3">
-              {/* Player Role Card */}
-              <YStack
-                borderWidth={2}
-                borderColor={role === UserRole.PLAYER ? '$themeColor' : '$borderColor'}
-                bg={role === UserRole.PLAYER ? '$themeColorHover' : '$backgroundHover'}
-                p="$4"
-                br="$5"
-                onPress={() => setRole(UserRole.PLAYER)}
-                gap="$2"
-              >
-                <XStack ai="center" gap="$3">
-                  <Paragraph fontSize={28}>🏸</Paragraph>
-                  <YStack f={1}>
-                    <H4 col="$color" fow="700">Người chơi (Player)</H4>
-                    <Paragraph col="$colorMuted" fos="$2" lh={16}>
-                      Tìm bạn chơi nhanh chóng, tham gia trận đấu xung quanh, chia sẻ kỹ năng thể thao.
-                    </Paragraph>
-                  </YStack>
-                </XStack>
+          {/* STEP 1: ROLE */}
+          {step === 1 && (
+            <YStack gap="$5" animation="quick" enterStyle={{ opacity: 0, x: -10 }}>
+              <YStack gap="$2">
+                <H2 color="white" fontWeight="800">Chọn vai trò</H2>
+                <Paragraph color="rgba(255,255,255,0.6)">Bạn tham gia CourtMate với mục đích gì?</Paragraph>
               </YStack>
 
-              {/* Organizer Role Card */}
-              <YStack
-                borderWidth={2}
-                borderColor={role === UserRole.ORGANIZER ? '$themeColor' : '$borderColor'}
-                bg={role === UserRole.ORGANIZER ? '$themeColorHover' : '$backgroundHover'}
-                p="$4"
-                br="$5"
-                onPress={() => setRole(UserRole.ORGANIZER)}
-                gap="$2"
-              >
-                <XStack ai="center" gap="$3">
-                  <Paragraph fontSize={28}>🏆</Paragraph>
-                  <YStack f={1}>
-                    <H4 col="$color" fow="700">Ban tổ chức (Organizer)</H4>
-                    <Paragraph col="$colorMuted" fos="$2" lh={16}>
-                      Tạo giải đấu phong trào, quản lý danh sách vận động viên và đặt lịch sân trực tuyến.
-                    </Paragraph>
-                  </YStack>
-                </XStack>
+              <YStack gap="$4">
+                <YStack
+                  borderWidth={2}
+                  borderColor={role === UserRole.PLAYER ? '#C4F82A' : 'rgba(255,255,255,0.1)'}
+                  bg={role === UserRole.PLAYER ? 'rgba(196, 248, 42, 0.1)' : 'rgba(20,20,20,0.6)'}
+                  p="$5"
+                  br="$6"
+                  onPress={() => setRole(UserRole.PLAYER)}
+                  animation="quick"
+                  pressStyle={{ scale: 0.98 }}
+                >
+                  <XStack ai="center" gap="$4">
+                    <YStack bg={role === UserRole.PLAYER ? '#C4F82A' : 'rgba(255,255,255,0.1)'} p="$3" br="$10">
+                      <UserIcon color={role === UserRole.PLAYER ? '#0A0A0A' : 'white'} size={24} />
+                    </YStack>
+                    <YStack f={1}>
+                      <H4 color="white" fow="700">Người chơi</H4>
+                      <Paragraph color="rgba(255,255,255,0.5)" fos={13} mt="$1">Đăng ký tham gia giải đấu, quản lý hồ sơ và lịch thi đấu cá nhân</Paragraph>
+                    </YStack>
+                  </XStack>
+                </YStack>
+
+                <YStack
+                  borderWidth={2}
+                  borderColor={role === UserRole.ORGANIZER ? '#C4F82A' : 'rgba(255,255,255,0.1)'}
+                  bg={role === UserRole.ORGANIZER ? 'rgba(196, 248, 42, 0.1)' : 'rgba(20,20,20,0.6)'}
+                  p="$5"
+                  br="$6"
+                  onPress={() => setRole(UserRole.ORGANIZER)}
+                  animation="quick"
+                  pressStyle={{ scale: 0.98 }}
+                >
+                  <XStack ai="center" gap="$4">
+                    <YStack bg={role === UserRole.ORGANIZER ? '#C4F82A' : 'rgba(255,255,255,0.1)'} p="$3" br="$10">
+                      <Trophy color={role === UserRole.ORGANIZER ? '#0A0A0A' : 'white'} size={24} />
+                    </YStack>
+                    <YStack f={1}>
+                      <H4 color="white" fow="700">Ban tổ chức</H4>
+                      <Paragraph color="rgba(255,255,255,0.5)" fos={13} mt="$1">Tạo giải đấu, quản lý sân và lịch đặt</Paragraph>
+                    </YStack>
+                  </XStack>
+                </YStack>
               </YStack>
             </YStack>
+          )}
 
-            <Button mt="$3" onPress={handleNextStep}>
-              Tiếp tục
-            </Button>
-          </YStack>
-        )}
+          {/* STEP 2: DETAILS */}
+          {step === 2 && (
+            <YStack gap="$5" animation="quick" enterStyle={{ opacity: 0, x: 10 }}>
+              <YStack gap="$2">
+                <H2 color="white" fontWeight="800">Cập nhật hồ sơ</H2>
+                <Paragraph color="rgba(255,255,255,0.6)">Thông tin này giúp chúng tôi cá nhân hóa trải nghiệm.</Paragraph>
+              </YStack>
 
-        {/* STEP 2: PERSONAL DETAILS & LOCATION */}
-        {step === 2 && (
-          <YStack gap="$4">
-            <YStack ai="center" gap="$1" mb="$2">
-              <H3 col="$color" fontWeight="800" ta="center">Thông tin cơ bản</H3>
-              <Paragraph col="$colorMuted" ta="center" fos="$2">
-                Hãy cho mọi người biết tên của bạn và thành phố bạn sống.
-              </Paragraph>
-            </YStack>
-
-            <YStack gap="$3">
-              <YStack gap="$1">
-                <Label col="$color" fow="600">Họ và tên</Label>
+              <YStack gap="$2">
+                <Label color="rgba(255,255,255,0.8)" fow="600">Tên hiển thị</Label>
                 <Input
-                  placeholder="Ví dụ: Nguyễn Văn A"
+                  placeholder="Ví dụ: Quốc Toản"
                   value={name}
                   onChangeText={setName}
+                  bg="rgba(255,255,255,0.05)"
+                  borderColor="rgba(255,255,255,0.1)"
+                  color="white"
+                  h={50}
                 />
               </YStack>
 
               <YStack gap="$2">
-                <Label col="$color" fow="600">Thành phố hoạt động chính</Label>
-                
-                {/* Custom City Buttons */}
-                <XStack gap="$2" jc="space-between">
-                  {(['Da Nang', 'Ha Noi', 'Ho Chi Minh'] as const).map((c) => {
+                <Label color="rgba(255,255,255,0.8)" fow="600">Khu vực hoạt động</Label>
+                <XStack gap="$2" fw="wrap">
+                  {(['Da Nang', 'Ha Noi', 'Ho Chi Minh'] as const).map(c => {
                     const label = c === 'Da Nang' ? 'Đà Nẵng' : c === 'Ha Noi' ? 'Hà Nội' : 'TP. HCM';
                     const active = city === c;
                     return (
-                      <Button
+                      <YStack
                         key={c}
-                        f={1}
-                        theme={active ? 'active' : 'alt2'}
-                        borderWidth={active ? 2 : 1}
-                        borderColor={active ? '$themeColor' : '$borderColor'}
-                        onPress={() => {
-                          setCity(c);
-                          setGpsSuccess(false);
-                          setGpsError(null);
-                        }}
+                        bg={active ? '#C4F82A' : 'rgba(255,255,255,0.05)'}
+                        borderWidth={1}
+                        borderColor={active ? '#C4F82A' : 'rgba(255,255,255,0.1)'}
+                        px="$4"
+                        py="$3"
+                        br="$10"
+                        onPress={() => setCity(c)}
                       >
-                        {label}
-                      </Button>
+                        <Text color={active ? '#0A0A0A' : 'white'} fow="600">{label}</Text>
+                      </YStack>
                     );
                   })}
                 </XStack>
-
-                {/* GPS Detection */}
-                <Button
-                  mt="$2"
-                  theme="alt1"
-                  onPress={detectLocation}
-                  disabled={isGpsLoading}
-                >
-                  {isGpsLoading ? (
-                    <XStack ai="center" gap="$2">
-                      <Spinner size="small" color="$color" />
-                      <Paragraph col="$color" fos="$2">Đang định vị...</Paragraph>
-                    </XStack>
-                  ) : (
-                    '📍 Tự động định vị GPS'
-                  )}
-                </Button>
-
-                {gpsSuccess && (
-                  <Paragraph col="$green10" fos="$1" fow="600" ta="center">
-                    Đã định vị thành công! Thành phố được chọn: {city === 'Da Nang' ? 'Đà Nẵng' : city === 'Ha Noi' ? 'Hà Nội' : 'TP. Hồ Chí Minh'}
-                  </Paragraph>
-                )}
-
-                {gpsError && (
-                  <Paragraph col="$yellow10" fos="$1" fow="600" ta="center" lh={14}>
-                    ⚠️ {gpsError}
-                  </Paragraph>
-                )}
+                <YStack mt="$2" onPress={detectLocation} pressStyle={{ opacity: 0.5 }}>
+                  <XStack ai="center" gap="$2">
+                    {isGpsLoading ? <Spinner size="small" color="#3B82F6" /> : <MapPin color="#3B82F6" size={16} />}
+                    <Text color="#3B82F6" fow="600">Tự động định vị GPS</Text>
+                  </XStack>
+                </YStack>
+                {gpsError && <Text color="#F87171" fos={12}>{gpsError}</Text>}
               </YStack>
             </YStack>
+          )}
 
-            <XStack gap="$3" mt="$3">
-              <Button f={1} theme="alt2" onPress={handlePrevStep}>
-                Quay lại
-              </Button>
-              <Button f={1} onPress={handleNextStep}>
-                Tiếp tục
-              </Button>
-            </XStack>
-          </YStack>
-        )}
-
-        {/* STEP 3: PREFERENCES */}
-        {step === 3 && (
-          <YStack gap="$4">
-            {role === UserRole.PLAYER ? (
-              // Player Preferences
-              <YStack gap="$4">
-                <YStack ai="center" gap="$1" mb="$2">
-                  <H3 col="$color" fontWeight="800" ta="center">Môn chơi & Trình độ</H3>
-                  <Paragraph col="$colorMuted" ta="center" fos="$2">
-                    Giúp kết nối bạn với những trận đấu vừa sức nhất.
-                  </Paragraph>
-                </YStack>
-
-                {/* Sports Grid */}
-                <YStack gap="$2">
-                  <Label col="$color" fow="600">Chọn các môn thể thao (Chọn nhiều)</Label>
-                  <XStack fw="wrap" gap="$2">
-                    {([
-                      { id: SportType.BADMINTON, label: 'Cầu lông', icon: '🏸' },
-                      { id: SportType.FOOTBALL, label: 'Bóng đá', icon: '⚽' },
-                      { id: SportType.PICKLEBALL, label: 'Pickleball', icon: '🏓' },
-                      { id: SportType.TENNIS, label: 'Tennis', icon: '🎾' },
-                    ]).map((s) => {
-                      const selected = selectedSports.includes(s.id);
-                      return (
-                        <Button
-                          key={s.id}
-                          theme={selected ? 'active' : 'alt2'}
-                          borderWidth={selected ? 2 : 1}
-                          borderColor={selected ? '$themeColor' : '$borderColor'}
-                          onPress={() => handleSportToggle(s.id)}
-                          px="$3"
-                          py="$2"
-                        >
-                          <XStack ai="center" gap="$2">
-                            <Paragraph fontSize={16}>{s.icon}</Paragraph>
-                            <Paragraph col="$color" fos="$2">{s.label}</Paragraph>
-                          </XStack>
-                        </Button>
-                      );
-                    })}
-                  </XStack>
-                </YStack>
-
-                {/* Skill Level Selection */}
-                <YStack gap="$2">
-                  <Label col="$color" fow="600">Trình độ chơi của bạn</Label>
-                  <XStack gap="$2">
-                    {([
-                      { id: 'Beginner', label: 'Mới chơi', desc: 'Nhập môn' },
-                      { id: 'Intermediate', label: 'Trung bình', desc: 'Đã chơi lâu' },
-                      { id: 'Advanced', label: 'Nâng cao', desc: 'Có giải đấu' },
-                    ] as const).map((l) => {
-                      const active = skillLevel === l.id;
-                      return (
-                        <Button
-                          key={l.id}
-                          f={1}
-                          theme={active ? 'active' : 'alt2'}
-                          borderWidth={active ? 2 : 1}
-                          borderColor={active ? '$themeColor' : '$borderColor'}
-                          onPress={() => setSkillLevel(l.id)}
-                          py="$3"
-                          h="auto"
-                        >
-                          <YStack ai="center">
-                            <Paragraph col="$color" fow="700" fos="$2">{l.label}</Paragraph>
-                            <Paragraph col={active ? '$color' : '$colorMuted'} fos="$1" ta="center">
-                              {l.desc}
-                            </Paragraph>
-                          </YStack>
-                        </Button>
-                      );
-                    })}
-                  </XStack>
-                </YStack>
+          {/* STEP 3: PREFS */}
+          {step === 3 && (
+            <YStack gap="$5" animation="quick" enterStyle={{ opacity: 0, x: 10 }}>
+              <YStack gap="$2">
+                <H2 color="white" fontWeight="800">Sở thích thể thao</H2>
+                <Paragraph color="rgba(255,255,255,0.6)">Bạn quan tâm đến môn thể thao nào?</Paragraph>
               </YStack>
-            ) : (
-              // Organizer Preferences
-              <YStack gap="$4">
-                <YStack ai="center" gap="$1" mb="$2">
-                  <H3 col="$color" fontWeight="800" ta="center">Thông tin câu lạc bộ</H3>
-                  <Paragraph col="$colorMuted" ta="center" fos="$2">
-                    Tên hiển thị của ban tổ chức khi đăng giải đấu.
-                  </Paragraph>
-                </YStack>
 
-                <YStack gap="$1">
-                  <Label col="$color" fow="600">Tên Câu lạc bộ / Đơn vị tổ chức</Label>
+              {role === UserRole.PLAYER ? (
+                <YStack gap="$5">
+                  <YStack gap="$3">
+                    <Label color="rgba(255,255,255,0.8)" fow="600">Chọn môn thể thao (có thể chọn nhiều)</Label>
+                    <XStack gap="$3" fw="wrap">
+                      {([
+                        { id: SportType.BADMINTON, label: 'Cầu lông', icon: '🏸' },
+                        { id: SportType.FOOTBALL, label: 'Bóng đá', icon: '⚽' },
+                        { id: SportType.PICKLEBALL, label: 'Pickleball', icon: '🏓' },
+                        { id: SportType.TENNIS, label: 'Tennis', icon: '🎾' }
+                      ]).map(s => {
+                        const active = selectedSports.includes(s.id);
+                        return (
+                          <YStack
+                            key={s.id}
+                            w="46%"
+                            bg={active ? 'rgba(196, 248, 42, 0.1)' : 'rgba(255,255,255,0.05)'}
+                            borderWidth={2}
+                            borderColor={active ? '#C4F82A' : 'transparent'}
+                            p="$4"
+                            br="$4"
+                            ai="center"
+                            onPress={() => handleSportToggle(s.id)}
+                          >
+                            <Text fos={32} mb="$2">{s.icon}</Text>
+                            <Text color="white" fow="600">{s.label}</Text>
+                          </YStack>
+                        );
+                      })}
+                    </XStack>
+                  </YStack>
+
+                  <YStack gap="$3">
+                    <Label color="rgba(255,255,255,0.8)" fow="600">Trình độ của bạn</Label>
+                    <XStack gap="$2" jc="space-between">
+                      {([
+                        { id: 'Beginner', label: 'Nhập môn' },
+                        { id: 'Intermediate', label: 'Trung bình' },
+                        { id: 'Advanced', label: 'Nâng cao' }
+                      ] as const).map(l => {
+                        const active = skillLevel === l.id;
+                        return (
+                          <YStack
+                            key={l.id}
+                            f={1}
+                            bg={active ? '#C4F82A' : 'rgba(255,255,255,0.05)'}
+                            borderWidth={1}
+                            borderColor={active ? '#C4F82A' : 'rgba(255,255,255,0.1)'}
+                            py="$3"
+                            br="$4"
+                            ai="center"
+                            onPress={() => setSkillLevel(l.id)}
+                          >
+                            <Text color={active ? '#0A0A0A' : 'white'} fow="600">{l.label}</Text>
+                          </YStack>
+                        );
+                      })}
+                    </XStack>
+                  </YStack>
+                </YStack>
+              ) : (
+                <YStack gap="$2">
+                  <Label color="rgba(255,255,255,0.8)" fow="600">Tên CLB / Tổ chức</Label>
                   <Input
-                    placeholder="Ví dụ: Da Nang Pickleball Club"
+                    placeholder="Nhập tên CLB của bạn"
                     value={clubName}
                     onChangeText={setClubName}
+                    bg="rgba(255,255,255,0.05)"
+                    borderColor="rgba(255,255,255,0.1)"
+                    color="white"
+                    h={50}
                   />
                 </YStack>
-              </YStack>
+              )}
+            </YStack>
+          )}
+        </YStack>
+
+        {/* Bottom Fixed Navigation */}
+        <XStack gap="$3" mt="$4">
+          {step > 1 && (
+            <YStack
+              bg="rgba(255,255,255,0.1)"
+              w={56}
+              h={56}
+              br="$4"
+              jc="center"
+              ai="center"
+              onPress={() => setStep(step - 1)}
+              pressStyle={{ opacity: 0.7 }}
+            >
+              <ChevronLeft color="white" size={24} />
+            </YStack>
+          )}
+          <YStack
+            f={1}
+            bg={step === 1 && !role ? "rgba(196, 248, 42, 0.3)" : "#C4F82A"}
+            h={56}
+            br="$4"
+            jc="center"
+            ai="center"
+            onPress={step === 3 ? handleSubmit : handleNextStep}
+            disabled={isSubmitting || (step === 1 && !role)}
+            pressStyle={{ opacity: 0.8 }}
+          >
+            {isSubmitting ? <Spinner size="small" color="#0A0A0A" /> : (
+              <XStack ai="center" gap="$2">
+                <Text color="#0A0A0A" fow="800" fos={16} tt="uppercase">
+                  {step === 3 ? 'Hoàn tất' : 'Tiếp tục'}
+                </Text>
+                {step < 3 && <ChevronRight color="#0A0A0A" size={20} />}
+                {step === 3 && <CheckCircle2 color="#0A0A0A" size={20} />}
+              </XStack>
             )}
-
-            <XStack gap="$3" mt="$3">
-              <Button f={1} theme="alt2" onPress={handlePrevStep} disabled={isLoading}>
-                Quay lại
-              </Button>
-              <Button f={1} onPress={handleSubmit} disabled={isLoading}>
-                {isLoading ? <Spinner size="small" color="$color" /> : 'Hoàn tất'}
-              </Button>
-            </XStack>
           </YStack>
-        )}
-
+        </XStack>
       </YStack>
     </YStack>
   );

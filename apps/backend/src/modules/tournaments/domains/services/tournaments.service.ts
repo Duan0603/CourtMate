@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, FilterQuery } from 'mongoose';
 import { Tournament } from '../../infrastructure/persistence/tournament.entity';
-import { SportType, TournamentStatus } from '@courtmate/shared';
+import { SportType, TournamentStatus, CreateTournamentDto } from '@courtmate/shared';
 
 @Injectable()
 export class TournamentsService {
@@ -10,33 +10,115 @@ export class TournamentsService {
     @InjectModel(Tournament.name) private readonly tournamentModel: Model<Tournament>,
   ) {}
 
-  async findAll(filters?: {
-    city?: string;
-    sport?: string;
-    includeHidden?: boolean;
-  }): Promise<Tournament[]> {
-    const query: FilterQuery<Tournament> = {};
+  async create(createDto: CreateTournamentDto, rulesFileUrl?: string, organizerInfo?: any): Promise<Tournament> {
+    const createdTournament = new this.tournamentModel({
+      ...createDto,
+      rulesFileUrl,
+      organizer: organizerInfo || {
+        id: 'mock-organizer-id',
+        name: 'Mock Organizer',
+        isVerified: true
+      }
+    });
+    return createdTournament.save();
+  }
 
-    if (filters?.city) {
-      query.city = filters.city;
+  async incrementReportCount(id: string): Promise<Tournament | null> {
+    const tournament = await this.tournamentModel.findById(id);
+    if (!tournament) {
+      return null;
     }
 
-    if (filters?.sport) {
-      query.sport = filters.sport;
+    tournament.reportsCount += 1;
+    
+    // Auto-hide threshold
+    if (tournament.reportsCount >= 5) {
+      tournament.isHidden = true;
     }
 
-    if (!filters?.includeHidden) {
-      query.isHidden = { $ne: true };
-    }
+    return tournament.save();
+  }
 
+  async findByOrganizerId(organizerId: string): Promise<Tournament[]> {
     return this.tournamentModel
-      .find(query)
+      .find({ 'organizer.id': organizerId })
       .sort({ createdAt: -1 })
       .exec();
   }
 
-  async findById(id: string): Promise<Tournament | null> {
-    return this.tournamentModel.findById(id).exec();
+  async findByIds(ids: string[]): Promise<Tournament[]> {
+    return this.tournamentModel
+      .find({ _id: { $in: ids }, isHidden: { $ne: true } })
+      .exec();
+  }
+
+  async findAll(filters?: {
+    city?: string;
+    sport?: string;
+    status?: string;
+    keyword?: string;
+    minFee?: number;
+    maxFee?: number;
+    includeHidden?: boolean;
+  }): Promise<Tournament[]> {
+    let filterObj: any = {};
+    
+    if (!filters?.includeHidden) {
+      filterObj.isHidden = { $ne: true };
+    }
+    
+    if (filters) {
+      if (filters.city) filterObj.city = filters.city;
+      if (filters.sport) filterObj.sport = filters.sport;
+      if (filters.status) filterObj.status = filters.status;
+      
+      if (filters.keyword) {
+        filterObj.$or = [
+          { title: { $regex: filters.keyword, $options: 'i' } },
+          { 'organizer.name': { $regex: filters.keyword, $options: 'i' } }
+        ];
+      }
+
+      if (filters.minFee !== undefined || filters.maxFee !== undefined) {
+        const feeQuery: any = {};
+        if (filters.minFee !== undefined) feeQuery.$gte = Number(filters.minFee);
+        if (filters.maxFee !== undefined) feeQuery.$lte = Number(filters.maxFee);
+        filterObj.categories = { $elemMatch: { fee: feeQuery } };
+      }
+    }
+
+    let tournaments = await this.tournamentModel
+      .find(filterObj)
+      .sort({ startDate: 1 })
+      .exec();
+
+    // Fallback to national view (all cities) if local city is empty and no other strict filters applied
+    if (tournaments.length === 0 && filters?.city && !filters.keyword && !filters.sport) {
+      const fallbackQuery: any = {};
+      if (!filters?.includeHidden) {
+        fallbackQuery.isHidden = { $ne: true };
+      }
+      tournaments = await this.tournamentModel
+        .find(fallbackQuery)
+        .sort({ startDate: 1 })
+        .exec();
+    }
+
+    // Sort to prioritize Open For Registration
+    return tournaments.sort((a, b) => {
+      const aIsOpen = a.status === TournamentStatus.OPEN ? -1 : 1;
+      const bIsOpen = b.status === TournamentStatus.OPEN ? -1 : 1;
+      if (aIsOpen !== bIsOpen) return aIsOpen - bIsOpen;
+      return 0; // maintain chronological order for same status
+    });
+  }
+
+  async findById(id: string): Promise<Tournament> {
+    const tournament = await this.tournamentModel.findById(id).exec();
+    if (!tournament) {
+      throw new NotFoundException(`Tournament with ID ${id} not found`);
+    }
+    return tournament;
   }
 
   async findByCity(city: string): Promise<Tournament[]> {

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authApi } from '../services/auth.api';
 import { User } from '@courtmate/shared';
 
@@ -24,16 +24,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     async function loadToken() {
       try {
-        const storedToken = await SecureStore.getItemAsync('courtmate_jwt_token');
+        const storedToken = await AsyncStorage.getItem('courtmate_jwt_token');
         if (storedToken) {
           const profile = await authApi.getProfile(storedToken);
           setToken(storedToken);
           setUser(profile);
         }
       } catch (error) {
-        console.error('Error loading token from SecureStore:', error);
+        console.error('Error loading token from AsyncStorage:', error);
         try {
-          await SecureStore.deleteItemAsync('courtmate_jwt_token');
+          await AsyncStorage.removeItem('courtmate_jwt_token');
         } catch (_) {}
       } finally {
         setIsLoading(false);
@@ -43,46 +43,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const requestOtp = async (email: string) => {
-    setIsLoading(true);
-    try {
-      await authApi.requestOtp(email);
-    } finally {
-      setIsLoading(false);
-    }
+    await authApi.requestOtp(email);
   };
 
   const verifyOtp = async (email: string, code: string) => {
-    setIsLoading(true);
-    try {
-      const response = await authApi.verifyOtp(email, code);
-      await SecureStore.setItemAsync('courtmate_jwt_token', response.token);
-      setToken(response.token);
-      setUser(response.user);
-    } finally {
-      setIsLoading(false);
-    }
+    const response = await authApi.verifyOtp(email, code);
+    await AsyncStorage.setItem('courtmate_jwt_token', response.token);
+    setToken(response.token);
+    setUser(response.user);
   };
 
   const updateProfile = async (profileData: any) => {
     if (!token) throw new Error('Not authenticated');
-    setIsLoading(true);
-    try {
-      const updatedUser = await authApi.updateProfile(token, profileData);
-      setUser(updatedUser);
-    } finally {
-      setIsLoading(false);
-    }
+    const updatedUser = await authApi.updateProfile(token, profileData);
+    setUser(updatedUser);
   };
 
   const logout = async () => {
-    setIsLoading(true);
-    try {
-      await SecureStore.deleteItemAsync('courtmate_jwt_token');
-      setToken(null);
-      setUser(null);
-    } finally {
-      setIsLoading(false);
-    }
+    await AsyncStorage.removeItem('courtmate_jwt_token');
+    setToken(null);
+    setUser(null);
   };
 
   const isAuthenticated = !!token && !!user;
