@@ -12,6 +12,8 @@ const REPORT_REASONS = [
   { id: 'other', label: 'Lý do khác' },
 ];
 
+const RadioGroupAny = RadioGroup as any;
+
 interface ReportModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
