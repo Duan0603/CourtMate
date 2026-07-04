@@ -5,10 +5,7 @@ const config = {
   mongodb: {
     url: process.env.MONGODB_URI || 'mongodb://root:examplepassword@localhost:27017/courtmate?authSource=admin',
     databaseName: 'courtmate',
-    options: {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    }
+    options: {}
   },
   migrationsDir: 'migrations',
   changelogCollectionName: 'changelog',

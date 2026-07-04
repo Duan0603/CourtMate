@@ -27,10 +27,7 @@ export async function runMigrations() {
       mongodb: {
         url: dbUri,
         databaseName: 'courtmate',
-        options: {
-          useNewUrlParser: true,
-          useUnifiedTopology: true,
-        }
+        options: {}
       },
       migrationsDir,
       changelogCollectionName: 'changelog',

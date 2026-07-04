@@ -30,7 +30,7 @@ export class User extends Document {
   @Prop({ required: false, default: '' })
   name!: string;
 
-  @Prop({ required: true, enum: ['USER', 'REGIONAL_ADMIN', 'SUPER_ADMIN'], default: 'USER' })
+  @Prop({ required: true, enum: ['USER', 'PLAYER', 'ORGANIZER', 'REGIONAL_ADMIN', 'SUPER_ADMIN'], default: 'USER' })
   role!: string;
 
   @Prop({ type: UserPreferencesSchemaFactory, default: {} })
