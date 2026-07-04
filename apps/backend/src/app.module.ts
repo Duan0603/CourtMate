@@ -1,8 +1,10 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ArticlesModule } from './modules/articles/articles.module';
+import { AdminModule } from './modules/admin/admin.module';
+import { CityRoutingMiddleware } from './core/middleware/city-routing.middleware';
 import { RegistrationsModule } from './modules/registrations/registrations.module';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -37,6 +39,9 @@ import { ReportsModule } from './modules/reports/reports.module';
 
     // Feature Modules
     ArticlesModule,
+
+    // Phase 8: Multi-Region & Admin
+    AdminModule,
     RegistrationsModule,
     UsersModule,
     AuthModule,
@@ -44,4 +49,8 @@ import { ReportsModule } from './modules/reports/reports.module';
     ReportsModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(CityRoutingMiddleware).forRoutes('*');
+  }
+}
