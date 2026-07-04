@@ -5,14 +5,6 @@ module.exports = function (api) {
       ["babel-preset-expo", { jsxImportSource: "nativewind" }],
       "nativewind/babel"
     ],
-    plugins: [
-      [
-        "@tamagui/babel-plugin",
-        {
-          config: "./tamagui.config.ts",
-          components: ["tamagui"]
-        }
-      ]
-    ]
+    plugins: []
   };
 };

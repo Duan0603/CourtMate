@@ -13,7 +13,7 @@
     "migrate:status": "migrate-mongo status"
   },
   "dependencies": {
-    "@courtmate/shared": "*",
+    "@courtmate/shared": "file:../../packages/shared",
     "@nestjs/cache-manager": "^2.0.0",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.0.0",

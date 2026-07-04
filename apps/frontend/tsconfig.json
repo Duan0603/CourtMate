@@ -16,7 +16,9 @@
   "include": [
     "src/**/*",
     "app/**/*",
-    "components/**/*"
+    "components/**/*",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
   ],
   "extends": "expo/tsconfig.base.json"
 }

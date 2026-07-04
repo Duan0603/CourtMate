@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Sheet, YStack, XStack, Button, H3, Paragraph, RadioGroup, Label, TextArea, Spinner } from 'tamagui';
 import { Alert } from 'react-native';
 
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+
 const REPORT_REASONS = [
   { id: 'fake', label: 'Thông tin giả mạo/lừa đảo' },
   { id: 'spam', label: 'Spam/Quảng cáo' },
@@ -24,7 +26,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({ open, onOpenChange, ta
   const handleSubmit = async () => {
     try {
       setIsSubmitting(true);
-      const response = await fetch('http://localhost:3000/reports', {
+      const response = await fetch(`${BASE_URL}/reports`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

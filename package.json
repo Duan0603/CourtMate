@@ -2,35 +2,15 @@
   "name": "courtmate-monorepo",
   "version": "1.0.0",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
   "scripts": {
-    "backend:dev": "npm run start:dev -w apps/backend",
-    "frontend:dev": "npm run start -w apps/frontend",
+    "backend:dev": "npm run start:dev --prefix apps/backend",
+    "frontend:dev": "npm run start --prefix apps/frontend",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
-    "migration": "npm run migrate:up -w apps/backend",
-    "migration:status": "npm run migrate:status -w apps/backend",
-    "migration:down": "npm run migrate:down -w apps/backend",
-    "migration:create": "npm run migrate:create -w apps/backend",
-    "typecheck": "npm run typecheck --workspaces --if-present"
-  },
-  "overrides": {
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "@types/react": "~18.2.45"
-  },
-  "dependencies": {
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "@react-navigation/native": "^6.1.18",
-    "@react-navigation/native-stack": "^6.11.0",
-    "react-native-web": "^0.21.0"
-  },
-  "devDependencies": {
-    "@react-native-community/cli-server-api": "^13.6.9",
-    "concurrently": "^10.0.3"
+    "migration": "npm run migrate:up --prefix apps/backend",
+    "migration:status": "npm run migrate:status --prefix apps/backend",
+    "migration:down": "npm run migrate:down --prefix apps/backend",
+    "migration:create": "npm run migrate:create --prefix apps/backend",
+    "typecheck": "npm run typecheck --prefix apps/frontend && npm run typecheck --prefix apps/backend"
   }
 }

@@ -1,9 +1,8 @@
 import { CreateTournamentDto, Tournament, TournamentStatus, TournamentCategory, SportType, TournamentFilterDto } from '@courtmate/shared';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Lấy BACKEND_URL từ biến môi trường hoặc config (MVP dùng localhost/LAN IP)
-const BACKEND_URL = 'http://10.0.2.2:3000'; // Dành cho Android Emulator, thay đổi tuỳ theo device thật
-const API_URL = 'http://localhost:3000'; // In a real app this would use an env var
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+const BACKEND_URL = API_URL;
 
 export const createTournament = async (
   data: CreateTournamentDto,
