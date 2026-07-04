@@ -1,8 +1,7 @@
 import React from 'react';
 import { YStack, H2, H4, Paragraph, Text, ScrollView, XStack } from 'tamagui';
 import { useLocalSearchParams, router } from 'expo-router';
-import { Button } from '../../src/components';
-import { formatCurrency } from '../../src/utils/validation';
+import { ChevronLeft, MapPin, Calendar, Users, FileText } from 'lucide-react-native';
 
 export default function TournamentDetailRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -14,6 +13,8 @@ export default function TournamentDetailRoute() {
     : 'Giải vô địch Cầu lông Phong trào Đà Nẵng 2026';
 
   const sport = isPickleball ? 'PICKLEBALL' : 'BADMINTON';
+  const sportColor = isPickleball ? '#C4F82A' : '#3B82F6';
+  const sportBg = isPickleball ? 'rgba(196, 248, 42, 0.1)' : 'rgba(59, 130, 246, 0.1)';
   const fee = isPickleball ? 150000 : 200000;
   const slotsLimit = isPickleball ? 24 : 32;
   const location = isPickleball
@@ -25,79 +26,90 @@ export default function TournamentDetailRoute() {
     : 'Thi đấu theo luật Cầu lông hiện hành của Tổng cục TDTT. Đăng ký theo cặp đấu đôi nam hoặc đôi nam nữ.';
 
   return (
-    <YStack bg="$background" f={1} p="$5" mt="$8" gap="$4">
-      <XStack w="100%" jc="flex-start">
-        <Button
-          size="$3.5"
-          onPress={() => router.replace('/')}
-          theme="alt1"
-          bg="$backgroundHover"
-          br="$3"
-        >
-          Quay lại
-        </Button>
+    <YStack bg="#0A0A0A" f={1}>
+      
+      {/* Header */}
+      <XStack p="$5" pt="$10" ai="center" gap="$3" bg="rgba(20,20,20,0.8)" borderBottomWidth={1} borderBottomColor="rgba(255,255,255,0.05)">
+        <YStack w={40} h={40} br={20} bg="rgba(255,255,255,0.1)" jc="center" ai="center" onPress={() => router.replace('/')}>
+          <ChevronLeft color="white" size={24} />
+        </YStack>
+        <Text color="white" fow="700" fos={18}>Chi tiết giải đấu</Text>
       </XStack>
 
-      <ScrollView f={1} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
-        <YStack gap="$4">
-          <YStack gap="$1">
-            <XStack gap="$2" ai="center">
-              <Text fow="bold" fos="$2.5" col="#ff5e3a" bg="rgba(255, 94, 58, 0.1)" px="$2.5" py="$0.5" br="$3">
-                {sport}
-              </Text>
-              <Text fos="$2.5" col="$colorMuted">
-                ID: {id}
-              </Text>
+      <ScrollView f={1} p="$5" contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
+        <YStack gap="$5">
+          <YStack gap="$3">
+            <XStack jc="space-between" ai="center">
+              <YStack px="$3" py="$1" br="$4" bg={sportBg} borderWidth={1} borderColor={sportColor}>
+                <Text fos={12} fow="700" color={sportColor}>{sport}</Text>
+              </YStack>
+              <Text fos={12} color="rgba(255,255,255,0.5)">ID: {id?.substring(0, 8)}...</Text>
             </XStack>
-            <H2 col="$color" fow="bold" mt="$1.5">
-              {title}
-            </H2>
+            <H2 color="white" fow="900" lh={34}>{title}</H2>
           </YStack>
 
-          <YStack bg="$backgroundHover" p="$4" br="$4" gap="$2.5" borderWidth={1} borderColor="$borderColor">
-            <XStack jc="space-between">
-              <Text col="$colorMuted">Lệ phí:</Text>
-              <Text col="$color" fow="bold">{formatCurrency(fee)}</Text>
+          {/* Info Card */}
+          <YStack bg="rgba(20,20,20,0.6)" br="$6" p="$5" borderWidth={1} borderColor="rgba(255,255,255,0.08)" gap="$4">
+            <XStack gap="$3" ai="flex-start">
+              <MapPin color="rgba(255,255,255,0.5)" size={20} />
+              <YStack f={1}>
+                <Text color="rgba(255,255,255,0.5)" fos={13}>Địa điểm thi đấu</Text>
+                <Text color="white" fow="600" mt="$1">{location}</Text>
+              </YStack>
             </XStack>
-            <XStack jc="space-between">
-              <Text col="$colorMuted">Thời gian:</Text>
-              <Text col="$color" fow="bold">{time}</Text>
+            
+            <XStack gap="$3" ai="flex-start">
+              <Calendar color="rgba(255,255,255,0.5)" size={20} />
+              <YStack f={1}>
+                <Text color="rgba(255,255,255,0.5)" fos={13}>Thời gian tổ chức</Text>
+                <Text color="white" fow="600" mt="$1">{time}</Text>
+              </YStack>
             </XStack>
-            <XStack jc="space-between">
-              <Text col="$colorMuted">Địa điểm:</Text>
-              <Text col="$color" fow="bold" f={1} ta="right" ml="$4" numberOfLines={2}>
-                {location}
-              </Text>
-            </XStack>
-            <XStack jc="space-between">
-              <Text col="$colorMuted">Giới hạn slots:</Text>
-              <Text col="$color" fow="bold">{slotsLimit} cặp đấu</Text>
+
+            <XStack gap="$3" ai="flex-start">
+              <Users color="rgba(255,255,255,0.5)" size={20} />
+              <YStack f={1}>
+                <Text color="rgba(255,255,255,0.5)" fos={13}>Giới hạn đội tham gia</Text>
+                <Text color="white" fow="600" mt="$1">{slotsLimit} cặp đấu</Text>
+              </YStack>
             </XStack>
           </YStack>
 
-          <YStack gap="$2">
-            <H4 col="$color" fow="bold">Điều lệ giải đấu</H4>
-            <Paragraph col="$colorMuted" ta="justify" fos="$3.5" lh="$5">
+          {/* Rules Section */}
+          <YStack gap="$3" mt="$2">
+            <XStack ai="center" gap="$2">
+              <FileText color={sportColor} size={20} />
+              <H4 color="white" fow="800">Điều lệ giải đấu</H4>
+            </XStack>
+            <Paragraph color="rgba(255,255,255,0.7)" ta="justify" fos={15} lh={24}>
               {rules}
             </Paragraph>
           </YStack>
         </YStack>
       </ScrollView>
 
-      {/* Large CTA single-hand touch target placed in thumb zone near bottom */}
-      <YStack position="absolute" bottom="$4" left="$5" right="$5" bg="$background" pt="$2">
-        <Button
-          bg="#ff5e3a"
-          col="#ffffff"
-          hoverStyle={{ bg: '#e54d2a' }}
-          size="$5"
-          br="$4"
-          onPress={() => router.push(`/register/${id}`)}
-        >
-          <Text fow="bold" col="#ffffff" fos="$4">
-            Đăng Ký Thi Đấu Ngay
+      {/* Bottom Fixed CTA */}
+      <YStack position="absolute" bottom={0} left={0} right={0} p="$5" pb="$8" bg="rgba(10,10,10,0.95)" borderTopWidth={1} borderTopColor="rgba(255,255,255,0.05)">
+        <XStack jc="space-between" ai="center" mb="$3">
+          <Text color="rgba(255,255,255,0.5)" fos={14}>Lệ phí tham gia:</Text>
+          <Text color={sportColor} fow="900" fos={24}>
+            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(fee)}
           </Text>
-        </Button>
+        </XStack>
+        <YStack
+          bg={sportColor}
+          h={56}
+          br="$4"
+          jc="center"
+          ai="center"
+          onPress={() => router.push(`/register/${id}`)}
+          pressStyle={{ scale: 0.98, opacity: 0.9 }}
+          animation="quick"
+        >
+          <Text color="#0A0A0A" fow="900" fos={16} textTransform="uppercase">
+            Đăng ký thi đấu ngay
+          </Text>
+        </YStack>
       </YStack>
     </YStack>
   );
