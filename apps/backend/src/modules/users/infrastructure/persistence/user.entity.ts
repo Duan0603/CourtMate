@@ -11,6 +11,12 @@ export class UserPreferencesSchema {
 
   @Prop()
   location?: string; // e.g. "Da Nang"
+
+  @Prop({ type: String, default: null })
+  skillLevel?: string;
+
+  @Prop({ type: String, default: null })
+  clubName?: string;
 }
 
 export const UserPreferencesSchemaFactory =
@@ -21,7 +27,7 @@ export class User extends Document {
   @Prop({ required: true })
   email!: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false, default: '' })
   name!: string;
 
   @Prop({ required: true, enum: ['USER', 'REGIONAL_ADMIN', 'SUPER_ADMIN'], default: 'USER' })
@@ -32,6 +38,9 @@ export class User extends Document {
 
   @Prop({ default: false })
   isVerified!: boolean;
+
+  @Prop({ type: [String], default: [] })
+  bookmarkedTournaments!: string[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

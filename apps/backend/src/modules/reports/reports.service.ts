@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Report } from './report.schema';
 import { CreateReportDto } from '@courtmate/shared';
-import { TournamentsService } from '../tournaments/tournaments.service';
+import { TournamentsService } from '../tournaments/domains/services/tournaments.service';
 
 @Injectable()
 export class ReportsService {

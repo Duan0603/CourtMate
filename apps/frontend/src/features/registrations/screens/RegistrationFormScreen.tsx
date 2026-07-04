@@ -1,9 +1,9 @@
 import React from 'react';
-import { YStack, H3, Paragraph, ScrollView, XStack } from 'tamagui';
+import { YStack, H3, Paragraph, ScrollView, XStack, Text } from 'tamagui';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useRegistrations } from '../hooks/useRegistrations';
 import { RegistrationForm } from '../components/RegistrationForm';
-import { Button } from '../../../components';
+import { ChevronLeft, ClipboardList } from 'lucide-react-native';
 
 export const RegistrationFormScreen: React.FC = () => {
   const { tournamentId } = useLocalSearchParams<{ tournamentId: string }>();
@@ -28,36 +28,40 @@ export const RegistrationFormScreen: React.FC = () => {
   };
 
   return (
-    <ScrollView bg="$background" f={1}>
-      <YStack f={1} p="$6" gap="$4" ai="center" mt="$8">
-        <XStack w="100%" jc="flex-start" mb="$2">
-          <Button
-            size="$3.5"
-            onPress={() => router.back()}
-            theme="alt1"
-            bg="$backgroundHover"
-            br="$3"
-          >
-            Quay lại
-          </Button>
-        </XStack>
-
-        <YStack ai="center" gap="$1" mb="$4">
-          <H3 col="$color" ta="center" fow="bold">
-            Đăng Ký Tham Gia
-          </H3>
-          <Paragraph col="$colorMuted" ta="center" fos="$3">
-            Giải đấu: {tournamentId || 'Giải đấu CourtMate'}
-          </Paragraph>
+    <YStack bg="#0A0A0A" f={1}>
+      
+      {/* Header */}
+      <XStack p="$5" pt="$10" ai="center" gap="$3" bg="rgba(20,20,20,0.8)" borderBottomWidth={1} borderBottomColor="rgba(255,255,255,0.05)">
+        <YStack w={40} h={40} br={20} bg="rgba(255,255,255,0.1)" jc="center" ai="center" onPress={() => router.back()}>
+          <ChevronLeft color="white" size={24} />
         </YStack>
+        <Text color="white" fow="700" fos={18}>Đăng ký thi đấu</Text>
+      </XStack>
 
-        <RegistrationForm
-          onSubmit={handleFormSubmit}
-          isLoading={isSubmitting}
-          errorMessage={error}
-        />
-      </YStack>
-    </ScrollView>
+      <ScrollView f={1} p="$5" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+        <YStack gap="$5">
+          <YStack ai="center" gap="$2" mb="$2">
+            <YStack w={60} h={60} br={30} bg="rgba(196, 248, 42, 0.1)" jc="center" ai="center" mb="$2">
+              <ClipboardList color="#C4F82A" size={28} />
+            </YStack>
+            <H3 col="white" ta="center" fow="800">
+              Hoàn thiện hồ sơ
+            </H3>
+            <Paragraph col="rgba(255,255,255,0.5)" ta="center" fos={14}>
+              Mã giải đấu: {tournamentId?.substring(0,8)}...
+            </Paragraph>
+          </YStack>
+
+          <YStack bg="rgba(20,20,20,0.6)" br="$6" p="$5" borderWidth={1} borderColor="rgba(255,255,255,0.08)">
+            <RegistrationForm
+              onSubmit={handleFormSubmit}
+              isLoading={isSubmitting}
+              errorMessage={error}
+            />
+          </YStack>
+        </YStack>
+      </ScrollView>
+    </YStack>
   );
 };
 

@@ -6,17 +6,49 @@
  */
 module.exports = {
   async up(db) {
+    // Helper function to create index safely by dropping existing index with different name on same key
+    async function createIndexSafely(collectionName, keys, options) {
+      const collection = db.collection(collectionName);
+      const indexes = await collection.listIndexes().toArray();
+      
+      const areKeysEqual = (key1, key2) => {
+        const k1 = Object.keys(key1);
+        const k2 = Object.keys(key2);
+        if (k1.length !== k2.length) return false;
+        for (let i = 0; i < k1.length; i++) {
+          if (k1[i] !== k2[i] || key1[k1[i]] !== key2[k2[i]]) {
+            return false;
+          }
+        }
+        return true;
+      };
+
+      const existing = indexes.find(idx => areKeysEqual(idx.key, keys));
+      
+      if (existing) {
+        if (existing.name === options.name) {
+          console.log(`Index ${options.name} already exists on ${collectionName} with matching spec.`);
+          return;
+        }
+        console.log(`Index on ${collectionName} exists with a different name: ${existing.name}. Dropping and recreating as ${options.name}...`);
+        await collection.dropIndex(existing.name);
+      }
+      
+      await collection.createIndex(keys, options);
+      console.log(`Index ${options.name} created on ${collectionName}.`);
+    }
+
     // 1. Add compound indexes for city-based tournament queries
     console.log('Creating compound indexes on tournaments collection...');
-    await db.collection('tournaments').createIndex(
+    await createIndexSafely('tournaments',
       { city: 1, sport: 1, createdAt: -1 },
       { name: 'idx_city_sport_created', background: true },
     );
-    await db.collection('tournaments').createIndex(
+    await createIndexSafely('tournaments',
       { city: 1, isHidden: 1 },
       { name: 'idx_city_hidden', background: true },
     );
-    await db.collection('tournaments').createIndex(
+    await createIndexSafely('tournaments',
       { 'organizer.id': 1 },
       { name: 'idx_organizer_id', background: true },
     );
@@ -24,15 +56,15 @@ module.exports = {
 
     // 2. Add indexes on users collection for role and location queries
     console.log('Creating indexes on users collection...');
-    await db.collection('users').createIndex(
+    await createIndexSafely('users',
       { role: 1 },
       { name: 'idx_role', background: true },
     );
-    await db.collection('users').createIndex(
+    await createIndexSafely('users',
       { 'preferences.location': 1 },
       { name: 'idx_preferences_location', background: true },
     );
-    await db.collection('users').createIndex(
+    await createIndexSafely('users',
       { email: 1 },
       { name: 'idx_email_unique', unique: true, background: true },
     );
