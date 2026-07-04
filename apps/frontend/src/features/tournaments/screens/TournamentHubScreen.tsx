@@ -88,13 +88,15 @@ export const TournamentHubScreen = ({ navigation }: any) => {
           </Button>
         </XStack>
 
-        <XStack space="$2" alignItems="center">
+        <XStack space="$2" alignItems="center" position="relative">
+          <View position="absolute" left={12} zIndex={10}>
+            <Search size={18} color="gray" />
+          </View>
           <Input 
             flex={1} 
             placeholder="Tìm kiếm giải đấu, nhà tổ chức..." 
             value={keyword}
             onChangeText={setKeyword}
-            left={<Search size={18} color="gray" style={{ marginLeft: 10 }} />}
             paddingLeft="$8"
           />
         </XStack>

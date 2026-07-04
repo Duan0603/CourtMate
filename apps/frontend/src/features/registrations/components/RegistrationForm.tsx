@@ -53,7 +53,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   ];
 
   return (
-    <YStack gap="$4" w="100%" maxW={400} p="$4" bg="$backgroundHover" br="$6" shadowColor="$shadowColor" shadowRadius={8}>
+    <YStack gap="$4" w="100%" maxWidth={400} p="$4" bg="$backgroundHover" br="$6" shadowColor="$shadowColor" shadowRadius={8}>
       {validationError && (
         <Text col="$red10" fow="bold" ta="center" fos="$3">
           {validationError}
