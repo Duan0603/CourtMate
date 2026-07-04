@@ -18,18 +18,27 @@ jobs:
         with:
           node-version: 18.x
           cache: 'npm'
+          cache-dependency-path: |
+            apps/frontend/package-lock.json
+            apps/backend/package-lock.json
 
-      - name: Install Dependencies
-        run: npm ci
+      - name: Install Shared Dependencies
+        run: npm install --prefix packages/shared
+
+      - name: Install Backend Dependencies
+        run: npm ci --prefix apps/backend
+
+      - name: Install Frontend Dependencies
+        run: npm ci --prefix apps/frontend
 
       - name: Build Shared Package
-        run: npm run build -w packages/shared
+        run: npm run build --prefix packages/shared
 
       - name: Typecheck Workspaces
         run: npm run typecheck
 
       - name: Build Backend App
-        run: npm run build -w apps/backend
+        run: npm run build --prefix apps/backend
 
       - name: Verify Frontend App
-        run: npm run typecheck -w apps/frontend
+        run: npm run typecheck --prefix apps/frontend
