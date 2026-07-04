@@ -1,8 +1,8 @@
+import { Tournament, TournamentSchema } from './infrastructure/persistence/tournament.entity';
+import { TournamentsService } from './domains/services/tournaments.service';
+import { TournamentsController } from './controllers/http/tournaments.controller';
 import { Module, OnModuleInit } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { TournamentsController } from './tournaments.controller';
-import { TournamentsService } from './tournaments.service';
-import { Tournament, TournamentSchema } from './tournament.schema';
 
 @Module({
   imports: [
@@ -10,7 +10,7 @@ import { Tournament, TournamentSchema } from './tournament.schema';
   ],
   controllers: [TournamentsController],
   providers: [TournamentsService],
-  exports: [TournamentsService],
+  exports: [TournamentsService, MongooseModule],
 })
 export class TournamentsModule implements OnModuleInit {
   constructor(private readonly tournamentsService: TournamentsService) {}
