@@ -34,6 +34,7 @@ export interface User {
   name: string;
   role: UserRole;
   preferences: UserPreferences;
+  bookmarkedTournaments?: string[];
   isVerified: boolean;
   createdAt: Date;
 }
@@ -157,4 +158,13 @@ export interface CreateRegistrationDto {
   partnerName?: string;
   contactPhone: string;
   skillLevel: SkillLevel;
+}
+
+export interface TournamentFilterDto {
+  keyword?: string;
+  sport?: SportType;
+  city?: string;
+  minFee?: number;
+  maxFee?: number;
+  status?: TournamentStatus;
 }

@@ -55,10 +55,10 @@ export class TournamentsController {
   }
 
   @Get()
-  async findAll(@Query('city') city?: string) {
-    const tournaments = await this.tournamentsService.findAll(city);
+  async findAll(@Query() query: any) {
+    const tournaments = await this.tournamentsService.findAll(query);
     // Determine if we are returning local or national fallback
-    const isFallback = city && tournaments.length > 0 && tournaments[0].city !== city;
+    const isFallback = query.city && tournaments.length > 0 && tournaments[0].city !== query.city;
     
     return {
       data: tournaments.map(t => ({
@@ -80,7 +80,50 @@ export class TournamentsController {
       }
     };
   }
+  @Get('my-organized')
+  async findMyOrganized() {
+    // TODO: Retrieve from req.user
+    const mockOrganizerId = 'org-123';
+    const tournaments = await this.tournamentsService.findByOrganizerId(mockOrganizerId);
+    
+    return {
+      data: tournaments.map(t => ({
+        id: t._id,
+        title: t.title,
+        sport: t.sport,
+        coverImage: t.coverImage,
+        startDate: t.startDate,
+        location: t.location,
+        district: t.district,
+        city: t.city,
+        status: t.status,
+        categories: t.categories,
+      }))
+    };
+  }
 
+  @Get('bookmarked')
+  async findBookmarked(@Query('ids') ids?: string) {
+    if (!ids) return { data: [] };
+    const idArray = ids.split(',').map(id => id.trim()).filter(Boolean);
+    const tournaments = await this.tournamentsService.findByIds(idArray);
+    
+    return {
+      data: tournaments.map(t => ({
+        id: t._id,
+        title: t.title,
+        sport: t.sport,
+        coverImage: t.coverImage,
+        startDate: t.startDate,
+        location: t.location,
+        district: t.district,
+        city: t.city,
+        organizer: t.organizer,
+        status: t.status,
+        categories: t.categories,
+      }))
+    };
+  }
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const t = await this.tournamentsService.findById(id);

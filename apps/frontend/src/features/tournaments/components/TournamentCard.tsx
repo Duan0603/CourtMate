@@ -1,14 +1,21 @@
 import React from 'react';
-import { YStack, XStack, Text, Image, Card, Theme, View } from 'tamagui';
+import { YStack, XStack, Text, Image, Card, Theme, View, Button } from 'tamagui';
 import { Tournament, TournamentStatus } from '@courtmate/shared';
-// Import Button from common components if needed, or use Tamagui Button
+import { Bookmark } from 'lucide-react-native';
 
 interface TournamentCardProps {
   tournament: Tournament;
   onPress: () => void;
+  isBookmarked?: boolean;
+  onToggleBookmark?: (e: any) => void;
 }
 
-export const TournamentCard: React.FC<TournamentCardProps> = ({ tournament, onPress }) => {
+export const TournamentCard: React.FC<TournamentCardProps> = ({ 
+  tournament, 
+  onPress,
+  isBookmarked = false,
+  onToggleBookmark
+}) => {
   const isRegistrationOpen = tournament.status === TournamentStatus.OPEN;
   
   // Format dates locally
@@ -45,9 +52,16 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({ tournament, onPr
                 {isRegistrationOpen ? 'Mở đăng ký' : 'Sắp diễn ra / Đóng'}
               </Text>
             </View>
-            <View backgroundColor="rgba(0,0,0,0.5)" padding="$2" borderRadius="$10">
-              <Text color="white" fontSize="$3">🔖</Text>
-            </View>
+            <Button
+              circular
+              size="$3"
+              backgroundColor="rgba(0,0,0,0.5)"
+              onPress={(e: any) => {
+                e.stopPropagation();
+                if (onToggleBookmark) onToggleBookmark(e);
+              }}
+              icon={<Bookmark size={18} color={isBookmarked ? "#FFD700" : "white"} fill={isBookmarked ? "#FFD700" : "transparent"} />}
+            />
           </XStack>
         </Card.Header>
 

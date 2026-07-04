@@ -1,4 +1,4 @@
-import { Controller, Get, Put, Body, UseGuards, Req, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Put, Body, UseGuards, Req, NotFoundException, Param, Delete } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UserRole } from '@courtmate/shared';
@@ -37,6 +37,22 @@ export class UsersController {
     if (!user) {
       throw new NotFoundException('User profile not found');
     }
+    return user;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('bookmarks/:id')
+  async addBookmark(@Req() req: any, @Param('id') tournamentId: string) {
+    const user = await this.usersService.addBookmark(req.user.email, tournamentId);
+    if (!user) throw new NotFoundException('User profile not found');
+    return user;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('bookmarks/:id')
+  async removeBookmark(@Req() req: any, @Param('id') tournamentId: string) {
+    const user = await this.usersService.removeBookmark(req.user.email, tournamentId);
+    if (!user) throw new NotFoundException('User profile not found');
     return user;
   }
 }

@@ -33,6 +33,9 @@ export class User extends Document {
 
   @Prop({ type: Boolean, default: false })
   isVerified!: boolean;
+
+  @Prop({ type: [String], default: [] })
+  bookmarkedTournaments!: string[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

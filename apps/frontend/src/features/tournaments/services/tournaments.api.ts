@@ -1,4 +1,4 @@
-import { CreateTournamentDto, Tournament, TournamentStatus, TournamentCategory, SportType } from '@courtmate/shared';
+import { CreateTournamentDto, Tournament, TournamentStatus, TournamentCategory, SportType, TournamentFilterDto } from '@courtmate/shared';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Lấy BACKEND_URL từ biến môi trường hoặc config (MVP dùng localhost/LAN IP)
@@ -47,11 +47,16 @@ export const createTournament = async (
 };
 
 export const tournamentsApi = {
-  async getTournaments(city?: string): Promise<{ data: Tournament[], meta: any }> {
+  async getTournaments(filters?: TournamentFilterDto): Promise<{ data: Tournament[], meta: any }> {
     try {
       const url = new URL(`${API_URL}/tournaments`);
-      if (city) {
-        url.searchParams.append('city', city);
+      if (filters) {
+        if (filters.city) url.searchParams.append('city', filters.city);
+        if (filters.sport) url.searchParams.append('sport', filters.sport);
+        if (filters.status) url.searchParams.append('status', filters.status);
+        if (filters.keyword) url.searchParams.append('keyword', filters.keyword);
+        if (filters.minFee !== undefined) url.searchParams.append('minFee', filters.minFee.toString());
+        if (filters.maxFee !== undefined) url.searchParams.append('maxFee', filters.maxFee.toString());
       }
       
       const response = await fetch(url.toString(), {
@@ -86,6 +91,42 @@ export const tournamentsApi = {
       return response.json();
     } catch (error) {
       console.error('Error fetching tournament details:', error);
+      throw error;
+    }
+  },
+
+  async getBookmarkedTournaments(token: string, ids: string[]): Promise<{ data: Tournament[] }> {
+    try {
+      const url = new URL(`${API_URL}/tournaments/bookmarked`);
+      if (ids.length > 0) {
+        url.searchParams.append('ids', ids.join(','));
+      }
+      const response = await fetch(url.toString(), {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch bookmarked tournaments');
+      return response.json();
+    } catch (error) {
+      console.error('Error fetching bookmarked tournaments:', error);
+      throw error;
+    }
+  },
+
+  async getMyOrganizedTournaments(token: string): Promise<{ data: Tournament[] }> {
+    try {
+      const response = await fetch(`${API_URL}/tournaments/my-organized`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch organized tournaments');
+      return response.json();
+    } catch (error) {
+      console.error('Error fetching organized tournaments:', error);
       throw error;
     }
   }
