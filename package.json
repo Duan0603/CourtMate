@@ -18,11 +18,16 @@
     "typecheck": "npm run typecheck --workspaces --if-present"
   },
   "overrides": {
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
     "@types/react": "~18.2.45"
   },
   "dependencies": {
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
     "@react-navigation/native": "^6.1.18",
-    "@react-navigation/native-stack": "^6.11.0"
+    "@react-navigation/native-stack": "^6.11.0",
+    "react-native-web": "^0.21.0"
   },
   "devDependencies": {
     "@react-native-community/cli-server-api": "^13.6.9",
