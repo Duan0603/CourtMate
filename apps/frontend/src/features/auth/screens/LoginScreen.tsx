@@ -356,7 +356,7 @@ export const LoginScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
             style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}
             resizeMode="cover"
           >
-            <View position="absolute" inset={0} bg="rgba(0,0,0,0.5)" />
+            <View position="absolute" top={0} bottom={0} left={0} right={0} bg="rgba(0,0,0,0.5)" />
             <View 
               bg="rgba(255,255,255,0.1)" borderWidth={1} borderColor="rgba(255,255,255,0.2)" br={16} 
               p={32} w="100%" maxWidth={450} style={{ backdropFilter: 'blur(10px)' }}
@@ -385,7 +385,7 @@ export const LoginScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
         style={{ flex: 1, width: '100%', height: '100%' }}
         resizeMode="cover"
       >
-        <View position="absolute" inset={0} bg="rgba(0,0,0,0.5)" />
+        <View position="absolute" top={0} bottom={0} left={0} right={0} bg="rgba(0,0,0,0.5)" />
         <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: 16 }} showsVerticalScrollIndicator={false} bounces={false}>
           {formContent}
         </ScrollView>
