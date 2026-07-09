@@ -21,7 +21,7 @@ export default function ProfileTab() {
         <YStack w={80} h={80} br={40} bg="rgba(196, 248, 42, 0.2)" jc="center" ai="center" mb="$3" borderWidth={2} borderColor="#C4F82A">
           <UserIcon color="#C4F82A" size={40} />
         </YStack>
-        <H2 color="white" fow="800">{user?.name || user?.identifier || 'Người chơi ẩn danh'}</H2>
+        <H2 color="white" fow="800">{user?.name || user?.email || 'Người chơi ẩn danh'}</H2>
         <Paragraph color="rgba(255,255,255,0.6)" fos={14} mt="$1">
           {user?.role === 'PLAYER' ? 'Vận động viên' : user?.role === 'ORGANIZER' ? 'Nhà tổ chức' : 'Thành viên'}
         </Paragraph>
