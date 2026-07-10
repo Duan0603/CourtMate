@@ -2,11 +2,11 @@ import React from 'react';
 import { YStack, Spinner, Paragraph } from 'tamagui';
 import { useLogin } from '../src/features/auth/hooks/useLogin';
 import { UserRole } from '@courtmate/shared';
+import { Redirect } from 'expo-router';
 
 // Screens
 import LoginScreen from '../src/features/auth/screens/LoginScreen';
 import OnboardingScreen from '../src/features/auth/screens/OnboardingScreen';
-import DashboardScreen from '../src/features/dashboard/screens/DashboardScreen';
 
 export default function Home() {
   const { isAuthenticated, user, isLoading } = useLogin();
@@ -29,6 +29,6 @@ export default function Home() {
     return <OnboardingScreen />;
   }
 
-  // Fully authenticated and onboarded
-  return <DashboardScreen />;
+  // Fully authenticated and onboarded, redirect to tabs layout
+  return <Redirect href="/(tabs)" />;
 }
