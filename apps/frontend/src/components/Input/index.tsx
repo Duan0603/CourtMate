@@ -1,17 +1,18 @@
-import React from 'react';
-import { Input as TamaguiInput } from 'tamagui';
+import React, { forwardRef } from 'react';
+import { Input as TamaguiInput, GetProps } from 'tamagui';
 
-type AppInputProps = Record<string, unknown>;
+type AppInputProps = GetProps<typeof TamaguiInput>;
 
-export const Input: React.FC<AppInputProps> = (props) => {
+export const Input = forwardRef<TamaguiInput, AppInputProps>((props, ref) => {
   return (
     <TamaguiInput 
+      ref={ref as any}
       borderWidth={1} 
       borderColor="$borderColor" 
       size="$4" 
       br="$4" 
-      {...(props as any)}
+      {...props}
     />
   );
-};
+});
 export default Input;

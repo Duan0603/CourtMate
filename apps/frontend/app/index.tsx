@@ -8,8 +8,11 @@ import { Redirect } from 'expo-router';
 import LoginScreen from '../src/features/auth/screens/LoginScreen';
 import OnboardingScreen from '../src/features/auth/screens/OnboardingScreen';
 
+import StartScreen from '../src/features/auth/screens/StartScreen';
+
 export default function Home() {
   const { isAuthenticated, user, isLoading } = useLogin();
+  const [hasStarted, setHasStarted] = React.useState(false);
 
   if (isLoading) {
     return (
@@ -20,8 +23,12 @@ export default function Home() {
     );
   }
 
+  if (!hasStarted && !isAuthenticated) {
+    return <StartScreen onStart={() => setHasStarted(true)} />;
+  }
+
   if (!isAuthenticated || !user) {
-    return <LoginScreen />;
+    return <LoginScreen onBack={() => setHasStarted(false)} />;
   }
 
   // User has logged in but hasn't completed onboarding yet (UserRole.USER is the default before they pick Player/Organizer)
