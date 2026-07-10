@@ -144,34 +144,6 @@ export const DashboardScreen: React.FC = () => {
         </YStack>
       </ScrollView>
 
-      {/* Bottom Navigation */}
-      <XStack
-        bg="rgba(20,20,20,0.95)"
-        borderTopWidth={1}
-        borderTopColor="rgba(255,255,255,0.05)"
-        h={80}
-        pb={20}
-        jc="space-around"
-        ai="center"
-      >
-        <YStack ai="center" gap="$1" opacity={1} onPress={() => router.replace('/')}>
-          <Trophy color="#C4F82A" size={24} />
-          <Text color="#C4F82A" fos={10} fow="600">Giải đấu</Text>
-        </YStack>
-        <YStack ai="center" gap="$1" opacity={0.5}>
-          <Search color="white" size={24} />
-          <Text color="white" fos={10} fow="600">Tìm kiếm</Text>
-        </YStack>
-        <YStack ai="center" gap="$1" opacity={0.5} onPress={() => router.push('/tracker')}>
-          <Calendar color="white" size={24} />
-          <Text color="white" fos={10} fow="600">Hồ sơ</Text>
-        </YStack>
-        <YStack ai="center" gap="$1" opacity={0.5}>
-          <UserIcon color="white" size={24} />
-          <Text color="white" fos={10} fow="600">Cá nhân</Text>
-        </YStack>
-      </XStack>
-      
     </YStack>
   );
 };
