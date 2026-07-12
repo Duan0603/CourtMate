@@ -17,4 +17,16 @@ export class AuthController {
   async verifyOtp(@Body() body: { email: string; code: string }) {
     return this.authService.verifyOtp(body.email, body.code);
   }
+
+  @Post('register')
+  @HttpCode(HttpStatus.CREATED)
+  async register(@Body() body: { email: string; password?: string; name?: string }) {
+    return this.authService.register(body.email, body.password || '', body.name || '');
+  }
+
+  @Post('login')
+  @HttpCode(HttpStatus.OK)
+  async login(@Body() body: { email: string; password?: string }) {
+    return this.authService.login(body.email, body.password || '');
+  }
 }

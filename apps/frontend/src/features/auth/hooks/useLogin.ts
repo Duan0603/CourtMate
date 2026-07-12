@@ -12,6 +12,8 @@ interface AuthContextType {
   verifyOtp: (email: string, code: string) => Promise<void>;
   updateProfile: (profileData: any) => Promise<void>;
   mockGoogleLogin: () => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -100,11 +102,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(fakeUser as any);
   };
 
+  const login = async (email: string, password: string) => {
+    const response = await authApi.login(email, password);
+    await AsyncStorage.setItem('courtmate_jwt_token', response.token);
+    setToken(response.token);
+    setUser(response.user);
+  };
+
+  const register = async (email: string, password: string, name: string) => {
+    const response = await authApi.register(email, password, name);
+    await AsyncStorage.setItem('courtmate_jwt_token', response.token);
+    setToken(response.token);
+    setUser(response.user);
+  };
+
   const logout = async () => {
-    await AsyncStorage.removeItem('courtmate_jwt_token');
-    await AsyncStorage.removeItem('courtmate_mock_user');
-    setToken(null);
-    setUser(null);
+    try {
+      console.log('[AuthContext] Attempting to logout...');
+      await AsyncStorage.removeItem('courtmate_jwt_token');
+      await AsyncStorage.removeItem('courtmate_mock_user');
+      setToken(null);
+      setUser(null);
+      console.log('[AuthContext] Logout successful. Tokens removed and state reset.');
+    } catch (e) {
+      console.error('[AuthContext] Error during logout:', e);
+      throw e;
+    }
   };
 
   const isAuthenticated = !!token && !!user;
@@ -121,6 +144,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         verifyOtp,
         updateProfile,
         mockGoogleLogin,
+        login,
+        register,
         logout,
       },
     },

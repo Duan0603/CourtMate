@@ -101,4 +101,62 @@ export const authApi = {
     }
     return response.json();
   },
+
+  login: async (email: string, password: string): Promise<{ user: User; token: string }> => {
+    const response = await fetch(`${API_URL}/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
+    if (!response.ok) {
+      const errText = await response.text();
+      let errMessage = 'Đăng nhập không thành công';
+      try {
+        const errJson = JSON.parse(errText);
+        errMessage = errJson.message || errMessage;
+      } catch (_) {
+        errMessage = errText || errMessage;
+      }
+      throw new Error(errMessage);
+    }
+    return response.json();
+  },
+
+  register: async (email: string, password: string, name: string): Promise<{ user: User; token: string }> => {
+    const response = await fetch(`${API_URL}/auth/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password, name }),
+    });
+    if (!response.ok) {
+      const errText = await response.text();
+      let errMessage = 'Đăng ký không thành công';
+      try {
+        const errJson = JSON.parse(errText);
+        errMessage = errJson.message || errMessage;
+      } catch (_) {
+        errMessage = errText || errMessage;
+      }
+      throw new Error(errMessage);
+    }
+    return response.json();
+  },
+
+  getFriends: async (token: string): Promise<User[]> => {
+    const response = await fetch(`${API_URL}/users/friends`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(errText || `Failed to fetch friends. status: ${response.status}`);
+    }
+    return response.json();
+  },
 };

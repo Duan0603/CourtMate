@@ -36,6 +36,12 @@ export class User extends Document {
 
   @Prop({ type: [String], default: [] })
   bookmarkedTournaments!: string[];
+
+  @Prop({ type: String, required: false })
+  password?: string;
+
+  @Prop({ type: [String], default: [] })
+  friends!: string[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

@@ -18,21 +18,21 @@ import { tournamentsApi } from '../../tournaments/services/tournaments.api';
 import { useLogin } from '../../auth/hooks/useLogin';
 
 const colors = {
-  background: '#14100E',
-  backgroundSecondary: '#1E1815',
-  surface: 'rgba(255,255,255,0.05)',
-  surfaceHover: 'rgba(255,255,255,0.08)',
-  surfaceBorder: 'rgba(255,255,255,0.10)',
-  primary: '#FF6B35',
-  primaryMuted: 'rgba(255,107,53,0.15)',
-  secondary: '#1FA598',
-  secondaryMuted: 'rgba(31,165,152,0.15)',
-  warning: '#F2B84B',
-  textPrimary: '#F5F0EB',
-  textSecondary: '#A69C93',
-  textDisabled: '#5C5550',
-  textOnPrimary: '#14100E',
-  divider: 'rgba(255,255,255,0.06)',
+  background: '#F4FBF7',
+  backgroundSecondary: '#FFFFFF',
+  surface: '#FFFFFF',
+  surfaceHover: '#F8FAFC',
+  surfaceBorder: 'rgba(5, 150, 105, 0.08)',
+  primary: '#059669',
+  primaryMuted: 'rgba(5, 150, 105, 0.08)',
+  secondary: '#1E293B',
+  secondaryMuted: 'rgba(30, 41, 59, 0.05)',
+  warning: '#D97706',
+  textPrimary: '#062F21',
+  textSecondary: '#476F62',
+  textDisabled: '#A7C2B7',
+  textOnPrimary: '#FFFFFF',
+  divider: 'rgba(5, 150, 105, 0.06)',
 };
 
 const sportLabels: Record<SportType, string> = {
@@ -159,13 +159,23 @@ export const DashboardScreen: React.FC = () => {
             backgroundColor={colors.surface}
             borderColor={colors.surfaceBorder}
             borderWidth={1}
-            onPress={logout}
+            onPress={async () => {
+              try {
+                console.log('Dashboard logout button clicked');
+                await logout();
+                console.log('Dashboard logout call finished, redirecting...');
+                router.replace('/');
+              } catch (err) {
+                console.error('Error during dashboard logout button click:', err);
+                Alert.alert('Lỗi', 'Không thể đăng xuất. Chi tiết: ' + String(err));
+              }
+            }}
             icon={<LogOut color={colors.textPrimary} size={18} />}
           />
         </XStack>
 
         <XStack gap="$3">
-          <YStack flex={1} backgroundColor={colors.surface} borderColor={colors.surfaceBorder} borderWidth={1} borderRadius="$5" padding="$3">
+          <YStack flex={1} backgroundColor="rgba(5, 150, 105, 0.04)" borderColor="rgba(5, 150, 105, 0.08)" borderWidth={1} borderRadius="$5" padding="$3">
             <Text color={colors.textSecondary} fontSize={12}>
               {isOrganizer ? 'Giải đang hiển thị' : 'Giải tìm thấy'}
             </Text>
@@ -186,8 +196,8 @@ export const DashboardScreen: React.FC = () => {
         <XStack
           alignItems="center"
           gap="$2"
-          backgroundColor={colors.surface}
-          borderColor={colors.surfaceBorder}
+          backgroundColor="rgba(5, 150, 105, 0.04)"
+          borderColor="rgba(5, 150, 105, 0.08)"
           borderWidth={1}
           borderRadius="$5"
           paddingHorizontal="$3"
@@ -218,7 +228,7 @@ export const DashboardScreen: React.FC = () => {
             <Button
               size="$3"
               borderRadius="$10"
-              backgroundColor={!selectedSport ? colors.primary : colors.surface}
+              backgroundColor={!selectedSport ? colors.primary : "rgba(5, 150, 105, 0.05)"}
               color={!selectedSport ? colors.textOnPrimary : colors.textPrimary}
               onPress={() => setSelectedSport(undefined)}
             >
@@ -229,7 +239,7 @@ export const DashboardScreen: React.FC = () => {
                 key={sport}
                 size="$3"
                 borderRadius="$10"
-                backgroundColor={selectedSport === sport ? colors.primary : colors.surface}
+                backgroundColor={selectedSport === sport ? colors.primary : "rgba(5, 150, 105, 0.05)"}
                 color={selectedSport === sport ? colors.textOnPrimary : colors.textPrimary}
                 onPress={() => setSelectedSport(sport)}
               >
@@ -287,7 +297,12 @@ export const DashboardScreen: React.FC = () => {
                     backgroundColor={colors.surface}
                     borderColor={colors.surfaceBorder}
                     borderWidth={1}
-                    borderRadius="$5"
+                    borderRadius={14}
+                    shadowColor="rgba(5, 150, 105, 0.08)"
+                    shadowOffset={{ width: 0, height: 4 }}
+                    shadowOpacity={1}
+                    shadowRadius={12}
+                    elevation={2}
                     overflow="hidden"
                     pressStyle={{ scale: 0.98, opacity: 0.92 }}
                     animation="quick"
@@ -350,47 +365,6 @@ export const DashboardScreen: React.FC = () => {
           </YStack>
         </ScrollView>
       )}
-
-      <XStack
-        position="absolute"
-        bottom={0}
-        left={0}
-        right={0}
-        height={82}
-        paddingBottom="$5"
-        backgroundColor="rgba(30,24,21,0.96)"
-        borderTopWidth={1}
-        borderTopColor={colors.surfaceBorder}
-        justifyContent="space-around"
-        alignItems="center"
-      >
-        <YStack alignItems="center" gap="$1" onPress={() => router.replace('/')}>
-          <Trophy color={colors.primary} size={23} />
-          <Text color={colors.primary} fontSize={10} fontWeight="700">{isOrganizer ? 'Giải của bạn' : 'Giải đấu'}</Text>
-        </YStack>
-        <YStack alignItems="center" gap="$1" onPress={() => searchRef.current?.focus()}>
-          <Search color={colors.textPrimary} size={23} />
-          <Text color={colors.textPrimary} fontSize={10} fontWeight="700">Tìm kiếm</Text>
-        </YStack>
-        <YStack alignItems="center" gap="$1" onPress={() => router.push('/tracker')}>
-          <Calendar color={colors.textSecondary} size={23} />
-          <Text color={colors.textSecondary} fontSize={10} fontWeight="700">{isOrganizer ? 'Đăng ký' : 'Hồ sơ'}</Text>
-        </YStack>
-        <YStack
-          alignItems="center"
-          gap="$1"
-          onPress={() => {
-            if (isOrganizer) {
-              Alert.alert('Tạo giải đấu', 'Luồng tạo giải sẽ được nối vào màn này trong bước tiếp theo.');
-              return;
-            }
-            Alert.alert('Cá nhân', user?.name || 'CourtMate');
-          }}
-        >
-          <UserIcon color={colors.textSecondary} size={23} />
-          <Text color={colors.textSecondary} fontSize={10} fontWeight="700">{isOrganizer ? 'Tạo giải' : 'Cá nhân'}</Text>
-        </YStack>
-      </XStack>
     </YStack>
   );
 };
