@@ -1,67 +1,68 @@
 import React from 'react';
-import { YStack, H3, Paragraph, ScrollView, XStack, Text } from 'tamagui';
+import { ScrollView, View, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useRegistrations } from '../hooks/useRegistrations';
 import { RegistrationForm } from '../components/RegistrationForm';
 import { ChevronLeft, ClipboardList } from 'lucide-react-native';
+import { Typography } from '../../../components/ui/Typography';
 
 export const RegistrationFormScreen: React.FC = () => {
   const { tournamentId } = useLocalSearchParams<{ tournamentId: string }>();
   const { submitRegistration, isSubmitting, error } = useRegistrations();
 
-  const mockPlayerId = '64957e841234567890abcdef'; // Nguyen Van Cau Thu (seeded ID format)
-
-  const handleFormSubmit = async (formData: any) => {
-    try {
-      await submitRegistration(
-        {
-          tournamentId,
-          ...formData,
-        },
-        mockPlayerId
-      );
-      // Success - redirect to tracker
-      router.push('/tracker');
-    } catch (e) {
-      console.error('Registration submit error:', e);
+  const handleFormSubmit = (formData: any) => {
+    const params = new URLSearchParams({
+      playerName: formData.playerName,
+      contactPhone: formData.contactPhone,
+      skillLevel: formData.skillLevel,
+      paymentMethod: formData.paymentMethod,
+    });
+    if (formData.partnerName) {
+      params.append('partnerName', formData.partnerName);
     }
+    router.push(`/payment/${tournamentId}?${params.toString()}` as any);
   };
 
   return (
-    <YStack bg="#0A0A0A" f={1}>
+    <View className="flex-1 bg-background">
       
       {/* Header */}
-      <XStack p="$5" pt="$10" ai="center" gap="$3" bg="rgba(20,20,20,0.8)" borderBottomWidth={1} borderBottomColor="rgba(255,255,255,0.05)">
-        <YStack w={40} h={40} br={20} bg="rgba(255,255,255,0.1)" jc="center" ai="center" onPress={() => router.back()}>
-          <ChevronLeft color="white" size={24} />
-        </YStack>
-        <Text color="white" fow="700" fos={18}>Đăng ký thi đấu</Text>
-      </XStack>
+      <View className="flex-row items-center p-md pt-2xl bg-surface border-b border-outline-variant/30 space-x-md">
+        <TouchableOpacity 
+          className="w-10 h-10 rounded-full border border-outline-variant/30 items-center justify-center bg-surface-container-lowest"
+          onPress={() => router.back()}
+        >
+          <ChevronLeft color="#1d4ed8" size={24} />
+        </TouchableOpacity>
+        <Typography variant="headline-md" className="flex-1 text-primary font-bold">
+          Đăng ký thi đấu
+        </Typography>
+      </View>
 
-      <ScrollView f={1} p="$5" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
-        <YStack gap="$5">
-          <YStack ai="center" gap="$2" mb="$2">
-            <YStack w={60} h={60} br={30} bg="rgba(196, 248, 42, 0.1)" jc="center" ai="center" mb="$2">
-              <ClipboardList color="#C4F82A" size={28} />
-            </YStack>
-            <H3 col="white" ta="center" fow="800">
+      <ScrollView className="flex-1 p-md" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+        <View className="space-y-xl mt-md">
+          <View className="items-center space-y-sm mb-sm">
+            <View className="w-16 h-16 rounded-full bg-primary/10 justify-center items-center mb-xs">
+              <ClipboardList color="#1d4ed8" size={28} />
+            </View>
+            <Typography variant="headline-lg" className="text-primary font-bold text-center">
               Hoàn thiện hồ sơ
-            </H3>
-            <Paragraph col="rgba(255,255,255,0.5)" ta="center" fos={14}>
+            </Typography>
+            <Typography variant="body-md" className="text-on-surface-variant text-center opacity-70">
               Mã giải đấu: {tournamentId?.substring(0,8)}...
-            </Paragraph>
-          </YStack>
+            </Typography>
+          </View>
 
-          <YStack bg="rgba(20,20,20,0.6)" br="$6" p="$5" borderWidth={1} borderColor="rgba(255,255,255,0.08)">
+          <View className="bg-surface-container-lowest rounded-xl p-lg border border-outline-variant/30" style={{ elevation: 2, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 8 }}>
             <RegistrationForm
               onSubmit={handleFormSubmit}
               isLoading={isSubmitting}
               errorMessage={error}
             />
-          </YStack>
-        </YStack>
+          </View>
+        </View>
       </ScrollView>
-    </YStack>
+    </View>
   );
 };
 

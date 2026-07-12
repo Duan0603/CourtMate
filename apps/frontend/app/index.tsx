@@ -30,9 +30,9 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <YStack f={1} ai="center" jc="center" bg="#F4FBF7">
-        <Spinner size="large" color="#059669" />
-        <Paragraph mt="$4" color="#476F62" fow="600">Đang tải ứng dụng...</Paragraph>
+      <YStack f={1} ai="center" jc="center" bg="#F8FAFC">
+        <Spinner size="large" color="#2563EB" />
+        <Paragraph mt="$4" color="#0F172A" fow="600">Đang tải ứng dụng...</Paragraph>
       </YStack>
     );
   }

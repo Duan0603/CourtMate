@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { ScrollView } from 'react-native';
-import { YStack, Text, Spinner } from 'tamagui';
+import { ScrollView, View } from 'react-native';
 import { BasicInfoStep } from '../components/BasicInfoStep';
 import { CategoriesStep } from '../components/CategoriesStep';
 import { RulesStep } from '../components/RulesStep';
 import { createTournament } from '../services/tournaments.api';
+import { Typography } from '../../../components/ui/Typography';
 
 export const CreateTournamentScreen = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -44,11 +44,21 @@ export const CreateTournamentScreen = () => {
 
   return (
     <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
-      <YStack flex={1} padding="$4" bg="$background" gap="$4">
-        <YStack>
-          <Text fontSize="$8" fontWeight="bold" color="$blue10">Tạo Giải Đấu Mới</Text>
-          <Text color="$gray10">Bước {currentStep} / 3</Text>
-        </YStack>
+      <View className="flex-1 p-lg bg-surface space-y-md">
+        <View className="mb-md">
+          <Typography variant="headline-lg-mobile" color="navy" className="mb-xs">Tạo Giải Đấu Mới</Typography>
+          <Typography variant="body-md" color="navy" className="opacity-70">Bước {currentStep} / 3</Typography>
+        </View>
+
+        <View className="flex-row items-center space-x-sm mb-lg">
+          {[1, 2, 3].map((step) => (
+            <View key={step} className="flex-1 h-1 rounded-full overflow-hidden bg-gray-border">
+              <View 
+                className={`h-full ${step <= currentStep ? 'bg-blue-vibrant' : 'bg-transparent'}`} 
+              />
+            </View>
+          ))}
+        </View>
 
         {currentStep === 1 && (
           <BasicInfoStep data={formData} updateData={updateData} onNext={handleNext} />
@@ -67,7 +77,8 @@ export const CreateTournamentScreen = () => {
             isLoading={isLoading} 
           />
         )}
-      </YStack>
+      </View>
     </ScrollView>
   );
 };
+

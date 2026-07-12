@@ -62,15 +62,14 @@ export default function EditProfileScreen() {
   };
 
   return (
-    <YStack f={1} bg="#0A0A0A" position="relative">
-      <View position="absolute" top={-50} right={-50} w={200} h={200} br={100} bg="#C4F82A" opacity={0.05} />
+    <YStack f={1} bg="#fcf8fa" position="relative">
       
       {/* Header */}
-      <XStack pt="$10" pb="$4" px="$5" ai="center" jc="space-between" bg="rgba(20,20,20,0.8)" borderBottomWidth={1} borderBottomColor="rgba(255,255,255,0.05)">
+      <XStack pt="$10" pb="$4" px="$5" ai="center" jc="space-between" bg="#ffffff" borderBottomWidth={1} borderBottomColor="rgba(124, 116, 122, 0.15)">
         <YStack w={40} h={40} jc="center" ai="flex-start" onPress={() => router.back()}>
-          <ChevronLeft color="white" size={24} />
+          <ChevronLeft color="#1d4ed8" size={24} />
         </YStack>
-        <H2 color="white" fow="700" fos={18}>Chỉnh sửa Hồ sơ</H2>
+        <H2 color="#1e293b" fow="700" fos={18}>Chỉnh sửa Hồ sơ</H2>
         <YStack w={40} h={40} />
       </XStack>
 
@@ -78,34 +77,34 @@ export default function EditProfileScreen() {
         <YStack gap="$5" pb="$10">
           
           {error && (
-            <YStack bg="rgba(239, 68, 68, 0.1)" p="$3" br="$4" borderWidth={1} borderColor="rgba(239, 68, 68, 0.3)">
-              <Paragraph color="#F87171" fow="600" fos="$3" ta="center">{error}</Paragraph>
+            <YStack bg="rgba(179, 38, 30, 0.1)" p="$3" br="$4" borderWidth={1} borderColor="rgba(179, 38, 30, 0.3)">
+              <Paragraph color="#b3261e" fow="600" fos="$3" ta="center">{error}</Paragraph>
             </YStack>
           )}
 
           {/* Avatar Preview */}
           <YStack ai="center" py="$4">
-            <YStack w={80} h={80} br={40} bg="rgba(255,255,255,0.05)" jc="center" ai="center" borderWidth={2} borderColor="rgba(255,255,255,0.1)">
-              <UserIcon color="white" size={32} />
+            <YStack w={80} h={80} br={40} bg="rgba(29, 78, 216, 0.1)" jc="center" ai="center" borderWidth={2} borderColor="#1d4ed8">
+              <UserIcon color="#1d4ed8" size={32} />
             </YStack>
-            <Text color="#C4F82A" mt="$3" fow="600" fos={14}>Đổi ảnh đại diện</Text>
+            <Text color="#1d4ed8" mt="$3" fow="600" fos={14}>Đổi ảnh đại diện</Text>
           </YStack>
 
           <YStack gap="$2">
-            <Label color="rgba(255,255,255,0.8)" fow="600">Tên hiển thị</Label>
+            <Label color="#1e293b" fow="600">Tên hiển thị</Label>
             <Input
               placeholder="Nhập tên của bạn"
               value={name}
               onChangeText={setName}
-              bg="rgba(255,255,255,0.05)"
-              borderColor="rgba(255,255,255,0.1)"
-              color="white"
+              bg="#ffffff"
+              borderColor="#7c747a"
+              color="#1e293b"
               h={50}
             />
           </YStack>
 
           <YStack gap="$2">
-            <Label color="rgba(255,255,255,0.8)" fow="600">Khu vực hoạt động</Label>
+            <Label color="#1e293b" fow="600">Khu vực hoạt động</Label>
             <XStack gap="$2" fw="wrap">
               {(['Da Nang', 'Ha Noi', 'Ho Chi Minh'] as const).map(c => {
                 const label = c === 'Da Nang' ? 'Đà Nẵng' : c === 'Ha Noi' ? 'Hà Nội' : 'TP. HCM';
@@ -113,15 +112,15 @@ export default function EditProfileScreen() {
                 return (
                   <YStack
                     key={c}
-                    bg={active ? '#C4F82A' : 'rgba(255,255,255,0.05)'}
+                    bg={active ? '#1d4ed8' : '#ffffff'}
                     borderWidth={1}
-                    borderColor={active ? '#C4F82A' : 'rgba(255,255,255,0.1)'}
+                    borderColor={active ? '#1d4ed8' : '#7c747a'}
                     px="$4"
                     py="$3"
                     br="$10"
                     onPress={() => setCity(c)}
                   >
-                    <Text color={active ? '#0A0A0A' : 'white'} fow="600">{label}</Text>
+                    <Text color={active ? '#ffffff' : '#1e293b'} fow="600">{label}</Text>
                   </YStack>
                 );
               })}
@@ -131,7 +130,7 @@ export default function EditProfileScreen() {
           {user?.role === UserRole.PLAYER && (
             <>
               <YStack gap="$3" mt="$2">
-                <Label color="rgba(255,255,255,0.8)" fow="600">Sở thích thể thao</Label>
+                <Label color="#1e293b" fow="600">Sở thích thể thao</Label>
                 <XStack gap="$3" fw="wrap">
                   {([
                     { id: SportType.BADMINTON, label: 'Cầu lông', icon: '🏸' },
@@ -144,16 +143,16 @@ export default function EditProfileScreen() {
                       <YStack
                         key={s.id}
                         w="46%"
-                        bg={active ? 'rgba(196, 248, 42, 0.1)' : 'rgba(255,255,255,0.05)'}
+                        bg={active ? 'rgba(29, 78, 216, 0.1)' : '#ffffff'}
                         borderWidth={2}
-                        borderColor={active ? '#C4F82A' : 'transparent'}
+                        borderColor={active ? '#1d4ed8' : 'rgba(124, 116, 122, 0.2)'}
                         p="$3"
                         br="$4"
                         ai="center"
                         onPress={() => handleSportToggle(s.id)}
                       >
                         <Text fos={24} mb="$1">{s.icon}</Text>
-                        <Text color="white" fow="600" fos={14}>{s.label}</Text>
+                        <Text color="#1e293b" fow="600" fos={14}>{s.label}</Text>
                       </YStack>
                     );
                   })}
@@ -161,7 +160,7 @@ export default function EditProfileScreen() {
               </YStack>
 
               <YStack gap="$3" mt="$2">
-                <Label color="rgba(255,255,255,0.8)" fow="600">Trình độ</Label>
+                <Label color="#1e293b" fow="600">Trình độ</Label>
                 <XStack gap="$2" jc="space-between">
                   {([
                     { id: 'Beginner', label: 'Nhập môn' },
@@ -173,15 +172,15 @@ export default function EditProfileScreen() {
                       <YStack
                         key={l.id}
                         f={1}
-                        bg={active ? '#C4F82A' : 'rgba(255,255,255,0.05)'}
+                        bg={active ? '#1d4ed8' : '#ffffff'}
                         borderWidth={1}
-                        borderColor={active ? '#C4F82A' : 'rgba(255,255,255,0.1)'}
+                        borderColor={active ? '#1d4ed8' : '#7c747a'}
                         py="$3"
                         br="$4"
                         ai="center"
                         onPress={() => setSkillLevel(l.id)}
                       >
-                        <Text color={active ? '#0A0A0A' : 'white'} fow="600" fos={13}>{l.label}</Text>
+                        <Text color={active ? '#ffffff' : '#1e293b'} fow="600" fos={13}>{l.label}</Text>
                       </YStack>
                     );
                   })}
@@ -192,14 +191,14 @@ export default function EditProfileScreen() {
 
           {user?.role === UserRole.ORGANIZER && (
             <YStack gap="$2" mt="$2">
-              <Label color="rgba(255,255,255,0.8)" fow="600">Tên CLB / Tổ chức</Label>
+              <Label color="#1e293b" fow="600">Tên CLB / Tổ chức</Label>
               <Input
                 placeholder="Nhập tên CLB của bạn"
                 value={clubName}
                 onChangeText={setClubName}
-                bg="rgba(255,255,255,0.05)"
-                borderColor="rgba(255,255,255,0.1)"
-                color="white"
+                bg="#ffffff"
+                borderColor="#7c747a"
+                color="#1e293b"
                 h={50}
               />
             </YStack>
@@ -207,7 +206,7 @@ export default function EditProfileScreen() {
 
           <YStack
             mt="$6"
-            bg={isSubmitting ? "rgba(196, 248, 42, 0.5)" : "#C4F82A"}
+            bg={isSubmitting ? "rgba(29, 78, 216, 0.5)" : "#1d4ed8"}
             h={56}
             br="$4"
             jc="center"
@@ -215,10 +214,10 @@ export default function EditProfileScreen() {
             onPress={isSubmitting ? undefined : handleSave}
             pressStyle={{ opacity: 0.8 }}
           >
-            {isSubmitting ? <Spinner size="small" color="#0A0A0A" /> : (
+            {isSubmitting ? <Spinner size="small" color="#ffffff" /> : (
               <XStack ai="center" gap="$2">
-                <CheckCircle2 color="#0A0A0A" size={20} />
-                <Text color="#0A0A0A" fow="800" fos={16} tt="uppercase">
+                <CheckCircle2 color="#ffffff" size={20} />
+                <Text color="#ffffff" fow="800" fos={16} tt="uppercase">
                   Lưu thay đổi
                 </Text>
               </XStack>

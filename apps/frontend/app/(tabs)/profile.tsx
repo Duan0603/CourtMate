@@ -1,46 +1,162 @@
-import React from 'react';
-import { Alert } from 'react-native';
+import React, { useRef, useEffect } from 'react';
+import { Alert, Platform } from 'react-native';
 import { YStack, XStack, H2, H3, Paragraph, Text, ScrollView, Separator } from 'tamagui';
 import { Settings, Shield, CreditCard, LogOut, ChevronRight, User as UserIcon } from 'lucide-react-native';
+import { useIsFocused } from '@react-navigation/native';
+import gsap from 'gsap';
 import { useLogin } from '../../src/features/auth/hooks/useLogin';
+import { useRegistrations } from '../../src/features/registrations/hooks/useRegistrations';
 import { router } from 'expo-router';
 
 export default function ProfileTab() {
   const { user, logout } = useLogin();
+  const { registrations, fetchRegistrations, isLoading: isRegLoading } = useRegistrations();
+  
+  const isFocused = useIsFocused();
+  const containerRef = useRef<any>(null);
+  const headerRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (isFocused && Platform.OS === 'web' && headerRef.current) {
+      // Ensure profile header is visible initially
+      gsap.set(headerRef.current, { y: 0, opacity: 1 });
+    }
+  }, [isFocused]);
+
+  useEffect(() => {
+    if (isFocused && Platform.OS === 'web' && containerRef.current) {
+      gsap.fromTo(containerRef.current, 
+        { opacity: 0, y: 15 }, 
+        { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out' }
+      );
+    }
+  }, [isFocused]);
+
+  const handleScroll = (event: any) => {
+    const scrollY = event.nativeEvent.contentOffset.y;
+    if (Platform.OS === 'web' && headerRef.current) {
+      if (scrollY > 20) {
+        // Scrolling down: slide profile header up and out of view
+        gsap.to(headerRef.current, {
+          y: -220,
+          opacity: 0,
+          duration: 0.3,
+          overwrite: 'auto',
+          ease: 'power2.out'
+        });
+      } else {
+        // Scrolling up to top: slide profile header back down
+        gsap.to(headerRef.current, {
+          y: 0,
+          opacity: 1,
+          duration: 0.3,
+          overwrite: 'auto',
+          ease: 'power2.out'
+        });
+      }
+    }
+  };
+  
+  const mockPlayerId = '64957e841234567890abcdef';
+
+  useEffect(() => {
+    fetchRegistrations(mockPlayerId);
+  }, [fetchRegistrations]);
 
   const menuItems = [
-    { icon: <UserIcon color="#059669" size={20} />, title: 'Chỉnh sửa thông tin', route: '/edit-profile' },
-    { icon: <Shield color="#059669" size={20} />, title: 'Bảo mật & Mật khẩu' },
-    { icon: <CreditCard color="#059669" size={20} />, title: 'Phương thức thanh toán' },
-    { icon: <Settings color="#059669" size={20} />, title: 'Cài đặt ứng dụng' },
+    { icon: <UserIcon color="#1d4ed8" size={20} />, title: 'Chỉnh sửa thông tin', route: '/edit-profile' },
+    { icon: <Shield color="#1d4ed8" size={20} />, title: 'Bảo mật & Mật khẩu' },
+    { icon: <CreditCard color="#1d4ed8" size={20} />, title: 'Phương thức thanh toán' },
+    { icon: <Settings color="#1d4ed8" size={20} />, title: 'Cài đặt ứng dụng' },
   ];
 
   return (
-    <YStack f={1} bg="#F4FBF7">
+    <YStack ref={containerRef} f={1} bg="#fcf8fa" position="relative">
       {/* Header Profile */}
-      <YStack pt="$10" pb="$6" px="$5" ai="center" bg="#FFFFFF" borderBottomWidth={1} borderBottomColor="rgba(5, 150, 105, 0.08)">
-        <YStack w={80} h={80} br={40} bg="rgba(5, 150, 105, 0.1)" jc="center" ai="center" mb="$3" borderWidth={2} borderColor="#059669">
-          <UserIcon color="#059669" size={40} />
+      <YStack 
+        ref={headerRef} 
+        pt="$10" 
+        pb="$6" 
+        px="$5" 
+        ai="center" 
+        bg="#FFFFFF" 
+        borderBottomWidth={1} 
+        borderBottomColor="rgba(29, 78, 216, 0.08)"
+        style={{
+          position: Platform.OS === 'web' ? 'fixed' : 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 50,
+          height: 220,
+          transition: 'transform 0.3s, opacity 0.3s'
+        } as any}
+      >
+        <YStack w={80} h={80} br={40} bg="rgba(29, 78, 216, 0.1)" jc="center" ai="center" mb="$3" borderWidth={2} borderColor="#1d4ed8">
+          <UserIcon color="#1d4ed8" size={40} />
         </YStack>
-        <H2 color="#062F21" fow="800">{user?.name || user?.email || 'Người chơi ẩn danh'}</H2>
-        <Paragraph color="#476F62" fos={14} mt="$1">
+        <H2 color="#00174b" fow="800">{user?.name || user?.email || 'Người chơi ẩn danh'}</H2>
+        <Paragraph color="#45464d" fos={14} mt="$1">
           {user?.role === 'PLAYER' ? 'Vận động viên' : user?.role === 'ORGANIZER' ? 'Nhà tổ chức' : 'Thành viên'}
         </Paragraph>
         
         <XStack mt="$4" gap="$3">
-          <YStack bg="rgba(5, 150, 105, 0.06)" px="$3" py="$1.5" br="$4">
-            <Text color="#059669" fos={12} fow="600">{user?.preferences?.location || 'Chưa cập nhật'}</Text>
+          <YStack bg="rgba(29, 78, 216, 0.06)" px="$3" py="$1.5" br="$4">
+            <Text color="#1d4ed8" fos={12} fow="600">{user?.preferences?.location || 'Chưa cập nhật'}</Text>
           </YStack>
-          <YStack bg="rgba(5, 150, 105, 0.06)" px="$3" py="$1.5" br="$4">
-            <Text color="#062F21" fos={12} fow="600">{user?.preferences?.skillLevel === 'Beginner' ? 'Nhập môn' : user?.preferences?.skillLevel === 'Intermediate' ? 'Trung bình' : user?.preferences?.skillLevel === 'Advanced' ? 'Nâng cao' : 'Chưa cập nhật'}</Text>
+          <YStack bg="rgba(29, 78, 216, 0.06)" px="$3" py="$1.5" br="$4">
+            <Text color="#00174b" fos={12} fow="600">{user?.preferences?.skillLevel === 'Beginner' ? 'Nhập môn' : user?.preferences?.skillLevel === 'Intermediate' ? 'Trung bình' : user?.preferences?.skillLevel === 'Advanced' ? 'Nâng cao' : 'Chưa cập nhật'}</Text>
           </YStack>
         </XStack>
       </YStack>
 
-      <ScrollView f={1} p="$5">
+      <ScrollView 
+        f={1} 
+        p="$5" 
+        onScroll={handleScroll} 
+        scrollEventThrottle={16}
+        contentContainerStyle={{ paddingTop: 220, paddingBottom: 100 }}
+      >
         <YStack gap="$4" pb="$8">
           
-          <Text color="#062F21" fos={18} fow="700" mb="$2">Cài đặt chung</Text>
+          <Text color="#00174b" fos={18} fow="700" mb="$2">Lịch sử giải đấu</Text>
+
+          {isRegLoading ? (
+            <Text col="#45464d">Đang tải lịch sử...</Text>
+          ) : registrations.length === 0 ? (
+            <Text col="#45464d">Bạn chưa đăng ký giải đấu nào.</Text>
+          ) : (
+            <YStack gap="$3">
+              {registrations.map((reg: any, idx) => (
+                <XStack
+                  key={reg.id || idx}
+                  bg="#FFFFFF"
+                  p="$4"
+                  br={12}
+                  borderWidth={1}
+                  borderColor="rgba(29, 78, 216, 0.08)"
+                  jc="space-between"
+                  ai="center"
+                  onPress={() => router.push(`/ticket/${reg.tournamentId || reg.tournament?._id || reg.tournament}` as any)}
+                  pressStyle={{ bg: 'rgba(29, 78, 216, 0.04)' }}
+                >
+                  <YStack f={1}>
+                    <Text color="#00174b" fos={15} fow="700" numberOfLines={1}>
+                      {reg.playerName} (Đăng ký)
+                    </Text>
+                    <Text color="#45464d" fos={13} mt="$1">
+                      Mã giải: {String(reg.tournamentId || reg.tournament?._id || reg.tournament).substring(0, 8).toUpperCase()}
+                    </Text>
+                  </YStack>
+                  <YStack bg="rgba(29, 78, 216, 0.1)" px="$3" py="$1.5" br="$4">
+                    <Text color="#1d4ed8" fos={12} fow="700">Xem vé</Text>
+                  </YStack>
+                </XStack>
+              ))}
+            </YStack>
+          )}
+
+          <Text color="#062F21" fos={18} fow="700" mt="$4" mb="$2">Cài đặt chung</Text>
 
           <YStack 
             bg="#FFFFFF" 

@@ -4,7 +4,7 @@ import { Button, Input } from '../../../components';
 import { SkillLevel, CreateRegistrationDto } from '@courtmate/shared';
 
 interface RegistrationFormProps {
-  onSubmit: (data: Omit<CreateRegistrationDto, 'tournamentId'>) => void;
+  onSubmit: (data: Omit<CreateRegistrationDto, 'tournamentId'> & { paymentMethod: string }) => void;
   isLoading: boolean;
   errorMessage: string | null;
 }
@@ -18,6 +18,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   const [partnerName, setPartnerName] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [skillLevel, setSkillLevel] = useState<SkillLevel>(SkillLevel.INTERMEDIATE);
+  const [paymentMethod, setPaymentMethod] = useState<string>('qr');
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const handleSubmit = () => {
@@ -43,6 +44,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       partnerName: partnerName.trim() || undefined,
       contactPhone: contactPhone.trim(),
       skillLevel,
+      paymentMethod,
     });
   };
 
@@ -53,7 +55,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   ];
 
   return (
-    <YStack gap="$4" w="100%" maxWidth={400} p="$4" bg="$backgroundHover" br="$6" shadowColor="$shadowColor" shadowRadius={8}>
+    <YStack gap="$4" w="100%">
       {validationError && (
         <Text col="$red10" fow="bold" ta="center" fos="$3">
           {validationError}
@@ -108,12 +110,46 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                 f={1}
                 onPress={() => setSkillLevel(opt.value)}
                 theme={isSelected ? 'active' : 'alt1'}
-                bg={isSelected ? '#ff5e3a' : '$backgroundHover'}
+                bg={isSelected ? '#1d4ed8' : '$backgroundHover'}
                 col={isSelected ? '#ffffff' : '$color'}
-                borderColor={isSelected ? '#ff5e3a' : '$borderColor'}
+                borderColor={isSelected ? '#1d4ed8' : '$borderColor'}
                 borderWidth={1}
                 size="$3.5"
                 br="$3"
+                hoverStyle={{ bg: isSelected ? '#003ea8' : '$backgroundPress' }}
+                pressStyle={{ bg: isSelected ? '#003ea8' : '$backgroundPress' }}
+              >
+                <Text fow="bold" fos="$3" col={isSelected ? '#ffffff' : '$color'}>
+                  {opt.label}
+                </Text>
+              </Button>
+            );
+          })}
+        </XStack>
+      </YStack>
+
+      <YStack gap="$1.5">
+        <Label col="$color" fow="bold" fos="$4">Phương thức thanh toán *</Label>
+        <XStack gap="$2" jc="space-between" w="100%">
+          {[
+            { label: 'Momo / QR Code', value: 'qr' },
+            { label: 'Chuyển khoản', value: 'bank' },
+          ].map((opt) => {
+            const isSelected = paymentMethod === opt.value;
+            return (
+              <Button
+                key={opt.value}
+                f={1}
+                onPress={() => setPaymentMethod(opt.value)}
+                theme={isSelected ? 'active' : 'alt1'}
+                bg={isSelected ? '#1d4ed8' : '$backgroundHover'}
+                col={isSelected ? '#ffffff' : '$color'}
+                borderColor={isSelected ? '#1d4ed8' : '$borderColor'}
+                borderWidth={1}
+                size="$3.5"
+                br="$3"
+                hoverStyle={{ bg: isSelected ? '#003ea8' : '$backgroundPress' }}
+                pressStyle={{ bg: isSelected ? '#003ea8' : '$backgroundPress' }}
               >
                 <Text fow="bold" fos="$3" col={isSelected ? '#ffffff' : '$color'}>
                   {opt.label}
@@ -128,14 +164,15 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
         mt="$4"
         onPress={handleSubmit}
         disabled={isLoading}
-        bg="#ff5e3a"
+        bg="#1d4ed8"
         color="#ffffff"
-        hoverStyle={{ bg: '#e54d2a' }}
+        hoverStyle={{ bg: '#003ea8' }}
+        pressStyle={{ bg: '#003ea8' }}
         size="$5"
         br="$4"
       >
         <Text fow="bold" col="#ffffff" fos="$4">
-          {isLoading ? 'Đang gửi đăng ký...' : 'Xác nhận Đăng ký'}
+          {isLoading ? 'Đang xử lý...' : 'Tiếp tục thanh toán'}
         </Text>
       </Button>
     </YStack>

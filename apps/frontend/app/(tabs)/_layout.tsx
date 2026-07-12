@@ -45,8 +45,8 @@ export default function TabLayout() {
         options={{
           tabBarIcon: ({ color, focused }) => (
             <YStack ai="center" gap="$1" opacity={focused ? 1 : 0.7}>
-              <Trophy color={focused ? "#059669" : "#94B5A6"} size={24} />
-              <Text color={focused ? "#059669" : "#94B5A6"} fos={10} fow="600">
+              <Trophy color={focused ? "#1d4ed8" : "#76777D"} size={24} />
+              <Text color={focused ? "#1d4ed8" : "#76777D"} fos={10} fow="600">
                 Giải đấu
               </Text>
             </YStack>
@@ -56,14 +56,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="tracker"
         options={{
-          tabBarIcon: ({ color, focused }) => (
-            <YStack ai="center" gap="$1" opacity={focused ? 1 : 0.7}>
-              <Calendar color={focused ? "#059669" : "#94B5A6"} size={24} />
-              <Text color={focused ? "#059669" : "#94B5A6"} fos={10} fow="600">
-                Hồ sơ
-              </Text>
-            </YStack>
-          ),
+          href: null,
         }}
       />
       <Tabs.Screen
@@ -71,8 +64,8 @@ export default function TabLayout() {
         options={{
           tabBarIcon: ({ color, focused }) => (
             <YStack ai="center" gap="$1" opacity={focused ? 1 : 0.7}>
-              <MessageCircle color={focused ? "#059669" : "#94B5A6"} size={24} />
-              <Text color={focused ? "#059669" : "#94B5A6"} fos={10} fow="600">
+              <MessageCircle color={focused ? "#1d4ed8" : "#76777D"} size={24} />
+              <Text color={focused ? "#1d4ed8" : "#76777D"} fos={10} fow="600">
                 Nhắn tin
               </Text>
             </YStack>
@@ -84,8 +77,8 @@ export default function TabLayout() {
         options={{
           tabBarIcon: ({ color, focused }) => (
             <YStack ai="center" gap="$1" opacity={focused ? 1 : 0.7}>
-              <UserIcon color={focused ? "#059669" : "#94B5A6"} size={24} />
-              <Text color={focused ? "#059669" : "#94B5A6"} fos={10} fow="600">
+              <UserIcon color={focused ? "#1d4ed8" : "#76777D"} size={24} />
+              <Text color={focused ? "#1d4ed8" : "#76777D"} fos={10} fow="600">
                 Cá nhân
               </Text>
             </YStack>
