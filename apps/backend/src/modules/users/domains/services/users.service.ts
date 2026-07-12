@@ -15,7 +15,13 @@ export class UsersService {
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return this.userModel.findOne({ email: email.toLowerCase() }).exec();
+    const clean = email.toLowerCase().trim();
+    return this.userModel.findOne({
+      $or: [
+        { email: clean },
+        { identifier: clean }
+      ]
+    }).exec();
   }
 
   async findByCity(city: string): Promise<User[]> {
@@ -39,9 +45,23 @@ export class UsersService {
   async create(email: string, role: UserRole = UserRole.USER): Promise<User> {
     const newUser = new this.userModel({
       email: email.toLowerCase(),
+      identifier: email.toLowerCase(),
       role,
       preferences: { sports: [] },
       isVerified: false,
+    });
+    return newUser.save();
+  }
+
+  async createWithPassword(email: string, passwordHash: string, name: string = ''): Promise<User> {
+    const newUser = new this.userModel({
+      email: email.toLowerCase(),
+      identifier: email.toLowerCase(),
+      password: passwordHash,
+      name,
+      role: UserRole.USER,
+      preferences: { sports: [] },
+      isVerified: true,
     });
     return newUser.save();
   }
@@ -113,5 +133,11 @@ export class UsersService {
     
     user.bookmarkedTournaments = user.bookmarkedTournaments.filter(id => id !== tournamentId);
     return user.save();
+  }
+
+  async getFriends(email: string): Promise<User[]> {
+    const user = await this.findByEmail(email);
+    if (!user || !user.friends) return [];
+    return this.userModel.find({ _id: { $in: user.friends } }).exec();
   }
 }

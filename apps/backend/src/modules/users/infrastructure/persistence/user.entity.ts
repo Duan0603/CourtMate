@@ -27,6 +27,9 @@ export class User extends Document {
   @Prop({ required: true })
   email!: string;
 
+  @Prop({ required: false })
+  identifier?: string;
+
   @Prop({ required: false, default: '' })
   name!: string;
 
@@ -41,6 +44,12 @@ export class User extends Document {
 
   @Prop({ type: [String], default: [] })
   bookmarkedTournaments!: string[];
+
+  @Prop({ required: false })
+  password?: string;
+
+  @Prop({ type: [String], default: [] })
+  friends!: string[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

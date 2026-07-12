@@ -18,6 +18,12 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('friends')
+  async getFriends(@Req() req: any) {
+    return this.usersService.getFriends(req.user.email);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Put('profile')
   async updateProfile(
     @Req() req: any,

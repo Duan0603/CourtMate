@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { YStack, XStack, H1, H2, Paragraph, Label, Spinner, Text, View } from 'tamagui';
 import { useLogin } from '../hooks/useLogin';
 import { Input } from '../../../components';
 import { Check, Target, Activity, Star, Eye, EyeOff } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert, KeyboardAvoidingView, Platform, Dimensions, useWindowDimensions, ImageBackground, ScrollView, LayoutAnimation, UIManager, Animated } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
@@ -48,11 +49,12 @@ export const LoginScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
 
-  const { updateProfile, mockGoogleLogin } = useLogin();
+  const { login, register, mockGoogleLogin } = useLogin();
   const [mode, setMode] = useState<'login' | 'signup' | 'forgot_password'>('login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
 
   const emailRef = React.useRef<any>(null);
   const passwordRef = React.useRef<any>(null);
@@ -61,6 +63,24 @@ export const LoginScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const fadeAnim = React.useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const loadRemembered = async () => {
+      try {
+        const savedEmail = await AsyncStorage.getItem('courtmate_remember_email');
+        const savedRemember = await AsyncStorage.getItem('courtmate_remember_me');
+        if (savedRemember === 'true' && savedEmail) {
+          setEmail(savedEmail);
+          setRememberMe(true);
+        } else if (savedRemember === 'false') {
+          setRememberMe(false);
+        }
+      } catch (e) {
+        console.warn('Failed to load remembered email', e);
+      }
+    };
+    loadRemembered();
+  }, []);
 
   const handleToggleMode = () => {
     Animated.timing(fadeAnim, { toValue: 0, duration: 150, useNativeDriver: true }).start(() => {
@@ -95,19 +115,49 @@ export const LoginScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
     let newErrors: any = {};
     let hasError = false;
 
-    if (mode === 'signup' && !name.trim()) {
-      newErrors.name = 'Vui lòng nhập họ và tên của bạn';
-      hasError = true;
+    if (mode === 'signup') {
+      const trimmedName = name.trim();
+      if (!trimmedName) {
+        newErrors.name = 'Vui lòng nhập họ và tên của bạn';
+        hasError = true;
+      } else if (trimmedName.length < 2) {
+        newErrors.name = 'Họ và tên phải có ít nhất 2 ký tự';
+        hasError = true;
+      } else if (!/^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂÂÊÔƠưăâêôơ\s]+$/.test(trimmedName)) {
+        newErrors.name = 'Họ và tên chỉ được chứa chữ cái và khoảng trắng';
+        hasError = true;
+      }
     }
+
     const cleanEmail = email.trim().toLowerCase();
     if (!cleanEmail) {
       newErrors.email = 'Vui lòng nhập email';
       hasError = true;
-    }
-    if (!password.trim() || password.length < 6) {
-      newErrors.password = 'Mật khẩu phải chứa ít nhất 6 ký tự';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      newErrors.email = 'Định dạng email không hợp lệ (Ví dụ: user@example.com)';
       hasError = true;
     }
+
+    const trimmedPassword = password.trim();
+    if (!trimmedPassword) {
+      newErrors.password = 'Vui lòng nhập mật khẩu';
+      hasError = true;
+    } else if (mode === 'signup') {
+      if (trimmedPassword.length < 6) {
+        newErrors.password = 'Mật khẩu phải chứa ít nhất 6 ký tự';
+        hasError = true;
+      } else if (!/[A-Z]/.test(trimmedPassword)) {
+        newErrors.password = 'Mật khẩu phải chứa ít nhất 1 chữ hoa';
+        hasError = true;
+      } else if (!/[a-z]/.test(trimmedPassword)) {
+        newErrors.password = 'Mật khẩu phải chứa ít nhất 1 chữ thường';
+        hasError = true;
+      } else if (!/\d/.test(trimmedPassword)) {
+        newErrors.password = 'Mật khẩu phải chứa ít nhất 1 chữ số';
+        hasError = true;
+      }
+    }
+
     if (mode === 'signup' && !agreed) {
       newErrors.agreed = 'Bạn cần đồng ý với các Điều khoản';
       hasError = true;
@@ -121,22 +171,28 @@ export const LoginScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
     setErrors({});
     setIsSubmitting(true);
     
-    setTimeout(async () => {
-      try {
-        if (mode === 'signup') {
-          await updateProfile({ name: name.trim() });
-          Alert.alert('Thành công', 'Đăng ký tài khoản thành công!', [
-            { text: 'OK', onPress: handleToggleMode }
-          ]);
+    try {
+      if (mode === 'signup') {
+        await register(cleanEmail, password.trim(), name.trim());
+        Alert.alert('Thành công', 'Đăng ký tài khoản thành công!', [
+          { text: 'OK', onPress: handleToggleMode }
+        ]);
+      } else {
+        await login(cleanEmail, password.trim());
+        if (rememberMe) {
+          await AsyncStorage.setItem('courtmate_remember_email', cleanEmail);
+          await AsyncStorage.setItem('courtmate_remember_me', 'true');
         } else {
-          Alert.alert('Thành công', 'Đăng nhập thành công!');
+          await AsyncStorage.removeItem('courtmate_remember_email');
+          await AsyncStorage.setItem('courtmate_remember_me', 'false');
         }
-      } catch (err: any) {
-        setErrors({ general: err.message || 'Đã có lỗi xảy ra. Vui lòng thử lại.' });
-      } finally {
-        setIsSubmitting(false);
+        Alert.alert('Thành công', 'Đăng nhập thành công!');
       }
-    }, 1500);
+    } catch (err: any) {
+      setErrors({ general: err.message || 'Đã có lỗi xảy ra. Vui lòng thử lại.' });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const formContent = (
@@ -158,6 +214,15 @@ export const LoginScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
         <Paragraph color={theme.onSurfaceVariant} fos={14} mt="$1.5" ta={mode === 'login' || mode === 'forgot_password' ? 'left' : 'center'}>
           {mode === 'login' ? 'Đăng nhập nhanh chóng bằng tài khoản Google của bạn.' : mode === 'forgot_password' ? 'Nhập email của bạn để nhận mã OTP khôi phục mật khẩu.' : 'Bắt đầu hành trình chinh phục các trận đấu gay cấn cùng CourtMate ngay hôm nay.'}
         </Paragraph>
+        {mode === 'login' && (
+          <YStack w="100%" bg="rgba(80, 102, 0, 0.05)" p="$2.5" br={8} borderWidth={1} borderColor="rgba(80, 102, 0, 0.15)" mt="$3" gap="$0.5">
+            <Text color="#506600" fow="700" fos={12}>Tài khoản thử nghiệm (Mật khẩu: Password123):</Text>
+            <Text color="#444933" fos={11}>• Player: test@courtmate.com</Text>
+            <Text color="#444933" fos={11}>• Organizer: organizer@courtmate.com</Text>
+            <Text color="#444933" fos={11}>• Admin: admin@courtmate.com</Text>
+            <Text color="#444933" fos={11}>• Super Admin: superadmin@courtmate.com</Text>
+          </YStack>
+        )}
       </YStack>
 
       <YStack gap="$2.5">
@@ -248,6 +313,14 @@ export const LoginScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
               </View>
             </View>
             {errors.password && <Text color={theme.error} fos={12} ml="$1">{errors.password}</Text>}
+            {mode === 'login' && (
+              <XStack ai="center" gap="$2.5" mt="$3" mb="$1" cursor="pointer" onPress={() => setRememberMe(!rememberMe)}>
+                <View w={18} h={18} br={4} borderWidth={1.5} borderColor={rememberMe ? theme.primary : theme.outlineVariant} bg={rememberMe ? theme.primary : theme.surface} ai="center" jc="center">
+                  {rememberMe && <Check color="#fff" size={12} strokeWidth={3.5} />}
+                </View>
+                <Text color={theme.onSurfaceVariant} fos={14} fow="600">Ghi nhớ đăng nhập</Text>
+              </XStack>
+            )}
           </YStack>
         )}
 
