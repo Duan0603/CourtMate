@@ -325,11 +325,10 @@ export default function ChatTab() {
         )}
 
         {/* Header */}
-        <XStack px="$5" py="$4" bg="#FFFFFF" borderBottomWidth={1} borderBottomColor="rgba(29, 78, 216, 0.08)" ai="center" jc="space-between">
+        <XStack px="$5" py="$3" ai="center" jc="space-between">
           <YStack>
-            <Text color="#1e293b" fos={20} fow="800">Đoạn chat</Text>
+            <Text color="#1e293b" fos={22} fow="800">Đoạn chat</Text>
           </YStack>
-          <MessageSquare color="#1d4ed8" size={24} />
         </XStack>
 
         {isLoadingFriends ? (

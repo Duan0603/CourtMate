@@ -1,232 +1,512 @@
-import React, { useRef, useEffect } from 'react';
-import { Alert, Platform } from 'react-native';
-import { YStack, XStack, H2, H3, Paragraph, Text, ScrollView, Separator } from 'tamagui';
-import { Settings, Shield, CreditCard, LogOut, ChevronRight, User as UserIcon } from 'lucide-react-native';
-import { useIsFocused } from '@react-navigation/native';
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  ScrollView, 
+  TextInput, 
+  Image, 
+  Alert, 
+  Platform, 
+  ActivityIndicator 
+} from 'react-native';
+import { 
+  User, 
+  Shield, 
+  Bell, 
+  EyeOff, 
+  ChevronRight, 
+  ArrowLeft, 
+  Camera, 
+  Plus, 
+  X, 
+  Link2, 
+  LogOut, 
+  CheckCircle2, 
+  Target, 
+  Activity, 
+  Trophy, 
+  Sparkles, 
+  Award
+} from 'lucide-react-native';
 import gsap from 'gsap';
 import { useLogin } from '../../src/features/auth/hooks/useLogin';
-import { useRegistrations } from '../../src/features/registrations/hooks/useRegistrations';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 
 export default function ProfileTab() {
-  const { user, logout } = useLogin();
-  const { registrations, fetchRegistrations, isLoading: isRegLoading } = useRegistrations();
+  const { user, logout, updateProfile } = useLogin();
+  const { view: initialView } = useLocalSearchParams<{ view?: string }>();
+
+  // Screen state
+  const [currentView, setCurrentView] = useState<'SETTINGS' | 'EDIT_PROFILE'>('SETTINGS');
+
+  // GSAP Animation refs
+  const settingsWrapperRef = useRef<View>(null);
+  const editProfileWrapperRef = useRef<View>(null);
+
+  // Form states initialized with user preferences
+  const [fullName, setFullName] = useState(user?.name || '');
+  const [username, setUsername] = useState(user?.preferences?.username || '@amercer_elite');
+  const [bio, setBio] = useState(user?.preferences?.bio || 'Competitive tennis player focused on agility and baseline power. Looking for local tournaments.');
+  const [selectedSports, setSelectedSports] = useState<string[]>(user?.preferences?.sports || ['tennis', 'basketball']);
+  const [instagramUrl, setInstagramUrl] = useState(user?.preferences?.socialLinks?.instagram || 'https://instagram.com/amercer');
+  const [twitterUrl, setTwitterUrl] = useState(user?.preferences?.socialLinks?.twitter || '');
   
-  const isFocused = useIsFocused();
-  const containerRef = useRef<any>(null);
-  const headerRef = useRef<any>(null);
+  const defaultAvatar = 'https://lh3.googleusercontent.com/aida-public/AB6AXuCMJuy6DPTqraCzbCGubSvOP_URsWJZHNJdT3BWRGY1bvEm9xwAyauxG6VpB7rC5XmVBCygMlDvVJOQ9_BDSklP_N-dAAw02nnphfApJqsPAJfaHESPRjgqKrLx25HLZnFe1tjkuVKicL5_Q364S_d6cpCuIdLDneJ62m--bp2QgHysZXK-s_lKzBN7gkQQ6h-Lrrnqe1Pn3PC_dzn1ncmbv98ZhfFCTz7NZyb8LktIbwbW85rjvAwLxuhbHTcn0axGUws92p08rM0';
+  const [avatarUrl, setAvatarUrl] = useState(user?.preferences?.avatarUrl || defaultAvatar);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (isFocused && Platform.OS === 'web' && headerRef.current) {
-      // Ensure profile header is visible initially
-      gsap.set(headerRef.current, { y: 0, opacity: 1 });
-    }
-  }, [isFocused]);
-
-  useEffect(() => {
-    if (isFocused && Platform.OS === 'web' && containerRef.current) {
-      gsap.fromTo(containerRef.current, 
-        { opacity: 0, y: 15 }, 
-        { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out' }
-      );
-    }
-  }, [isFocused]);
-
-  const handleScroll = (event: any) => {
-    const scrollY = event.nativeEvent.contentOffset.y;
-    if (Platform.OS === 'web' && headerRef.current) {
-      if (scrollY > 20) {
-        // Scrolling down: slide profile header up and out of view
-        gsap.to(headerRef.current, {
-          y: -220,
-          opacity: 0,
-          duration: 0.3,
-          overwrite: 'auto',
-          ease: 'power2.out'
-        });
-      } else {
-        // Scrolling up to top: slide profile header back down
-        gsap.to(headerRef.current, {
-          y: 0,
-          opacity: 1,
-          duration: 0.3,
-          overwrite: 'auto',
-          ease: 'power2.out'
-        });
-      }
-    }
-  };
-  
-  const mockPlayerId = '64957e841234567890abcdef';
-
-  useEffect(() => {
-    fetchRegistrations(mockPlayerId);
-  }, [fetchRegistrations]);
-
-  const menuItems = [
-    { icon: <UserIcon color="#1d4ed8" size={20} />, title: 'Chỉnh sửa thông tin', route: '/edit-profile' },
-    { icon: <Shield color="#1d4ed8" size={20} />, title: 'Bảo mật & Mật khẩu' },
-    { icon: <CreditCard color="#1d4ed8" size={20} />, title: 'Phương thức thanh toán' },
-    { icon: <Settings color="#1d4ed8" size={20} />, title: 'Cài đặt ứng dụng' },
+  const avatarsList = [
+    defaultAvatar,
+    'https://lh3.googleusercontent.com/aida-public/AB6AXuBasGFQDB6ZoYS4Cy_k3dB8mu-KgjU3E6NgBcul8DTergM3hD_z0i02jsw06YWmME9RVnyZfe49dQfjXYHMVw29G1reS890PaYGTrMgl3Be44MLwX3_pJpQ43tdoUHBuECWfUEIzm3aWPhybBcWOG15VsR52auDRMRhPH_ZiH3w4jYZoHggdEOuYw-7syw-hzVMTnXN2mG77Wpm9gdCygA62x7x1AZJOQbA5TQ_1m_8DRadC80CVsYgvrjfi0n21lsYN5LEiMSuSxA'
   ];
 
-  return (
-    <YStack ref={containerRef} f={1} bg="#fcf8fa" position="relative">
-      {/* Header Profile */}
-      <YStack 
-        ref={headerRef} 
-        pt="$10" 
-        pb="$6" 
-        px="$5" 
-        ai="center" 
-        bg="#FFFFFF" 
-        borderBottomWidth={1} 
-        borderBottomColor="rgba(29, 78, 216, 0.08)"
-        style={{
-          position: Platform.OS === 'web' ? 'fixed' : 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 50,
-          height: 220,
-          transition: 'transform 0.3s, opacity 0.3s'
-        } as any}
-      >
-        <YStack w={80} h={80} br={40} bg="rgba(29, 78, 216, 0.1)" jc="center" ai="center" mb="$3" borderWidth={2} borderColor="#1d4ed8">
-          <UserIcon color="#1d4ed8" size={40} />
-        </YStack>
-        <H2 color="#00174b" fow="800">{user?.name || user?.email || 'Người chơi ẩn danh'}</H2>
-        <Paragraph color="#45464d" fos={14} mt="$1">
-          {user?.role === 'PLAYER' ? 'Vận động viên' : user?.role === 'ORGANIZER' ? 'Nhà tổ chức' : 'Thành viên'}
-        </Paragraph>
-        
-        <XStack mt="$4" gap="$3">
-          <YStack bg="rgba(29, 78, 216, 0.06)" px="$3" py="$1.5" br="$4">
-            <Text color="#1d4ed8" fos={12} fow="600">{user?.preferences?.location || 'Chưa cập nhật'}</Text>
-          </YStack>
-          <YStack bg="rgba(29, 78, 216, 0.06)" px="$3" py="$1.5" br="$4">
-            <Text color="#00174b" fos={12} fow="600">{user?.preferences?.skillLevel === 'Beginner' ? 'Nhập môn' : user?.preferences?.skillLevel === 'Intermediate' ? 'Trung bình' : user?.preferences?.skillLevel === 'Advanced' ? 'Nâng cao' : 'Chưa cập nhật'}</Text>
-          </YStack>
-        </XStack>
-      </YStack>
+  const allSports = [
+    { id: 'tennis', label: 'Tennis' },
+    { id: 'basketball', label: 'Basketball' },
+    { id: 'football', label: 'Football' },
+    { id: 'volleyball', label: 'Volleyball' },
+    { id: 'badminton', label: 'Badminton' },
+    { id: 'pickleball', label: 'Pickleball' },
+    { id: 'esports', label: 'Esports' }
+  ];
 
-      <ScrollView 
-        f={1} 
-        p="$5" 
-        onScroll={handleScroll} 
-        scrollEventThrottle={16}
-        contentContainerStyle={{ paddingTop: 220, paddingBottom: 100 }}
-      >
-        <YStack gap="$4" pb="$8">
+  const isInitialMount = useRef(true);
+
+  useEffect(() => {
+    if (initialView === 'edit-profile') {
+      if (currentView !== 'EDIT_PROFILE') {
+        if (isInitialMount.current) {
+          setCurrentView('EDIT_PROFILE');
+          if (Platform.OS === 'web') {
+            gsap.set(settingsWrapperRef.current, { display: 'none', opacity: 0 });
+            gsap.set(editProfileWrapperRef.current, { display: 'flex', opacity: 1, scale: 1, y: 0 });
+          }
+        } else {
+          if (Platform.OS === 'web') {
+            const tl = gsap.timeline({
+              onStart: () => {
+                gsap.set(editProfileWrapperRef.current, { display: 'flex' });
+              },
+              onComplete: () => {
+                gsap.set(settingsWrapperRef.current, { display: 'none' });
+                setCurrentView('EDIT_PROFILE');
+              }
+            });
+            
+            tl.to(settingsWrapperRef.current, {
+              opacity: 0,
+              scale: 0.95,
+              y: -15,
+              duration: 0.3,
+              ease: 'power2.inOut'
+            });
+            
+            tl.fromTo(editProfileWrapperRef.current,
+              { opacity: 0, scale: 0.95, y: 15 },
+              { opacity: 1, scale: 1, y: 0, duration: 0.4, ease: 'power2.out' },
+              '-=0.15'
+            );
+          } else {
+            setCurrentView('EDIT_PROFILE');
+          }
+        }
+      }
+    } else {
+      if (currentView !== 'SETTINGS') {
+        if (Platform.OS === 'web') {
+          const tl = gsap.timeline({
+            onStart: () => {
+              gsap.set(settingsWrapperRef.current, { display: 'flex' });
+            },
+            onComplete: () => {
+              gsap.set(editProfileWrapperRef.current, { display: 'none' });
+              setCurrentView('SETTINGS');
+            }
+          });
           
-          <Text color="#00174b" fos={18} fow="700" mb="$2">Lịch sử giải đấu</Text>
+          tl.to(editProfileWrapperRef.current, {
+            opacity: 0,
+            scale: 0.95,
+            y: 15,
+            duration: 0.3,
+            ease: 'power2.inOut'
+          });
+          
+          tl.fromTo(settingsWrapperRef.current,
+            { opacity: 0, scale: 0.95, y: -15 },
+            { opacity: 1, scale: 1, y: 0, duration: 0.4, ease: 'power2.out' },
+            '-=0.15'
+          );
+        } else {
+          setCurrentView('SETTINGS');
+        }
+      }
+    }
+    isInitialMount.current = false;
+  }, [initialView]);
 
-          {isRegLoading ? (
-            <Text col="#45464d">Đang tải lịch sử...</Text>
-          ) : registrations.length === 0 ? (
-            <Text col="#45464d">Bạn chưa đăng ký giải đấu nào.</Text>
-          ) : (
-            <YStack gap="$3">
-              {registrations.map((reg: any, idx) => (
-                <XStack
-                  key={reg.id || idx}
-                  bg="#FFFFFF"
-                  p="$4"
-                  br={12}
-                  borderWidth={1}
-                  borderColor="rgba(29, 78, 216, 0.08)"
-                  jc="space-between"
-                  ai="center"
-                  onPress={() => router.push(`/ticket/${reg.tournamentId || reg.tournament?._id || reg.tournament}` as any)}
-                  pressStyle={{ bg: 'rgba(29, 78, 216, 0.04)' }}
-                >
-                  <YStack f={1}>
-                    <Text color="#00174b" fos={15} fow="700" numberOfLines={1}>
-                      {reg.playerName} (Đăng ký)
-                    </Text>
-                    <Text color="#45464d" fos={13} mt="$1">
-                      Mã giải: {String(reg.tournamentId || reg.tournament?._id || reg.tournament).substring(0, 8).toUpperCase()}
-                    </Text>
-                  </YStack>
-                  <YStack bg="rgba(29, 78, 216, 0.1)" px="$3" py="$1.5" br="$4">
-                    <Text color="#1d4ed8" fos={12} fow="700">Xem vé</Text>
-                  </YStack>
-                </XStack>
-              ))}
-            </YStack>
-          )}
+  const getSportIcon = (sportId: string, color: string) => {
+    const s = sportId.toLowerCase();
+    if (s.includes('tennis')) return <Target color={color} size={14} />;
+    if (s.includes('basketball')) return <Activity color={color} size={14} />;
+    if (s.includes('football')) return <Trophy color={color} size={14} />;
+    if (s.includes('volleyball')) return <Sparkles color={color} size={14} />;
+    if (s.includes('badminton') || s.includes('pickleball')) return <Award color={color} size={14} />;
+    return <Shield color={color} size={14} />;
+  };
 
-          <Text color="#062F21" fos={18} fow="700" mt="$4" mb="$2">Cài đặt chung</Text>
+  const toggleSport = (sportId: string, add: boolean) => {
+    const target = sportId.toLowerCase();
+    if (add) {
+      const matchedSport = allSports.find(sp => sp.id.toLowerCase() === target);
+      const dbId = matchedSport ? matchedSport.id.toUpperCase() : sportId.toUpperCase();
+      if (!selectedSports.some(s => s.toLowerCase() === target)) {
+        setSelectedSports([...selectedSports, dbId]);
+      }
+    } else {
+      setSelectedSports(selectedSports.filter(s => s.toLowerCase() !== target));
+    }
+  };
 
-          <YStack 
-            bg="#FFFFFF" 
-            br={12} 
-            overflow="hidden" 
-            borderWidth={1} 
-            borderColor="rgba(5, 150, 105, 0.08)"
-            shadowColor="rgba(5, 150, 105, 0.06)"
-            shadowOffset={{ width: 0, height: 4 }}
-            shadowOpacity={1}
-            shadowRadius={8}
-            elevation={1}
+  const handleAvatarChange = () => {
+    const nextIdx = avatarUrl === avatarsList[0] ? 1 : 0;
+    setAvatarUrl(avatarsList[nextIdx]);
+    Alert.alert('Thành công', 'Ảnh đại diện đã được cập nhật!');
+  };
+
+  const goToEditProfile = () => {
+    router.setParams({ view: 'edit-profile' });
+  };
+
+  const goToSettings = () => {
+    router.setParams({ view: undefined as any });
+  };
+
+  const handleSave = async () => {
+    if (!fullName.trim()) {
+      return Alert.alert('Lỗi', 'Vui lòng nhập họ và tên.');
+    }
+    
+    setIsSubmitting(true);
+    try {
+      await updateProfile({
+        name: fullName.trim(),
+        preferences: {
+          ...user?.preferences,
+          username: username.trim(),
+          bio: bio.trim(),
+          sports: selectedSports,
+          avatarUrl: avatarUrl,
+          socialLinks: {
+            instagram: instagramUrl.trim(),
+            twitter: twitterUrl.trim()
+          }
+        }
+      });
+      Alert.alert('Thành công', 'Thông tin cá nhân đã được lưu!');
+      goToSettings();
+    } catch (error: any) {
+      Alert.alert('Lỗi', 'Không thể lưu thay đổi: ' + String(error.message || error));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <View className="flex-grow bg-[#F8FAFC]">
+      {/* Main Container Wrapper */}
+      <ScrollView 
+        className="flex-1"
+        contentContainerStyle={{ paddingBottom: 140, paddingTop: currentView === 'SETTINGS' ? 16 : 24 }}
+      >
+        <View className="max-w-md w-full mx-auto px-4">
+          
+          {/* Settings Main View */}
+          <View 
+            ref={settingsWrapperRef}
+            style={Platform.OS === 'web' ? { width: '100%' } : { display: currentView === 'SETTINGS' ? 'flex' : 'none' }}
           >
-            {menuItems.map((item, index) => (
-              <React.Fragment key={item.title}>
-                <XStack 
-                  p="$4" 
-                  ai="center" 
-                  jc="space-between" 
-                  pressStyle={{ bg: 'rgba(5, 150, 105, 0.04)' }}
-                  onPress={() => item.route && router.push(item.route as any)}
-                >
-                  <XStack ai="center" gap="$3">
-                    <YStack w={36} h={36} br={18} bg="rgba(5, 150, 105, 0.06)" jc="center" ai="center">
-                      {item.icon}
-                    </YStack>
-                    <Text color="#062F21" fos={15} fow="600">{item.title}</Text>
-                  </XStack>
-                  <ChevronRight color="rgba(5, 150, 105, 0.3)" size={20} />
-                </XStack>
-                {index < menuItems.length - 1 && (
-                  <Separator borderColor="rgba(5, 150, 105, 0.08)" ml="$11" />
+            <View className="mb-6 mt-4">
+              <Text className="text-3xl font-bold text-slate-900">Cài đặt</Text>
+              <Text className="text-base text-slate-500 mt-1">Quản lý tài khoản và tuỳ chỉnh của bạn.</Text>
+            </View>
+
+            <View className="flex-col">
+              {/* Profile Details */}
+              <TouchableOpacity
+                onPress={goToEditProfile}
+                className="w-full flex-row items-center justify-between p-4 bg-white rounded-xl border border-slate-200 shadow-sm mb-3 active:scale-[0.99]"
+              >
+                <View className="flex-row items-center flex-1 pr-4">
+                  <View className="w-12 h-12 rounded-full bg-slate-100 items-center justify-center">
+                    <User color="#2563eb" size={24} />
+                  </View>
+                  <View className="ml-4 flex-1">
+                    <Text className="text-lg font-medium text-slate-900">Hồ sơ cá nhân</Text>
+                    <Text className="text-sm text-slate-500 mt-0.5">Cập nhật thông tin cá nhân và tiểu sử</Text>
+                  </View>
+                </View>
+                <ChevronRight color="#475569" size={20} />
+              </TouchableOpacity>
+
+              {/* Security & Password */}
+              <TouchableOpacity
+                onPress={() => Alert.alert('Bảo mật', 'Chức năng Bảo mật & Mật khẩu sẽ sớm ra mắt')}
+                className="w-full flex-row items-center justify-between p-4 bg-white rounded-xl border border-slate-200 shadow-sm mb-3 active:scale-[0.99]"
+              >
+                <View className="flex-row items-center flex-1 pr-4">
+                  <View className="w-12 h-12 rounded-full bg-slate-100 items-center justify-center">
+                    <Shield color="#2563eb" size={24} />
+                  </View>
+                  <View className="ml-4 flex-1">
+                    <Text className="text-lg font-medium text-slate-900">Bảo mật & Mật khẩu</Text>
+                    <Text className="text-sm text-slate-500 mt-0.5">Quản lý mật khẩu và xác thực 2 lớp</Text>
+                  </View>
+                </View>
+                <ChevronRight color="#475569" size={20} />
+              </TouchableOpacity>
+
+              {/* Notifications */}
+              <TouchableOpacity
+                onPress={() => Alert.alert('Thông báo', 'Chức năng cấu hình Thông báo sẽ sớm ra mắt')}
+                className="w-full flex-row items-center justify-between p-4 bg-white rounded-xl border border-slate-200 shadow-sm mb-3 active:scale-[0.99]"
+              >
+                <View className="flex-row items-center flex-1 pr-4">
+                  <View className="w-12 h-12 rounded-full bg-slate-100 items-center justify-center">
+                    <Bell color="#2563eb" size={24} />
+                  </View>
+                  <View className="ml-4 flex-1">
+                    <Text className="text-lg font-medium text-slate-900">Thông báo</Text>
+                    <Text className="text-sm text-slate-500 mt-0.5">Cấu hình email, push và SMS</Text>
+                  </View>
+                </View>
+                <ChevronRight color="#475569" size={20} />
+              </TouchableOpacity>
+
+              {/* Privacy */}
+              <TouchableOpacity
+                onPress={() => Alert.alert('Quyền riêng tư', 'Chức năng cấu hình Quyền riêng tư sẽ sớm ra mắt')}
+                className="w-full flex-row items-center justify-between p-4 bg-white rounded-xl border border-slate-200 shadow-sm mb-3 active:scale-[0.99]"
+              >
+                <View className="flex-row items-center flex-1 pr-4">
+                  <View className="w-12 h-12 rounded-full bg-slate-100 items-center justify-center">
+                    <EyeOff color="#2563eb" size={24} />
+                  </View>
+                  <View className="ml-4 flex-1">
+                    <Text className="text-lg font-medium text-slate-900">Quyền riêng tư</Text>
+                    <Text className="text-sm text-slate-500 mt-0.5">Kiểm soát ai được xem hồ sơ của bạn</Text>
+                  </View>
+                </View>
+                <ChevronRight color="#475569" size={20} />
+              </TouchableOpacity>
+
+              {/* Logout Button */}
+              <TouchableOpacity
+                onPress={async () => {
+                  try {
+                    await logout();
+                    router.replace('/');
+                  } catch (err) {
+                    Alert.alert('Lỗi', 'Không thể đăng xuất: ' + String(err));
+                  }
+                }}
+                className="w-full flex-row items-center justify-between p-4 bg-red-50/50 rounded-xl border border-red-200/50 shadow-sm mt-4 active:scale-[0.99]"
+              >
+                <View className="flex-row items-center">
+                  <View className="w-12 h-12 rounded-full bg-red-50 items-center justify-center">
+                    <LogOut color="#ef4444" size={24} />
+                  </View>
+                  <View className="ml-4">
+                    <Text className="text-lg font-semibold text-red-500">Đăng xuất</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Edit Profile Form View */}
+          <View 
+            ref={editProfileWrapperRef}
+            style={Platform.OS === 'web' ? { width: '100%', display: 'none', opacity: 0, scale: 0.95 } as any : { display: currentView === 'EDIT_PROFILE' ? 'flex' : 'none' }}
+          >
+            {/* Inline header for Edit Profile view (shown when global top & bottom taskbars are hidden) */}
+            <View className="flex-row items-center justify-between py-4 mb-4 border-b border-slate-200">
+              <View className="flex-row items-center">
+                <TouchableOpacity className="mr-3 p-1 rounded-full active:scale-95 transition-transform" onPress={goToSettings}>
+                  <ArrowLeft color="#475569" size={24} />
+                </TouchableOpacity>
+                <Text className="text-xl font-bold text-slate-800 tracking-tighter">Chỉnh sửa hồ sơ</Text>
+              </View>
+              <TouchableOpacity 
+                onPress={isSubmitting ? undefined : handleSave} 
+                className="bg-blue-600 px-5 py-2 rounded-full active:scale-95 transition-transform"
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <Text className="text-white text-xs font-bold uppercase tracking-wider">Lưu</Text>
                 )}
-              </React.Fragment>
-            ))}
-          </YStack>
+              </TouchableOpacity>
+            </View>
+            {/* Avatar Section */}
+            <View className="bg-white border border-slate-200 rounded-xl p-6 items-center justify-center shadow-sm mb-4 mt-4">
+              <TouchableOpacity 
+                onPress={handleAvatarChange}
+                className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-blue-600 shadow-sm"
+              >
+                <Image source={{ uri: avatarUrl }} className="w-full h-full object-cover" />
+                <View className="absolute inset-0 bg-slate-900/40 items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                  <Camera color="#ffffff" size={32} />
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleAvatarChange} className="mt-4">
+                <Text className="text-sm font-semibold text-blue-600">Đổi ảnh đại diện</Text>
+              </TouchableOpacity>
+            </View>
 
-          <YStack mt="$4">
-            <XStack 
-              p="$4" 
-              ai="center" 
-              jc="space-between" 
-              bg="rgba(239, 68, 68, 0.05)" 
-              br={12}
-              borderWidth={1}
-              borderColor="rgba(239, 68, 68, 0.15)"
-              onPress={async () => {
-                try {
-                  console.log('Profile logout button clicked');
-                  await logout();
-                  console.log('Profile logout call finished, redirecting...');
-                  router.replace('/');
-                } catch (err) {
-                  console.error('Error during profile logout:', err);
-                  Alert.alert('Lỗi', 'Không thể đăng xuất. Chi tiết: ' + String(err));
-                }
-              }}
-              pressStyle={{ scale: 0.98, opacity: 0.8 }}
+            {/* Basic Info form */}
+            <View className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm mb-4">
+              <Text className="text-xl font-semibold text-slate-900 mb-4">Thông tin cơ bản</Text>
+              
+              {/* Full Name */}
+              <View className="mb-4">
+                <Text className="text-xs font-semibold text-slate-500 mb-1 ml-1">Họ và tên</Text>
+                <TextInput
+                  value={fullName}
+                  onChangeText={setFullName}
+                  style={Platform.OS === 'web' ? { outline: 'none' } as any : undefined}
+                  className="bg-slate-50 w-full border-b-2 border-slate-200 focus:border-blue-600 p-3 text-slate-900 rounded-t"
+                  placeholder="Nhập họ và tên"
+                />
+              </View>
+
+              {/* Username */}
+              <View className="mb-4">
+                <Text className="text-xs font-semibold text-slate-500 mb-1 ml-1">Tên đăng nhập</Text>
+                <TextInput
+                  value={username}
+                  onChangeText={setUsername}
+                  style={Platform.OS === 'web' ? { outline: 'none' } as any : undefined}
+                  className="bg-slate-50 w-full border-b-2 border-slate-200 focus:border-blue-600 p-3 text-slate-900 rounded-t"
+                  placeholder="@username"
+                />
+              </View>
+
+              {/* Bio */}
+              <View className="mb-1">
+                <Text className="text-xs font-semibold text-slate-500 mb-1 ml-1">Tiểu sử</Text>
+                <TextInput
+                  value={bio}
+                  onChangeText={setBio}
+                  multiline
+                  numberOfLines={4}
+                  style={Platform.OS === 'web' ? { outline: 'none' } as any : undefined}
+                  className="bg-slate-50 w-full border border-slate-200 focus:border-blue-600 p-3 text-slate-900 rounded-lg text-sm"
+                  placeholder="Giới thiệu về bản thân..."
+                />
+              </View>
+            </View>
+
+            {/* Favorite Sports Chips Card */}
+            <View className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm mb-4">
+              <View className="flex-row justify-between items-center mb-4">
+                <Text className="text-xl font-semibold text-slate-900">Môn thể thao yêu thích</Text>
+                <TouchableOpacity className="p-1 hover:bg-slate-100 rounded-full" onPress={() => Alert.alert('Thông tin', 'Nhấn vào các gợi ý bên dưới để thêm môn thể thao yêu thích!')}>
+                  <Plus color="#2563eb" size={20} />
+                </TouchableOpacity>
+              </View>
+              
+              {/* Selected Active Chips */}
+              <Text className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 ml-1">Đang chọn</Text>
+              <View className="flex-row flex-wrap mb-4">
+                {selectedSports.length === 0 ? (
+                  <Text className="text-xs text-slate-400 italic py-2">Chưa chọn môn nào. Nhấn gợi ý bên dưới để thêm.</Text>
+                ) : (
+                  selectedSports.map(s => {
+                    const matched = allSports.find(sport => sport.id.toLowerCase() === s.toLowerCase()) || { label: s, id: s };
+                    return (
+                      <TouchableOpacity 
+                        key={matched.id}
+                        onPress={() => toggleSport(matched.id, false)}
+                        className="flex-row items-center bg-blue-50 border border-blue-200 rounded-full px-3 py-1.5 mr-2 mb-2"
+                      >
+                        {getSportIcon(matched.id, '#2563eb')}
+                        <Text className="text-xs font-semibold text-blue-600 ml-1.5 mr-1">{matched.label}</Text>
+                        <X color="rgba(37, 99, 235, 0.7)" size={12} />
+                      </TouchableOpacity>
+                    );
+                  })
+                )}
+              </View>
+
+              {/* Suggestions Inactive Chips */}
+              <Text className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 ml-1">Gợi ý thêm</Text>
+              <View className="flex-row flex-wrap">
+                {allSports.filter(s => !selectedSports.some(sel => sel.toLowerCase() === s.id.toLowerCase())).map(s => {
+                  return (
+                    <TouchableOpacity 
+                      key={s.id}
+                      onPress={() => toggleSport(s.id, true)}
+                      className="flex-row items-center bg-slate-50 border border-slate-200 rounded-full px-3 py-1.5 mr-2 mb-2"
+                    >
+                      {getSportIcon(s.id, '#64748B')}
+                      <Text className="text-xs font-semibold text-slate-600 ml-1.5 mr-1">{s.label}</Text>
+                      <Plus color="#64748b" size={12} />
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* Social Links Card */}
+            <View className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm mb-6">
+              <Text className="text-xl font-semibold text-slate-900 mb-4">Mạng xã hội</Text>
+              
+              {/* Instagram */}
+              <View className="flex-row items-center border-b-2 border-slate-200 focus-within:border-blue-600 mb-4 bg-slate-50 rounded-t px-3">
+                <Link2 color="#64748b" size={18} />
+                <TextInput
+                  value={instagramUrl}
+                  onChangeText={setInstagramUrl}
+                  style={Platform.OS === 'web' ? { outline: 'none' } as any : undefined}
+                  className="flex-1 p-3 text-slate-900"
+                  placeholder="Instagram URL"
+                />
+              </View>
+
+              {/* Twitter/X */}
+              <View className="flex-row items-center border-b-2 border-slate-200 focus-within:border-blue-600 bg-slate-50 rounded-t px-3">
+                <Link2 color="#64748b" size={18} />
+                <TextInput
+                  value={twitterUrl}
+                  onChangeText={setTwitterUrl}
+                  style={Platform.OS === 'web' ? { outline: 'none' } as any : undefined}
+                  className="flex-1 p-3 text-slate-900"
+                  placeholder="Twitter/X URL"
+                />
+              </View>
+            </View>
+            
+            {/* Save Button Card */}
+            <TouchableOpacity
+              onPress={isSubmitting ? undefined : handleSave}
+              className="bg-blue-600 h-14 rounded-xl flex-row items-center justify-center shadow-md active:scale-95 transition-transform"
             >
-              <XStack ai="center" gap="$3">
-                <YStack w={36} h={36} br={18} bg="rgba(239, 68, 68, 0.1)" jc="center" ai="center">
-                  <LogOut color="#EF4444" size={20} />
-                </YStack>
-                <Text color="#EF4444" fos={15} fow="700">Đăng xuất</Text>
-              </XStack>
-            </XStack>
-          </YStack>
+              {isSubmitting ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <View className="flex-row items-center">
+                  <CheckCircle2 color="#ffffff" size={20} className="mr-2" />
+                  <Text className="text-white font-bold text-base uppercase tracking-wider ml-2">Lưu thay đổi</Text>
+                </View>
+              )}
+            </TouchableOpacity>
 
-        </YStack>
+          </View>
+
+        </View>
       </ScrollView>
-    </YStack>
+    </View>
   );
 }

@@ -30,3 +30,4 @@ async function bootstrap() {
   console.log(`CourtMate NestJS Backend is running on: http://localhost:${port}`);
 }
 bootstrap();
+// Trigger nodemon reload.
