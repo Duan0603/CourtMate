@@ -39,10 +39,11 @@ export const Typography: React.FC<TypographyProps> = ({
 }) => {
   return (
     <Text
-      style={[variantStyles[variant], style]}
       {...props}
+      style={[variantStyles[variant], style, props.style]}
     >
       {children}
     </Text>
   );
 };
+
