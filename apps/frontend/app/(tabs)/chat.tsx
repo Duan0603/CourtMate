@@ -17,8 +17,14 @@ interface SocketMessage {
   createdAt: string;
 }
 
+import { useIsFocused } from '@react-navigation/native';
+import gsap from 'gsap';
+
 export default function ChatTab() {
   const { user, token, isAuthenticated } = useLogin();
+  const isFocused = useIsFocused();
+  const containerRef = useRef<any>(null);
+
   const [friends, setFriends] = useState<User[]>([]);
   const [activeFriend, setActiveFriend] = useState<User | null>(null);
   const [messages, setMessages] = useState<SocketMessage[]>([]);
@@ -26,6 +32,55 @@ export default function ChatTab() {
   const [isConnected, setIsConnected] = useState(false);
   const [isLoadingFriends, setIsLoadingFriends] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  useEffect(() => {
+    if (isFocused && Platform.OS === 'web' && containerRef.current) {
+      gsap.fromTo(containerRef.current, 
+        { opacity: 0, y: 15 }, 
+        { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out' }
+      );
+    }
+  }, [isFocused]);
+
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      const tabbar = document.querySelector('div[style*="height: 80px"]') || document.querySelector('div[role="tablist"]') || document.querySelector('nav');
+      if (tabbar) {
+        if (isFocused && activeFriend !== null) {
+          gsap.to(tabbar, {
+            opacity: 0,
+            y: 80,
+            duration: 0.25,
+            display: 'none',
+            overwrite: 'auto'
+          });
+        } else {
+          gsap.to(tabbar, {
+            opacity: 0.95,
+            y: 0,
+            duration: 0.25,
+            display: 'flex',
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            overwrite: 'auto'
+          });
+        }
+      }
+    }
+    
+    return () => {
+      if (Platform.OS === 'web') {
+        const tabbar = document.querySelector('div[style*="height: 80px"]') || document.querySelector('div[role="tablist"]') || document.querySelector('nav');
+        if (tabbar) {
+          gsap.set(tabbar, {
+            opacity: 0.95,
+            y: 0,
+            display: 'flex',
+            backgroundColor: 'rgba(255, 255, 255, 0.95)'
+          });
+        }
+      }
+    };
+  }, [activeFriend, isFocused]);
 
   // In-app Notification Banner State
   const [activeNotification, setActiveNotification] = useState<{ senderName: string; content: string } | null>(null);
@@ -224,7 +279,7 @@ export default function ChatTab() {
   // Render Friend List Screen
   if (activeFriend === null) {
     return (
-      <YStack f={1} bg="#F4FBF7" paddingTop="$8">
+      <YStack f={1} bg="#fcf8fa" paddingTop="$8">
         
         {/* Sliding Notification Banner */}
         {activeNotification && (
@@ -238,25 +293,25 @@ export default function ChatTab() {
               backgroundColor: '#FFFFFF',
               borderRadius: 16,
               padding: 16,
-              shadowColor: '#059669',
+              shadowColor: '#1d4ed8',
               shadowOpacity: 0.15,
               shadowRadius: 15,
               shadowOffset: { width: 0, height: 8 },
               elevation: 5,
               borderWidth: 1.5,
-              borderColor: 'rgba(5, 150, 105, 0.15)',
+              borderColor: 'rgba(29, 78, 216, 0.15)',
               transform: [{ translateY: bannerAnim }],
             }}
           >
             <XStack gap="$3" ai="center">
-              <View w={36} h={36} br={18} bg="rgba(5, 150, 105, 0.1)" jc="center" ai="center">
-                <Bell color="#059669" size={18} />
+              <View w={36} h={36} br={18} bg="rgba(29, 78, 216, 0.1)" jc="center" ai="center">
+                <Bell color="#1d4ed8" size={18} />
               </View>
               <YStack f={1}>
-                <Text color="#062F21" fos={14} fow="800">{activeNotification.senderName}</Text>
-                <Text color="#476F62" fos={13} numberOfLines={1} mt="$0.5">{activeNotification.content}</Text>
+                <Text color="#1e293b" fos={14} fow="800">{activeNotification.senderName}</Text>
+                <Text color="#45464d" fos={13} numberOfLines={1} mt="$0.5">{activeNotification.content}</Text>
               </YStack>
-              <Button size="$2.5" bg="#059669" color="#FFFFFF" br={12} onPress={() => {
+              <Button size="$2.5" bg="#1d4ed8" color="#FFFFFF" br={12} onPress={() => {
                 const found = friends.find(f => (f.name || f.email.split('@')[0]) === activeNotification.senderName);
                 if (found) {
                   setActiveFriend(found);
@@ -270,18 +325,16 @@ export default function ChatTab() {
         )}
 
         {/* Header */}
-        <XStack px="$5" py="$4" bg="#FFFFFF" borderBottomWidth={1} borderBottomColor="rgba(5, 150, 105, 0.08)" ai="center" jc="space-between">
+        <XStack px="$5" py="$3" ai="center" jc="space-between">
           <YStack>
-            <Text color="#062F21" fos={22} fow="900">Nhắn Tin Bạn Bè</Text>
-            <Text color="#476F62" fos={13} mt="$1">Chỉ những tài khoản đã kết bạn mới có thể nhắn tin</Text>
+            <Text color="#1e293b" fos={22} fow="800">Đoạn chat</Text>
           </YStack>
-          <MessageSquare color="#059669" size={24} />
         </XStack>
 
         {isLoadingFriends ? (
           <YStack f={1} jc="center" ai="center" gap="$3">
-            <Spinner size="large" color="#059669" />
-            <Text color="#476F62" fos={14}>Đang tải danh sách bạn bè...</Text>
+            <Spinner size="large" color="#1d4ed8" />
+            <Text color="#45464d" fos={14}>Đang tải đoạn chat...</Text>
           </YStack>
         ) : (
           <ScrollView 
@@ -293,8 +346,8 @@ export default function ChatTab() {
           >
             {friends.length === 0 ? (
               <YStack ai="center" jc="center" py="$10" gap="$3" opacity={0.6}>
-                <UserIcon color="#94B5A6" size={48} />
-                <Text color="#476F62" fos={15} ta="center">Chưa có bạn bè nào trong danh sách.</Text>
+                <UserIcon color="#7c747a" size={48} />
+                <Text color="#45464d" fos={15} ta="center">Chưa có cuộc hội thoại nào.</Text>
               </YStack>
             ) : (
               friends.map((friend) => {
@@ -311,9 +364,9 @@ export default function ChatTab() {
                     ai="center" 
                     jc="space-between"
                     borderWidth={1}
-                    borderColor="rgba(5, 150, 105, 0.08)"
+                    borderColor="rgba(29, 78, 216, 0.08)"
                     style={{
-                      shadowColor: '#059669',
+                      shadowColor: '#1d4ed8',
                       shadowOpacity: 0.03,
                       shadowRadius: 10,
                       shadowOffset: { width: 0, height: 4 },
@@ -323,16 +376,16 @@ export default function ChatTab() {
                     pressStyle={{ scale: 0.98, opacity: 0.9 }}
                   >
                     <XStack ai="center" gap="$3">
-                      <YStack w={48} h={48} br={24} bg="rgba(5, 150, 105, 0.1)" jc="center" ai="center" borderWidth={1} borderColor="rgba(5, 150, 105, 0.2)">
+                      <YStack w={48} h={48} br={24} bg="rgba(29, 78, 216, 0.1)" jc="center" ai="center" borderWidth={1} borderColor="rgba(29, 78, 216, 0.2)">
                         {friend.role === 'SUPER_ADMIN' || friend.role === 'REGIONAL_ADMIN' ? (
-                          <Shield color="#059669" size={22} />
+                          <Shield color="#1d4ed8" size={22} />
                         ) : (
-                          <UserIcon color="#059669" size={22} />
+                          <UserIcon color="#1d4ed8" size={22} />
                         )}
                       </YStack>
                       
                       <YStack>
-                        <Text color="#062F21" fos={16} fow="800">
+                        <Text color="#1e293b" fos={16} fow="800">
                           {friend.name || friend.email.split('@')[0]}
                         </Text>
                         <Text color={roleColor} fos={12} fow="600" mt="$0.5">
@@ -340,17 +393,6 @@ export default function ChatTab() {
                         </Text>
                       </YStack>
                     </XStack>
-
-                    <Button 
-                      size="$3" 
-                      bg="#059669" 
-                      color="#FFFFFF" 
-                      br={18} 
-                      onPress={() => setActiveFriend(friend)}
-                      pressStyle={{ bg: '#047857' }}
-                    >
-                      Nhắn tin
-                    </Button>
                   </XStack>
                 );
               })
@@ -368,7 +410,7 @@ export default function ChatTab() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
-      <YStack f={1} bg="#F4FBF7" paddingTop="$8">
+      <YStack f={1} bg="#fcf8fa" paddingTop="$8">
         
         {/* Sliding Notification Banner inside Room (for other conversations) */}
         {activeNotification && (
@@ -382,25 +424,25 @@ export default function ChatTab() {
               backgroundColor: '#FFFFFF',
               borderRadius: 16,
               padding: 16,
-              shadowColor: '#059669',
+              shadowColor: '#1d4ed8',
               shadowOpacity: 0.15,
               shadowRadius: 15,
               shadowOffset: { width: 0, height: 8 },
               elevation: 5,
               borderWidth: 1.5,
-              borderColor: 'rgba(5, 150, 105, 0.15)',
+              borderColor: 'rgba(29, 78, 216, 0.15)',
               transform: [{ translateY: bannerAnim }],
             }}
           >
             <XStack gap="$3" ai="center">
-              <View w={36} h={36} br={18} bg="rgba(5, 150, 105, 0.1)" jc="center" ai="center">
-                <Bell color="#059669" size={18} />
+              <View w={36} h={36} br={18} bg="rgba(29, 78, 216, 0.1)" jc="center" ai="center">
+                <Bell color="#1d4ed8" size={18} />
               </View>
               <YStack f={1}>
-                <Text color="#062F21" fos={14} fow="800">{activeNotification.senderName}</Text>
-                <Text color="#476F62" fos={13} numberOfLines={1} mt="$0.5">{activeNotification.content}</Text>
+                <Text color="#1e293b" fos={14} fow="800">{activeNotification.senderName}</Text>
+                <Text color="#45464d" fos={13} numberOfLines={1} mt="$0.5">{activeNotification.content}</Text>
               </YStack>
-              <Button size="$2.5" bg="#059669" color="#FFFFFF" br={12} onPress={() => {
+              <Button size="$2.5" bg="#1d4ed8" color="#FFFFFF" br={12} onPress={() => {
                 const found = friends.find(f => (f.name || f.email.split('@')[0]) === activeNotification.senderName);
                 if (found) {
                   setActiveFriend(found);
@@ -414,21 +456,21 @@ export default function ChatTab() {
         )}
 
         {/* Header */}
-        <XStack px="$4" py="$3" bg="#FFFFFF" borderBottomWidth={1} borderBottomColor="rgba(5, 150, 105, 0.08)" ai="center" gap="$3">
+        <XStack px="$4" py="$3" bg="#FFFFFF" borderBottomWidth={1} borderBottomColor="rgba(29, 78, 216, 0.08)" ai="center" gap="$3">
           <Button 
             circular 
             size="$3.5" 
             chromeless 
             onPress={() => setActiveFriend(null)} 
-            icon={<ArrowLeft color="#062F21" size={20} />} 
+            icon={<ArrowLeft color="#1e293b" size={20} />} 
           />
           <YStack f={1}>
-            <Text color="#062F21" fos={18} fow="900" numberOfLines={1}>
+            <Text color="#1e293b" fos={16} fow="700" numberOfLines={1}>
               {activeFriend.name || activeFriend.email.split('@')[0]}
             </Text>
             <XStack ai="center" gap="$1.5" mt="$0.5">
               <View w={8} h={8} br={4} bg={isConnected ? '#10B981' : '#EF4444'} />
-              <Text color="#476F62" fos={11}>
+              <Text color="#45464d" fos={11}>
                 {getRoleLabel(activeFriend.role)}
               </Text>
             </XStack>
@@ -457,33 +499,39 @@ export default function ChatTab() {
         >
           {messages.length === 0 ? (
             <YStack ai="center" jc="center" py="$10" gap="$2" opacity={0.6}>
-              <MessageSquare color="#94B5A6" size={40} />
-              <Text color="#476F62" fos={13} ta="center">Gửi tin nhắn để bắt đầu cuộc trò chuyện!</Text>
+              <MessageSquare color="#7c747a" size={40} />
+              <Text color="#45464d" fos={13} ta="center">Gửi tin nhắn để bắt đầu cuộc trò chuyện!</Text>
             </YStack>
           ) : (
             messages.map((msg) => {
               const isMe = msg.senderId === (user?.id || (user as any)?._id);
+              const isLast = msg === messages[messages.length - 1];
               return (
                 <YStack key={msg._id || Math.random().toString()} ai={isMe ? 'flex-end' : 'flex-start'} w="100%">
                   <View 
-                    bg={isMe ? '#059669' : '#FFFFFF'} 
+                    bg={isMe ? '#1d4ed8' : '#FFFFFF'} 
                     p="$3" 
-                    br={16} 
-                    borderBottomLeftRadius={isMe ? 16 : 4}
-                    borderBottomRightRadius={isMe ? 4 : 16}
+                    br={18} 
+                    borderBottomLeftRadius={isMe ? 18 : 4}
+                    borderBottomRightRadius={isMe ? 4 : 18}
                     maxWidth="75%"
                     style={{
                       shadowColor: '#000',
-                      shadowOpacity: 0.03,
+                      shadowOpacity: 0.02,
                       shadowRadius: 4,
                       shadowOffset: { width: 0, height: 2 },
                       elevation: 1,
                     }}
                   >
-                    <Text color={isMe ? '#FFFFFF' : '#062F21'} fos={14} lh={20}>
+                    <Text color={isMe ? '#FFFFFF' : '#1e293b'} fos={14} lh={20}>
                       {msg.content}
                     </Text>
                   </View>
+                  {isMe && isLast && (
+                    <XStack mt="$1" ai="center" gap="$1" opacity={0.7} px="$1">
+                      <Text color="#7c747a" fos={10} fow="600">Đã xem</Text>
+                    </XStack>
+                  )}
                 </YStack>
               );
             })
@@ -491,21 +539,20 @@ export default function ChatTab() {
         </ScrollView>
 
         {/* Input Bar */}
-        <XStack p="$4" bg="#FFFFFF" borderTopWidth={1} borderTopColor="rgba(5, 150, 105, 0.08)" gap="$3" ai="center">
+        <XStack p="$4" bg="#FFFFFF" borderTopWidth={1} borderTopColor="rgba(29, 78, 216, 0.08)" gap="$3" ai="center">
           <Input
             flex={1}
             value={inputText}
             onChangeText={setInputText}
             placeholder={isConnected ? "Nhập tin nhắn..." : "Mất kết nối server..."}
-            placeholderTextColor="#A7C2B7"
-            color="#062F21"
-            bg="#F4FBF7"
+            placeholderTextColor="#7c747a"
+            color="#1e293b"
+            bg="#f0edef"
             h={48}
             br={24}
             px="$4"
-            borderWidth={1}
-            borderColor="rgba(5, 150, 105, 0.15)"
-            focusStyle={{ borderColor: '#059669', borderWidth: 1 }}
+            borderWidth={0}
+            focusStyle={{ borderColor: '#1d4ed8', borderWidth: 1, bg: '#FFFFFF' }}
             disabled={!isConnected}
             onSubmitEditing={handleSendMessage}
             returnKeyType="send"
@@ -514,11 +561,11 @@ export default function ChatTab() {
             circular
             w={48}
             h={48}
-            bg="#059669"
+            bg="#1d4ed8"
             onPress={handleSendMessage}
             pressStyle={{ scale: 0.95 }}
             disabled={!inputText.trim() || !isConnected}
-            disabledStyle={{ bg: '#A7C2B7', opacity: 0.8 }}
+            disabledStyle={{ bg: '#7c747a', opacity: 0.8 }}
             icon={<Send color="#FFFFFF" size={18} />}
           />
         </XStack>
