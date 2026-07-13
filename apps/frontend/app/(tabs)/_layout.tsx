@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Platform, Image } from "react-native";
-import { Tabs, router, useLocalSearchParams } from "expo-router";
+import { Tabs, router, useGlobalSearchParams } from "expo-router";
 import {
   Trophy,
   MessageCircle,
@@ -10,10 +10,11 @@ import { useLogin } from "../../src/features/auth/hooks/useLogin";
 
 function CustomTabBar({ state, descriptors, navigation }: any) {
   const { routes, index: activeIndex } = state;
-  const params = useLocalSearchParams<{ view?: string }>();
+  const params = useGlobalSearchParams<{ view?: string; chatting?: string }>();
   const isEditProfile = params.view === 'edit-profile';
+  const isChatting = params.chatting === 'true';
 
-  if (isEditProfile) return null;
+  if (isEditProfile || isChatting) return null;
 
   return (
     <View 
@@ -85,8 +86,11 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
 
 export default function TabLayout() {
   const { isAuthenticated, isLoading, user } = useLogin();
-  const params = useLocalSearchParams<{ view?: string }>();
+  
+  const params = useGlobalSearchParams<{ view?: string; chatting?: string }>();
   const isEditProfile = params.view === 'edit-profile';
+  const isChatting = params.chatting === 'true';
+  const shouldHideHeader = isEditProfile || isChatting;
 
   React.useEffect(() => {
     if (!isLoading) {
@@ -107,7 +111,7 @@ export default function TabLayout() {
   return (
     <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
       {/* Unified top taskbar header */}
-      {!isEditProfile && (
+      {!shouldHideHeader && (
         <View 
           style={Platform.OS === 'web' ? { position: 'fixed', top: 0, left: 0, right: 0 } as any : undefined}
           className="h-16 bg-white border-b border-slate-200 shadow-sm flex-row items-center justify-between px-6 z-50"
@@ -126,7 +130,7 @@ export default function TabLayout() {
         </View>
       )}
 
-      <View style={{ flex: 1, paddingTop: !isEditProfile ? 64 : 0 }}>
+      <View style={{ flex: 1, paddingTop: !shouldHideHeader ? 64 : 0 }}>
         <Tabs
           tabBar={(props) => <CustomTabBar {...props} />}
           screenOptions={{

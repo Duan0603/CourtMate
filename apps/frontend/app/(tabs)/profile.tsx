@@ -32,8 +32,10 @@ import {
 import gsap from 'gsap';
 import { useLogin } from '../../src/features/auth/hooks/useLogin';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 
 export default function ProfileTab() {
+  const navigation = useNavigation<any>();
   const { user, logout, updateProfile } = useLogin();
   const { view: initialView } = useLocalSearchParams<{ view?: string }>();
 

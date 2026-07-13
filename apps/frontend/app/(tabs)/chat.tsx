@@ -17,12 +17,14 @@ interface SocketMessage {
   createdAt: string;
 }
 
-import { useIsFocused } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import gsap from 'gsap';
+import { router } from 'expo-router';
 
 export default function ChatTab() {
   const { user, token, isAuthenticated } = useLogin();
   const isFocused = useIsFocused();
+  const navigation = useNavigation<any>();
   const containerRef = useRef<any>(null);
 
   const [friends, setFriends] = useState<User[]>([]);
@@ -43,43 +45,11 @@ export default function ChatTab() {
   }, [isFocused]);
 
   useEffect(() => {
-    if (Platform.OS === 'web') {
-      const tabbar = document.querySelector('div[style*="height: 80px"]') || document.querySelector('div[role="tablist"]') || document.querySelector('nav');
-      if (tabbar) {
-        if (isFocused && activeFriend !== null) {
-          gsap.to(tabbar, {
-            opacity: 0,
-            y: 80,
-            duration: 0.25,
-            display: 'none',
-            overwrite: 'auto'
-          });
-        } else {
-          gsap.to(tabbar, {
-            opacity: 0.95,
-            y: 0,
-            duration: 0.25,
-            display: 'flex',
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-            overwrite: 'auto'
-          });
-        }
-      }
+    if (isFocused && activeFriend !== null) {
+      router.setParams({ chatting: 'true' });
+    } else {
+      router.setParams({ chatting: undefined as any });
     }
-    
-    return () => {
-      if (Platform.OS === 'web') {
-        const tabbar = document.querySelector('div[style*="height: 80px"]') || document.querySelector('div[role="tablist"]') || document.querySelector('nav');
-        if (tabbar) {
-          gsap.set(tabbar, {
-            opacity: 0.95,
-            y: 0,
-            display: 'flex',
-            backgroundColor: 'rgba(255, 255, 255, 0.95)'
-          });
-        }
-      }
-    };
   }, [activeFriend, isFocused]);
 
   // In-app Notification Banner State
