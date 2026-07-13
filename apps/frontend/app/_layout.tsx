@@ -3,6 +3,8 @@ import { TamaguiProvider, Theme } from 'tamagui';
 import tamaguiConfig from '../tamagui.config';
 import { useColorScheme, View, StyleSheet } from 'react-native';
 import { AuthProvider } from '../src/features/auth/hooks/useLogin';
+import "../global.css";
+
 import { useFonts } from 'expo-font';
 import { useEffect } from 'react';
 import * as SplashScreen from 'expo-splash-screen';

@@ -26,6 +26,14 @@ export interface UserPreferences {
   location?: string; // e.g. "Da Nang", "Ha Noi", "Ho Chi Minh"
   skillLevel?: string; // e.g. "Beginner", "Intermediate", "Advanced"
   clubName?: string; // e.g. "Da Nang Badminton Club"
+  // Profile extended fields
+  username?: string;
+  bio?: string;
+  avatarUrl?: string;
+  socialLinks?: {
+    instagram?: string;
+    twitter?: string;
+  };
 }
 
 export interface User {
@@ -34,6 +42,7 @@ export interface User {
   name: string;
   role: UserRole;
   preferences: UserPreferences;
+  avatarUrl?: string;
   bookmarkedTournaments?: string[];
   isVerified: boolean;
   createdAt: Date;

@@ -1,9 +1,21 @@
 import React from 'react';
 import { Text, TextProps } from 'react-native';
 
-interface TypographyProps extends TextProps {
+export type TypographyVariant =
+  | 'display-lg'
+  | 'headline-lg'
+  | 'headline-lg-mobile'
+  | 'headline-md'
+  | 'headline-sm'
+  | 'body-lg'
+  | 'body-md'
+  | 'label-md'
+  | 'label-sm'
+  | 'label-xs';
+
+export interface TypographyProps extends TextProps {
   children: React.ReactNode;
-  variant?: 'display-lg' | 'headline-lg' | 'headline-lg-mobile' | 'headline-md' | 'body-lg' | 'body-md' | 'label-md' | 'label-sm';
+  variant?: TypographyVariant;
   color?: 'navy' | 'blue' | 'green' | 'orange' | 'white' | 'gray';
   className?: string;
   weight?: 'bold' | 'semibold' | 'medium' | 'normal';
@@ -17,6 +29,7 @@ export const Typography = ({
   className = '',
   weight,
   align = 'left',
+  style,
   ...props
 }: TypographyProps) => {
   const variantClass = `text-${variant}`;
@@ -28,7 +41,7 @@ export const Typography = ({
     green: 'text-green-success',
     orange: 'text-orange-highlight',
     white: 'text-white',
-    gray: 'text-gray-500', // standard gray if needed
+    gray: 'text-gray-500',
   };
   const colorClass = colorMap[color] || 'text-navy-deep';
   
@@ -42,6 +55,7 @@ export const Typography = ({
   return (
     <Text 
       className={`${variantClass} ${colorClass} ${alignClass} ${weightClass} ${fontClass} ${className}`}
+      style={style}
       {...props}
     >
       {children}

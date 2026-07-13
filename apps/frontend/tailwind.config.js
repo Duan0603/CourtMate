@@ -1,6 +1,5 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  // Path to all components and screens for styling parsing
   content: [
     "./app/**/*.{js,jsx,ts,tsx}",
     "./components/**/*.{js,jsx,ts,tsx}",
@@ -64,13 +63,14 @@ module.exports = {
         'headline-lg': ['32px', { lineHeight: '40px', letterSpacing: '-0.02em', fontWeight: '700' }],
         'headline-lg-mobile': ['24px', { lineHeight: '32px', letterSpacing: '-0.02em', fontWeight: '700' }],
         'headline-md': ['24px', { lineHeight: '32px', fontWeight: '600' }],
+        'headline-sm': ['18px', { lineHeight: '24px', fontWeight: '600' }],
         'body-lg': ['18px', { lineHeight: '28px', fontWeight: '400' }],
         'body-md': ['16px', { lineHeight: '24px', fontWeight: '400' }],
         'label-md': ['14px', { lineHeight: '20px', letterSpacing: '0.01em', fontWeight: '500' }],
         'label-sm': ['12px', { lineHeight: '16px', fontWeight: '600' }],
+        'label-xs': ['10px', { lineHeight: '14px', fontWeight: '500' }],
       },
       spacing: {
-        'base': '4px',
         'xs': '4px',
         'sm': '8px',
         'md': '16px',
