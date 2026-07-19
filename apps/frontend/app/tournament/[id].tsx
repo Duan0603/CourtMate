@@ -1,388 +1,273 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, RefreshControl } from 'react-native';
-import { Button, ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
+import React, { useEffect, useState, useMemo } from 'react';
+import { View, ScrollView, TouchableOpacity, ImageBackground, Image, Alert, Linking, Platform } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import {
-  Calendar,
-  ChevronLeft,
-  Clock,
-  FileText,
-  MapPin,
-  ShieldCheck,
-  Trophy,
-  Users,
-} from 'lucide-react-native';
-import { SportType, Tournament, TournamentStatus, UserRole } from '@courtmate/shared';
+import { ChevronLeft, Share, MapPin, Calendar, CreditCard, ArrowRight } from 'lucide-react-native';
 import { tournamentsApi } from '../../src/features/tournaments/services/tournaments.api';
-import { useLogin } from '../../src/features/auth/hooks/useLogin';
-
-const colors = {
-  background: '#14100E',
-  backgroundSecondary: '#1E1815',
-  surface: 'rgba(255,255,255,0.05)',
-  surfaceHover: 'rgba(255,255,255,0.08)',
-  surfaceBorder: 'rgba(255,255,255,0.10)',
-  primary: '#FF6B35',
-  primaryMuted: 'rgba(255,107,53,0.15)',
-  secondary: '#1FA598',
-  secondaryMuted: 'rgba(31,165,152,0.15)',
-  warning: '#F2B84B',
-  textPrimary: '#F5F0EB',
-  textSecondary: '#A69C93',
-  textOnPrimary: '#14100E',
-};
-
-const sportLabels: Record<SportType, string> = {
-  [SportType.BADMINTON]: 'Cầu lông',
-  [SportType.FOOTBALL]: 'Bóng đá',
-  [SportType.PICKLEBALL]: 'Pickleball',
-  [SportType.TENNIS]: 'Tennis',
-};
-
-const statusLabels: Record<TournamentStatus, string> = {
-  [TournamentStatus.UPCOMING]: 'Sắp mở',
-  [TournamentStatus.OPEN]: 'Đang nhận đăng ký',
-  [TournamentStatus.FULL]: 'Đã đủ suất',
-  [TournamentStatus.IN_PROGRESS]: 'Đang thi đấu',
-  [TournamentStatus.COMPLETED]: 'Đã kết thúc',
-};
-
-function formatDate(value?: Date | string) {
-  if (!value) return 'Đang cập nhật';
-  return new Date(value).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
-}
+import { Tournament, TournamentStatus } from '@courtmate/shared';
+import { Typography } from '../../src/components/ui/Typography';
+import { MOCK_ACTIVE_TOURNAMENTS, MOCK_RECOMMENDED } from '../../src/features/dashboard/screens/DashboardScreen';
 
 function formatFee(value: number) {
   return `${value.toLocaleString('vi-VN')}đ`;
 }
 
 function getMinFee(tournament: Tournament) {
-  const fees = tournament.categories?.map((category) => category.fee).filter((fee) => Number.isFinite(fee)) ?? [];
-  return fees.length ? Math.min(...fees) : tournament.registrationFee ?? 0;
-}
-
-function getRules(tournament: Tournament) {
-  return tournament.rules || tournament.rulesText || 'Ban tổ chức chưa cập nhật điều lệ chi tiết cho giải đấu này.';
+  const fees = tournament.categories?.map((c) => c.fee).filter((f) => Number.isFinite(f)) ?? [];
+  return fees.length ? Math.min(...fees) : tournament.registrationFee ?? 45000;
 }
 
 export default function TournamentDetailRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { user } = useLogin();
-  const isOrganizer = user?.role === UserRole.ORGANIZER;
-
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'rules' | 'schedule'>('overview');
-
-  const loadTournament = async (refresh = false) => {
-    if (!id) return;
-
-    if (refresh) {
-      setIsRefreshing(true);
-    } else {
-      setIsLoading(true);
-    }
-
-    try {
-      setErrorMessage(null);
-      const data = await tournamentsApi.getTournamentDetails(id);
-      setTournament(data);
-    } catch (error) {
-      console.error('Error loading tournament details:', error);
-      setErrorMessage('Không tải được chi tiết giải đấu. Vui lòng thử lại.');
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  };
 
   useEffect(() => {
-    loadTournament();
+    if (id) {
+      const mockData = [...MOCK_ACTIVE_TOURNAMENTS, ...MOCK_RECOMMENDED].find(t => t.id === id);
+      if (mockData) {
+        setTournament({
+          id: mockData.id,
+          title: mockData.title,
+          sport: mockData.sport,
+          location: (mockData as any).location || (mockData as any).info,
+          startDate: new Date(),
+          categories: [{ name: 'Intermediate', fee: 45000 }],
+          status: TournamentStatus.OPEN,
+          description: "Tham gia giải đấu vòng loại được mong đợi nhất mùa giải.",
+          image: (mockData as any).image || undefined,
+        } as any);
+        setIsLoading(false);
+      } else {
+        tournamentsApi.getTournamentDetails(id)
+          .then(res => {
+            const data = (res as any).data || res;
+            setTournament(data);
+          })
+          .catch(err => {
+            console.error(err);
+            Alert.alert('Lỗi', 'Không thể tải thông tin giải đấu');
+          })
+          .finally(() => setIsLoading(false));
+      }
+    }
   }, [id]);
 
+  const handleOpenMap = () => {
+    const loc = tournament?.location || 'Metro Tennis Center New York';
+    const query = encodeURIComponent(loc);
+    const url = Platform.select({
+      ios: `maps:0,0?q=${query}`,
+      android: `geo:0,0?q=${query}`,
+      default: `https://www.google.com/maps/search/?api=1&query=${query}`
+    });
+    Linking.openURL(url);
+  };
+
   const minFee = useMemo(() => (tournament ? getMinFee(tournament) : 0), [tournament]);
-  const isOpen = tournament?.status === TournamentStatus.OPEN;
+
+  // Render dummy avatars for participant roster
+  const dummyAvatars = [
+    'https://lh3.googleusercontent.com/aida-public/AB6AXuDqU6IpSkFIimKXiUYhOscsR4L0dPJOW0aXaSQRaDFjHWRZqhfA0i3G7aIPIK2n3GD8a0Y39LcDz-YDb4KCokzpGCLUcv8ReG_gL0v2bJQlXrt1XUiqzThac4JSPz5T1xv_mnDE_2ollTfm7mlgvkoD7e3VU0ejL0Zoiu-CmHDv0gWsq64ioCFm4oQMN4YFvEy1bFcE69A4lzkKO9dz5LxAUKY6MtTKcwlpnXYSpEYC7LrPhc6eIEDRzw',
+    'https://lh3.googleusercontent.com/aida-public/AB6AXuBTpL9d84gPMerrKM6krAeDqQaMB8VXzxeWG1RmryoTyvYbASH3dnEWVLeYU3w7kmDNeY8OlMEwmsoiu3QJgHT4SbGFdhlBNnTVjnwzqsadQa8VlLUSyb7sd3GgFa12Dk1-hul09MvEmGXoeDXofjEZ5M11A_zCmHcpclfeqVfn2d2KularfxS88oqEWg5jhZgh6fqaCpmBCxxpVI69tWy_pAbZ8XHtdpdMBlxfWlgkZkFdeX5eXswdSQ',
+    'https://lh3.googleusercontent.com/aida-public/AB6AXuAaGOXp9zKSia58kO94VMjc97HLw8iHNm1zG-LX9dl0AZwUH0K-IUOOpsWelNAiXQCpPDo3igaBdg87pIUW2kal6tZ586Zes7Mfkn5pOD7UXFabWVq_F2fpjcMvlya590QXQPI4hNQD0ZEF3M1WQnhMohqDhYLFsuynTlx96dnG3WLptDYfjHWrkQ1kSWud5R2hvF-lSkDnMmkCp7xfnvdgWkTfmNPgwcVJT2SbiUhAKgTOKAQRy5OoLw',
+    'https://lh3.googleusercontent.com/aida-public/AB6AXuBzcv4qok8PlbQvbc_5aj42pL2dq8Qpc3ma7xL4hry6W2NYPDVeSLSV5MwKCK8-2K3pL-zzMDBomEqEPcuPeosp4upPhi61hmY0n6JvyQBzPwvA5TJotET2iVcJzEH-3G3-eA2fpwMPiUta3GGTP0u-lje0p1aFD1sbwl5x9dSMz_BtL17hT_5p0l8fvz8jUL-6DmftIN1Asz1beWFglJ5L0p1HseHLXbUsvLUlW20P70Trr8NQ1qnBVw',
+  ];
 
   if (isLoading) {
-    return (
-      <YStack flex={1} alignItems="center" justifyContent="center" backgroundColor={colors.background}>
-        <Spinner size="large" color={colors.primary} />
-        <Text color={colors.textSecondary} marginTop="$3">Đang tải chi tiết giải đấu...</Text>
-      </YStack>
-    );
-  }
-
-  if (!tournament || errorMessage) {
-    return (
-      <YStack flex={1} backgroundColor={colors.background} padding="$5" paddingTop="$10" gap="$4">
-        <Button
-          alignSelf="flex-start"
-          circular
-          backgroundColor={colors.surface}
-          borderColor={colors.surfaceBorder}
-          borderWidth={1}
-          onPress={() => router.back()}
-          icon={<ChevronLeft color={colors.textPrimary} size={22} />}
-        />
-        <YStack flex={1} justifyContent="center" alignItems="center" gap="$3">
-          <Text color={colors.textPrimary} fontSize={20} fontWeight="900">Không mở được giải đấu</Text>
-          <Text color={colors.textSecondary} textAlign="center">{errorMessage}</Text>
-          <Button backgroundColor={colors.primary} color={colors.textOnPrimary} onPress={() => loadTournament()}>
-            Thử lại
-          </Button>
-        </YStack>
-      </YStack>
-    );
+    return <View className="flex-1 bg-background" />;
   }
 
   return (
-    <YStack flex={1} backgroundColor={colors.background}>
-      <YStack
-        padding="$5"
-        paddingTop="$8"
-        backgroundColor={colors.backgroundSecondary}
-        borderBottomWidth={1}
-        borderBottomColor={colors.surfaceBorder}
-        gap="$4"
-      >
-        <XStack alignItems="center" justifyContent="space-between">
-          <Button
-            circular
-            size="$4"
-            backgroundColor={colors.surface}
-            borderColor={colors.surfaceBorder}
-            borderWidth={1}
-            onPress={() => router.back()}
-            icon={<ChevronLeft color={colors.textPrimary} size={22} />}
-          />
-          <Text color={colors.textSecondary} fontSize={13} fontWeight="700">
-            Chi tiết giải đấu
-          </Text>
-          <YStack width={42} />
-        </XStack>
+    <View className="flex-1 bg-background">
+      {/* Top Navigation Bar */}
+      <View className="w-full absolute top-0 z-50 bg-surface/80 flex-row items-center justify-between px-md py-sm shadow-sm" style={{ paddingTop: 40 }}>
+        <TouchableOpacity onPress={() => router.back()} className="p-2">
+          <ChevronLeft color="#000000" size={28} />
+        </TouchableOpacity>
+        <Typography variant="headline-lg-mobile" className="text-primary font-bold">
+          CourtMate
+        </Typography>
+        <TouchableOpacity className="p-2" onPress={() => Alert.alert('Chia sẻ', 'Tính năng đang phát triển')}>
+          <Share color="#000000" size={24} />
+        </TouchableOpacity>
+      </View>
 
-        <YStack gap="$3">
-          <XStack gap="$2" alignItems="center" flexWrap="wrap">
-            <YStack backgroundColor={isOpen ? colors.primaryMuted : 'rgba(242,184,75,0.15)'} borderColor={isOpen ? colors.primary : colors.warning} borderWidth={1} borderRadius="$10" paddingHorizontal="$3" paddingVertical="$1">
-              <Text color={isOpen ? colors.primary : colors.warning} fontSize={12} fontWeight="900">
-                {statusLabels[tournament.status]}
-              </Text>
-            </YStack>
-            <YStack backgroundColor={colors.surface} borderColor={colors.surfaceBorder} borderWidth={1} borderRadius="$10" paddingHorizontal="$3" paddingVertical="$1">
-              <Text color={colors.textPrimary} fontSize={12} fontWeight="900">
-                {sportLabels[tournament.sport] ?? tournament.sport}
-              </Text>
-            </YStack>
-          </XStack>
-
-          <Text color={colors.textPrimary} fontSize={28} fontWeight="900" lineHeight={34}>
-            {tournament.title}
-          </Text>
-
-          <XStack alignItems="center" gap="$2">
-            <YStack width={34} height={34} borderRadius="$10" backgroundColor={colors.surfaceHover} alignItems="center" justifyContent="center">
-              <Trophy color={colors.primary} size={18} />
-            </YStack>
-            <YStack flex={1}>
-              <Text color={colors.textSecondary} fontSize={12}>Ban tổ chức</Text>
-              <XStack alignItems="center" gap="$2">
-                <Text color={colors.textPrimary} fontWeight="800">{tournament.organizer?.name || 'Đang cập nhật'}</Text>
-                {tournament.organizer?.isVerified && <ShieldCheck color={colors.secondary} size={16} />}
-              </XStack>
-            </YStack>
-          </XStack>
-        </YStack>
-      </YStack>
-
-      <ScrollView
-        flex={1}
-        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={() => loadTournament(true)} />}
-        contentContainerStyle={{ padding: 20, paddingBottom: 130 }}
+      <ScrollView 
+        className="flex-1" 
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 32 }}
       >
-        <YStack gap="$4">
-          <YStack backgroundColor={colors.surface} borderColor={colors.surfaceBorder} borderWidth={1} borderRadius="$5" padding="$4" gap="$4">
-            <XStack gap="$3" alignItems="flex-start">
-              <Calendar color={colors.primary} size={20} />
-              <YStack flex={1}>
-                <Text color={colors.textSecondary} fontSize={12}>Thời gian</Text>
-                <Text color={colors.textPrimary} fontWeight="800" marginTop="$1">
-                  {formatDate(tournament.startDate)} - {formatDate(tournament.endDate)}
-                </Text>
-              </YStack>
-            </XStack>
-            <XStack gap="$3" alignItems="flex-start">
-              <MapPin color={colors.primary} size={20} />
-              <YStack flex={1}>
-                <Text color={colors.textSecondary} fontSize={12}>Địa điểm</Text>
-                <Text color={colors.textPrimary} fontWeight="800" marginTop="$1">
-                  {tournament.location}{tournament.district ? `, ${tournament.district}` : ''}, {tournament.city}
-                </Text>
-              </YStack>
-            </XStack>
-            <XStack gap="$3" alignItems="flex-start">
-              <Users color={colors.primary} size={20} />
-              <YStack flex={1}>
-                <Text color={colors.textSecondary} fontSize={12}>Hạng mục</Text>
-                <Text color={colors.textPrimary} fontWeight="800" marginTop="$1">
-                  {tournament.categories?.length ? `${tournament.categories.length} hạng mục thi đấu` : 'Đang cập nhật'}
-                </Text>
-              </YStack>
-            </XStack>
-          </YStack>
+        <View className="w-full h-72 relative">
+          <ImageBackground 
+            source={{ uri: (tournament as any)?.image || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDj-0SSKmPxFPxl2kcGyexPAHUzeiHTt5T_dpw5zUC_BgF4oqj0qN2FqojB7T9pyiQlAHbutjMpw1wuTlPwquFEqJRafoTN0dhkaKgq4zCWuk_btYP6JcNPSqj6rI9' }}
+            className="w-full h-full justify-end"
+            resizeMode="cover"
+          >
+            {/* Gradient Overlay simulation */}
+            <View className="absolute inset-0 bg-black/30" />
+            
+            {/* Badges Overlay */}
+            <View className="absolute bottom-10 left-md right-md flex-row flex-wrap space-x-sm">
+              <View className="bg-secondary-container px-md py-xs rounded-full">
+                <Typography variant="label-sm" color="white" className="uppercase tracking-wider">
+                  {tournament?.sport || 'Quần vợt'}
+                </Typography>
+              </View>
+              <View className="bg-surface-container-highest px-md py-xs rounded-full">
+                <Typography variant="label-sm" className="text-on-surface uppercase tracking-wider">
+                  Sân cứng
+                </Typography>
+              </View>
+            </View>
+          </ImageBackground>
+        </View>
 
-          <XStack gap="$2">
-            {[
-              { key: 'overview', label: 'Tổng quan' },
-              { key: 'rules', label: 'Điều lệ' },
-              { key: 'schedule', label: 'Lịch trình' },
-            ].map((tab) => (
-              <Button
-                key={tab.key}
-                flex={1}
-                size="$3"
-                borderRadius="$10"
-                backgroundColor={activeTab === tab.key ? colors.primary : colors.surface}
-                color={activeTab === tab.key ? colors.textOnPrimary : colors.textPrimary}
-                onPress={() => setActiveTab(tab.key as typeof activeTab)}
-              >
-                {tab.label}
-              </Button>
-            ))}
-          </XStack>
+        {/* Content Canvas */}
+        <View className="px-md -mt-xl z-10 space-y-lg">
+          
+          {/* Header Info */}
+          <View className="bg-surface-container-lowest rounded-xl p-lg border border-outline-variant/30" style={{ elevation: 2, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 8 }}>
+            <Typography variant="headline-md" className="text-primary mb-xs font-bold">
+              {tournament?.title || 'Spring Open Qualifiers'}
+            </Typography>
+            <View className="flex-row items-center space-x-xs mb-md">
+              <MapPin color="#45464d" size={18} />
+              <Typography variant="label-md" className="text-on-surface-variant ml-1">
+                {tournament?.location || 'Metro Tennis Center, NY'}
+              </Typography>
+            </View>
+            
+            <View className="flex-row border-t border-outline-variant/20 pt-md mt-md">
+              <View className="flex-1">
+                <Typography variant="label-sm" className="text-on-surface-variant uppercase">Trình độ</Typography>
+                <Typography variant="headline-md" className="text-primary mt-1 font-bold">
+                  {tournament?.categories?.[0]?.name || 'Trung bình'}
+                </Typography>
+              </View>
+              <View className="flex-1">
+                <Typography variant="label-sm" className="text-on-surface-variant uppercase">Thể thức</Typography>
+                <Typography variant="headline-md" className="text-primary mt-1 font-bold">Loại trực tiếp</Typography>
+              </View>
+            </View>
+          </View>
 
-          {activeTab === 'overview' && (
-            <YStack gap="$4">
-              <YStack gap="$2">
-                <Text color={colors.textPrimary} fontSize={18} fontWeight="900">Giới thiệu</Text>
-                <Text color={colors.textSecondary} fontSize={15} lineHeight={23}>
-                  {tournament.description || 'Ban tổ chức chưa cập nhật phần mô tả.'}
-                </Text>
-              </YStack>
+          {/* Overview Section */}
+          <View className="space-y-sm mt-lg">
+            <Typography variant="label-sm" className="text-on-surface-variant tracking-widest uppercase px-xs">Tổng quan</Typography>
+            <View className="bg-surface-container-lowest rounded-xl p-md border border-outline-variant/30 mt-xs">
+              <Typography variant="body-md" className="text-on-surface-variant leading-[24px]">
+                {tournament?.description || "Tham gia giải đấu vòng loại được mong đợi nhất mùa giải. Một sân chơi chuyên nghiệp và cạnh tranh."}
+              </Typography>
+              
+              {/* Richer detail elements to fix "quá ít thông tin" */}
+              <View className="border-t border-outline-variant/20 pt-md mt-md space-y-sm">
+                <Typography variant="label-sm" className="text-on-surface-variant font-bold">CHI TIẾT GIẢI ĐẤU</Typography>
+                <Typography variant="body-md" className="text-on-surface-variant">
+                  • <Typography variant="label-md" className="text-primary font-bold">Thể thức thi đấu:</Typography> Đấu đơn/đôi loại trực tiếp (Knock-out stage).
+                </Typography>
+                <Typography variant="body-md" className="text-on-surface-variant">
+                  • <Typography variant="label-md" className="text-primary font-bold">Giải thưởng:</Typography> Cúp vô địch + Huy chương + Quà tặng nhà tài trợ.
+                </Typography>
+                <Typography variant="body-md" className="text-on-surface-variant">
+                  • <Typography variant="label-md" className="text-primary font-bold">Yêu cầu:</Typography> Có mặt trước giờ thi đấu 15 phút để làm thủ tục check-in.
+                </Typography>
+              </View>
 
-              <YStack gap="$3">
-                <Text color={colors.textPrimary} fontSize={18} fontWeight="900">Lệ phí theo hạng mục</Text>
-                {tournament.categories?.length ? (
-                  tournament.categories.map((category, index) => (
-                    <XStack
-                      key={category.id || `${category.name}-${index}`}
-                      justifyContent="space-between"
-                      alignItems="center"
-                      backgroundColor={colors.surface}
-                      borderColor={colors.surfaceBorder}
-                      borderWidth={1}
-                      borderRadius="$4"
-                      padding="$3"
-                    >
-                      <YStack flex={1} paddingRight="$3">
-                        <Text color={colors.textPrimary} fontWeight="800">{category.name}</Text>
-                        <Text color={colors.textSecondary} fontSize={12}>
-                          {category.maxParticipants ? `Tối đa ${category.maxParticipants} người/đội` : 'Không giới hạn hiển thị'}
-                        </Text>
-                      </YStack>
-                      <Text color={colors.primary} fontWeight="900">{formatFee(category.fee)}</Text>
-                    </XStack>
-                  ))
-                ) : (
-                  <Text color={colors.textSecondary}>Chưa có hạng mục thi đấu.</Text>
-                )}
-              </YStack>
-            </YStack>
-          )}
+              <View className="mt-md flex-row items-center space-x-md border-t border-outline-variant/20 pt-md">
+                <View className="flex-row items-center space-x-xs">
+                  <Calendar color="#1d4ed8" size={20} />
+                  <Typography variant="label-md" className="text-primary ml-1 font-medium">
+                    {tournament?.startDate ? new Date(tournament.startDate).toLocaleDateString('vi-VN') : 'May 12 - 14'}
+                  </Typography>
+                </View>
+                <View className="flex-row items-center space-x-xs">
+                  <CreditCard color="#1d4ed8" size={20} />
+                  <Typography variant="label-md" className="text-primary ml-1 font-medium">
+                    {formatFee(minFee)}
+                  </Typography>
+                </View>
+              </View>
+            </View>
+          </View>
 
-          {activeTab === 'rules' && (
-            <YStack gap="$3">
-              <XStack alignItems="center" gap="$2">
-                <FileText color={colors.primary} size={19} />
-                <Text color={colors.textPrimary} fontSize={18} fontWeight="900">Điều lệ giải đấu</Text>
-              </XStack>
-              <Text color={colors.textSecondary} fontSize={15} lineHeight={24}>
-                {getRules(tournament)}
-              </Text>
-              {tournament.rulesFileUrl && (
-                <Button
-                  alignSelf="flex-start"
-                  backgroundColor={colors.surface}
-                  color={colors.textPrimary}
-                  borderColor={colors.surfaceBorder}
-                  borderWidth={1}
-                  onPress={() => Alert.alert('Điều lệ PDF', 'Tệp điều lệ đã có trong dữ liệu giải. Trình xem PDF sẽ được nối ở bước sau.')}
+          {/* Participant Roster */}
+          <View className="space-y-sm mt-lg">
+            <View className="flex-row justify-between items-end px-xs">
+              <Typography variant="label-sm" className="text-on-surface-variant tracking-widest uppercase">Danh sách đăng ký</Typography>
+              <Typography variant="label-sm" className="text-secondary">24 / 32 Đã đăng ký</Typography>
+            </View>
+            <View className="bg-surface-container-lowest rounded-xl p-md border border-outline-variant/30 mt-xs">
+              <View className="w-full bg-surface-container-highest h-2 rounded-full overflow-hidden mb-md">
+                <View className="bg-secondary h-full rounded-full w-[75%]" />
+              </View>
+              
+              <View className="flex-row justify-between items-center">
+                <View className="flex-row overflow-hidden" style={{ paddingLeft: 10 }}>
+                  {dummyAvatars.map((avatar, idx) => (
+                    <View key={idx} className="h-10 w-10 rounded-full border-2 border-surface-container-lowest bg-surface-variant overflow-hidden" style={{ marginLeft: -12 }}>
+                      <Image source={{ uri: avatar }} className="h-full w-full" />
+                    </View>
+                  ))}
+                  <View className="h-10 w-10 rounded-full border-2 border-surface-container-lowest bg-secondary-container items-center justify-center" style={{ marginLeft: -12 }}>
+                    <Typography variant="label-sm" className="text-on-secondary-container">+20</Typography>
+                  </View>
+                </View>
+
+                <TouchableOpacity 
+                  className="bg-primary px-4 py-2 rounded-lg"
+                  onPress={() => router.push(`/register/${id}`)}
+                  style={{ elevation: 2, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 4 }}
                 >
-                  Xem file điều lệ
-                </Button>
-              )}
-            </YStack>
-          )}
+                  <Typography variant="label-md" color="white" className="font-bold">Đăng ký ngay</Typography>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
 
-          {activeTab === 'schedule' && (
-            <YStack gap="$3">
-              <XStack alignItems="center" gap="$2">
-                <Clock color={colors.primary} size={19} />
-                <Text color={colors.textPrimary} fontSize={18} fontWeight="900">Lịch trình dự kiến</Text>
-              </XStack>
-              {tournament.schedule?.length ? (
-                tournament.schedule.map((item, index) => (
-                  <XStack key={`${item}-${index}`} gap="$3" alignItems="flex-start">
-                    <YStack width={28} height={28} borderRadius="$10" backgroundColor={colors.primaryMuted} alignItems="center" justifyContent="center">
-                      <Text color={colors.primary} fontSize={12} fontWeight="900">{index + 1}</Text>
-                    </YStack>
-                    <Text flex={1} color={colors.textSecondary} fontSize={15} lineHeight={22}>{item}</Text>
-                  </XStack>
-                ))
-              ) : (
-                <Text color={colors.textSecondary}>Ban tổ chức chưa cập nhật lịch trình chi tiết.</Text>
-              )}
-            </YStack>
-          )}
-        </YStack>
+          {/* Venue & Map */}
+          <View className="space-y-sm mt-lg mb-6">
+            <Typography variant="label-sm" className="text-on-surface-variant tracking-widest uppercase px-xs">Địa điểm thi đấu</Typography>
+            <View className="bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/30 mt-xs">
+              <TouchableOpacity className="h-40 w-full bg-surface-variant relative overflow-hidden" onPress={handleOpenMap} activeOpacity={0.8}>
+                <ImageBackground 
+                  source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCoxXkRV5jt0fyHLKlxEKLay4HKlVSLvecabzcT-9VX0jc_04bohVm6TttGBxPIYegInj5dByHEMScJo4a2lwfH-LTjneGHoMUcJnPbmm03Tqjo49c9FgV7BDjSPJOkdsi-AfkKhweUurQnYtanisc_mO8rfnJxhPSdTi_PrQDYWjGLWuBc3IvjG3FCS74GfAyPgh_xMZb3OuSHGoayz9BEj20RqYvKzHq6LX_CV_vm2K2it8_2Q7E_yQ' }}
+                  className="w-full h-full opacity-80"
+                  resizeMode="cover"
+                />
+                <View className="absolute inset-0 items-center justify-center">
+                  <View className="bg-secondary p-2 rounded-full" style={{ elevation: 5, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 5 }}>
+                    <MapPin color="#ffffff" size={24} />
+                  </View>
+                </View>
+              </TouchableOpacity>
+              <View className="p-md pointer-events-none">
+                <Typography variant="label-md" className="text-primary font-bold mb-1">
+                  {tournament?.location || 'Metro Tennis Center'}
+                </Typography>
+                <Typography variant="label-sm" className="text-on-surface-variant">
+                  {tournament?.district ? `${tournament.district}, ` : ''}{tournament?.city || 'New York, NY 10001'}
+                </Typography>
+              </View>
+            </View>
+          </View>
+
+        </View>
       </ScrollView>
 
-      <YStack
-        position="absolute"
-        bottom={0}
-        left={0}
-        right={0}
-        padding="$5"
-        paddingBottom="$7"
-        backgroundColor="rgba(30,24,21,0.97)"
-        borderTopWidth={1}
-        borderTopColor={colors.surfaceBorder}
-        gap="$3"
-      >
-        <XStack justifyContent="space-between" alignItems="center">
-          <YStack>
-            <Text color={colors.textSecondary} fontSize={12}>Lệ phí từ</Text>
-            <Text color={colors.primary} fontSize={24} fontWeight="900">{formatFee(minFee)}</Text>
-          </YStack>
-          <Text color={colors.textSecondary} fontSize={12}>ID: {String(id).slice(0, 8)}...</Text>
-        </XStack>
-        <Button
-          height={54}
-          borderRadius="$5"
-          backgroundColor={isOpen ? colors.primary : colors.surfaceHover}
-          color={isOpen ? colors.textOnPrimary : colors.textSecondary}
-          fontWeight="900"
-          disabled={!isOpen && !isOrganizer}
-          opacity={!isOpen && !isOrganizer ? 0.6 : 1}
-          onPress={() => {
-            if (isOrganizer) {
-              router.push('/tracker');
-              return;
-            }
-
-            if (isOpen) {
-              router.push(`/register/${id}`);
-              return;
-            }
-
-            Alert.alert('Chưa thể đăng ký', 'Giải đấu hiện chưa mở hoặc đã ngừng nhận đăng ký.');
-          }}
+      {/* Fixed Bottom Action Panel */}
+      <View className="bg-surface-container-lowest/95 border-t border-outline-variant/30 px-md py-lg flex-row items-center space-x-md" style={{ elevation: 10, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10 }}>
+        <View className="flex-1">
+          <Typography variant="label-sm" className="text-on-surface-variant">Giá đăng ký sớm</Typography>
+          <Typography variant="headline-md" className="text-primary font-bold">{formatFee(minFee)}</Typography>
+        </View>
+        <TouchableOpacity 
+          className="flex-[2] bg-primary rounded-xl py-md flex-row items-center justify-center space-x-sm"
+          onPress={() => router.push(`/register/${id}`)}
         >
-          {isOrganizer ? 'Xem danh sách đăng ký' : isOpen ? 'Đăng ký thi đấu' : 'Chưa mở đăng ký'}
-        </Button>
-      </YStack>
-    </YStack>
+          <Typography variant="headline-md" color="white" className="font-bold">Đăng ký thi đấu</Typography>
+          <ArrowRight color="#ffffff" size={20} />
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 }

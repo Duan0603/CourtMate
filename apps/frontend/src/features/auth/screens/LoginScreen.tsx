@@ -23,20 +23,20 @@ const GoogleIcon = () => (
 );
 
 const theme = {
-  background: '#f9fbe5',
+  background: '#fcf8fa',
   surfaceContainerLowest: '#ffffff',
-  surface: '#f9fbe5',
-  surfaceContainerHigh: '#e7ead4',
-  primary: '#506600',
+  surface: '#ffffff',
+  surfaceContainerHigh: '#eae7e9',
+  primary: '#1d4ed8',
   onPrimary: '#ffffff',
-  onSurface: '#1a1d10',
-  onSurfaceVariant: '#444933',
-  outlineVariant: '#c4c9ac',
-  outline: '#747a60',
-  secondary: '#565e74',
+  onSurface: '#1e293b',
+  onSurfaceVariant: '#45464d',
+  outlineVariant: '#cbd5e1',
+  outline: '#7c747a',
+  secondary: '#1e293b',
   onSecondary: '#ffffff',
-  error: '#ba1a1a',
-  errorContainer: '#ffdad6',
+  error: '#b3261e',
+  errorContainer: '#fde8e8',
 };
 
 const sports = [
@@ -199,31 +199,37 @@ export const LoginScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
     <Animated.View style={{ width: '100%', maxWidth: mode === 'login' ? 440 : 480, opacity: fadeAnim }}>
       <YStack 
         w="100%"
-        bg={mode === 'login' && isDesktop ? 'transparent' : theme.surfaceContainerLowest}
-      br={16}
-      borderWidth={mode === 'login' && isDesktop ? 0 : 1}
-      borderColor="rgba(196, 201, 172, 0.3)"
-      p={mode === 'login' && isDesktop ? "$0" : "$4"}
-      style={mode === 'login' && isDesktop ? {} : { shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 }}
-    >
-      {/* Branding */}
-      <YStack ai={mode === 'login' || mode === 'forgot_password' ? "flex-start" : "center"} mb="$4">
-        <H1 color={mode === 'login' || mode === 'forgot_password' ? theme.onSurface : theme.primary} fontWeight="800" fos={mode === 'login' || mode === 'forgot_password' ? 32 : 36} lh={40} ls={-1}>
-          {mode === 'login' ? 'Chào mừng trở lại' : mode === 'forgot_password' ? 'Quên mật khẩu' : 'CourtMate'}
-        </H1>
-        <Paragraph color={theme.onSurfaceVariant} fos={14} mt="$1.5" ta={mode === 'login' || mode === 'forgot_password' ? 'left' : 'center'}>
-          {mode === 'login' ? 'Đăng nhập nhanh chóng bằng tài khoản Google của bạn.' : mode === 'forgot_password' ? 'Nhập email của bạn để nhận mã OTP khôi phục mật khẩu.' : 'Bắt đầu hành trình chinh phục các trận đấu gay cấn cùng CourtMate ngay hôm nay.'}
-        </Paragraph>
-        {mode === 'login' && (
-          <YStack w="100%" bg="rgba(80, 102, 0, 0.05)" p="$2.5" br={8} borderWidth={1} borderColor="rgba(80, 102, 0, 0.15)" mt="$3" gap="$0.5">
-            <Text color="#506600" fow="700" fos={12}>Tài khoản thử nghiệm (Mật khẩu: Password123):</Text>
-            <Text color="#444933" fos={11}>• Player: test@courtmate.com</Text>
-            <Text color="#444933" fos={11}>• Organizer: organizer@courtmate.com</Text>
-            <Text color="#444933" fos={11}>• Admin: admin@courtmate.com</Text>
-            <Text color="#444933" fos={11}>• Super Admin: superadmin@courtmate.com</Text>
-          </YStack>
-        )}
-      </YStack>
+        bg={theme.surfaceContainerLowest}
+        br={24}
+        borderWidth={1}
+        borderColor="rgba(226, 232, 240, 0.8)"
+        p={isDesktop ? "$6" : "$4.5"}
+        style={{
+          shadowColor: '#1e293b',
+          shadowOpacity: 0.06,
+          shadowRadius: 16,
+          shadowOffset: { width: 0, height: 8 },
+          elevation: 4
+        }}
+      >
+        {/* Branding */}
+        <YStack ai={mode === 'login' || mode === 'forgot_password' ? "flex-start" : "center"} mb="$4">
+          <H1 color={mode === 'login' || mode === 'forgot_password' ? theme.onSurface : theme.primary} fontWeight="800" fos={mode === 'login' || mode === 'forgot_password' ? 32 : 36} lh={40} ls={-1}>
+            {mode === 'login' ? 'Chào mừng trở lại' : mode === 'forgot_password' ? 'Quên mật khẩu' : 'CourtMate'}
+          </H1>
+          <Paragraph color={theme.onSurfaceVariant} fos={14} mt="$1.5" ta={mode === 'login' || mode === 'forgot_password' ? 'left' : 'center'}>
+            {mode === 'login' ? 'Đăng nhập nhanh chóng bằng tài khoản Google của bạn.' : mode === 'forgot_password' ? 'Nhập email của bạn để nhận mã OTP khôi phục mật khẩu.' : 'Bắt đầu hành trình chinh phục các trận đấu cùng CourtMate ngay hôm nay.'}
+          </Paragraph>
+          {mode === 'login' && (
+            <YStack w="100%" bg="rgba(29, 78, 216, 0.04)" p="$3" br={12} borderWidth={1} borderColor="rgba(29, 78, 216, 0.12)" mt="$3.5" gap="$0.5">
+              <Text color={theme.primary} fow="700" fos={12}>Tài khoản thử nghiệm (Mật khẩu: Password123):</Text>
+              <Text color={theme.onSurfaceVariant} fos={11}>• Player: test@courtmate.com</Text>
+              <Text color={theme.onSurfaceVariant} fos={11}>• Organizer: organizer@courtmate.com</Text>
+              <Text color={theme.onSurfaceVariant} fos={11}>• Admin: admin@courtmate.com</Text>
+              <Text color={theme.onSurfaceVariant} fos={11}>• Super Admin: superadmin@courtmate.com</Text>
+            </YStack>
+          )}
+        </YStack>
 
       <YStack gap="$2.5">
         {/* Error Alert */}
@@ -422,27 +428,27 @@ export const LoginScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
 
   if (isDesktop) {
     return (
-      <View flex={1} flexDirection="row" bg={theme.surfaceContainerLowest}>
+      <View flex={1} flexDirection="row" bg={theme.background}>
         <View flex={1} bg={theme.surfaceContainerHigh}>
           <ImageBackground
             source={require('../../../../assets/images/registration_header.png')}
             style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}
             resizeMode="cover"
           >
-            <View position="absolute" top={0} bottom={0} left={0} right={0} bg="rgba(0,0,0,0.5)" />
+            <View position="absolute" top={0} bottom={0} left={0} right={0} bg="rgba(30, 41, 59, 0.55)" />
             <View 
-              bg="rgba(255,255,255,0.1)" borderWidth={1} borderColor="rgba(255,255,255,0.2)" br={16} 
-              p={32} w="100%" maxWidth={450} style={{ backdropFilter: 'blur(10px)' }}
+              bg="rgba(255,255,255,0.12)" borderWidth={1} borderColor="rgba(255,255,255,0.25)" br={20} 
+              p={32} w="100%" maxWidth={450} style={{ backdropFilter: 'blur(15px)' }}
             >
               <H2 color={theme.onPrimary} fow="800" fos={40} lh={48} ls={-0.5} mb="$3">Vượt mọi giới hạn</H2>
               <Paragraph color="rgba(255,255,255,0.9)" fos={18} lh={28}>
-                Tham gia mạng lưới hơn 10,000 vận động viên. Đặt sân, tìm kiếm đối thủ và nâng cao trình độ của bạn ngay hôm nay.
+                Tham gia mạng lưới hơn 10,000 vận động viên. Đặt sân, tìm kiếm đối thủ và nâng cao trình độ của bạn cùng CourtMate.
               </Paragraph>
             </View>
           </ImageBackground>
         </View>
 
-        <View flex={1} jc="center" ai="center" bg={theme.surfaceContainerLowest}>
+        <View flex={1} jc="center" ai="center" bg={theme.background}>
           <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: 24, width: '100%' }} showsVerticalScrollIndicator={false}>
             {formContent}
           </ScrollView>
@@ -452,17 +458,10 @@ export const LoginScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   }
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ImageBackground
-        source={require('../../../../assets/images/registration_header.png')}
-        style={{ flex: 1, width: '100%', height: '100%' }}
-        resizeMode="cover"
-      >
-        <View position="absolute" top={0} bottom={0} left={0} right={0} bg="rgba(0,0,0,0.5)" />
-        <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: 16 }} showsVerticalScrollIndicator={false} bounces={false}>
-          {formContent}
-        </ScrollView>
-      </ImageBackground>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: theme.background }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: 16 }} showsVerticalScrollIndicator={false} bounces={false}>
+        {formContent}
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 };
