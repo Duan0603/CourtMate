@@ -86,8 +86,20 @@ export class Tournament extends Document {
   @Prop({ type: [CategoryInfoSchema], required: true, default: [] })
   categories!: CategoryInfo[];
 
+  @Prop({ required: false, min: 0 })
+  registrationFee?: number;
+
+  @Prop({ required: false, min: 1 })
+  slotsLimit?: number;
+
+  @Prop({ default: 0 })
+  joinedSlots!: number;
+
   @Prop({ type: [String], required: false })
   schedule?: string[];
+
+  @Prop({ type: [Date], required: false })
+  matchDates?: Date[];
 
   @Prop({ required: false })
   registrationLink?: string;

@@ -16,7 +16,7 @@ export const HeaderScrollContext = React.createContext({
 });
 
 const TAB_META: Record<string, { label: string; icon: typeof Trophy }> = {
-  dashboard: { label: 'Giải đấu', icon: Trophy },
+  home: { label: 'Giải đấu', icon: Trophy },
   chat: { label: 'Trò chuyện', icon: MessageCircle },
   profile: { label: 'Hồ sơ', icon: UserRound },
 };
@@ -70,7 +70,7 @@ function BrandHeader({ title, unreadCount, onNotifications }: { title: string; u
   return (
     <View style={{ paddingTop: insets.top, backgroundColor: NAVY, borderBottomColor: 'rgba(255,255,255,0.12)', borderBottomWidth: 1 }}>
       <View style={{ height: 60, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <TouchableOpacity onPress={() => router.replace('/(tabs)/dashboard')} activeOpacity={0.8} style={{ flexDirection: 'row', alignItems: 'center', minHeight: 44 }}>
+        <TouchableOpacity onPress={() => router.replace('/(tabs)/home' as any)} activeOpacity={0.8} style={{ flexDirection: 'row', alignItems: 'center', minHeight: 44 }}>
           <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' }}>
             <View style={{ width: 15, height: 15, borderRadius: 8, borderWidth: 4, borderColor: BLUE }} />
             <View style={{ position: 'absolute', right: 3, top: 3, width: 9, height: 9, borderRadius: 5, backgroundColor: YELLOW }} />
@@ -153,7 +153,7 @@ export default function TabLayout() {
       {!hiddenChrome && <BrandHeader title={title} unreadCount={unreadCount} onNotifications={() => setNotificationsOpen(true)} />}
       <View style={{ flex: 1 }}>
         <Tabs tabBar={(props) => <CourtMateTabBar {...props} />} screenOptions={{ headerShown: false }}>
-          <Tabs.Screen name="dashboard" />
+          <Tabs.Screen name="home" />
           <Tabs.Screen name="tracker" options={{ href: null }} />
           <Tabs.Screen name="chat" />
           <Tabs.Screen name="profile" />

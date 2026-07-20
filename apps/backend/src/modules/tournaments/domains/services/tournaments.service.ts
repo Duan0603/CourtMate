@@ -13,7 +13,7 @@ export class TournamentsService {
   async create(createDto: CreateTournamentDto, rulesFileUrl?: string, organizerInfo?: any): Promise<Tournament> {
     const createdTournament = new this.tournamentModel({
       ...createDto,
-      rulesFileUrl,
+      rulesFileUrl: rulesFileUrl || createDto.rulesFileUrl,
       organizer: organizerInfo || {
         id: 'mock-organizer-id',
         name: 'Mock Organizer',
@@ -161,6 +161,53 @@ export class TournamentsService {
 
     const mockTournaments = [
       {
+        title: 'CourtMate Pickleball Open Đà Nẵng',
+        description: 'Giải đấu cộng đồng dành cho các cặp vận động viên tại Đà Nẵng.',
+        sport: SportType.PICKLEBALL,
+        coverImage: 'https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?auto=format&fit=crop&w=1200&q=85',
+        startDate: fromNow(5),
+        endDate: fromNow(7),
+        location: 'Khu thể thao Tuyên Sơn, Đà Nẵng',
+        district: 'Hải Châu',
+        city: 'Da Nang',
+        organizer: {
+          id: 'seed-org-courtmate-pb',
+          name: 'CourtMate',
+          isVerified: true,
+        },
+        status: TournamentStatus.IN_PROGRESS,
+        categories: [
+          { id: 'cat-pb-open', name: 'Mở rộng', fee: 150000, maxParticipants: 32 },
+        ],
+        joinedSlots: 24,
+        slotsLimit: 32,
+        isFeatured: true,
+        matchDates: [fromNow(5), fromNow(6)],
+      },
+      {
+        title: 'Cúp Cầu lông Phong trào Hải Châu',
+        description: 'Sân chơi phong trào dành cho vận động viên cầu lông khu vực Hải Châu.',
+        sport: SportType.BADMINTON,
+        coverImage: 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=1200&q=85',
+        startDate: fromNow(15),
+        endDate: fromNow(17),
+        location: 'Nhà thi đấu Phan Châu Trinh, Đà Nẵng',
+        district: 'Hải Châu',
+        city: 'Da Nang',
+        organizer: {
+          id: 'seed-org-hc-bm',
+          name: 'Đà Nẵng Sports',
+          isVerified: false,
+        },
+        status: TournamentStatus.OPEN,
+        categories: [
+          { id: 'cat-bm-phongtrao', name: 'Phong trào', fee: 100000, maxParticipants: 24 },
+        ],
+        joinedSlots: 12,
+        slotsLimit: 24,
+        matchDates: [fromNow(15), fromNow(16), fromNow(17)],
+      },
+      {
         title: 'Cúp Cầu lông CourtMate Đà Nẵng 2026',
         description: 'Giải cầu lông phong trào dành cho người chơi tại Đà Nẵng, thi đấu các nội dung đơn nam, đôi nam và đôi nam nữ.',
         sport: SportType.BADMINTON,
@@ -177,12 +224,13 @@ export class TournamentsService {
         },
         status: TournamentStatus.OPEN,
         categories: [
-          { id: 'mens-singles', name: 'Đơn nam phong trào', fee: 150000, maxParticipants: 32 },
-          { id: 'mixed-doubles', name: 'Đôi nam nữ', fee: 250000, maxParticipants: 24 },
+          { id: 'mens-singles', name: 'Đơn nam phong trào', fee: 5000, maxParticipants: 32 },
+          { id: 'mixed-doubles', name: 'Đôi nam nữ', fee: 5000, maxParticipants: 24 },
         ],
         rules: 'Áp dụng luật BWF, mỗi trận đấu 3 hiệp 21 điểm.',
         schedule: ['07:30 - Check-in', '08:00 - Vòng bảng', '15:30 - Chung kết'],
         isFeatured: true,
+        matchDates: [fromNow(7), fromNow(8), fromNow(9)],
       },
       {
         title: 'Sơn Trà Pickleball Open 2026',
@@ -202,6 +250,7 @@ export class TournamentsService {
         status: TournamentStatus.OPEN,
         categories: [{ id: 'open-doubles', name: 'Đôi mở rộng', fee: 300000, maxParticipants: 32 }],
         rules: 'Vòng bảng tính điểm, các đội dẫn đầu vào vòng loại trực tiếp.',
+        matchDates: [fromNow(12), fromNow(13)],
       },
       {
         title: 'Hải Châu Football League S7',
@@ -239,6 +288,7 @@ export class TournamentsService {
           { id: 'tennis-doubles', name: 'Đôi nam 35+', fee: 400000, maxParticipants: 24 },
         ],
         rules: 'Thi đấu một set 6 game, tie-break khi tỷ số 6-6.',
+        matchDates: [fromNow(18), fromNow(19), fromNow(20)],
       },
       {
         title: 'Liên Chiểu Badminton Rookie Cup',
@@ -270,6 +320,7 @@ export class TournamentsService {
         categories: [{ id: 'night-doubles', name: 'Đôi hỗn hợp 3.0–3.5', fee: 180000, maxParticipants: 20 }],
         rules: 'Mỗi trận một game 15 điểm, đổi sân khi một đội đạt 8 điểm.',
         isFeatured: true,
+        matchDates: [fromNow(3), fromNow(4)],
       },
       {
         title: 'Thanh Khê Futsal Community Cup',
@@ -418,16 +469,24 @@ export class TournamentsService {
       },
     ];
 
+    // Set all fees to 5000 as requested
+    mockTournaments.forEach(t => {
+      if (t.categories) {
+        t.categories.forEach(c => c.fee = 5000);
+      }
+    });
+
     const result = await this.tournamentModel.bulkWrite(
       mockTournaments.map((tournament) => ({
         updateOne: {
           filter: { title: tournament.title },
-          update: { $setOnInsert: tournament },
+          update: { $set: tournament },
           upsert: true,
         },
       })),
     );
 
+    console.log(`[Seed] Added or updated ${result.upsertedCount + result.modifiedCount} tournament posts`);
     if (result.upsertedCount > 0) {
       console.log(`[Seed] Added ${result.upsertedCount} tournament posts`);
     }

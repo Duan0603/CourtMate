@@ -48,9 +48,6 @@ export const RegistrationFormScreen: React.FC = () => {
             <Typography variant="headline-lg" className="text-primary font-bold text-center">
               Hoàn thiện hồ sơ
             </Typography>
-            <Typography variant="body-md" className="text-on-surface-variant text-center opacity-70">
-              Mã giải đấu: {tournamentId?.substring(0,8)}...
-            </Typography>
           </View>
 
           <View className="bg-surface-container-lowest rounded-xl p-lg border border-outline-variant/30" style={{ elevation: 2, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 8 }}>

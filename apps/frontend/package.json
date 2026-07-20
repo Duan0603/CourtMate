@@ -5,9 +5,9 @@
   "main": "expo-router/entry",
   "scripts": {
     "postinstall": "patch-package",
-    "start": "expo start --localhost",
-    "android": "expo start --android --localhost",
-    "ios": "expo start --ios --localhost",
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit"
   },
@@ -28,6 +28,8 @@
     "courtmate-monorepo": "file:../..",
     "expo": "~51.0.0",
     "expo-constants": "~16.0.2",
+    "expo-document-picker": "~12.0.2",
+    "expo-image-picker": "~15.1.0",
     "expo-linear-gradient": "^57.0.0",
     "expo-linking": "~6.3.1",
     "expo-location": "~17.0.1",

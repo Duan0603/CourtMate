@@ -28,10 +28,9 @@ import {
 } from 'lucide-react-native';
 import { Tournament, TournamentStatus } from '@courtmate/shared';
 import { tournamentsApi } from '../../src/features/tournaments/services/tournaments.api';
-import {
-  MOCK_ACTIVE_TOURNAMENTS,
-  MOCK_RECOMMENDED,
-} from '../../src/features/dashboard/screens/DashboardScreen';
+// Removed mock imports
+import { useRegistrations } from '../../src/features/registrations/hooks/useRegistrations';
+import { useLogin } from '../../src/features/auth/hooks/useLogin';
 
 const COLORS = {
   navy: '#00102F',
@@ -67,41 +66,16 @@ export default function TournamentDetailRoute() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
+  
+  const { registrations, fetchRegistrations } = useRegistrations();
+  const { user } = useLogin();
+  const actualPlayerId = user?.id || (user as any)?._id;
 
   const loadTournament = async () => {
     if (!id) return;
     setIsLoading(true);
     setLoadError(false);
     setImageFailed(false);
-
-    const local = [...MOCK_ACTIVE_TOURNAMENTS, ...MOCK_RECOMMENDED].find(
-      (item) => item.id === id,
-    );
-
-    if (local) {
-      const sourced = local as any;
-      setTournament({
-        id: local.id,
-        title: local.title,
-        sport: local.sport,
-        location: sourced.location || sourced.info,
-        city: sourced.location?.includes('Đà Nẵng') ? 'Đà Nẵng' : 'Việt Nam',
-        startDate: sourced.startDate || new Date(),
-        endDate: sourced.endDate || sourced.startDate || new Date(),
-        categories: [{ name: sourced.level || 'Phong trào', fee: sourced.fee || 0 }],
-        status: sourced.status || TournamentStatus.OPEN,
-        description: sourced.description || 'Giải đấu cộng đồng được tổng hợp bởi CourtMate.',
-        organizer: sourced.organizer
-          ? { id: 'facebook-source', name: sourced.organizer, isVerified: false }
-          : undefined,
-        slotsLimit: sourced.totalSlots,
-        sourceName: sourced.sourceName,
-        sourceUrl: sourced.sourceUrl,
-        image: sourced.image || undefined,
-      } as any);
-      setIsLoading(false);
-      return;
-    }
 
     try {
       const response = await tournamentsApi.getTournamentDetails(id);
@@ -116,7 +90,12 @@ export default function TournamentDetailRoute() {
 
   useEffect(() => {
     loadTournament();
-  }, [id]);
+    if (actualPlayerId) {
+      fetchRegistrations(actualPlayerId);
+    }
+  }, [id, actualPlayerId]);
+
+  const isRegistered = registrations.some(reg => reg.tournamentId === id);
 
   const minFee = useMemo(() => (tournament ? getMinFee(tournament) : 0), [tournament]);
   const imageUrl = (tournament as any)?.image as string | undefined;
@@ -147,6 +126,10 @@ export default function TournamentDetailRoute() {
   const register = () => {
     if (!id) {
       Alert.alert('Chưa thể đăng ký', 'Không tìm thấy mã giải đấu.');
+      return;
+    }
+    if (isRegistered) {
+      router.push('/tracker');
       return;
     }
     router.push(`/register/${id}`);
@@ -293,7 +276,7 @@ export default function TournamentDetailRoute() {
           <View style={styles.card}>
             <DetailRow label="Môn thi đấu" value={tournament.sport || 'Đang cập nhật'} />
             <DetailRow label="Hạng mục" value={category} />
-            <DetailRow label="Số lượng tối đa" value={tournament.slotsLimit ? `${tournament.slotsLimit} vận động viên` : 'Đang cập nhật'} />
+            <DetailRow label="Tình trạng" value={tournament.slotsLimit ? (tournament as any).joinedSlots !== undefined ? `Còn ${Math.max(0, tournament.slotsLimit - (tournament as any).joinedSlots)} / ${tournament.slotsLimit} suất` : `${tournament.slotsLimit} vận động viên` : 'Đang cập nhật'} />
             <DetailRow label="Lệ phí" value={formatFee(minFee)} last />
           </View>
 
@@ -314,9 +297,13 @@ export default function TournamentDetailRoute() {
           <Text style={styles.feeLabel}>Lệ phí từ</Text>
           <Text style={styles.feeValue}>{formatFee(minFee)}</Text>
         </View>
-        <TouchableOpacity style={styles.registerButton} onPress={register} activeOpacity={0.85}>
-          <Text style={styles.registerText}>Đăng ký thi đấu</Text>
-          <ArrowRight color={COLORS.white} size={20} />
+        <TouchableOpacity 
+          style={[styles.registerButton, isRegistered && { backgroundColor: COLORS.muted }]} 
+          onPress={register} 
+          activeOpacity={0.85}
+        >
+          <Text style={styles.registerText}>{isRegistered ? 'Đã đăng ký (Xem)' : 'Đăng ký thi đấu'}</Text>
+          {!isRegistered && <ArrowRight color={COLORS.white} size={20} />}
         </TouchableOpacity>
       </View>
     </View>

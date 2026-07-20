@@ -1,6 +1,8 @@
 import React from 'react';
 import { YStack, Label, XStack, Text } from 'tamagui';
 import { Button, Input } from '../../../components';
+import * as DocumentPicker from 'expo-document-picker';
+import { Alert } from 'react-native';
 
 interface RulesStepProps {
   data: any;
@@ -11,16 +13,12 @@ interface RulesStepProps {
 }
 
 export const RulesStep: React.FC<RulesStepProps> = ({ data, updateData, onSubmit, onBack, isLoading }) => {
-  // Hàm giả lập chọn file (mock)
-  const handlePickFile = () => {
-    updateData({ 
-      rulesFile: { 
-        uri: 'file://mock-path/rules.pdf', 
-        name: 'rules.pdf', 
-        type: 'application/pdf' 
-      } 
-    });
-    alert('Đã chọn file: rules.pdf (Mock)');
+  const handlePickFile = async () => {
+    const result = await DocumentPicker.getDocumentAsync({ type: 'application/pdf', copyToCacheDirectory: true, multiple: false });
+    if (result.canceled) return;
+    const asset = result.assets[0];
+    if (asset.size && asset.size > 10 * 1024 * 1024) return Alert.alert('File quá lớn', 'Điều lệ PDF tối đa 10MB.');
+    updateData({ rulesFile: { uri: asset.uri, name: asset.name, type: asset.mimeType || 'application/pdf', file: asset.file } });
   };
 
   const hasRules = !!data.rulesText || !!data.rulesFile;
@@ -41,7 +39,7 @@ export const RulesStep: React.FC<RulesStepProps> = ({ data, updateData, onSubmit
       </YStack>
 
       <YStack gap="$2" mt="$2">
-        <Label>Hoặc tải lên file điều lệ (PDF/Image)</Label>
+        <Label>Hoặc tải lên điều lệ PDF (tối đa 10MB)</Label>
         <Button onPress={handlePickFile} bg="$gray5">
           {data.rulesFile ? `Đã chọn: ${data.rulesFile.name}` : 'Chọn File...'}
         </Button>
@@ -58,4 +56,3 @@ export const RulesStep: React.FC<RulesStepProps> = ({ data, updateData, onSubmit
     </YStack>
   );
 };
-

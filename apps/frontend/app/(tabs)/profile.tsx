@@ -4,6 +4,8 @@ import { ArrowLeft, Award, Bell, CalendarDays, Camera, ChevronRight, LockKeyhole
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLogin } from '../../src/features/auth/hooks/useLogin';
+import * as ImagePicker from 'expo-image-picker';
+import { uploadFile } from '../../src/services/uploads.api';
 
 const NAVY = '#00102F';
 const BLUE = '#0077FF';
@@ -34,6 +36,10 @@ function SettingRow({ icon: Icon, label, detail, onPress, disabled = false, dest
   );
 }
 
+import { useRegistrations } from '../../src/features/registrations/hooks/useRegistrations';
+import { tournamentsApi } from '../../src/features/tournaments/services/tournaments.api';
+import { ScheduleCalendar } from '../../src/features/registrations/components/ScheduleCalendar';
+
 export default function ProfileTab() {
   const { user, logout, updateProfile } = useLogin();
   const { view } = useLocalSearchParams<{ view?: string }>();
@@ -43,6 +49,15 @@ export default function ProfileTab() {
   const [bio, setBio] = useState(prefs.bio || '');
   const [avatar, setAvatar] = useState(prefs.avatarUrl || DEFAULT_AVATAR);
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [apiTournaments, setApiTournaments] = useState<any[]>([]);
+  
+  const { registrations, fetchRegistrations } = useRegistrations();
+  const playerId = user?.id || (user as any)?._id;
+
+  useEffect(() => {
+    tournamentsApi.getTournaments({}).then(res => setApiTournaments(res.data || [])).catch(() => {});
+  }, []);
 
   useEffect(() => {
     setName(user?.name || '');
@@ -51,7 +66,25 @@ export default function ProfileTab() {
     setAvatar(prefs.avatarUrl || DEFAULT_AVATAR);
   }, [user?.name, prefs.username, prefs.bio, prefs.avatarUrl]);
 
+  useEffect(() => {
+    if (playerId) {
+      fetchRegistrations(playerId);
+    }
+  }, [playerId, fetchRegistrations]);
+
   const closeSubview = () => router.setParams({ view: undefined as any });
+  const pickAvatar = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) return Alert.alert('Cần quyền truy cập ảnh', 'Hãy cho phép CourtMate chọn ảnh đại diện.');
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.8, allowsEditing: true, aspect: [1, 1] });
+    if (result.canceled) return;
+    const asset = result.assets[0];
+    if (asset.fileSize && asset.fileSize > 5 * 1024 * 1024) return Alert.alert('Ảnh quá lớn', 'Ảnh đại diện tối đa 5MB.');
+    setUploadingAvatar(true);
+    try { const uploaded = await uploadFile('avatar', { uri: asset.uri, fileName: asset.fileName, mimeType: asset.mimeType, file: (asset as any).file }); setAvatar(uploaded.url); }
+    catch (error: any) { Alert.alert('Không thể tải ảnh', error.message || 'Vui lòng thử lại.'); }
+    finally { setUploadingAvatar(false); }
+  };
   const saveProfile = async () => {
     if (!name.trim()) return Alert.alert('Thiếu họ và tên', 'Hãy nhập họ và tên trước khi lưu hồ sơ.');
     setSaving(true);
@@ -69,11 +102,11 @@ export default function ProfileTab() {
         <LocalHeader title="Chỉnh sửa hồ sơ" onBack={closeSubview} />
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
           <View style={{ alignItems: 'center', paddingVertical: 16 }}>
-            <TouchableOpacity onPress={() => setAvatar(avatar === DEFAULT_AVATAR ? 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=240&q=85' : DEFAULT_AVATAR)} style={{ width: 104, height: 104 }}>
+            <TouchableOpacity disabled={uploadingAvatar} onPress={pickAvatar} style={{ width: 104, height: 104, opacity: uploadingAvatar ? 0.6 : 1 }}>
               <Image source={{ uri: avatar }} style={{ width: 96, height: 96, borderRadius: 48, borderWidth: 3, borderColor: '#FFFFFF' }} />
               <View style={{ position: 'absolute', right: 0, bottom: 4, width: 40, height: 40, borderRadius: 20, backgroundColor: BLUE, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: '#F7FAFF' }}><Camera color="#FFFFFF" size={18} /></View>
             </TouchableOpacity>
-            <Text style={{ color: BLUE, fontSize: 14, lineHeight: 20, fontWeight: '600', marginTop: 8 }}>Đổi ảnh đại diện</Text>
+            <Text style={{ color: BLUE, fontSize: 14, lineHeight: 20, fontWeight: '600', marginTop: 8 }}>{uploadingAvatar ? 'Đang tải ảnh…' : 'Đổi ảnh đại diện'}</Text>
           </View>
 
           <View style={{ backgroundColor: '#FFFFFF', borderRadius: 16, borderWidth: 1, borderColor: BORDER, padding: 16 }}>
@@ -96,12 +129,7 @@ export default function ProfileTab() {
     return (
       <View style={{ flex: 1, backgroundColor: '#F7FAFF' }}>
         <LocalHeader title="Lịch thi đấu" onBack={closeSubview} />
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 }}>
-          <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: NAVY, alignItems: 'center', justifyContent: 'center' }}><CalendarDays color={YELLOW} size={34} /></View>
-          <Text style={{ color: NAVY, fontSize: 20, lineHeight: 24, fontWeight: '600', marginTop: 24 }}>Chưa có lịch thi đấu</Text>
-          <Text style={{ color: MUTED, fontSize: 16, lineHeight: 24, textAlign: 'center', marginTop: 8 }}>Các trận đấu và giải đã đăng ký sẽ xuất hiện tại đây khi ban tổ chức công bố lịch.</Text>
-          <TouchableOpacity onPress={() => { closeSubview(); router.replace('/(tabs)/dashboard'); }} style={{ height: 48, paddingHorizontal: 20, borderRadius: 12, backgroundColor: BLUE, justifyContent: 'center', marginTop: 24 }}><Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '600' }}>Khám phá giải đấu</Text></TouchableOpacity>
-        </View>
+        <ScheduleCalendar registrations={registrations} apiTournaments={apiTournaments} />
       </View>
     );
   }
@@ -124,7 +152,7 @@ export default function ProfileTab() {
       </View>
 
       <View style={{ margin: 16, flexDirection: 'row', backgroundColor: '#FFFFFF', borderRadius: 16, borderWidth: 1, borderColor: BORDER }}>
-        {[['Đã đăng ký', '0'], ['Hoàn thành', '0'], ['Đã lưu', String(user?.bookmarkedTournaments?.length || 0)]].map(([label, value], index) => <View key={label} style={{ flex: 1, alignItems: 'center', paddingVertical: 16, borderLeftWidth: index ? 1 : 0, borderLeftColor: BORDER }}><Text style={{ color: BLUE, fontSize: 20, lineHeight: 24, fontWeight: '600' }}>{value}</Text><Text style={{ color: MUTED, fontSize: 14, lineHeight: 20 }}>{label}</Text></View>)}
+        {[['Đã đăng ký', String(registrations.length)], ['Hoàn thành', '0'], ['Đã lưu', String(user?.bookmarkedTournaments?.length || 0)]].map(([label, value], index) => <View key={label} style={{ flex: 1, alignItems: 'center', paddingVertical: 16, borderLeftWidth: index ? 1 : 0, borderLeftColor: BORDER }}><Text style={{ color: BLUE, fontSize: 20, lineHeight: 24, fontWeight: '600' }}>{value}</Text><Text style={{ color: MUTED, fontSize: 14, lineHeight: 20 }}>{label}</Text></View>)}
       </View>
 
       <View style={{ paddingHorizontal: 16 }}>

@@ -17,6 +17,9 @@ export class UserPreferencesSchema {
 
   @Prop({ type: String, default: null })
   clubName?: string;
+
+  @Prop({ type: String, default: null })
+  avatarUrl?: string;
 }
 
 export const UserPreferencesSchemaFactory =

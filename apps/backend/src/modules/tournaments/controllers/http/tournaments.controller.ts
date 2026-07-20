@@ -42,9 +42,13 @@ export class TournamentsController {
       city: body.city,
       categories: categories,
       rulesText: body.rulesText,
+      coverImage: body.coverImage,
+      rulesFileUrl: body.rulesFileUrl,
+      registrationFee: body.registrationFee ? Number(body.registrationFee) : undefined,
+      slotsLimit: body.slotsLimit ? Number(body.slotsLimit) : undefined,
     };
 
-    const fileUrl = file ? `/uploads/${file.filename}` : undefined;
+    const fileUrl = file ? `/uploads/${file.filename}` : body.rulesFileUrl;
 
     // TODO: Retrieve from req.user
     const mockOrganizer = {
@@ -75,6 +79,10 @@ export class TournamentsController {
         organizer: t.organizer,
         status: t.status,
         categories: t.categories,
+        registrationFee: t.registrationFee,
+        slotsLimit: t.slotsLimit,
+        joinedSlots: (t as any).joinedSlots || 0,
+        matchDates: (t as any).matchDates,
         sourceName: t.sourceName,
         sourceUrl: t.sourceUrl,
       })),
@@ -147,11 +155,15 @@ export class TournamentsController {
       organizer: t.organizer,
       status: t.status,
       categories: t.categories,
+      registrationFee: t.registrationFee,
+      slotsLimit: t.slotsLimit,
       rules: t.rules,
       schedule: t.schedule,
+      matchDates: (t as any).matchDates,
       registrationLink: t.registrationLink,
       sourceName: t.sourceName,
       sourceUrl: t.sourceUrl,
+      joinedSlots: t.joinedSlots || 0,
       createdAt: t.createdAt,
     };
   }

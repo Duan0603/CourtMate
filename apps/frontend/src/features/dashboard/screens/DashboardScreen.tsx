@@ -5,7 +5,6 @@ import { router } from 'expo-router';
 import { Tournament } from '@courtmate/shared';
 import { tournamentsApi } from '../../tournaments/services/tournaments.api';
 import { useLogin } from '../../auth/hooks/useLogin';
-import { FACEBOOK_TOURNAMENTS } from '../../tournaments/data/facebook-tournaments';
 
 const NAVY = '#00102F';
 const BLUE = '#0077FF';
@@ -14,36 +13,9 @@ const CANVAS = '#F7FAFF';
 const MUTED = '#52627A';
 const BORDER = 'rgba(0,16,47,0.12)';
 
-export const MOCK_ACTIVE_TOURNAMENTS = [
-  {
-    id: 'court-1',
-    title: 'CourtMate Pickleball Open Đà Nẵng',
-    sport: 'Pickleball',
-    location: 'Khu thể thao Tuyên Sơn, Đà Nẵng',
-    image: 'https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?auto=format&fit=crop&w=1200&q=85',
-    description: 'Giải đấu cộng đồng dành cho các cặp vận động viên tại Đà Nẵng.',
-    status: 'IN_PROGRESS',
-    level: 'Bán chuyên',
-    fee: 150000,
-    joinedSlots: 24,
-    totalSlots: 32,
-  },
-  {
-    id: 'court-2',
-    title: 'Cúp Cầu lông Phong trào Hải Châu',
-    sport: 'Cầu lông',
-    location: 'Nhà thi đấu Phan Châu Trinh, Đà Nẵng',
-    image: 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=1200&q=85',
-    description: 'Sân chơi phong trào dành cho vận động viên cầu lông khu vực Hải Châu.',
-    status: 'OPEN',
-    level: 'Phong trào',
-    fee: 100000,
-    joinedSlots: 12,
-    totalSlots: 24,
-  },
-];
-
-export const MOCK_RECOMMENDED = FACEBOOK_TOURNAMENTS;
+export const MOCK_ACTIVE_TOURNAMENTS: any[] = [];
+export const FACEBOOK_TOURNAMENTS: any[] = [];
+export const MOCK_RECOMMENDED: any[] = [];
 
 const SPORTS = ['Tất cả', 'Pickleball', 'Cầu lông', 'Tennis', 'Bóng đá'];
 const PLAYERS = [
@@ -104,7 +76,11 @@ function TournamentCard({ item, featured = false }: { item: any; featured?: bool
           </View>
           <View style={{ flex: 1 }}>
             <Text style={{ color: MUTED, fontSize: 14, lineHeight: 20 }}>Quy mô</Text>
-            <Text style={{ color: NAVY, fontSize: 16, lineHeight: 24, fontWeight: '600' }}>{totalSlots ? `${totalSlots} suất` : item.prizePool || 'Đang cập nhật'}</Text>
+            <Text style={{ color: NAVY, fontSize: 16, lineHeight: 24, fontWeight: '600' }}>
+              {totalSlots 
+                ? (item.joinedSlots !== undefined ? `Còn ${Math.max(0, totalSlots - item.joinedSlots)} suất` : `${totalSlots} suất`)
+                : item.prizePool || 'Đang cập nhật'}
+            </Text>
           </View>
           <View style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: BLUE, alignItems: 'center', justifyContent: 'center' }}>
             <Trophy color="#FFFFFF" size={22} />
@@ -130,7 +106,7 @@ export const DashboardScreen: React.FC = () => {
     if (refresh) setRefreshing(true); else setLoading(true);
     setError(false);
     try {
-      const result = await tournamentsApi.getTournaments({ city: user?.preferences?.location || 'Da Nang' });
+      const result = await tournamentsApi.getTournaments();
       setApiTournaments(result.data || []);
     } catch {
       setError(true);
@@ -143,9 +119,9 @@ export const DashboardScreen: React.FC = () => {
   useEffect(() => { load(); }, [load]);
 
   const tournaments = useMemo(() => {
-    const source: any[] = apiTournaments.length ? apiTournaments : [...MOCK_ACTIVE_TOURNAMENTS, ...FACEBOOK_TOURNAMENTS];
+    const source = apiTournaments;
     return source.filter(item => {
-      const text = `${item.title} ${item.sport} ${item.location || item.info || ''}`.toLowerCase();
+      const text = `${item.title} ${item.sport} ${item.location || ''}`.toLowerCase();
       const matchesQuery = text.includes(query.trim().toLowerCase());
       const matchesSport = selectedSport === 'Tất cả' || sportName(item.sport).toLowerCase().includes(selectedSport.toLowerCase());
       return matchesQuery && matchesSport;
@@ -232,7 +208,7 @@ export const DashboardScreen: React.FC = () => {
                 <Text style={{ color: MUTED, fontSize: 16, lineHeight: 24, textAlign: 'center', marginTop: 8 }}>Kiểm tra kết nối rồi thử lại.</Text>
                 <TouchableOpacity onPress={() => load()} style={{ height: 48, paddingHorizontal: 20, borderRadius: 12, backgroundColor: BLUE, justifyContent: 'center', marginTop: 16 }}><Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '600' }}>Tải lại giải đấu</Text></TouchableOpacity>
               </View>
-            ) : tournaments.length ? tournaments.map((item, index) => <TournamentCard key={item.id || item._id} item={item} featured={index === 0} />) : (
+            ) : tournaments.length ? tournaments.map((item, index) => <TournamentCard key={item.id || (item as any)._id} item={item} featured={index === 0} />) : (
               <View style={{ padding: 24, backgroundColor: '#FFFFFF', borderRadius: 16, alignItems: 'center' }}>
                 <Text style={{ color: NAVY, fontSize: 20, fontWeight: '600' }}>Chưa tìm thấy giải đấu</Text>
                 <Text style={{ color: MUTED, fontSize: 16, lineHeight: 24, textAlign: 'center', marginTop: 8 }}>Thử đổi từ khóa, khu vực hoặc bộ lọc để xem thêm kết quả.</Text>

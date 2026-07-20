@@ -96,7 +96,7 @@ export default function ChatTab() {
                 <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: NAVY, alignItems: 'center', justifyContent: 'center' }}><MessageCircle color={YELLOW} size={30} /></View>
                 <Text style={{ color: NAVY, fontSize: 20, lineHeight: 24, fontWeight: '600', marginTop: 24 }}>Chưa có cuộc trò chuyện</Text>
                 <Text style={{ color: MUTED, fontSize: 16, lineHeight: 24, textAlign: 'center', marginTop: 8 }}>Khi bạn liên hệ với ban tổ chức, cuộc trò chuyện sẽ xuất hiện ở đây.</Text>
-                <TouchableOpacity onPress={() => router.replace('/(tabs)/dashboard')} style={{ height: 48, paddingHorizontal: 20, borderRadius: 12, backgroundColor: BLUE, alignItems: 'center', justifyContent: 'center', marginTop: 24 }}><Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '600' }}>Khám phá giải đấu</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => router.replace('/(tabs)/home' as any)} style={{ height: 48, paddingHorizontal: 20, borderRadius: 12, backgroundColor: BLUE, alignItems: 'center', justifyContent: 'center', marginTop: 24 }}><Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '600' }}>Khám phá giải đấu</Text></TouchableOpacity>
               </View>
             ) : (
               <View style={{ backgroundColor: '#FFFFFF', borderRadius: 16, borderWidth: 1, borderColor: BORDER, overflow: 'hidden' }}>

@@ -17,6 +17,10 @@ export const createTournament = async (
   formData.append('location', data.location);
   formData.append('city', data.city);
   formData.append('categories', JSON.stringify(data.categories));
+  if ((data as any).registrationFee) formData.append('registrationFee', String((data as any).registrationFee));
+  if ((data as any).slotsLimit) formData.append('slotsLimit', String((data as any).slotsLimit));
+  if (data.coverImage) formData.append('coverImage', data.coverImage);
+  if (data.rulesFileUrl) formData.append('rulesFileUrl', data.rulesFileUrl);
 
   if (data.rulesText) {
     formData.append('rulesText', data.rulesText);

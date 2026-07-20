@@ -11,6 +11,8 @@ import { AuthModule } from './modules/auth/auth.module';
 import { TournamentsModule } from './modules/tournaments/tournaments.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { ChatModule } from './modules/chat/chat.module';
+import { PaymentsModule } from './modules/payments/payments.module';
+import { UploadsModule } from './modules/uploads/uploads.module';
 
 @Module({
   imports: [
@@ -49,6 +51,8 @@ import { ChatModule } from './modules/chat/chat.module';
     TournamentsModule,
     ReportsModule,
     ChatModule,
+    PaymentsModule,
+    UploadsModule,
   ],
 })
 export class AppModule implements NestModule {
