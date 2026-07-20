@@ -109,7 +109,7 @@ export default function TabLayout() {
       } else if (user?.role === 'REGIONAL_ADMIN' || user?.role === 'SUPER_ADMIN') {
         router.replace("/admin");
       } else if (user?.role === 'ORGANIZER') {
-        router.replace("/organizer" as const);
+        router.replace("/organizer" as any);
       }
     }
   }, [isAuthenticated, isLoading, user?.role]);
@@ -118,7 +118,6 @@ export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const [searchVal, setSearchVal] = React.useState("");
   const [isScrolled, setIsScrolled] = React.useState(false);
-  const [isNotificationsOpen, setIsNotificationsOpen] = React.useState(false);
   const [notificationsOpen, setNotificationsOpen] = React.useState(false);
   const [notifications, setNotifications] = React.useState([
     { id: 1, title: 'Hồ sơ đăng ký đã được duyệt', body: 'Ban tổ chức đã xác nhận lượt đăng ký gần nhất.', unread: true },
@@ -144,7 +143,6 @@ export default function TabLayout() {
     });
   };
 
-  if (isLoading || !isAuthenticated || user?.role === 'REGIONAL_ADMIN' || user?.role === 'SUPER_ADMIN') return null;
 
   const hiddenChrome = params.view === 'edit-profile' || params.view === 'schedule' || params.chatting === 'true';
   const title = pathname.includes('chat') ? 'Trò chuyện' : pathname.includes('profile') ? 'Hồ sơ' : 'Giải đấu';

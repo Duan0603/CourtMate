@@ -24,7 +24,7 @@ export function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
       if (user.role === UserRole.SUPER_ADMIN || user.role === UserRole.REGIONAL_ADMIN) {
         router.replace('/admin');
       } else if (user.role === UserRole.ORGANIZER) {
-        router.replace('/organizer');
+        router.replace('/organizer' as any);
       } else {
         router.replace('/(tabs)/dashboard');
       }
