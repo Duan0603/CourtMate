@@ -23,7 +23,8 @@ export default function Home() {
       } else if (userRole === 'ORGANIZER') {
         router.replace('/organizer');
       } else if (userRole !== 'USER') {
-        router.replace('/(tabs)/dashboard');
+        console.log('[Home Redirect] Redirecting to /(tabs)/home');
+        router.replace('/(tabs)/home' as any);
       }
     }
   }, [isAuthenticated, userRole, isLoading]);

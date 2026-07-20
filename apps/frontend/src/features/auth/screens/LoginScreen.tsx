@@ -313,6 +313,16 @@ export const LoginScreen: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                 h={56} br={12} px="$3" pr="$10" fos={15}
                 returnKeyType="done"
                 onSubmitEditing={handleSubmit}
+                {...(Platform.OS === 'web' ? {
+                  onCopy: (e: any) => e.preventDefault(),
+                  onCut: (e: any) => e.preventDefault(),
+                  onPaste: (e: any) => e.preventDefault(),
+                  style: { userSelect: 'none', WebkitUserSelect: 'none' },
+                  autoComplete: 'new-password',
+                } as any : {
+                  contextMenuHidden: true,
+                  selectTextOnFocus: false,
+                })}
               />
               <View position="absolute" right={12} top={16} cursor="pointer" onPress={() => setShowPassword(!showPassword)} style={{ opacity: password.length > 0 ? 1 : 0.4 }}>
                 {showPassword ? <EyeOff color={theme.onSurfaceVariant} size={24} /> : <Eye color={theme.onSurfaceVariant} size={24} />}

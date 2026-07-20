@@ -1,13 +1,30 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { ScrollView, RefreshControl } from 'react-native';
 import { YStack, XStack, Text, H2, H4, Button, Spinner, View, Input, Sheet, Label, Select, Adapt } from 'tamagui';
-import { Search, Filter, ChevronDown, Check } from 'lucide-react-native';
+import { Search, Filter, ChevronDown, Check, X } from 'lucide-react-native';
 import { tournamentsApi } from '../services/tournaments.api';
 import { TournamentCard } from '../components/TournamentCard';
 import { Tournament, SportType, TournamentFilterDto, TournamentStatus } from '@courtmate/shared';
 
 // Ideally, fetch current city from user preferences context
 const MOCK_USER_CITY = 'Da Nang';
+
+// Fee range presets (VND)
+const FEE_RANGES = [
+  { label: 'Tất cả', min: undefined, max: undefined },
+  { label: 'Dưới 100K', min: 0, max: 100000 },
+  { label: '100K - 300K', min: 100000, max: 300000 },
+  { label: '300K - 500K', min: 300000, max: 500000 },
+  { label: 'Trên 500K', min: 500000, max: undefined },
+];
+
+// Sport label mapping
+const SPORT_LABELS: Record<string, string> = {
+  [SportType.BADMINTON]: '🏸 Cầu lông',
+  [SportType.FOOTBALL]: '⚽ Bóng đá',
+  [SportType.PICKLEBALL]: '🏓 Pickleball',
+  [SportType.TENNIS]: '🎾 Tennis',
+};
 
 // Debounce hook
 function useDebounce<T>(value: T, delay: number): T {
@@ -34,12 +51,23 @@ export const TournamentHubScreen = ({ navigation }: any) => {
   const [filters, setFilters] = useState<TournamentFilterDto>({
     city: MOCK_USER_CITY,
   });
+
+  // Active fee range index
+  const [activeFeeRange, setActiveFeeRange] = useState(0);
   
   // Sheet State
   const [sheetOpen, setSheetOpen] = useState(false);
   const [tempFilters, setTempFilters] = useState<TournamentFilterDto>({
     city: MOCK_USER_CITY,
   });
+  const [tempFeeRange, setTempFeeRange] = useState(0);
+
+  // Count active filters (excluding defaults)
+  const activeFilterCount = [
+    filters.sport,
+    filters.status,
+    filters.minFee !== undefined || filters.maxFee !== undefined ? true : undefined,
+  ].filter(Boolean).length;
 
   const fetchTournaments = useCallback(async (currentFilters: TournamentFilterDto) => {
     try {
@@ -66,13 +94,17 @@ export const TournamentHubScreen = ({ navigation }: any) => {
   };
 
   const applyFilters = () => {
-    setFilters(tempFilters);
+    const feeRange = FEE_RANGES[tempFeeRange];
+    setFilters({ ...tempFilters, minFee: feeRange.min, maxFee: feeRange.max });
+    setActiveFeeRange(tempFeeRange);
     setSheetOpen(false);
   };
   
   const resetFilters = () => {
-    const reset = { city: MOCK_USER_CITY };
+    const reset: TournamentFilterDto = { city: MOCK_USER_CITY };
     setTempFilters(reset);
+    setTempFeeRange(0);
+    setActiveFeeRange(0);
     setFilters(reset);
     setKeyword('');
     setSheetOpen(false);
@@ -83,8 +115,17 @@ export const TournamentHubScreen = ({ navigation }: any) => {
       <YStack padding="$4" paddingBottom="$0" space="$3">
         <XStack justifyContent="space-between" alignItems="center">
           <H2>Giải đấu</H2>
-          <Button size="$3" theme="alt2" onPress={() => setSheetOpen(true)} icon={<Filter size={16} />}>
-            Bộ lọc
+          <Button 
+            size="$3" 
+            theme={activeFilterCount > 0 ? 'active' : 'alt2'}
+            onPress={() => {
+              setTempFilters(filters);
+              setTempFeeRange(activeFeeRange);
+              setSheetOpen(true);
+            }} 
+            icon={<Filter size={16} />}
+          >
+            Bộ lọc {activeFilterCount > 0 ? `(${activeFilterCount})` : ''}
           </Button>
         </XStack>
 
@@ -99,9 +140,21 @@ export const TournamentHubScreen = ({ navigation }: any) => {
             onChangeText={setKeyword}
             paddingLeft="$8"
           />
+          {keyword.length > 0 && (
+            <View 
+              position="absolute" 
+              right={12} 
+              zIndex={10} 
+              onPress={() => setKeyword('')}
+              cursor="pointer"
+              pressStyle={{ opacity: 0.6 }}
+            >
+              <X size={18} color="gray" />
+            </View>
+          )}
         </XStack>
         
-        {/* Quick Sport Filters (Optional if we want to keep them outside sheet) */}
+        {/* Quick Sport Filters */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <XStack space="$2" paddingBottom="$2">
             <Button 
@@ -118,11 +171,59 @@ export const TournamentHubScreen = ({ navigation }: any) => {
                 theme={filters.sport === sport ? 'active' : 'alt1'}
                 onPress={() => setFilters(prev => ({ ...prev, sport: sport as SportType }))}
               >
-                {sport}
+                {SPORT_LABELS[sport] || sport}
               </Button>
             ))}
           </XStack>
         </ScrollView>
+
+        {/* Active filter chips */}
+        {activeFilterCount > 0 && (
+          <XStack space="$2" flexWrap="wrap">
+            {filters.status && (
+              <XStack 
+                bg="$blue3" 
+                px="$2" 
+                py="$1" 
+                borderRadius="$2" 
+                alignItems="center" 
+                space="$1"
+                marginBottom="$1"
+              >
+                <Text fontSize="$2" color="$blue10">
+                  {filters.status === TournamentStatus.OPEN ? 'Đang mở' : filters.status}
+                </Text>
+                <View onPress={() => setFilters(prev => ({ ...prev, status: undefined }))} cursor="pointer">
+                  <X size={12} color="#2563EB" />
+                </View>
+              </XStack>
+            )}
+            {(filters.minFee !== undefined || filters.maxFee !== undefined) && (
+              <XStack 
+                bg="$green3" 
+                px="$2" 
+                py="$1" 
+                borderRadius="$2" 
+                alignItems="center" 
+                space="$1"
+                marginBottom="$1"
+              >
+                <Text fontSize="$2" color="$green10">
+                  {FEE_RANGES[activeFeeRange]?.label || 'Lệ phí'}
+                </Text>
+                <View onPress={() => {
+                  setFilters(prev => ({ ...prev, minFee: undefined, maxFee: undefined }));
+                  setActiveFeeRange(0);
+                }} cursor="pointer">
+                  <X size={12} color="#16a34a" />
+                </View>
+              </XStack>
+            )}
+            <View onPress={resetFilters} cursor="pointer" py="$1">
+              <Text fontSize="$2" color="$red10" fontWeight="600">Xóa tất cả</Text>
+            </View>
+          </XStack>
+        )}
       </YStack>
 
       {loading ? (
@@ -136,6 +237,11 @@ export const TournamentHubScreen = ({ navigation }: any) => {
           }
         >
           <YStack padding="$4" paddingTop="$2" space="$4">
+            {/* Result count */}
+            <Text fontSize="$3" color="$gray10">
+              {tournaments.length} giải đấu được tìm thấy
+            </Text>
+
             {/* Empty State / Fallback Notice */}
             {isFallback && (
               <YStack backgroundColor="$orange3" padding="$3" borderRadius="$3" space="$2">
@@ -148,8 +254,12 @@ export const TournamentHubScreen = ({ navigation }: any) => {
 
             {tournaments.length === 0 ? (
               <YStack padding="$4" alignItems="center" space="$3">
-                <Text>Không tìm thấy giải đấu nào phù hợp.</Text>
-                <Button onPress={resetFilters}>Xóa bộ lọc</Button>
+                <Text fontSize="$6">🔍</Text>
+                <Text fontWeight="bold" fontSize="$5">Không tìm thấy giải đấu</Text>
+                <Text color="$gray10" textAlign="center">
+                  Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm khác.
+                </Text>
+                <Button onPress={resetFilters} theme="active" mt="$2">Xóa bộ lọc</Button>
               </YStack>
             ) : (
               <YStack space="$4">
@@ -170,33 +280,43 @@ export const TournamentHubScreen = ({ navigation }: any) => {
         modal
         open={sheetOpen}
         onOpenChange={setSheetOpen}
-        snapPoints={[60]}
+        snapPoints={[70]}
         dismissOnSnapToBottom
       >
         <Sheet.Overlay animation="lazy" enterStyle={{ opacity: 0 }} exitStyle={{ opacity: 0 }} />
         <Sheet.Handle />
         <Sheet.Frame padding="$4" space="$4" backgroundColor="$background">
-          <H2>Bộ lọc nâng cao</H2>
+          <XStack justifyContent="space-between" alignItems="center">
+            <H2>Bộ lọc nâng cao</H2>
+            <View onPress={() => setSheetOpen(false)} cursor="pointer" p="$2">
+              <X size={20} color="#666" />
+            </View>
+          </XStack>
           
+          {/* City filter */}
           <YStack space="$2">
-            <Label fontWeight="bold">Khu vực</Label>
+            <Label fontWeight="bold">📍 Khu vực</Label>
             <XStack space="$2" flexWrap="wrap">
-              {['Da Nang', 'Ha Noi', 'Ho Chi Minh'].map(city => (
-                <Button 
-                  key={city}
-                  size="$3"
-                  theme={tempFilters.city === city ? 'active' : 'alt1'}
-                  onPress={() => setTempFilters(prev => ({ ...prev, city }))}
-                  marginBottom="$2"
-                >
-                  {city}
-                </Button>
-              ))}
+              {['Da Nang', 'Ha Noi', 'Ho Chi Minh'].map(city => {
+                const labels: Record<string, string> = { 'Da Nang': 'Đà Nẵng', 'Ha Noi': 'Hà Nội', 'Ho Chi Minh': 'TP. HCM' };
+                return (
+                  <Button 
+                    key={city}
+                    size="$3"
+                    theme={tempFilters.city === city ? 'active' : 'alt1'}
+                    onPress={() => setTempFilters(prev => ({ ...prev, city }))}
+                    marginBottom="$2"
+                  >
+                    {labels[city] || city}
+                  </Button>
+                );
+              })}
             </XStack>
           </YStack>
 
+          {/* Status filter */}
           <YStack space="$2">
-            <Label fontWeight="bold">Trạng thái</Label>
+            <Label fontWeight="bold">📋 Trạng thái</Label>
             <XStack space="$2" flexWrap="wrap">
               <Button 
                 size="$3"
@@ -214,17 +334,43 @@ export const TournamentHubScreen = ({ navigation }: any) => {
               >
                 Đang mở đăng ký
               </Button>
+              <Button 
+                size="$3"
+                theme={tempFilters.status === TournamentStatus.UPCOMING ? 'active' : 'alt1'}
+                onPress={() => setTempFilters(prev => ({ ...prev, status: TournamentStatus.UPCOMING }))}
+                marginBottom="$2"
+              >
+                Sắp diễn ra
+              </Button>
+            </XStack>
+          </YStack>
+
+          {/* Fee range filter */}
+          <YStack space="$2">
+            <Label fontWeight="bold">💰 Mức lệ phí</Label>
+            <XStack space="$2" flexWrap="wrap">
+              {FEE_RANGES.map((range, idx) => (
+                <Button 
+                  key={idx}
+                  size="$3"
+                  theme={tempFeeRange === idx ? 'active' : 'alt1'}
+                  onPress={() => setTempFeeRange(idx)}
+                  marginBottom="$2"
+                >
+                  {range.label}
+                </Button>
+              ))}
             </XStack>
           </YStack>
 
           <View flex={1} />
           
           <XStack space="$3" paddingBottom="$4">
-            <Button flex={1} theme="alt1" onPress={() => setTempFilters(filters)}>
-              Hủy
+            <Button flex={1} theme="alt1" onPress={resetFilters}>
+              Đặt lại
             </Button>
             <Button flex={2} theme="active" onPress={applyFilters}>
-              Áp dụng
+              Áp dụng bộ lọc
             </Button>
           </XStack>
         </Sheet.Frame>

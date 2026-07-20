@@ -216,6 +216,7 @@ export const StartScreen: React.FC<{ onStart: () => void }> = ({ onStart }) => {
   const isDesktop = width >= 768;
 
   // Refs for elements
+  const scrollRef = useRef<any>(null);
   const heroRef = useRef<any>(null);
   const arrowRef = useRef<any>(null);
   const emojiRefs = useRef<any[]>([]);
@@ -459,6 +460,7 @@ export const StartScreen: React.FC<{ onStart: () => void }> = ({ onStart }) => {
       )}
 
       <ScrollView
+        ref={scrollRef}
         onScroll={handleScroll}
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
@@ -513,17 +515,18 @@ export const StartScreen: React.FC<{ onStart: () => void }> = ({ onStart }) => {
           </YStack>
 
           {/* Scroll Down Guide */}
-          <YStack
-            ref={arrowRef}
-            position="absolute"
-            bottom={isDesktop ? 50 : 30}
-            ai="center"
-            gap="$2"
-            opacity={0.8}
+          <TouchableOpacity
+            onPress={() => scrollRef.current?.scrollTo({ y: viewportHeight, animated: true })}
+            activeOpacity={0.7}
+            style={{ position: 'absolute', bottom: isDesktop ? 50 : 30 }}
           >
-            <Text color="rgba(255,255,255,0.6)" fos={12} fow="600" tt="uppercase" ls={1}>Cuộn chuột để khám phá</Text>
-            <ChevronDown color="#ffffff" size={24} />
-          </YStack>
+            <YStack ref={arrowRef} ai="center" gap="$2" opacity={0.8} px="$4" py="$2">
+              <Text color="rgba(255,255,255,0.6)" fos={12} fow="600" tt="uppercase" ls={1}>
+                {Platform.OS === 'web' ? 'Cuộn chuột để khám phá' : 'Vuốt lên để khám phá'}
+              </Text>
+              <ChevronDown color="#ffffff" size={24} />
+            </YStack>
+          </TouchableOpacity>
         </YStack>
 
         {/* Section 2: Feature 1 (Matchmaking) */}
@@ -544,7 +547,7 @@ export const StartScreen: React.FC<{ onStart: () => void }> = ({ onStart }) => {
               top: 10,
               left: 10,
               zIndex: 0,
-              opacity: 0,
+              opacity: Platform.OS === 'web' ? 0 : 1,
               transform: [{ rotate: '-15deg' }, { scale: 0.5 }],
               transformOrigin: 'top left',
             } as any}
@@ -562,7 +565,7 @@ export const StartScreen: React.FC<{ onStart: () => void }> = ({ onStart }) => {
               alignSelf: isDesktop ? 'flex-end' : 'center',
               marginRight: isDesktop ? '8%' : 0,
               paddingHorizontal: isDesktop ? 0 : 24,
-              opacity: 0,
+              opacity: Platform.OS === 'web' ? 0 : 1,
               justifyContent: 'center',
             } as any}
           >
@@ -607,7 +610,7 @@ export const StartScreen: React.FC<{ onStart: () => void }> = ({ onStart }) => {
               top: 10,
               left: 10,
               zIndex: 0,
-              opacity: 0,
+              opacity: Platform.OS === 'web' ? 0 : 1,
               transform: [{ rotate: '-15deg' }, { scale: 0.5 }],
               transformOrigin: 'top left',
             } as any}
@@ -625,7 +628,7 @@ export const StartScreen: React.FC<{ onStart: () => void }> = ({ onStart }) => {
               alignSelf: isDesktop ? 'flex-start' : 'center',
               marginLeft: isDesktop ? '8%' : 0,
               paddingHorizontal: isDesktop ? 0 : 24,
-              opacity: 0,
+              opacity: Platform.OS === 'web' ? 0 : 1,
               justifyContent: 'center',
             } as any}
           >
@@ -670,7 +673,7 @@ export const StartScreen: React.FC<{ onStart: () => void }> = ({ onStart }) => {
               top: 10,
               left: 10,
               zIndex: 0,
-              opacity: 0,
+              opacity: Platform.OS === 'web' ? 0 : 1,
               transform: [{ rotate: '-15deg' }, { scale: 0.5 }],
               transformOrigin: 'top left',
             } as any}
@@ -688,7 +691,7 @@ export const StartScreen: React.FC<{ onStart: () => void }> = ({ onStart }) => {
               alignSelf: isDesktop ? 'flex-end' : 'center',
               marginRight: isDesktop ? '8%' : 0,
               paddingHorizontal: isDesktop ? 0 : 24,
-              opacity: 0,
+              opacity: Platform.OS === 'web' ? 0 : 1,
               justifyContent: 'center',
             } as any}
           >
@@ -729,7 +732,7 @@ export const StartScreen: React.FC<{ onStart: () => void }> = ({ onStart }) => {
             style={{
               width: '100%',
               maxWidth: 750,
-              opacity: 0,
+              opacity: Platform.OS === 'web' ? 0 : 1,
               alignItems: 'center',
               justifyContent: 'center',
               backgroundColor: 'rgba(30, 41, 59, 0.75)',
