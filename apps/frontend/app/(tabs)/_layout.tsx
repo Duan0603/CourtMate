@@ -109,7 +109,7 @@ export default function TabLayout() {
       } else if (user?.role === 'REGIONAL_ADMIN' || user?.role === 'SUPER_ADMIN') {
         router.replace("/admin");
       } else if (user?.role === 'ORGANIZER') {
-        router.replace("/organizer");
+        router.replace("/organizer" as const);
       }
     }
   }, [isAuthenticated, isLoading, user?.role]);

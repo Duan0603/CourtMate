@@ -21,7 +21,7 @@ export default function Home() {
       if (userRole === 'REGIONAL_ADMIN' || userRole === 'SUPER_ADMIN') {
         router.replace('/admin');
       } else if (userRole === 'ORGANIZER') {
-        router.replace('/organizer');
+        router.replace('/organizer' as const);
       } else if (userRole !== 'USER') {
         console.log('[Home Redirect] Redirecting to /(tabs)/home');
         router.replace('/(tabs)/home' as any);
