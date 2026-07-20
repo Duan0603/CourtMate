@@ -75,6 +75,8 @@ export class TournamentsController {
         organizer: t.organizer,
         status: t.status,
         categories: t.categories,
+        sourceName: t.sourceName,
+        sourceUrl: t.sourceUrl,
       })),
       meta: {
         isFallback,
@@ -148,6 +150,8 @@ export class TournamentsController {
       rules: t.rules,
       schedule: t.schedule,
       registrationLink: t.registrationLink,
+      sourceName: t.sourceName,
+      sourceUrl: t.sourceUrl,
       createdAt: t.createdAt,
     };
   }
