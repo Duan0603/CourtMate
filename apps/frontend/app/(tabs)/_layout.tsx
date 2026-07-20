@@ -94,6 +94,8 @@ export default function TabLayout() {
         router.replace("/");
       } else if (user?.role === 'REGIONAL_ADMIN' || user?.role === 'SUPER_ADMIN') {
         router.replace("/admin");
+      } else if (user?.role === 'ORGANIZER') {
+        router.replace("/organizer");
       }
     }
   }, [isAuthenticated, isLoading, user?.role]);
@@ -134,7 +136,7 @@ export default function TabLayout() {
   const pathname = usePathname();
   const isDashboard = pathname === '/dashboard' || pathname === '/';
 
-  if (isLoading || !isAuthenticated || user?.role === 'REGIONAL_ADMIN' || user?.role === 'SUPER_ADMIN') {
+  if (isLoading || !isAuthenticated || user?.role === 'REGIONAL_ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'ORGANIZER') {
     return null;
   }
 
