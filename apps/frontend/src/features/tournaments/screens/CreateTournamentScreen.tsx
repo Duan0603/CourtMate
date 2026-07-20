@@ -5,6 +5,7 @@ import { CategoriesStep } from '../components/CategoriesStep';
 import { RulesStep } from '../components/RulesStep';
 import { createTournament } from '../services/tournaments.api';
 import { Typography } from '../../../components/ui/Typography';
+import { uploadFile } from '../../../services/uploads.api';
 
 export const CreateTournamentScreen = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -21,6 +22,7 @@ export const CreateTournamentScreen = () => {
     categories: [],
     rulesText: '',
     rulesFile: null,
+    bannerFile: null,
   });
 
   const updateData = (newData: any) => {
@@ -33,7 +35,11 @@ export const CreateTournamentScreen = () => {
   const handleSubmit = async () => {
     try {
       setIsLoading(true);
-      await createTournament(formData, formData.rulesFile);
+      const [bannerUpload, rulesUpload] = await Promise.all([
+        formData.bannerFile ? uploadFile('tournament-banner', formData.bannerFile) : Promise.resolve(null),
+        formData.rulesFile ? uploadFile('rules', formData.rulesFile) : Promise.resolve(null),
+      ]);
+      await createTournament({ ...formData, coverImage: bannerUpload?.url, rulesFileUrl: rulesUpload?.url }, undefined);
       alert('Tạo giải đấu thành công!');
       // TODO: Navigate back or to tournament details
     } catch (error) {
@@ -83,4 +89,3 @@ export const CreateTournamentScreen = () => {
     </ScrollView>
   );
 };
-

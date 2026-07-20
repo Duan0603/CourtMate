@@ -11,7 +11,6 @@ export const RegistrationTrackerScreen: React.FC = () => {
     isLoading,
     error,
     fetchRegistrations,
-    simulatePayment,
   } = useRegistrations();
 
   const mockPlayerId = '64957e841234567890abcdef'; // Nguyen Van Cau Thu (seeded ID)
@@ -91,7 +90,7 @@ export const RegistrationTrackerScreen: React.FC = () => {
                 <YStack key={reg.id || (reg as any)._id} bg="rgba(20,20,20,0.6)" br="$6" p="$4" borderWidth={1} borderColor="rgba(255,255,255,0.08)">
                   <RegistrationStatusCard
                     registration={reg}
-                    onSimulatePayment={simulatePayment}
+                    onPay={(registration) => router.push({ pathname: `/payment/${registration.tournamentId}` as any, params: { registrationId: registration.id || (registration as any)._id } })}
                   />
                 </YStack>
               ))}

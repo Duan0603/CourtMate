@@ -2,6 +2,8 @@ import React from 'react';
 import { YStack, Label, XStack, Text } from 'tamagui';
 import { Button, Input } from '../../../components';
 import { SportType } from '@courtmate/shared';
+import * as ImagePicker from 'expo-image-picker';
+import { Alert, Image } from 'react-native';
 
 interface BasicInfoStepProps {
   data: any;
@@ -15,6 +17,20 @@ export const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ data, updateData, 
   return (
     <YStack gap="$4" flex={1}>
       <Text fontSize="$6" fontWeight="bold">Thông tin cơ bản</Text>
+
+      <YStack gap="$2">
+        <Label>Banner giải đấu (JPG, PNG hoặc WebP; tối đa 8MB)</Label>
+        {data.bannerFile?.uri && <Image source={{ uri: data.bannerFile.uri }} style={{ width: '100%', height: 160, borderRadius: 14 }} resizeMode="cover" />}
+        <Button onPress={async () => {
+          const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+          if (!permission.granted) return Alert.alert('Cần quyền truy cập ảnh', 'Hãy cho phép CourtMate chọn banner từ thư viện.');
+          const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.85, allowsEditing: true, aspect: [16, 9] });
+          if (result.canceled) return;
+          const asset = result.assets[0];
+          if (asset.fileSize && asset.fileSize > 8 * 1024 * 1024) return Alert.alert('Ảnh quá lớn', 'Banner tối đa 8MB.');
+          updateData({ bannerFile: { uri: asset.uri, fileName: asset.fileName, mimeType: asset.mimeType, file: (asset as any).file } });
+        }}>{data.bannerFile ? 'Đổi banner' : 'Chọn banner'}</Button>
+      </YStack>
       
       <YStack>
         <Label>Tên giải đấu</Label>
@@ -107,4 +123,3 @@ export const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ data, updateData, 
     </YStack>
   );
 };
-

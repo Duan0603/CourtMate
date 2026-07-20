@@ -107,6 +107,7 @@ export interface Tournament {
   registrationFee?: number;
   slotsLimit?: number;
   schedule?: string[]; // Basic array of strings for schedule items
+  matchDates?: Date[]; // Specific dates when matches are played
   registrationLink?: string;
   sourceName?: string;
   sourceUrl?: string;
@@ -127,7 +128,12 @@ export interface CreateTournamentDto {
     fee: number;
     maxParticipants?: number;
   }[];
+  registrationFee?: number;
+  slotsLimit?: number;
   rulesText?: string;
+  coverImage?: string;
+  rulesFileUrl?: string;
+  matchDates?: Date[];
   // rulesFile will be handled as multipart/form-data on the backend
 }
 

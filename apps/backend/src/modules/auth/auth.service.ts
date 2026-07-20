@@ -58,19 +58,12 @@ export class AuthService implements OnModuleInit {
       const organizer = await this.usersService.findByEmail('organizer@courtmate.com');
       const admin = await this.usersService.findByEmail('admin@courtmate.com');
       const superadmin = await this.usersService.findByEmail('superadmin@courtmate.com');
-
+      // Link friendships sequentially to avoid VersionError
       if (player && organizer && admin && superadmin) {
-        player.friends = [organizer._id.toString(), admin._id.toString()];
-        await player.save();
-
-        organizer.friends = [player._id.toString(), superadmin._id.toString()];
-        await organizer.save();
-
-        admin.friends = [player._id.toString()];
-        await admin.save();
-
-        superadmin.friends = [organizer._id.toString()];
-        await superadmin.save();
+        await this.usersService.updateProfile('test@courtmate.com', { friends: [organizer._id.toString(), admin._id.toString()] } as any);
+        await this.usersService.updateProfile('organizer@courtmate.com', { friends: [player._id.toString(), superadmin._id.toString()] } as any);
+        await this.usersService.updateProfile('admin@courtmate.com', { friends: [player._id.toString()] } as any);
+        await this.usersService.updateProfile('superadmin@courtmate.com', { friends: [organizer._id.toString()] } as any);
 
         console.log('[AuthService] Successfully linked test friendships!');
       }

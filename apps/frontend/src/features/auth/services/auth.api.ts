@@ -42,6 +42,7 @@ export const authApi = {
         location?: string;
         skillLevel?: string;
         clubName?: string;
+        avatarUrl?: string;
       };
     }
   ): Promise<User> => {

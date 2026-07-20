@@ -5,16 +5,13 @@ import { Registration, RegistrationStatus, SkillLevel } from '@courtmate/shared'
 
 interface RegistrationStatusCardProps {
   registration: Registration;
-  onSimulatePayment: (id: string) => void;
+  onPay: (registration: Registration) => void;
 }
 
 export const RegistrationStatusCard: React.FC<RegistrationStatusCardProps> = ({
   registration,
-  onSimulatePayment,
+  onPay,
 }) => {
-  // Safe extraction of MongoDB ID or standard ID property
-  const registrationId = registration.id || (registration as any)._id;
-
   const getStatusDetails = (status: RegistrationStatus) => {
     switch (status) {
       case RegistrationStatus.PENDING:
@@ -104,7 +101,7 @@ export const RegistrationStatusCard: React.FC<RegistrationStatusCardProps> = ({
         </XStack>
       </YStack>
 
-      {/* Mock status transitions: allow paying if pending or approved to simulate flow */}
+      {/* Payment status is updated only by a verified gateway callback. */}
       {registration.status !== RegistrationStatus.PAID && registration.status !== RegistrationStatus.REJECTED && (
         <XStack mt="$2">
           <Button
@@ -114,10 +111,10 @@ export const RegistrationStatusCard: React.FC<RegistrationStatusCardProps> = ({
             bg="#4caf50"
             col="#ffffff"
             hoverStyle={{ bg: '#388e3c' }}
-            onPress={() => onSimulatePayment(registrationId)}
+            onPress={() => onPay(registration)}
           >
             <Text fow="bold" col="#ffffff" fos="$2.5">
-              Giả lập Thanh toán (VND)
+              Thanh toán lệ phí
             </Text>
           </Button>
         </XStack>

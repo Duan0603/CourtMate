@@ -18,7 +18,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   const [partnerName, setPartnerName] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [skillLevel, setSkillLevel] = useState<SkillLevel>(SkillLevel.INTERMEDIATE);
-  const [paymentMethod, setPaymentMethod] = useState<string>('qr');
+  const [paymentMethod, setPaymentMethod] = useState<string>('MOMO');
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const handleSubmit = () => {
@@ -100,40 +100,11 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       </YStack>
 
       <YStack gap="$1.5">
-        <Label col="$color" fow="bold" fos="$4">Trình độ của bạn *</Label>
-        <XStack gap="$2" jc="space-between" w="100%">
-          {skillOptions.map((opt) => {
-            const isSelected = skillLevel === opt.value;
-            return (
-              <Button
-                key={opt.value}
-                f={1}
-                onPress={() => setSkillLevel(opt.value)}
-                theme={isSelected ? 'active' : 'alt1'}
-                bg={isSelected ? '#1d4ed8' : '$backgroundHover'}
-                col={isSelected ? '#ffffff' : '$color'}
-                borderColor={isSelected ? '#1d4ed8' : '$borderColor'}
-                borderWidth={1}
-                size="$3.5"
-                br="$3"
-                hoverStyle={{ bg: isSelected ? '#003ea8' : '$backgroundPress' }}
-                pressStyle={{ bg: isSelected ? '#003ea8' : '$backgroundPress' }}
-              >
-                <Text fow="bold" fos="$3" col={isSelected ? '#ffffff' : '$color'}>
-                  {opt.label}
-                </Text>
-              </Button>
-            );
-          })}
-        </XStack>
-      </YStack>
-
-      <YStack gap="$1.5">
         <Label col="$color" fow="bold" fos="$4">Phương thức thanh toán *</Label>
         <XStack gap="$2" jc="space-between" w="100%">
           {[
-            { label: 'Momo / QR Code', value: 'qr' },
-            { label: 'Chuyển khoản', value: 'bank' },
+            { label: 'MoMo', value: 'MOMO' },
+            { label: 'VietQR', value: 'PAYOS' },
           ].map((opt) => {
             const isSelected = paymentMethod === opt.value;
             return (

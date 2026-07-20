@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Registration } from '../../infrastructure/persistence/registration.entity';
@@ -55,6 +55,9 @@ export class RegistrationsService {
   }
 
   async updateStatus(id: string, status: RegistrationStatus): Promise<Registration> {
+    if (status === RegistrationStatus.PAID) {
+      throw new BadRequestException('Trạng thái PAID chỉ được cập nhật bởi callback cổng thanh toán');
+    }
     const reg = await this.registrationModel
       .findByIdAndUpdate(id, { status }, { new: true })
       .exec();

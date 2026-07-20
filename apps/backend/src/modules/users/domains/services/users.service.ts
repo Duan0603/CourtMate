@@ -76,6 +76,7 @@ export class UsersService {
         location?: string;
         skillLevel?: string;
         clubName?: string;
+        avatarUrl?: string;
       };
     },
   ): Promise<User | null> {
@@ -109,7 +110,14 @@ export class UsersService {
       if (updateDto.preferences.clubName !== undefined) {
         prefs.clubName = updateDto.preferences.clubName;
       }
+      if (updateDto.preferences.avatarUrl !== undefined) {
+        (prefs as any).avatarUrl = updateDto.preferences.avatarUrl;
+      }
       user.preferences = prefs as any;
+    }
+
+    if ((updateDto as any).friends !== undefined) {
+      user.friends = (updateDto as any).friends;
     }
 
     user.isVerified = true;

@@ -5,7 +5,8 @@ export const apiClient = {
       headers,
     });
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorBody = await response.json().catch(() => null);
+      throw new Error(errorBody?.message || `HTTP error! status: ${response.status}`);
     }
     return response.json() as Promise<T>;
   },
@@ -20,7 +21,8 @@ export const apiClient = {
       body: JSON.stringify(body),
     });
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorBody = await response.json().catch(() => null);
+      throw new Error(errorBody?.message || `HTTP error! status: ${response.status}`);
     }
     return response.json() as Promise<T>;
   },
@@ -35,7 +37,8 @@ export const apiClient = {
       body: JSON.stringify(body),
     });
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorBody = await response.json().catch(() => null);
+      throw new Error(errorBody?.message || `HTTP error! status: ${response.status}`);
     }
     return response.json() as Promise<T>;
   },

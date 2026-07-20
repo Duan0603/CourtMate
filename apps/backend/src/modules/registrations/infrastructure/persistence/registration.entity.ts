@@ -33,6 +33,9 @@ export class Registration extends Document {
     default: RegistrationStatus.PENDING
   })
   status!: RegistrationStatus;
+
+  @Prop({ required: false, index: true })
+  paymentTransactionId?: string;
 }
 
 export const RegistrationSchema = SchemaFactory.createForClass(Registration);

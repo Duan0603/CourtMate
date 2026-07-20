@@ -36,6 +36,7 @@ export class UsersController {
         location?: string;
         skillLevel?: string;
         clubName?: string;
+        avatarUrl?: string;
       };
     },
   ) {
