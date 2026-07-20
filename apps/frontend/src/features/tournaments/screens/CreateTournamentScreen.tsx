@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { ScrollView, View, Alert } from 'react-native';
+import { router } from 'expo-router';
 import { BasicInfoStep } from '../components/BasicInfoStep';
 import { CategoriesStep } from '../components/CategoriesStep';
 import { RulesStep } from '../components/RulesStep';
@@ -40,11 +41,14 @@ export const CreateTournamentScreen = () => {
         formData.rulesFile ? uploadFile('rules', formData.rulesFile) : Promise.resolve(null),
       ]);
       await createTournament({ ...formData, coverImage: bannerUpload?.url, rulesFileUrl: rulesUpload?.url }, undefined);
-      alert('Tạo giải đấu thành công!');
-      // TODO: Navigate back or to tournament details
+      Alert.alert(
+        '🎉 Tạo giải đấu thành công!',
+        'Giải đấu của bạn đã được tạo và đang chờ duyệt.',
+        [{ text: 'Về trang quản lý', onPress: () => router.replace('/organizer' as any) }],
+      );
     } catch (error) {
       console.error(error);
-      alert('Có lỗi xảy ra khi tạo giải đấu.');
+      Alert.alert('Không thể tạo giải đấu', 'Có lỗi xảy ra, vui lòng kiểm tra thông tin và thử lại.');
     } finally {
       setIsLoading(false);
     }
