@@ -19,8 +19,9 @@ export default function Home() {
     console.log('[Home Redirect] userRole:', userRole, 'isAuthenticated:', isAuthenticated, 'isLoading:', isLoading);
     if (!isLoading && isAuthenticated && userRole) {
       if (userRole === 'REGIONAL_ADMIN' || userRole === 'SUPER_ADMIN') {
-        console.log('[Home Redirect] Redirecting to /admin');
         router.replace('/admin');
+      } else if (userRole === 'ORGANIZER') {
+        router.replace('/organizer' as any);
       } else if (userRole !== 'USER') {
         console.log('[Home Redirect] Redirecting to /(tabs)/home');
         router.replace('/(tabs)/home' as any);

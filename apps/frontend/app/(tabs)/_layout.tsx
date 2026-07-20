@@ -98,18 +98,51 @@ export default function TabLayout() {
   const { isAuthenticated, isLoading, user } = useLogin();
   const pathname = usePathname();
   const params = useGlobalSearchParams<{ view?: string; chatting?: string }>();
+  const isEditProfile = params.view === 'edit-profile';
+  const isChatting = params.chatting === 'true';
+  const shouldHideHeader = isEditProfile || isChatting;
+
+  React.useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        router.replace("/");
+      } else if (user?.role === 'REGIONAL_ADMIN' || user?.role === 'SUPER_ADMIN') {
+        router.replace("/admin");
+      } else if (user?.role === 'ORGANIZER') {
+        router.replace("/organizer" as any);
+      }
+    }
+  }, [isAuthenticated, isLoading, user?.role]);
+
+
+  const insets = useSafeAreaInsets();
+  const [searchVal, setSearchVal] = React.useState("");
+  const [isScrolled, setIsScrolled] = React.useState(false);
   const [notificationsOpen, setNotificationsOpen] = React.useState(false);
   const [notifications, setNotifications] = React.useState([
     { id: 1, title: 'Hồ sơ đăng ký đã được duyệt', body: 'Ban tổ chức đã xác nhận lượt đăng ký gần nhất.', unread: true },
     { id: 2, title: 'Nguồn giải đấu mới', body: 'CourtMate vừa cập nhật dữ liệu giải đấu từ cộng đồng.', unread: true },
   ]);
 
-  React.useEffect(() => {
-    if (!isLoading && !isAuthenticated) router.replace('/');
-    if (!isLoading && (user?.role === 'REGIONAL_ADMIN' || user?.role === 'SUPER_ADMIN')) router.replace('/admin');
-  }, [isAuthenticated, isLoading, user?.role]);
+  if (isLoading || !isAuthenticated || user?.role === 'REGIONAL_ADMIN' || user?.role === 'ORGANIZER') {
+    return null;
+  }
 
-  if (isLoading || !isAuthenticated || user?.role === 'REGIONAL_ADMIN' || user?.role === 'SUPER_ADMIN') return null;
+  const handleSearchSubmit = () => {
+    router.push({
+      pathname: "/(tabs)/dashboard",
+      params: { search: searchVal }
+    });
+  };
+
+  const handleSearchChange = (text: string) => {
+    setSearchVal(text);
+    router.push({
+      pathname: "/(tabs)/dashboard",
+      params: { search: text }
+    });
+  };
+
 
   const hiddenChrome = params.view === 'edit-profile' || params.view === 'schedule' || params.chatting === 'true';
   const title = pathname.includes('chat') ? 'Trò chuyện' : pathname.includes('profile') ? 'Hồ sơ' : 'Giải đấu';
