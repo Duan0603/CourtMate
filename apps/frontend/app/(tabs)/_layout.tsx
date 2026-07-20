@@ -130,7 +130,7 @@ export default function TabLayout() {
 
   const handleSearchSubmit = () => {
     router.push({
-      pathname: "/(tabs)/dashboard",
+      pathname: "/(tabs)/home",
       params: { search: searchVal }
     });
   };
@@ -138,7 +138,7 @@ export default function TabLayout() {
   const handleSearchChange = (text: string) => {
     setSearchVal(text);
     router.push({
-      pathname: "/(tabs)/dashboard",
+      pathname: "/(tabs)/home",
       params: { search: text }
     });
   };

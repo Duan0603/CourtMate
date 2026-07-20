@@ -297,22 +297,7 @@ export default function OrganizerDashboard() {
   };
 
   const handleCreateTournament = () => {
-    setDashboardData((prev) => ({
-      ...prev,
-      tournaments: [
-        {
-          id: `tournament-${Date.now()}`,
-          name: 'Giải đấu mới',
-          sport: 'Quần vợt',
-          date: 'TBD',
-          registrations: 0,
-          status: 'draft',
-          description: 'Giải đấu mới vừa được tạo',
-        },
-        ...prev.tournaments,
-      ],
-    }));
-    openDetail('Tạo giải đấu', 'Một giải đấu mới đã được thêm vào danh sách của bạn.');
+    router.push('/create-tournament' as any);
   };
 
   const handleSaveProfile = () => {

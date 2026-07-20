@@ -26,7 +26,7 @@ export function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
       } else if (user.role === UserRole.ORGANIZER) {
         router.replace('/organizer' as any);
       } else {
-        router.replace('/(tabs)/dashboard');
+        router.replace('/(tabs)/home');
       }
     }
   }, [isAuthenticated, isLoading, user, allowedRoles]);
