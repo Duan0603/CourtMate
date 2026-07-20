@@ -108,6 +108,8 @@ export interface Tournament {
   slotsLimit?: number;
   schedule?: string[]; // Basic array of strings for schedule items
   registrationLink?: string;
+  sourceName?: string;
+  sourceUrl?: string;
   reportsCount: number;
   isHidden: boolean;
   createdAt: Date;
@@ -227,4 +229,3 @@ export interface TournamentFilterDto {
   maxFee?: number;
   status?: TournamentStatus;
 }
-

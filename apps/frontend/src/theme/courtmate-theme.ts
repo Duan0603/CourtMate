@@ -1,8 +1,8 @@
 export const courtmateColors = {
-  // Base — nền tối chủ đạo, ngả nâu-than ấm
-  background: '#14100E',
-  backgroundSecondary: '#1E1815',
-  backgroundElevated: '#241C18',        // card nổi không dùng glass
+  // Brand palette from the CourtMate logo: navy, court blue, yellow and white.
+  background: '#00102F',
+  backgroundSecondary: '#061A3D',
+  backgroundElevated: '#0B2450',
 
   // Glassmorphism surface
   surface: 'rgba(255,255,255,0.05)',
@@ -10,31 +10,31 @@ export const courtmateColors = {
   surfaceBorder: 'rgba(255,255,255,0.10)',
 
   // Accent chính — cam da bóng rổ
-  primary: '#FF6B35',
-  primaryHover: '#FF7F4D',
-  primaryPressed: '#E85A2A',
-  primaryMuted: 'rgba(255,107,53,0.15)',
+  primary: '#0077FF',
+  primaryHover: '#248AFF',
+  primaryPressed: '#005FD1',
+  primaryMuted: 'rgba(0,119,255,0.15)',
 
   // Accent phụ — teal đậm (Verified / Success)
-  secondary: '#1FA598',
-  secondaryHover: '#26BAAB',
-  secondaryPressed: '#178F84',
-  secondaryMuted: 'rgba(31,165,152,0.15)',
+  secondary: '#FFC400',
+  secondaryHover: '#FFD138',
+  secondaryPressed: '#D9A700',
+  secondaryMuted: 'rgba(255,196,0,0.16)',
 
   // Semantic states
-  warning: '#F2B84B',
-  warningMuted: 'rgba(242,184,75,0.15)',
+  warning: '#FFC400',
+  warningMuted: 'rgba(255,196,0,0.15)',
   danger: '#E8483B',
   dangerMuted: 'rgba(232,72,59,0.15)',
-  success: '#1FA598',
-  info: '#E8A24C',
+  success: '#22C55E',
+  info: '#0077FF',
 
   // Text
-  textPrimary: '#F5F0EB',
-  textSecondary: '#A69C93',
-  textDisabled: '#5C5550',
-  textOnPrimary: '#14100E',   // chữ đặt trên nền cam
-  textOnSecondary: '#0A1A18', // chữ đặt trên nền teal
+  textPrimary: '#FFFFFF',
+  textSecondary: '#B8C7E0',
+  textDisabled: '#6F809F',
+  textOnPrimary: '#FFFFFF',
+  textOnSecondary: '#00102F',
 
   // Border / Divider
   border: 'rgba(255,255,255,0.10)',
@@ -42,14 +42,14 @@ export const courtmateColors = {
 };
 
 export const courtmateGradients = {
-  courtCTA: ['#FF6B35', '#E8483B'] as const,        // dùng với expo-linear-gradient
-  verifiedBadge: ['#1FA598', '#14746A'] as const,
+  courtCTA: ['#0077FF', '#005FD1'] as const,
+  verifiedBadge: ['#FFC400', '#E0A900'] as const,
   glassCard: ['rgba(255,255,255,0.07)', 'rgba(255,255,255,0.02)'] as const,
 };
 
 export const courtmateShadows = {
   primaryGlow: {
-    shadowColor: '#FF6B35',
+    shadowColor: '#0077FF',
     shadowOpacity: 0.35,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 0 },

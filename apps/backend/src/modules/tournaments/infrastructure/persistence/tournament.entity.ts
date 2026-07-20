@@ -92,6 +92,12 @@ export class Tournament extends Document {
   @Prop({ required: false })
   registrationLink?: string;
 
+  @Prop({ required: false })
+  sourceName?: string;
+
+  @Prop({ required: false })
+  sourceUrl?: string;
+
   @Prop({ default: false })
   isHidden!: boolean; // Phase 8: moderation flag
 
