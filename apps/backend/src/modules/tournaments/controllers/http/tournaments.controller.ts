@@ -26,6 +26,11 @@ export class TournamentsController {
     try {
       if (body.categories) {
         categories = typeof body.categories === 'string' ? JSON.parse(body.categories) : body.categories;
+        // Ensure each category has a required `id` field
+        categories = categories.map((cat: any, index: number) => ({
+          ...cat,
+          id: cat.id || `cat-${(cat.name || 'category').toLowerCase().replace(/\s+/g, '-')}-${index}-${Date.now()}`,
+        }));
       }
     } catch (e) {
       console.error('Error parsing categories:', e);

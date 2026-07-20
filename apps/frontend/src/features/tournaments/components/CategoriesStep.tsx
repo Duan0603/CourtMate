@@ -18,7 +18,7 @@ export const CategoriesStep: React.FC<CategoriesStepProps> = ({ data, updateData
     if (newCatName && newCatFee) {
       const updatedCategories = [
         ...categories, 
-        { name: newCatName, fee: parseInt(newCatFee, 10), maxParticipants: null }
+        { id: `cat-${newCatName.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`, name: newCatName, fee: parseInt(newCatFee, 10), maxParticipants: null }
       ];
       setCategories(updatedCategories);
       updateData({ categories: updatedCategories });
