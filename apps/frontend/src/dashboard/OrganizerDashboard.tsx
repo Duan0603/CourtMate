@@ -1,560 +1,417 @@
 import React, { useMemo, useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  Image,
-  Modal,
-  TextInput,
+  View, Text, TouchableOpacity, ScrollView, Image,
+  StyleSheet, Modal, TextInput, Alert,
 } from 'react-native';
 import {
-  LayoutDashboard, Trophy, ClipboardList, Users, FileText,
-  Building2, Plus, LogOut, Menu, Download, UserPlus, List,
-  Check, Clock, DollarSign,
+  Trophy, ClipboardList, Users, Building2,
+  Plus, LogOut, Check, Clock, X, ChevronRight,
+  DollarSign, TrendingUp, BarChart2, CalendarDays,
 } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useLogin } from '../features/auth/hooks/useLogin';
 import {
   getOrganizerMetrics,
   initialOrganizerDashboardData,
   type OrganizerDashboardData,
-  type OrganizerProfile,
   type RegistrationItem,
 } from './organizerMockData';
 
-type OrganizerTab =
-  | 'dashboard'
-  | 'tournaments'
-  | 'registrations'
-  | 'participants'
-  | 'reports'
-  | 'profile';
+// ────────────── Design tokens ──────────────
+const NAVY   = '#00102F';
+const BLUE   = '#0077FF';
+const YELLOW = '#FFC400';
+const MUTED  = '#52627A';
+const CANVAS = '#F7FAFF';
+const BORDER = 'rgba(0,16,47,0.10)';
+const GREEN  = '#16A34A';
+const RED    = '#E8483B';
 
-type OrganizerStatus = 'pending' | 'approved' | 'rejected';
+type OrgTab = 'overview' | 'tournaments' | 'registrations' | 'profile';
 
-type ActionItem = {
-  id: string;
-  label: string;
-  description?: string;
-  status?: OrganizerStatus | 'active' | 'completed' | 'draft' | 'available' | 'occupied' | 'maintenance';
-  onPress: () => void;
-};
-
-const SIDEBAR_ITEMS: { id: OrganizerTab; label: string; icon: typeof LayoutDashboard }[] = [
-  { id: 'dashboard', label: 'Tổng quan', icon: LayoutDashboard },
-  { id: 'tournaments', label: 'Giải đấu của tôi', icon: Trophy },
-  { id: 'registrations', label: 'Đơn đăng ký', icon: ClipboardList },
-  { id: 'participants', label: 'Người tham gia', icon: Users },
-  { id: 'reports', label: 'Báo cáo', icon: FileText },
-  { id: 'profile', label: 'Hồ sơ tổ chức', icon: Building2 },
-];
-
-const TAB_TITLES: Record<OrganizerTab, string> = {
-  dashboard: 'Tổng quan',
-  tournaments: 'Giải đấu của tôi',
-  registrations: 'Đơn đăng ký',
-  participants: 'Người tham gia',
-  reports: 'Báo cáo',
-  profile: 'Hồ sơ tổ chức',
-};
-
-function StatCard({ title, value, badge, icon: Icon }: {
-  title: string;
-  value: string;
-  badge?: string;
-  icon: typeof Trophy;
+// ────────────── Sub-components ──────────────
+function StatCard({ title, value, sub, icon: Icon, accent }: {
+  title: string; value: string; sub?: string;
+  icon: typeof Trophy; accent?: string;
 }) {
+  const color = accent || BLUE;
   return (
-    <View className="flex-1 min-w-[180px] bg-white border border-slate-200 rounded-2xl p-lg">
-      <View className="flex-row justify-between items-start">
-        <View>
-          <Text className="text-slate-500 text-sm font-medium">{title}</Text>
-          <Text className="text-slate-900 font-extrabold text-3xl mt-1">{value}</Text>
-          {badge && (
-            <View className="bg-green-50 px-2 py-0.5 rounded-full self-start mt-2">
-              <Text className="text-green-600 text-xs font-bold">{badge}</Text>
-            </View>
-          )}
-        </View>
-        <View className="w-10 h-10 rounded-xl bg-slate-50 items-center justify-center">
-          <Icon color="#64748B" size={20} />
-        </View>
+    <View style={[styles.statCard]}>
+      <View style={[styles.statIcon, { backgroundColor: color + '18' }]}>
+        <Icon color={color} size={20} />
       </View>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statTitle}>{title}</Text>
+      {sub && <Text style={styles.statSub}>{sub}</Text>}
     </View>
   );
 }
 
-function RegistrationStatus({ status }: { status: 'pending' | 'approved' | 'rejected' }) {
-  if (status === 'approved') {
-    return (
-      <View className="flex-row items-center bg-green-50 px-2.5 py-1 rounded-full self-start">
-        <Check color="#16A34A" size={12} />
-        <Text className="text-green-700 text-xs font-bold ml-1">Đã duyệt</Text>
-      </View>
-    );
-  }
-  if (status === 'rejected') {
-    return (
-      <View className="flex-row items-center bg-red-50 px-2.5 py-1 rounded-full self-start">
-        <Clock color="#EF4444" size={12} />
-        <Text className="text-red-600 text-xs font-bold ml-1">Từ chối</Text>
-      </View>
-    );
-  }
+function StatusBadge({ status }: { status: 'pending' | 'approved' | 'rejected' | 'active' | 'completed' | 'draft' }) {
+  const map: Record<string, { label: string; bg: string; color: string }> = {
+    approved:  { label: 'Đã duyệt',    bg: '#F0FDF4', color: GREEN },
+    rejected:  { label: 'Từ chối',     bg: '#FFF1F1', color: RED },
+    pending:   { label: 'Chờ duyệt',   bg: '#FFF9E6', color: '#B45309' },
+    active:    { label: 'Đang mở',     bg: '#EFF6FF', color: BLUE },
+    completed: { label: 'Kết thúc',    bg: '#F8FAFC', color: MUTED },
+    draft:     { label: 'Nháp',        bg: '#F8FAFC', color: MUTED },
+  };
+  const m = map[status] ?? map.pending;
   return (
-    <View className="flex-row items-center bg-slate-100 px-2.5 py-1 rounded-full self-start">
-      <Clock color="#64748B" size={12} />
-      <Text className="text-slate-600 text-xs font-bold ml-1">Đang chờ</Text>
+    <View style={[styles.badge, { backgroundColor: m.bg }]}>
+      <Text style={[styles.badgeText, { color: m.color }]}>{m.label}</Text>
     </View>
   );
 }
 
-function DetailModal({
-  visible,
-  title,
-  body,
-  onClose,
-}: {
-  visible: boolean;
-  title: string;
-  body: string;
-  onClose: () => void;
-}) {
-  return (
-    <Modal transparent animationType="slide" visible={visible}>
-      <View className="flex-1 justify-center items-center bg-black/40 px-lg">
-        <View className="w-full max-w-[420px] bg-white rounded-2xl p-lg">
-          <Text className="text-slate-900 font-extrabold text-lg mb-2">{title}</Text>
-          <Text className="text-slate-600 text-sm leading-6">{body}</Text>
-          <TouchableOpacity onPress={onClose} className="mt-lg bg-blue-vibrant rounded-xl py-md items-center">
-            <Text className="text-white font-bold text-sm">Đóng</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
-  );
-}
-
-function OverviewContent({
-  orgName,
-  metrics,
-  registrations,
-  onOpenTab,
-  onOpenDetail,
+// ────────────── Overview Tab ──────────────
+function OverviewTab({
+  orgName, metrics, registrations, onTab, onCreateTournament,
 }: {
   orgName: string;
   metrics: ReturnType<typeof getOrganizerMetrics>;
   registrations: RegistrationItem[];
-  onOpenTab: (tab: OrganizerTab) => void;
-  onOpenDetail: (title: string, body: string) => void;
+  onTab: (t: OrgTab) => void;
+  onCreateTournament: () => void;
 }) {
-  const greeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Chào buổi sáng';
-    if (hour < 18) return 'Chào buổi chiều';
-    return 'Chào buổi tối';
-  };
-
-  const recentRegistrations = registrations.slice(0, 4);
-
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Chào buổi sáng' : hour < 18 ? 'Chào buổi chiều' : 'Chào buổi tối';
   return (
-    <View>
-      <View className="flex-row justify-between items-start mb-lg">
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
+      {/* Greeting */}
+      <View style={styles.overviewHeader}>
         <View>
-          <Text className="text-slate-900 font-extrabold text-2xl">Tổng quan</Text>
-          <Text className="text-slate-500 text-sm mt-1">{greeting()}, {orgName}.</Text>
+          <Text style={styles.greeting}>{greeting} 👋</Text>
+          <Text style={styles.greetingName}>{orgName}</Text>
         </View>
-        <TouchableOpacity onPress={() => onOpenDetail('Xuất dữ liệu', 'Đã chuẩn bị file export cho tổ chức của bạn.')} className="flex-row items-center bg-white border border-slate-200 px-md py-sm rounded-xl">
-          <Download color="#64748B" size={16} />
-          <Text className="text-slate-700 font-semibold text-sm ml-2">Xuất</Text>
+        <TouchableOpacity onPress={onCreateTournament} style={styles.createBtn}>
+          <Plus color="#fff" size={18} />
+          <Text style={styles.createBtnText}>Tạo giải đấu</Text>
         </TouchableOpacity>
       </View>
 
-      <View className="flex-row flex-wrap gap-md mb-xl">
-        <StatCard title="Giải đấu đang hoạt động" value={metrics.activeTournaments.toString()} icon={Trophy} />
-        <StatCard title="Đơn chờ duyệt" value={metrics.pendingRegistrations.toString()} badge={`+${metrics.pendingRegistrations} hôm nay`} icon={ClipboardList} />
-        <StatCard title="Tổng người tham gia" value={metrics.totalParticipants.toString()} icon={Users} />
-        <StatCard title="Doanh thu tháng" value={metrics.monthlyRevenue} icon={DollarSign} />
+      {/* Stats */}
+      <View style={styles.statsRow}>
+        <StatCard title="Giải đang mở" value={String(metrics.activeTournaments)} icon={Trophy} accent={BLUE} />
+        <StatCard title="Chờ duyệt" value={String(metrics.pendingRegistrations)} icon={ClipboardList} accent="#B45309" />
+        <StatCard title="Người tham gia" value={String(metrics.totalParticipants)} icon={Users} accent={GREEN} />
+        <StatCard title="Doanh thu" value={metrics.monthlyRevenue} icon={DollarSign} accent={YELLOW} />
       </View>
 
-      <View className="flex-row flex-wrap gap-lg">
-        <View className="flex-1 min-w-[320px] bg-white border border-slate-200 rounded-2xl overflow-hidden">
-          <View className="flex-row justify-between items-center px-lg py-md border-b border-slate-100">
-            <Text className="text-slate-900 font-bold text-base">Đơn đăng ký gần đây</Text>
-            <TouchableOpacity onPress={() => onOpenTab('registrations')}><Text className="text-blue-vibrant font-bold text-sm">Xem tất cả</Text></TouchableOpacity>
-          </View>
-
-          <View className="flex-row bg-slate-50 px-lg py-sm border-b border-slate-100">
-            <Text className="text-slate-400 font-bold text-xs uppercase flex-[2]">Người chơi</Text>
-            <Text className="text-slate-400 font-bold text-xs uppercase flex-[1.5]">Giải đấu</Text>
-            <Text className="text-slate-400 font-bold text-xs uppercase flex-1">Hạng mục</Text>
-            <Text className="text-slate-400 font-bold text-xs uppercase w-24">Trạng thái</Text>
-          </View>
-
-          {recentRegistrations.map((reg) => (
-            <View key={reg.id} className="flex-row items-center px-lg py-md border-b border-slate-50">
-              <View className="flex-[2] flex-row items-center">
-                <Image source={{ uri: reg.avatar }} className="w-9 h-9 rounded-full mr-3" />
-                <View>
-                  <Text className="text-slate-900 font-bold text-sm">{reg.playerName}</Text>
-                  <Text className="text-slate-400 text-xs">{reg.rating}</Text>
-                </View>
-              </View>
-              <Text className="text-slate-700 text-xs flex-[1.5] font-medium">{reg.tournamentName}</Text>
-              <View className="flex-1">
-                <View className="bg-blue-50 px-2 py-1 rounded-md self-start">
-                  <Text className="text-blue-700 text-[10px] font-semibold">{reg.category}</Text>
-                </View>
-              </View>
-              <View className="w-24">
-                <RegistrationStatus status={reg.status} />
-              </View>
+      {/* Recent registrations */}
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle}>Đơn đăng ký gần đây</Text>
+          <TouchableOpacity onPress={() => onTab('registrations')}>
+            <Text style={styles.cardLink}>Xem tất cả</Text>
+          </TouchableOpacity>
+        </View>
+        {registrations.slice(0, 4).map(reg => (
+          <View key={reg.id} style={styles.regRow}>
+            <Image source={{ uri: reg.avatar }} style={styles.avatar} />
+            <View style={{ flex: 1, marginLeft: 12 }}>
+              <Text style={styles.regName}>{reg.playerName}</Text>
+              <Text style={styles.regSub}>{reg.tournamentName} · {reg.category}</Text>
             </View>
-          ))}
-        </View>
-
-        <View className="w-full md:w-[300px]">
-          <View className="bg-slate-900 rounded-2xl p-lg mb-lg">
-            <Text className="text-white font-bold text-base mb-md">Thao tác nhanh</Text>
-            {[
-              { label: 'Tạo giải đấu mới', icon: Plus, onPress: () => { onOpenTab('tournaments'); onOpenDetail('Tạo giải đấu', 'Bạn đang mở màn hình tạo giải đấu mới.'); } },
-              { label: 'Thêm người chơi thủ công', icon: UserPlus, onPress: () => { onOpenTab('participants'); onOpenDetail('Thêm người chơi', 'Bạn đang mở phần quản lý người tham gia.'); } },
-              { label: 'Xuất danh sách đăng ký', icon: List, onPress: () => onOpenDetail('Xuất danh sách', 'Danh sách đăng ký đã được chuẩn bị để xuất.') },
-            ].map((action, index) => {
-              const Icon = action.icon;
-              return (
-                <TouchableOpacity key={`${action.label}-${index}`} onPress={action.onPress} className="flex-row items-center py-md border-b border-slate-700 last:border-b-0">
-                  <Icon color="#94A3B8" size={18} />
-                  <Text className="text-slate-200 font-medium text-sm ml-3">{action.label}</Text>
-                </TouchableOpacity>
-              );
-            })}
+            <StatusBadge status={reg.status} />
           </View>
-
-        </View>
+        ))}
       </View>
-    </View>
+
+      {/* Quick actions */}
+      <Text style={[styles.cardTitle, { marginTop: 20, marginBottom: 12 }]}>Thao tác nhanh</Text>
+      <View style={styles.quickRow}>
+        {[
+          { label: 'Quản lý giải đấu', icon: Trophy, tab: 'tournaments' as OrgTab },
+          { label: 'Duyệt đơn đăng ký', icon: ClipboardList, tab: 'registrations' as OrgTab },
+          { label: 'Hồ sơ tổ chức', icon: Building2, tab: 'profile' as OrgTab },
+        ].map(({ label, icon: Icon, tab }) => (
+          <TouchableOpacity key={tab} onPress={() => onTab(tab)} style={styles.quickBtn}>
+            <View style={[styles.quickIcon, { backgroundColor: BLUE + '15' }]}>
+              <Icon color={BLUE} size={20} />
+            </View>
+            <Text style={styles.quickLabel}>{label}</Text>
+            <ChevronRight color={MUTED} size={16} />
+          </TouchableOpacity>
+        ))}
+      </View>
+    </ScrollView>
   );
 }
 
-function InteractiveSection({ title, description, items }: { title: string; description: string; items: ActionItem[] }) {
+// ────────────── Tournaments Tab ──────────────
+function TournamentsTab({
+  data, onCreateTournament,
+}: {
+  data: OrganizerDashboardData;
+  onCreateTournament: () => void;
+}) {
   return (
-    <View className="bg-white border border-slate-200 rounded-2xl p-xl">
-      <Text className="text-slate-900 font-bold text-lg mb-2">{title}</Text>
-      <Text className="text-slate-500 text-sm mb-lg">{description}</Text>
-      {items.map((item) => (
-        <TouchableOpacity key={item.id} onPress={item.onPress} className="flex-row items-start py-md border-b border-slate-100 last:border-b-0">
-          <View className="flex-1">
-            <Text className="text-slate-700 font-medium text-sm">{item.label}</Text>
-            {item.description ? <Text className="text-slate-500 text-xs mt-1">{item.description}</Text> : null}
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
+      <TouchableOpacity onPress={onCreateTournament} style={[styles.createBtn, { alignSelf: 'flex-start', marginBottom: 16 }]}>
+        <Plus color="#fff" size={18} />
+        <Text style={styles.createBtnText}>Tạo giải đấu mới</Text>
+      </TouchableOpacity>
+      {data.tournaments.map(t => (
+        <View key={t.id} style={[styles.card, { marginBottom: 12 }]}>
+          <View style={styles.cardHeader}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.cardTitle}>{t.name}</Text>
+              <Text style={styles.regSub}>{t.sport} · {t.date}</Text>
+            </View>
+            <StatusBadge status={t.status} />
           </View>
-          {item.status ? <View className="ml-2"><Text className="text-blue-vibrant text-xs font-semibold">{item.status}</Text></View> : null}
-        </TouchableOpacity>
+          <Text style={[styles.regSub, { marginTop: 8 }]}>{t.description}</Text>
+          <View style={[styles.divider, { marginVertical: 12 }]} />
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Users color={MUTED} size={14} />
+            <Text style={[styles.regSub, { marginLeft: 6 }]}>{t.registrations} đăng ký</Text>
+          </View>
+        </View>
       ))}
-    </View>
+    </ScrollView>
   );
 }
 
-export default function OrganizerDashboard() {
+// ────────────── Registrations Tab ──────────────
+function RegistrationsTab({ data }: { data: OrganizerDashboardData }) {
+  return (
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
+      {data.registrations.map(reg => (
+        <View key={reg.id} style={[styles.card, { marginBottom: 12 }]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Image source={{ uri: reg.avatar }} style={styles.avatar} />
+            <View style={{ flex: 1, marginLeft: 12 }}>
+              <Text style={styles.regName}>{reg.playerName}</Text>
+              <Text style={styles.regSub}>{reg.rating}</Text>
+            </View>
+            <StatusBadge status={reg.status} />
+          </View>
+          <View style={[styles.divider, { marginVertical: 12 }]} />
+          <View style={{ flexDirection: 'row' }}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.regSub}>Giải đấu</Text>
+              <Text style={styles.regName}>{reg.tournamentName}</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.regSub}>Hạng mục</Text>
+              <Text style={styles.regName}>{reg.category}</Text>
+            </View>
+          </View>
+          {reg.status === 'pending' && (
+            <View style={{ flexDirection: 'row', marginTop: 12, gap: 8 }}>
+              <TouchableOpacity
+                style={[styles.actionBtn, { backgroundColor: GREEN + '15', flex: 1 }]}
+                onPress={() => Alert.alert('Đã duyệt', `Đã duyệt đăng ký của ${reg.playerName}`)}
+              >
+                <Check color={GREEN} size={16} />
+                <Text style={[styles.actionBtnText, { color: GREEN }]}>Duyệt</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionBtn, { backgroundColor: RED + '12', flex: 1 }]}
+                onPress={() => Alert.alert('Đã từ chối', `Đã từ chối đăng ký của ${reg.playerName}`)}
+              >
+                <X color={RED} size={16} />
+                <Text style={[styles.actionBtnText, { color: RED }]}>Từ chối</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      ))}
+    </ScrollView>
+  );
+}
+
+// ────────────── Profile Tab ──────────────
+function ProfileTab({ data }: { data: OrganizerDashboardData }) {
+  const p = data.profile;
+  return (
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
+      {/* Banner */}
+      <View style={[styles.card, { alignItems: 'center', paddingVertical: 32 }]}>
+        <Image source={{ uri: p.logo }} style={styles.profileLogo} />
+        <Text style={[styles.cardTitle, { marginTop: 16, fontSize: 20 }]}>{p.name}</Text>
+        <Text style={[styles.regSub, { textAlign: 'center', marginTop: 8 }]}>{p.description}</Text>
+      </View>
+
+      {/* Info */}
+      <View style={[styles.card, { marginTop: 16 }]}>
+        <Text style={[styles.cardTitle, { marginBottom: 16 }]}>Thông tin liên hệ</Text>
+        {[
+          { label: 'Email', value: p.contactEmail },
+          { label: 'Điện thoại', value: p.phone },
+          { label: 'Địa điểm', value: p.location },
+        ].map(({ label, value }) => (
+          <View key={label} style={{ marginBottom: 16 }}>
+            <Text style={styles.regSub}>{label}</Text>
+            <Text style={styles.regName}>{value}</Text>
+            <View style={styles.divider} />
+          </View>
+        ))}
+      </View>
+
+      {/* Stats */}
+      <View style={[styles.card, { marginTop: 16 }]}>
+        <Text style={[styles.cardTitle, { marginBottom: 16 }]}>Thống kê</Text>
+        {[
+          { label: 'Tổng giải đấu đã tổ chức', value: String(data.tournaments.length), icon: Trophy },
+          { label: 'Tổng người tham gia', value: String(data.participants.length), icon: Users },
+          { label: 'Tỷ lệ duyệt đơn', value: `${Math.round((data.registrations.filter(r => r.status === 'approved').length / data.registrations.length) * 100)}%`, icon: TrendingUp },
+        ].map(({ label, value, icon: Icon }) => (
+          <View key={label} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+            <View style={[styles.statIcon, { backgroundColor: BLUE + '15', marginRight: 12 }]}>
+              <Icon color={BLUE} size={16} />
+            </View>
+            <Text style={[styles.regSub, { flex: 1 }]}>{label}</Text>
+            <Text style={styles.regName}>{value}</Text>
+          </View>
+        ))}
+      </View>
+    </ScrollView>
+  );
+}
+
+// ────────────── Main Component ──────────────
+export function OrganizerDashboard() {
   const { user, logout } = useLogin();
-  const [activeTab, setActiveTab] = useState<OrganizerTab>('dashboard');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [dashboardData, setDashboardData] = useState<OrganizerDashboardData>(initialOrganizerDashboardData);
-  const [detailModal, setDetailModal] = useState<{ title: string; body: string } | null>(null);
-  const [profileForm, setProfileForm] = useState<OrganizerProfile>(initialOrganizerDashboardData.profile);
-
-  const orgName = user?.preferences?.clubName || user?.name || dashboardData.profile.name;
+  const insets = useSafeAreaInsets();
+  const [activeTab, setActiveTab] = useState<OrgTab>('overview');
+  const [dashboardData] = useState<OrganizerDashboardData>(initialOrganizerDashboardData);
   const metrics = useMemo(() => getOrganizerMetrics(dashboardData), [dashboardData]);
-
-  const handleLogout = async () => {
-    await logout();
-    router.replace('/');
-  };
-
-  const openDetail = (title: string, body: string) => {
-    setDetailModal({ title, body });
-  };
-
-  const closeDetail = () => {
-    setDetailModal(null);
-  };
-
-  const handleApproveRegistration = (id: string) => {
-    setDashboardData((prev) => ({
-      ...prev,
-      registrations: prev.registrations.map((item) => (item.id === id ? { ...item, status: 'approved' as const } : item)),
-    }));
-    openDetail('Duyệt đăng ký', 'Đơn đăng ký đã được chấp thuận thành công.');
-  };
-
-  const handleRejectRegistration = (id: string) => {
-    setDashboardData((prev) => ({
-      ...prev,
-      registrations: prev.registrations.map((item) => (item.id === id ? { ...item, status: 'rejected' as const } : item)),
-    }));
-    openDetail('Từ chối đăng ký', 'Đơn đăng ký đã được chuyển sang trạng thái từ chối.');
-  };
+  const orgName = dashboardData.profile.name;
 
   const handleCreateTournament = () => {
     router.push('/create-tournament' as any);
   };
 
-  const handleSaveProfile = () => {
-    setDashboardData((prev) => ({ ...prev, profile: profileForm }));
-    openDetail('Lưu hồ sơ', 'Thông tin tổ chức đã được cập nhật.');
+  const handleLogout = () => {
+    Alert.alert(
+      'Đăng xuất',
+      'Bạn muốn đăng xuất khỏi tài khoản nhà tổ chức?',
+      [
+        { text: 'Hủy', style: 'cancel' },
+        { text: 'Đăng xuất', style: 'destructive', onPress: async () => { await logout(); router.replace('/'); } },
+      ],
+    );
   };
 
-  const renderTournamentsTab = () => (
-    <View className="flex-row flex-wrap gap-lg">
-      <View className="flex-1 min-w-[320px] bg-white border border-slate-200 rounded-2xl overflow-hidden">
-        <View className="flex-row justify-between items-center px-lg py-md border-b border-slate-100">
-          <Text className="text-slate-900 font-bold text-base">Danh sách giải đấu</Text>
-          <TouchableOpacity onPress={handleCreateTournament} className="bg-blue-vibrant px-md py-sm rounded-xl">
-            <Text className="text-white font-bold text-sm">Tạo giải đấu mới</Text>
-          </TouchableOpacity>
-        </View>
-        <View className="flex-row bg-slate-50 px-lg py-sm border-b border-slate-100">
-          <Text className="text-slate-400 font-bold text-xs uppercase flex-[2]">Tên giải đấu</Text>
-          <Text className="text-slate-400 font-bold text-xs uppercase flex-1">Ngày</Text>
-          <Text className="text-slate-400 font-bold text-xs uppercase w-24">Trạng thái</Text>
-        </View>
-        {dashboardData.tournaments.map((tournament) => (
-          <TouchableOpacity key={tournament.id} onPress={() => openDetail(tournament.name, `${tournament.description}\n\nSố người đăng ký: ${tournament.registrations}`)} className="flex-row items-center px-lg py-md border-b border-slate-50">
-            <View className="flex-[2]">
-              <Text className="text-slate-900 font-bold text-sm">{tournament.name}</Text>
-              <Text className="text-slate-500 text-xs mt-0.5">{tournament.sport}</Text>
-            </View>
-            <Text className="text-slate-600 text-xs flex-1">{tournament.date}</Text>
-            <View className="w-24">
-              <View className="px-2.5 py-1 rounded-full self-start bg-slate-100">
-                <Text className="text-slate-600 text-[10px] font-bold uppercase">{tournament.status}</Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-        ))}
-      </View>
-      <View className="w-full md:w-[300px]">
-        <View className="bg-slate-900 rounded-2xl p-lg">
-          <Text className="text-white font-bold text-base mb-md">Thao tác nhanh</Text>
-          {[
-            { label: 'Tạo giải đấu mới', onPress: handleCreateTournament },
-            { label: 'Xem số lượng đăng ký', onPress: () => { setActiveTab('registrations'); openDetail('Đăng ký', 'Bạn đang xem danh sách đơn đăng ký'); } },
-          ].map((action, index) => (
-            <TouchableOpacity key={`${action.label}-${index}`} onPress={action.onPress} className="flex-row items-center py-md border-b border-slate-700 last:border-b-0">
-              <Text className="text-slate-200 font-medium text-sm">{action.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-    </View>
-  );
-
-  const renderRegistrationsTab = () => (
-    <View className="flex-row flex-wrap gap-lg">
-      <View className="flex-1 min-w-[320px] bg-white border border-slate-200 rounded-2xl overflow-hidden">
-        <View className="flex-row justify-between items-center px-lg py-md border-b border-slate-100">
-          <Text className="text-slate-900 font-bold text-base">Đơn đăng ký</Text>
-          <View className="flex-row gap-sm">
-            <TouchableOpacity onPress={() => openDetail('Bộ lọc', 'Đang lọc các đơn đăng ký theo trạng thái chờ duyệt.')} className="bg-slate-100 px-md py-sm rounded-xl">
-              <Text className="text-slate-600 text-xs font-bold">Chờ duyệt</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => openDetail('Bộ lọc', 'Đang lọc các đơn đăng ký theo giải đấu hiện tại.')} className="bg-slate-100 px-md py-sm rounded-xl">
-              <Text className="text-slate-600 text-xs font-bold">Theo giải đấu</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-        <View className="flex-row bg-slate-50 px-lg py-sm border-b border-slate-100">
-          <Text className="text-slate-400 font-bold text-xs uppercase flex-[2]">Người chơi</Text>
-          <Text className="text-slate-400 font-bold text-xs uppercase flex-[1.5]">Giải đấu</Text>
-          <Text className="text-slate-400 font-bold text-xs uppercase w-24">Trạng thái</Text>
-        </View>
-        {dashboardData.registrations.map((registration) => (
-          <View key={registration.id} className="flex-row items-center px-lg py-md border-b border-slate-50">
-            <View className="flex-[2] flex-row items-center">
-              <Image source={{ uri: registration.avatar }} className="w-9 h-9 rounded-full mr-3" />
-              <View>
-                <Text className="text-slate-900 font-bold text-sm">{registration.playerName}</Text>
-                <Text className="text-slate-400 text-xs">{registration.rating}</Text>
-              </View>
-            </View>
-            <Text className="text-slate-700 text-xs flex-[1.5] font-medium">{registration.tournamentName}</Text>
-            <View className="w-24">
-              <RegistrationStatus status={registration.status} />
-              {registration.status === 'pending' ? (
-                <View className="flex-row mt-2">
-                  <TouchableOpacity onPress={() => handleApproveRegistration(registration.id)} className="mr-2">
-                    <Text className="text-green-600 text-xs font-bold">Duyệt</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => handleRejectRegistration(registration.id)}>
-                    <Text className="text-red-500 text-xs font-bold">Từ chối</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : null}
-            </View>
-          </View>
-        ))}
-      </View>
-      <View className="w-full md:w-[300px]">
-        <View className="bg-slate-900 rounded-2xl p-lg">
-          <Text className="text-white font-bold text-base mb-md">Tóm tắt</Text>
-          <Text className="text-slate-300 text-sm">Đang có {dashboardData.registrations.filter((item) => item.status === 'pending').length} đơn chờ duyệt.</Text>
-        </View>
-      </View>
-    </View>
-  );
-
-  const renderParticipantsTab = () => {
-    const participantItems: ActionItem[] = dashboardData.participants.map((participant) => ({
-      id: participant.id,
-      label: participant.name,
-      description: `${participant.tournamentName} • ${participant.role}`,
-      onPress: () => openDetail('Chi tiết người tham gia', `${participant.name} là thành viên của ${participant.tournamentName}.`),
-    }));
-    return <InteractiveSection title="Danh sách người tham gia" description="Tìm kiếm và xem các hồ sơ tham gia từ tất cả các giải đấu." items={participantItems} />;
-  };
-
-  const renderReportsTab = () => (
-    <View className="flex-row flex-wrap gap-lg">
-      {dashboardData.reports.map((report) => (
-        <View key={report.id} className="flex-1 min-w-[220px] bg-white border border-slate-200 rounded-2xl p-lg">
-          <Text className="text-slate-500 text-sm font-medium">{report.title}</Text>
-          <Text className="text-slate-900 font-extrabold text-3xl mt-2">{report.value}</Text>
-          <Text className="text-slate-500 text-sm mt-2">{report.detail}</Text>
-          <TouchableOpacity onPress={() => openDetail(report.title, `${report.detail} \nĐã tạo bản export giả lập.`)} className="mt-md bg-blue-vibrant rounded-xl px-md py-sm self-start">
-            <Text className="text-white font-bold text-sm">Xuất</Text>
-          </TouchableOpacity>
-        </View>
-      ))}
-    </View>
-  );
-
-  const renderProfileTab = () => (
-    <View className="flex-row flex-wrap gap-lg">
-      <View className="flex-1 min-w-[320px] bg-white border border-slate-200 rounded-2xl p-lg">
-        <Text className="text-slate-900 font-bold text-lg mb-4">Thông tin tổ chức</Text>
-        <View className="mb-md">
-          <Text className="text-slate-500 text-sm mb-1">Tên tổ chức</Text>
-          <TextInput value={profileForm.name} onChangeText={(text) => setProfileForm((prev) => ({ ...prev, name: text }))} className="border border-slate-200 rounded-xl px-md py-sm" />
-        </View>
-        <View className="mb-md">
-          <Text className="text-slate-500 text-sm mb-1">Email liên hệ</Text>
-          <TextInput value={profileForm.contactEmail} onChangeText={(text) => setProfileForm((prev) => ({ ...prev, contactEmail: text }))} className="border border-slate-200 rounded-xl px-md py-sm" />
-        </View>
-        <View className="mb-md">
-          <Text className="text-slate-500 text-sm mb-1">Số điện thoại</Text>
-          <TextInput value={profileForm.phone} onChangeText={(text) => setProfileForm((prev) => ({ ...prev, phone: text }))} className="border border-slate-200 rounded-xl px-md py-sm" />
-        </View>
-        <View className="mb-md">
-          <Text className="text-slate-500 text-sm mb-1">Địa điểm</Text>
-          <TextInput value={profileForm.location} onChangeText={(text) => setProfileForm((prev) => ({ ...prev, location: text }))} className="border border-slate-200 rounded-xl px-md py-sm" />
-        </View>
-        <View className="mb-md">
-          <Text className="text-slate-500 text-sm mb-1">Mô tả</Text>
-          <TextInput multiline value={profileForm.description} onChangeText={(text) => setProfileForm((prev) => ({ ...prev, description: text }))} className="border border-slate-200 rounded-xl px-md py-sm h-24" />
-        </View>
-        <TouchableOpacity onPress={handleSaveProfile} className="bg-blue-vibrant rounded-xl px-md py-sm self-start">
-          <Text className="text-white font-bold text-sm">Lưu</Text>
-        </TouchableOpacity>
-      </View>
-      <View className="w-full md:w-[300px]">
-        <View className="bg-slate-900 rounded-2xl p-lg">
-          <Text className="text-white font-bold text-base mb-md">Xem trước</Text>
-          <Image source={{ uri: profileForm.logo }} className="w-full h-28 rounded-xl mb-md" />
-          <Text className="text-white font-bold text-base">{profileForm.name}</Text>
-          <Text className="text-slate-400 text-sm mt-1">{profileForm.description}</Text>
-        </View>
-      </View>
-    </View>
-  );
-
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'dashboard':
-        return <OverviewContent orgName={orgName} metrics={metrics} registrations={dashboardData.registrations} onOpenTab={setActiveTab} onOpenDetail={openDetail} />;
-      case 'tournaments':
-        return renderTournamentsTab();
-      case 'registrations':
-        return renderRegistrationsTab();
-      case 'participants':
-        return renderParticipantsTab();
-      case 'reports':
-        return renderReportsTab();
-      case 'profile':
-        return renderProfileTab();
-      default:
-        return null;
-    }
-  };
+  const TABS: { id: OrgTab; label: string; icon: typeof Trophy }[] = [
+    { id: 'overview',       label: 'Tổng quan',  icon: BarChart2 },
+    { id: 'tournaments',    label: 'Giải đấu',   icon: Trophy },
+    { id: 'registrations',  label: 'Đăng ký',    icon: ClipboardList },
+    { id: 'profile',        label: 'Hồ sơ',      icon: Building2 },
+  ];
 
   return (
-    <View className="flex-1 flex-row bg-slate-50 relative">
-      <View className={`bg-slate-900 border-r border-slate-800 z-50 md:flex flex-col justify-between absolute md:relative h-full transition-all duration-300 ${isSidebarOpen ? 'left-0 w-64' : '-left-64 w-64 md:left-0'}`}>
-        <View className="p-lg flex-1">
-          <View className="mb-xl">
-            <Text className="text-white font-extrabold text-xl">CourtMate</Text>
-            <Text className="text-slate-400 text-xs font-semibold mt-0.5">Trung tâm nhà tổ chức</Text>
+    <View style={{ flex: 1, backgroundColor: CANVAS }}>
+      {/* Header */}
+      <View style={[styles.header, { paddingTop: insets.top }]}>
+        <View style={styles.headerInner}>
+          <View>
+            <Text style={styles.headerTitle}>CourtMate</Text>
+            <Text style={styles.headerSub}>Nhà tổ chức</Text>
           </View>
-
-          <View className="space-y-1">
-            {SIDEBAR_ITEMS.map(({ id, label, icon: Icon }) => {
-              const active = activeTab === id;
-              return (
-                <TouchableOpacity
-                  key={id}
-                  onPress={() => { setActiveTab(id); setIsSidebarOpen(false); }}
-                  className={`flex-row items-center p-md rounded-xl ${active ? 'bg-blue-vibrant/20 border-l-2 border-blue-vibrant' : ''}`}
-                >
-                  <Icon color={active ? '#FFFFFF' : '#94A3B8'} size={20} />
-                  <Text className={`font-semibold ml-sm text-sm ${active ? 'text-white' : 'text-slate-400'}`}>
-                    {label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
-
-        <View className="p-lg border-t border-slate-800">
-          <TouchableOpacity onPress={handleCreateTournament} className="bg-blue-vibrant py-md rounded-xl flex-row items-center justify-center mb-lg">
-            <Plus color="#FFFFFF" size={18} />
-            <Text className="text-white font-bold text-sm ml-2">Tạo giải đấu</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleLogout} className="flex-row items-center justify-center py-sm">
-            <LogOut color="#94A3B8" size={16} />
-            <Text className="text-slate-400 text-xs font-medium ml-2">Đăng xuất</Text>
+          <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
+            <LogOut color="#FFFFFF" size={20} />
           </TouchableOpacity>
         </View>
       </View>
 
-      {isSidebarOpen && (
-        <TouchableOpacity
-          className="absolute inset-0 bg-black/50 z-40 md:hidden"
-          onPress={() => setIsSidebarOpen(false)}
-        />
-      )}
-
-      <View className="flex-1 flex-col">
-        <View className="h-16 border-b border-slate-200 bg-white px-lg flex-row items-center">
-          <TouchableOpacity onPress={() => setIsSidebarOpen(!isSidebarOpen)} className="md:hidden p-xs mr-sm">
-            <Menu color="#334155" size={24} />
-          </TouchableOpacity>
-          <Text className="text-slate-800 font-extrabold text-xl">{TAB_TITLES[activeTab]}</Text>
-        </View>
-
-        <ScrollView className="flex-1 p-lg" contentContainerStyle={{ paddingBottom: 40 }}>
-          {renderTabContent()}
-        </ScrollView>
+      {/* Content */}
+      <View style={{ flex: 1 }}>
+        {activeTab === 'overview' && (
+          <OverviewTab
+            orgName={orgName}
+            metrics={metrics}
+            registrations={dashboardData.registrations}
+            onTab={setActiveTab}
+            onCreateTournament={handleCreateTournament}
+          />
+        )}
+        {activeTab === 'tournaments' && (
+          <TournamentsTab data={dashboardData} onCreateTournament={handleCreateTournament} />
+        )}
+        {activeTab === 'registrations' && (
+          <RegistrationsTab data={dashboardData} />
+        )}
+        {activeTab === 'profile' && (
+          <ProfileTab data={dashboardData} />
+        )}
       </View>
 
-      {detailModal && (
-        <DetailModal
-          visible={Boolean(detailModal)}
-          title={detailModal.title}
-          body={detailModal.body}
-          onClose={closeDetail}
-        />
-      )}
+      {/* Bottom Tab Bar */}
+      <View style={[styles.tabBar, { paddingBottom: insets.bottom }]}>
+        {TABS.map(({ id, label, icon: Icon }) => {
+          const focused = activeTab === id;
+          return (
+            <TouchableOpacity
+              key={id}
+              onPress={() => setActiveTab(id)}
+              style={styles.tabItem}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: focused }}
+            >
+              {focused && <View style={styles.tabIndicator} />}
+              <Icon color={focused ? BLUE : '#B8C7E0'} size={22} strokeWidth={2} />
+              <Text style={[styles.tabLabel, { color: focused ? '#FFFFFF' : '#B8C7E0' }]}>
+                {label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
     </View>
   );
 }
+
+// ────────────── Styles ──────────────
+const styles = StyleSheet.create({
+  header: { backgroundColor: NAVY, borderBottomColor: 'rgba(255,255,255,0.10)', borderBottomWidth: 1 },
+  headerInner: { height: 60, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  headerTitle: { color: '#FFFFFF', fontSize: 20, fontWeight: '700' },
+  headerSub: { color: '#B8C7E0', fontSize: 13 },
+  logoutBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+
+  overviewHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
+  greeting: { color: MUTED, fontSize: 13 },
+  greetingName: { color: NAVY, fontSize: 18, fontWeight: '700', marginTop: 2 },
+  createBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: BLUE, paddingHorizontal: 16, height: 44, borderRadius: 12 },
+  createBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 14, marginLeft: 6 },
+
+  statsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 20 },
+  statCard: { flex: 1, minWidth: 140, backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: BORDER },
+  statIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  statValue: { color: NAVY, fontSize: 22, fontWeight: '700' },
+  statTitle: { color: MUTED, fontSize: 12, marginTop: 4 },
+  statSub: { color: MUTED, fontSize: 11, marginTop: 2 },
+
+  card: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: BORDER },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  cardTitle: { color: NAVY, fontSize: 16, fontWeight: '700' },
+  cardLink: { color: BLUE, fontSize: 14, fontWeight: '600' },
+  divider: { height: 1, backgroundColor: BORDER, marginVertical: 4 },
+
+  regRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderTopWidth: 1, borderTopColor: BORDER },
+  avatar: { width: 44, height: 44, borderRadius: 22 },
+  regName: { color: NAVY, fontSize: 14, fontWeight: '600' },
+  regSub: { color: MUTED, fontSize: 13, marginTop: 2 },
+
+  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
+  badgeText: { fontSize: 12, fontWeight: '700' },
+
+  quickRow: { gap: 10 },
+  quickBtn: { backgroundColor: '#FFFFFF', borderRadius: 14, borderWidth: 1, borderColor: BORDER, padding: 14, flexDirection: 'row', alignItems: 'center' },
+  quickIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  quickLabel: { flex: 1, color: NAVY, fontSize: 14, fontWeight: '600' },
+
+  actionBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 10, borderRadius: 10, gap: 6 },
+  actionBtnText: { fontSize: 13, fontWeight: '700' },
+
+  profileLogo: { width: 96, height: 96, borderRadius: 48, borderWidth: 3, borderColor: '#FFFFFF' },
+
+  tabBar: { height: 64, backgroundColor: NAVY, flexDirection: 'row', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.10)' },
+  tabItem: { flex: 1, alignItems: 'center', justifyContent: 'center', position: 'relative', paddingTop: 8 },
+  tabIndicator: { position: 'absolute', top: 0, width: 36, height: 3, borderRadius: 2, backgroundColor: BLUE },
+  tabLabel: { fontSize: 11, fontWeight: '600', marginTop: 4 },
+});
