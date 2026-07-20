@@ -22,8 +22,8 @@ export default function Home() {
         console.log('[Home Redirect] Redirecting to /admin');
         router.replace('/admin');
       } else if (userRole !== 'USER') {
-        console.log('[Home Redirect] Redirecting to /(tabs)/dashboard');
-        router.replace('/(tabs)/dashboard');
+        console.log('[Home Redirect] Redirecting to /(tabs)/home');
+        router.replace('/(tabs)/home' as any);
       }
     }
   }, [isAuthenticated, userRole, isLoading]);

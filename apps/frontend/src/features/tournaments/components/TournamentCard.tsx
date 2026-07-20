@@ -1,7 +1,15 @@
 import React from 'react';
 import { YStack, XStack, Text, Image, Card, Theme, View, Button } from 'tamagui';
 import { Tournament, TournamentStatus } from '@courtmate/shared';
-import { Bookmark } from 'lucide-react-native';
+import { Bookmark, ShieldCheck } from 'lucide-react-native';
+
+// Sport label mapping (Vietnamese)
+const SPORT_LABELS: Record<string, string> = {
+  BADMINTON: 'Cầu lông',
+  FOOTBALL: 'Bóng đá',
+  PICKLEBALL: 'Pickleball',
+  TENNIS: 'Tennis',
+};
 
 interface TournamentCardProps {
   tournament: Tournament;
@@ -24,7 +32,7 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
   // Determine lowest fee
   const minFee = tournament.categories.length > 0 
     ? Math.min(...tournament.categories.map(c => c.fee))
-    : 0;
+    : tournament.registrationFee ?? 0;
 
   return (
     <Theme name="light">
@@ -90,6 +98,24 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
               {tournament.title}
             </Text>
             
+            {/* Organizer with Verified Badge */}
+            {tournament.organizer && (
+              <XStack marginTop="$1.5" alignItems="center" space="$1.5">
+                <Text fontSize="$2" color="$gray10">Bởi</Text>
+                <Text fontSize="$2" fontWeight="bold" color="$gray11">
+                  {tournament.organizer.name}
+                </Text>
+                {tournament.organizer.isVerified && (
+                  <View backgroundColor="$blue3" borderRadius="$10" paddingHorizontal="$1.5" paddingVertical="$0.5">
+                    <XStack alignItems="center" space="$1">
+                      <ShieldCheck size={12} color="#2563EB" />
+                      <Text fontSize={10} color="$blue10" fontWeight="700">Đã xác thực</Text>
+                    </XStack>
+                  </View>
+                )}
+              </XStack>
+            )}
+
             <XStack marginTop="$2" alignItems="center" space="$2">
               <Text fontSize="$3">📅</Text>
               <Text fontSize="$3" color="$gray10">{startDateStr}</Text>
@@ -104,7 +130,9 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
 
             <XStack marginTop="$2" justifyContent="space-between" alignItems="center">
               <View backgroundColor="$blue3" paddingHorizontal="$2" paddingVertical="$1" borderRadius="$2">
-                <Text color="$blue10" fontSize="$2" fontWeight="bold">{tournament.sport}</Text>
+                <Text color="$blue10" fontSize="$2" fontWeight="bold">
+                  {SPORT_LABELS[tournament.sport] || tournament.sport}
+                </Text>
               </View>
               <Text fontSize="$4" fontWeight="bold" color="$red10">
                 Từ {minFee.toLocaleString('vi-VN')}đ

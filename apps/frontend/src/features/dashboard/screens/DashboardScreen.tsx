@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState, useRef, useMemo, useContext } from 'react';
-import { View, ScrollView, TouchableOpacity, Alert, RefreshControl, ImageBackground, TextInput, Platform, LayoutAnimation, UIManager } from 'react-native';
-import { Trophy, Award, BarChart2, MapPin, Target, CircleDashed, Tent, Activity, Search, Filter, Calendar, ChevronDown, ChevronUp, Sparkles, SlidersHorizontal, Check, Users, MessageSquare } from 'lucide-react-native';
+import { View, ScrollView, TouchableOpacity, Alert, RefreshControl, ImageBackground, TextInput, Platform, LayoutAnimation, UIManager, Modal } from 'react-native';
+import { Trophy, Award, BarChart2, MapPin, Target, CircleDashed, Tent, Activity, Search, Filter, Calendar, ChevronDown, ChevronUp, Sparkles, SlidersHorizontal, Check, Users, MessageSquare, X } from 'lucide-react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useIsFocused } from '@react-navigation/native';
 import gsap from 'gsap';
@@ -28,7 +28,7 @@ export const MOCK_ACTIVE_TOURNAMENTS = [
     title: 'Elite Clay Masters 2026',
     sport: 'Quần vợt',
     location: 'Metropolis Arena',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDoY5nKXn8iyFasSan28EPjlpKl3z7A6cnA8pSkxncCStGFv2u2qf-4zghPcY7a1S5R4V3C8KD0a1c6-7SrmPyjVMH7W4XICudrVaBegXJ2iwo2V49eqBR_azaPKRBc1AZHfmWD-vM0EmWQx-3cci-hezgCDjIwnvepFRSBMEn-KKLGL5E21cNvDBaoOS6DJm039vuGMTvD8z_yNgKwddkc13m9UVfhKi9HBg9u40axJ6VutmG4c0heQQ',
+    image: 'https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?auto=format&fit=crop&w=800&q=80',
     isLive: true,
   },
   {
@@ -36,7 +36,7 @@ export const MOCK_ACTIVE_TOURNAMENTS = [
     title: 'Pro City Hoop Series',
     sport: 'Bóng rổ',
     location: 'Skyline Sports Complex',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD7UIMGG-jpTsAToMYbOAH_UhBwpYod_WDTAwLMuQytZC_HpOaGINzC0wwmZQFB2uzXQcBKJJq9xk7cPWFeyqN7K9Q83EOuVsqkDsn1guht2GpGWm-iWWuvY5Wzloc9otvJR9mTrYA91be8G7xOkWLwqTk-fDBg5E6Vf7rs3hJtihLnoJIbhw3sqX7o6mYU7zgRUhLXaDBNRWZKR4fSDi1iEC73dQ-1o75QaHSXdtyjmJEWSAoeGciZyA',
+    image: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=800&q=80',
     isLive: true,
   }
 ];
@@ -288,29 +288,7 @@ export const DashboardScreen: React.FC = () => {
     }
   }, [isFocused]);
 
-  useEffect(() => {
-    if (Platform.OS === 'web' && filterPanelRef.current) {
-      if (isFilterOpen) {
-        gsap.set(filterPanelRef.current, { display: 'flex' });
-        gsap.fromTo(filterPanelRef.current,
-          { height: 0, opacity: 0, scaleY: 0.95, transformOrigin: 'top center' },
-          { height: 'auto', opacity: 1, scaleY: 1, duration: 0.35, ease: 'power2.out' }
-        );
-      } else {
-        gsap.to(filterPanelRef.current, {
-          height: 0,
-          opacity: 0,
-          scaleY: 0.95,
-          transformOrigin: 'top center',
-          duration: 0.25,
-          ease: 'power2.in',
-          onComplete: () => {
-            gsap.set(filterPanelRef.current, { display: 'none' });
-          }
-        });
-      }
-    }
-  }, [isFilterOpen]);
+  // GSAP animation for filter removed as we now use Modal
 
   const loadTournaments = useCallback(async (refresh = false) => {
     if (refresh) setIsRefreshing(true);
@@ -568,12 +546,43 @@ export const DashboardScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Collapsible Dropdown Filter panel */}
-        <View 
-          ref={filterPanelRef}
-          className="mx-md mt-sm p-md bg-surface-container-lowest border border-outline-variant/30 rounded-2xl shadow-level-2"
-          style={Platform.OS === 'web' ? { overflow: 'hidden', height: 0, opacity: 0, display: 'none' } : { display: isFilterOpen ? 'flex' : 'none' }}
+        {/* Filter Modal */}
+        <Modal
+          visible={isFilterOpen}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => {
+            setIsFilterOpen(false);
+            router.setParams({ filter: 'false' });
+          }}
         >
+          <TouchableOpacity 
+            activeOpacity={1} 
+            onPress={() => {
+              setIsFilterOpen(false);
+              router.setParams({ filter: 'false' });
+            }} 
+            className="flex-1 bg-black/40 justify-center items-center px-4"
+          >
+            <TouchableOpacity 
+              activeOpacity={1} 
+              onPress={(e) => e.stopPropagation()} 
+              className="bg-white w-full rounded-2xl p-md overflow-hidden max-w-sm"
+              style={{ maxHeight: '80%' }}
+            >
+              <View className="flex-row justify-between items-center mb-md border-b border-slate-100 pb-3">
+                <Typography variant="headline-md" className="font-bold text-slate-900">Bộ lọc</Typography>
+                <TouchableOpacity 
+                  onPress={() => {
+                    setIsFilterOpen(false);
+                    router.setParams({ filter: 'false' });
+                  }}
+                  className="p-1 rounded-full bg-slate-100 active:scale-95"
+                >
+                  <X color="#64748B" size={20} />
+                </TouchableOpacity>
+              </View>
+              <ScrollView showsVerticalScrollIndicator={false}>
             {/* Filter by Level */}
             <View className="mb-md">
               <Typography variant="label-sm" className="text-on-surface-variant font-bold mb-sm">Trình độ</Typography>
@@ -664,11 +673,24 @@ export const DashboardScreen: React.FC = () => {
                 setSelectedSort('DATE');
                 setSearchQuery('');
               }}
-              className="w-full bg-surface-container-high py-sm rounded-xl items-center justify-center border border-outline-variant/20"
+              className="w-full bg-surface-container-high py-sm rounded-xl items-center justify-center border border-outline-variant/20 mt-2"
             >
               <Typography variant="label-sm" className="text-on-surface-variant font-bold">Đặt lại tất cả bộ lọc</Typography>
             </TouchableOpacity>
-        </View>
+            
+            <TouchableOpacity 
+              onPress={() => {
+                setIsFilterOpen(false);
+                router.setParams({ filter: 'false' });
+              }}
+              className="w-full bg-primary py-sm rounded-xl items-center justify-center mt-3"
+            >
+              <Typography variant="label-sm" className="text-white font-bold">Áp dụng</Typography>
+            </TouchableOpacity>
+              </ScrollView>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </Modal>
 
         {/* Scrollable Sport Category Quick Pills */}
         <ScrollView 
