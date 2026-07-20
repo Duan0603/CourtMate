@@ -7,7 +7,7 @@ import {
   User as UserIcon,
   Bell,
   Search,
-  Scan,
+  SlidersHorizontal,
   Calendar,
   X,
 } from "lucide-react-native";
@@ -132,7 +132,7 @@ export default function TabLayout() {
     ? { uri: user.preferences.avatarUrl }
     : require("../../assets/images/woman_avatar.png");
   const pathname = usePathname();
-  const isDashboard = pathname === '/dashboard' || pathname === '/';
+  const isDashboard = pathname === '/home' || pathname === '/';
 
   if (isLoading || !isAuthenticated || user?.role === 'REGIONAL_ADMIN' || user?.role === 'SUPER_ADMIN') {
     return null;
@@ -140,7 +140,7 @@ export default function TabLayout() {
 
   const handleSearchSubmit = () => {
     router.push({
-      pathname: "/(tabs)/dashboard",
+      pathname: "/(tabs)/home" as any,
       params: { search: searchVal }
     });
   };
@@ -148,7 +148,7 @@ export default function TabLayout() {
   const handleSearchChange = (text: string) => {
     setSearchVal(text);
     router.push({
-      pathname: "/(tabs)/dashboard",
+      pathname: "/(tabs)/home" as any,
       params: { search: text }
     });
   };
@@ -244,13 +244,13 @@ export default function TabLayout() {
                       onPress={() => {
                         // Toggle search filter in dashboard
                         router.push({
-                          pathname: "/(tabs)/dashboard",
+                          pathname: "/(tabs)/home" as any,
                           params: { filter: 'true' }
                         });
                       }}
                       className="p-1 active:scale-95"
                     >
-                      <Scan color="#76777D" size={18} />
+                      <SlidersHorizontal color="#76777D" size={18} />
                     </TouchableOpacity>
                   </View>
 
@@ -295,7 +295,7 @@ export default function TabLayout() {
               headerShown: false,
             }}
           >
-            <Tabs.Screen name="dashboard" />
+            <Tabs.Screen name="home" />
             <Tabs.Screen name="tracker" options={{ href: null }} />
             <Tabs.Screen name="chat" />
             <Tabs.Screen name="profile" />

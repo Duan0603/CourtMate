@@ -121,9 +121,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('[AuthContext] Attempting to logout...');
       await AsyncStorage.removeItem('courtmate_jwt_token');
       await AsyncStorage.removeItem('courtmate_mock_user');
+      // Clear remembered email so login form starts fresh
+      await AsyncStorage.removeItem('courtmate_remember_email');
+      await AsyncStorage.removeItem('courtmate_remember_me');
       setToken(null);
       setUser(null);
-      console.log('[AuthContext] Logout successful. Tokens removed and state reset.');
+      console.log('[AuthContext] Logout successful. Tokens and remembered data removed.');
     } catch (e) {
       console.error('[AuthContext] Error during logout:', e);
       throw e;

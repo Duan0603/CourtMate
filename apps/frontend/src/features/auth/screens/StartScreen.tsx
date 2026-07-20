@@ -535,22 +535,7 @@ export const StartScreen: React.FC<{ onStart: () => void }> = ({ onStart }) => {
           position="relative"
           style={Platform.OS === 'web' && !isDesktop ? ({ scrollSnapAlign: 'center', scrollSnapStop: 'always', minHeight: '100dvh', boxSizing: 'border-box', overflow: 'hidden' } as any) : undefined}
         >
-          {/* Decorative tennis racket: top-left watermark (mobile only) */}
-          {!isDesktop && <View
-            ref={decorRef1}
-            pointerEvents="none"
-            style={{
-              position: 'absolute',
-              top: 10,
-              left: 10,
-              zIndex: 0,
-              opacity: 0,
-              transform: [{ rotate: '-15deg' }, { scale: 0.5 }],
-              transformOrigin: 'top left',
-            } as any}
-          >
-            <TennisRacket />
-          </View>}
+
 
           {/* Text content: above the watermark */}
           <YStack
@@ -598,22 +583,7 @@ export const StartScreen: React.FC<{ onStart: () => void }> = ({ onStart }) => {
           position="relative"
           style={Platform.OS === 'web' && !isDesktop ? ({ scrollSnapAlign: 'center', scrollSnapStop: 'always', minHeight: '100dvh', boxSizing: 'border-box', overflow: 'hidden' } as any) : undefined}
         >
-          {/* Decorative badminton racket: top-left watermark (mobile only) */}
-          {!isDesktop && <View
-            ref={decorRef2}
-            pointerEvents="none"
-            style={{
-              position: 'absolute',
-              top: 10,
-              left: 10,
-              zIndex: 0,
-              opacity: 0,
-              transform: [{ rotate: '-15deg' }, { scale: 0.5 }],
-              transformOrigin: 'top left',
-            } as any}
-          >
-            <BadmintonRacket />
-          </View>}
+
 
           {/* Text content: above the watermark */}
           <YStack
@@ -661,22 +631,7 @@ export const StartScreen: React.FC<{ onStart: () => void }> = ({ onStart }) => {
           position="relative"
           style={Platform.OS === 'web' && !isDesktop ? ({ scrollSnapAlign: 'center', scrollSnapStop: 'always', minHeight: '100dvh', boxSizing: 'border-box', overflow: 'hidden' } as any) : undefined}
         >
-          {/* Decorative ping pong paddle: top-left watermark (mobile only) */}
-          {!isDesktop && <View
-            ref={decorRef3}
-            pointerEvents="none"
-            style={{
-              position: 'absolute',
-              top: 10,
-              left: 10,
-              zIndex: 0,
-              opacity: 0,
-              transform: [{ rotate: '-15deg' }, { scale: 0.5 }],
-              transformOrigin: 'top left',
-            } as any}
-          >
-            <PingPongPaddle />
-          </View>}
+
 
           {/* Text content: above the watermark */}
           <YStack

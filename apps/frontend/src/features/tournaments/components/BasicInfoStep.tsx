@@ -10,7 +10,7 @@ interface BasicInfoStepProps {
 }
 
 export const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ data, updateData, onNext }) => {
-  const isFormValid = data.title && data.description && data.sport && data.location && data.city && data.time;
+  const isFormValid = data.title && data.description && data.sport && data.location && data.city && data.time && data.registrationFee;
 
   return (
     <YStack gap="$4" flex={1}>
@@ -79,6 +79,27 @@ export const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ data, updateData, 
           placeholder="Tên sân, địa chỉ cụ thể" 
         />
       </YStack>
+
+      <XStack gap="$3">
+        <YStack flex={1}>
+          <Label>Lệ phí tổng (VNĐ) *</Label>
+          <Input 
+            value={data.registrationFee || ''} 
+            onChangeText={(text: string) => updateData({ registrationFee: text })} 
+            placeholder="Ví dụ: 200000" 
+            keyboardType="numeric"
+          />
+        </YStack>
+        <YStack flex={1}>
+          <Label>Giới hạn suất đăng ký</Label>
+          <Input 
+            value={data.slotsLimit || ''} 
+            onChangeText={(text: string) => updateData({ slotsLimit: text })} 
+            placeholder="Ví dụ: 32" 
+            keyboardType="numeric"
+          />
+        </YStack>
+      </XStack>
 
       <Button mt="$4" theme="active" disabled={!isFormValid} onPress={onNext}>
         Tiếp tục

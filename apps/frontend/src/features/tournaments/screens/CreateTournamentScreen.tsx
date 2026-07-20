@@ -16,6 +16,8 @@ export const CreateTournamentScreen = () => {
     time: '',
     location: '',
     city: '',
+    registrationFee: '',
+    slotsLimit: '',
     categories: [],
     rulesText: '',
     rulesFile: null,
