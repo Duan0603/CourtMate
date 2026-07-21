@@ -4,6 +4,7 @@ import {
   Alert,
   Image,
   Linking,
+  Modal,
   Platform,
   ScrollView,
   Share as NativeShare,
@@ -28,9 +29,9 @@ import {
 } from 'lucide-react-native';
 import { Tournament, TournamentStatus } from '@courtmate/shared';
 import { tournamentsApi } from '../../src/features/tournaments/services/tournaments.api';
-// Removed mock imports
 import { useRegistrations } from '../../src/features/registrations/hooks/useRegistrations';
 import { useLogin } from '../../src/features/auth/hooks/useLogin';
+import { ScheduleCalendar } from '../../src/features/registrations/components/ScheduleCalendar';
 
 const COLORS = {
   navy: '#00102F',
@@ -70,6 +71,7 @@ export default function TournamentDetailRoute() {
   const { registrations, fetchRegistrations } = useRegistrations();
   const { user } = useLogin();
   const actualPlayerId = user?.id || (user as any)?._id;
+  const [showSchedule, setShowSchedule] = useState(false);
 
   const loadTournament = async () => {
     if (!id) return;
@@ -129,7 +131,7 @@ export default function TournamentDetailRoute() {
       return;
     }
     if (isRegistered) {
-      router.push('/tracker');
+      setShowSchedule(true);
       return;
     }
     router.push(`/register/${id}`);
@@ -280,6 +282,26 @@ export default function TournamentDetailRoute() {
             <DetailRow label="Lệ phí" value={formatFee(minFee)} last />
           </View>
 
+          {/* ─── Match Schedule (only for registered users) ─── */}
+          {isRegistered && tournament && (
+            <>
+              <Text style={styles.sectionTitle}>📅 Lịch thi đấu</Text>
+              <View style={{ borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: COLORS.border, backgroundColor: COLORS.white, marginBottom: 16 }}>
+                <ScheduleCalendar
+                  registrations={registrations}
+                  apiTournaments={[{
+                    ...tournament,
+                    id: tournament.id || (tournament as any)._id,
+                    matchDates: (tournament as any).matchDates || [
+                      tournament.startDate,
+                      ...(tournament.endDate ? [tournament.endDate] : []),
+                    ].filter(Boolean),
+                  }]}
+                />
+              </View>
+            </>
+          )}
+
           <Text style={styles.sectionTitle}>Địa điểm</Text>
           <TouchableOpacity style={styles.locationCard} onPress={openMap} activeOpacity={0.8}>
             <View style={styles.mapIcon}><MapPin color={COLORS.white} size={24} /></View>
@@ -291,6 +313,38 @@ export default function TournamentDetailRoute() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* ─── Schedule full-screen modal ─── */}
+      <Modal visible={showSchedule} animationType="slide" onRequestClose={() => setShowSchedule(false)}>
+        <View style={{ flex: 1, backgroundColor: COLORS.canvas }}>
+          <View style={[styles.header, { paddingTop: insets.top, height: insets.top + 60 }]}>
+            <TouchableOpacity style={styles.iconButton} onPress={() => setShowSchedule(false)}>
+              <ChevronLeft color={COLORS.white} size={26} />
+            </TouchableOpacity>
+            <View style={styles.headerBrand}>
+              <View style={styles.brandDot} />
+              <Text style={styles.headerTitle}>Lịch thi đấu</Text>
+            </View>
+            <View style={styles.iconButton} />
+          </View>
+          <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
+            <Text style={[styles.sectionTitle, { marginHorizontal: 16, marginTop: 16 }]}>{tournament?.title}</Text>
+            {tournament && (
+              <ScheduleCalendar
+                registrations={registrations}
+                apiTournaments={[{
+                  ...tournament,
+                  id: tournament.id || (tournament as any)._id,
+                  matchDates: (tournament as any).matchDates || [
+                    tournament.startDate,
+                    ...(tournament.endDate ? [tournament.endDate] : []),
+                  ].filter(Boolean),
+                }]}
+              />
+            )}
+          </ScrollView>
+        </View>
+      </Modal>
 
       <View style={[styles.actionBar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
         <View style={styles.feeBlock}>
