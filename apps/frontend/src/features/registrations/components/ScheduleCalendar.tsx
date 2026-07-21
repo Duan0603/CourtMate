@@ -1,9 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { ChevronLeft, ChevronRight, MapPin } from 'lucide-react-native';
 
 const NAVY = '#00102F';
-const BLUE = '#0077FF';
 const YELLOW = '#FFC400';
 const MUTED = '#52627A';
 const BORDER = 'rgba(0,16,47,0.12)';
@@ -14,34 +13,67 @@ const TABS = ['TẤT CẢ', 'SẮP TỚI', 'ĐÃ QUA'];
 interface ScheduleCalendarProps {
   registrations: any[];
   apiTournaments: any[];
+  initialDate?: string | Date;
 }
 
-export function ScheduleCalendar({ registrations, apiTournaments }: ScheduleCalendarProps) {
+export function ScheduleCalendar({ registrations, apiTournaments, initialDate }: ScheduleCalendarProps) {
   const [activeTab, setActiveTab] = useState('TẤT CẢ');
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(() => {
+    const requestedDate = initialDate ? new Date(initialDate) : new Date(Date.now());
+    return isNaN(requestedDate.getTime()) ? new Date(Date.now()) : requestedDate;
+  });
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const paidRegistrationCount = registrations.filter(registration => registration.status === 'PAID').length;
+
+  useEffect(() => {
+    const requestedDate = initialDate ? new Date(initialDate) : new Date(Date.now());
+    if (isNaN(requestedDate.getTime())) return;
+    setCurrentDate(new Date(requestedDate.getFullYear(), requestedDate.getMonth(), 1));
+    setSelectedDate(null);
+  }, [initialDate ? new Date(initialDate).getTime() : undefined]);
 
   // Collect all match dates from registered tournaments
   const matchEvents = useMemo(() => {
     const events: Record<string, any[]> = {};
     
     registrations.forEach(reg => {
-      const t = apiTournaments.find(item => item.id === reg.tournamentId || item._id === reg.tournamentId);
-      if (!t || !t.matchDates) return;
+      // A tournament only becomes part of the player's schedule after the
+      // payment callback has confirmed the registration as paid.
+      if (reg.status !== 'PAID') return;
+
+      // Robust string comparison for IDs (converting both to string)
+      const t = apiTournaments.find(item => 
+        String(item.id || item._id) === String(reg.tournamentId)
+      );
+      if (!t) return;
+
+      const dates = t.matchDates?.length
+        ? t.matchDates
+        : [t.startDate].filter(Boolean);
+      if (!dates || dates.length === 0) return;
       
-      t.matchDates.forEach((dateString: string) => {
+      dates.forEach((dateString: any) => {
+        if (!dateString) return;
         const dateObj = new Date(dateString);
+        if (isNaN(dateObj.getTime())) return;
+        
+        // Use local date part to format dateKey to avoid timezone shift
         const dateKey = `${dateObj.getFullYear()}-${dateObj.getMonth()}-${dateObj.getDate()}`;
         
         if (!events[dateKey]) events[dateKey] = [];
-        events[dateKey].push({
-          id: reg.id || reg._id,
-          title: t.title,
-          sport: t.sport,
-          location: t.location || t.info,
-          status: reg.status,
-          time: t.time || '08:00', // Mock time if not available
-        });
+        
+        // Avoid duplicate events on same date for the same registration
+        const isDuplicate = events[dateKey].some(e => e.id === (reg.id || reg._id));
+        if (!isDuplicate) {
+          events[dateKey].push({
+            id: reg.id || reg._id,
+            title: t.title,
+            sport: t.sport,
+            location: t.location || t.info || 'Đang cập nhật địa điểm',
+            status: reg.status,
+            time: t.time || '08:00',
+          });
+        }
       });
     });
     
@@ -154,9 +186,7 @@ export function ScheduleCalendar({ registrations, apiTournaments }: ScheduleCale
             const dateKey = `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}`;
             const eventsOnDay = matchEvents[dateKey] || [];
             const hasEvent = eventsOnDay.length > 0;
-            const isSelected = selectedDate?.getDate() === day.getDate();
-            const isToday = new Date().toDateString() === day.toDateString();
-
+            const isSelected = selectedDate?.getDate() === day.getDate() && selectedDate?.getMonth() === day.getMonth() && selectedDate?.getFullYear() === day.getFullYear();
             return (
               <TouchableOpacity 
                 key={dateKey}
@@ -177,9 +207,9 @@ export function ScheduleCalendar({ registrations, apiTournaments }: ScheduleCale
                   backgroundColor: isSelected ? NAVY : 'transparent',
                 }}>
                   <Text style={{ 
-                    color: isSelected ? '#FFFFFF' : (isToday ? BLUE : NAVY), 
+                    color: isSelected ? '#FFFFFF' : NAVY,
                     fontSize: 14, 
-                    fontWeight: isSelected || isToday ? '600' : '400' 
+                    fontWeight: isSelected ? '600' : '400'
                   }}>
                     {day.getDate()}
                   </Text>
@@ -213,7 +243,11 @@ export function ScheduleCalendar({ registrations, apiTournaments }: ScheduleCale
 
         {displayEvents.length === 0 ? (
           <View style={{ alignItems: 'center', paddingVertical: 32 }}>
-            <Text style={{ color: MUTED, fontSize: 14 }}>Không có trận đấu nào được lên lịch.</Text>
+            <Text style={{ color: MUTED, fontSize: 14, textAlign: 'center', paddingHorizontal: 16 }}>
+              {registrations.length > 0 && paidRegistrationCount === 0
+                ? `Bạn có ${registrations.length} hồ sơ đăng ký nhưng chưa có khoản thanh toán thành công.`
+                : 'Không có trận đấu nào được lên lịch trong tháng này.'}
+            </Text>
           </View>
         ) : (
           displayEvents.map((event, index) => (

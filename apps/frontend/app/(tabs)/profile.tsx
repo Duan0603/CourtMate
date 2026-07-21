@@ -72,6 +72,15 @@ export default function ProfileTab() {
     }
   }, [playerId, fetchRegistrations]);
 
+  // Payment is completed outside this screen. Refresh when the schedule is
+  // opened so registrations updated to PAID by the gateway callback appear
+  // immediately instead of using the stale pre-payment state.
+  useEffect(() => {
+    if (view === 'schedule' && playerId) {
+      fetchRegistrations(playerId);
+    }
+  }, [view, playerId, fetchRegistrations]);
+
   const closeSubview = () => router.setParams({ view: undefined as any });
   const pickAvatar = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
