@@ -289,13 +289,13 @@ export default function TournamentDetailRoute() {
               <View style={{ borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: COLORS.border, backgroundColor: COLORS.white, marginBottom: 16 }}>
                 <ScheduleCalendar
                   registrations={registrations}
+                  initialDate={tournament.startDate}
                   apiTournaments={[{
                     ...tournament,
                     id: tournament.id || (tournament as any)._id,
-                    matchDates: (tournament as any).matchDates || [
-                      tournament.startDate,
-                      ...(tournament.endDate ? [tournament.endDate] : []),
-                    ].filter(Boolean),
+                    matchDates: (tournament as any).matchDates?.length
+                      ? (tournament as any).matchDates
+                      : [tournament.startDate].filter(Boolean),
                   }]}
                 />
               </View>
@@ -332,13 +332,13 @@ export default function TournamentDetailRoute() {
             {tournament && (
               <ScheduleCalendar
                 registrations={registrations}
+                initialDate={tournament.startDate}
                 apiTournaments={[{
                   ...tournament,
                   id: tournament.id || (tournament as any)._id,
-                  matchDates: (tournament as any).matchDates || [
-                    tournament.startDate,
-                    ...(tournament.endDate ? [tournament.endDate] : []),
-                  ].filter(Boolean),
+                  matchDates: (tournament as any).matchDates?.length
+                    ? (tournament as any).matchDates
+                    : [tournament.startDate].filter(Boolean),
                 }]}
               />
             )}
