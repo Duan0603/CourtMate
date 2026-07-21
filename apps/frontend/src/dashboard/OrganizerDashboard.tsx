@@ -2,11 +2,11 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   View, Text, TouchableOpacity, ScrollView, Image,
   StyleSheet, TextInput, Alert, ActivityIndicator,
-  KeyboardAvoidingView, Platform, RefreshControl,
+  KeyboardAvoidingView, Platform, RefreshControl, Animated,
 } from 'react-native';
 import {
   Trophy, ClipboardList, Users, Building2, MessageCircle,
-  Plus, LogOut, Check, X, ChevronRight, Send, Search,
+  Plus, LogOut, Check, X, ChevronRight, Send, Search, CheckCheck,
   DollarSign, TrendingUp, BarChart2, ArrowLeft, UserRound, Award,
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -280,24 +280,58 @@ function ProfileTab({ data }: { data: OrganizerDashboardData }) {
 }
 
 // ────────────── Chat Tab ──────────────
+function UnreadBadge({ count }: { count: number }) {
+  const scale = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    if (count === 0) return;
+    Animated.sequence([
+      Animated.spring(scale, { toValue: 1.35, useNativeDriver: true, speed: 20, bounciness: 12 }),
+      Animated.spring(scale, { toValue: 1,    useNativeDriver: true, speed: 20, bounciness: 8  }),
+    ]).start();
+  }, [count]);
+  if (count === 0) return null;
+  return (
+    <Animated.View style={{ transform: [{ scale }], minWidth: 22, height: 22, borderRadius: 11, paddingHorizontal: 6, backgroundColor: YELLOW, alignItems: 'center', justifyContent: 'center' }}>
+      <Text style={{ color: NAVY, fontSize: 13, fontWeight: '700', lineHeight: 16 }}>{count > 99 ? '99+' : count}</Text>
+    </Animated.View>
+  );
+}
+
+function SeenReceipt({ visible }: { visible: boolean }) {
+  if (!visible) return null;
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-end', marginTop: 2, marginBottom: 4, marginRight: 2 }}>
+      <CheckCheck color={BLUE} size={13} />
+      <Text style={{ color: BLUE, fontSize: 11, fontWeight: '600', marginLeft: 3 }}>Đã xem</Text>
+    </View>
+  );
+}
+
 function ChatTab({ user, token, isAuthenticated }: {
   user: any; token: string | null; isAuthenticated: boolean;
 }) {
-  const [friends, setFriends] = useState<User[]>([]);
+  const [friends, setFriends]           = useState<User[]>([]);
   const [activeFriend, setActiveFriend] = useState<User | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [message, setMessage] = useState('');
-  const [query, setQuery] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [connected, setConnected] = useState(false);
-  const socketRef = useRef<Socket | null>(null);
-  const messagesRef = useRef<ScrollView>(null);
+  const [messages, setMessages]         = useState<ChatMessage[]>([]);
+  const [message, setMessage]           = useState('');
+  const [query, setQuery]               = useState('');
+  const [loading, setLoading]           = useState(true);
+  const [refreshing, setRefreshing]     = useState(false);
+  const [connected, setConnected]       = useState(false);
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+  const [lastSeenByFriend, setLastSeenByFriend] = useState<string | null>(null);
+
+  const socketRef       = useRef<Socket | null>(null);
+  const messagesRef     = useRef<ScrollView>(null);
+  const activeFriendRef = useRef<User | null>(null);
+
+  useEffect(() => { activeFriendRef.current = activeFriend; }, [activeFriend]);
 
   const loadFriends = useCallback(async (refresh = false) => {
     if (!token) return;
     refresh ? setRefreshing(true) : setLoading(true);
-    try { setFriends(await authApi.getFriends(token)); } catch { setFriends([]); }
+    try { setFriends(await authApi.getFriends(token)); }
+    catch { setFriends([]); }
     finally { setLoading(false); setRefreshing(false); }
   }, [token]);
 
@@ -308,30 +342,56 @@ function ChatTab({ user, token, isAuthenticated }: {
     const myId = user.id || user._id;
     const socket = io(API_URL, { transports: ['websocket'], forceNew: true });
     socketRef.current = socket;
+
     socket.on('connect', () => { setConnected(true); socket.emit('register_user', { userId: myId }); });
-    socket.on('disconnect', () => setConnected(false));
+    socket.on('disconnect',    () => setConnected(false));
     socket.on('connect_error', () => setConnected(false));
+
     socket.on('chat_history', (history: ChatMessage[]) => {
       setMessages(history);
       setTimeout(() => messagesRef.current?.scrollToEnd({ animated: false }), 80);
     });
+
     socket.on('receive_message', (incoming: ChatMessage) => {
       setMessages(prev => [...prev, incoming]);
       setTimeout(() => messagesRef.current?.scrollToEnd({ animated: true }), 80);
+      const curFriend   = activeFriendRef.current;
+      const curFriendId = curFriend ? ((curFriend as any).id || (curFriend as any)._id) : null;
+      if (incoming.senderId !== myId && incoming.senderId === curFriendId && socketRef.current) {
+        socketRef.current.emit('mark_seen', { roomId: [myId, curFriendId].sort().join('_'), userId: myId, lastMessageId: incoming._id });
+      } else if (incoming.senderId !== myId) {
+        setUnreadCounts(prev => ({ ...prev, [incoming.senderId]: (prev[incoming.senderId] || 0) + 1 }));
+      }
     });
+
+    socket.on('message_seen', ({ userId, lastMessageId }: { userId: string; lastMessageId: string }) => {
+      const curFriend   = activeFriendRef.current;
+      const curFriendId = curFriend ? ((curFriend as any).id || (curFriend as any)._id) : null;
+      if (userId === curFriendId) setLastSeenByFriend(lastMessageId);
+    });
+
     return () => { socket.disconnect(); };
   }, [isAuthenticated, user]);
 
+  const openChat = (friend: User) => {
+    const friendId = (friend as any).id || (friend as any)._id;
+    setUnreadCounts(prev => ({ ...prev, [friendId]: 0 }));
+    setLastSeenByFriend(null);
+    setActiveFriend(friend);
+  };
+
   useEffect(() => {
     if (!activeFriend || !connected || !user || !socketRef.current) return;
-    const myId = user.id || user._id;
+    const myId     = user.id || user._id;
     const friendId = (activeFriend as any).id || (activeFriend as any)._id;
-    socketRef.current.emit('join_room', { roomId: [myId, friendId].sort().join('_') });
+    const roomId   = [myId, friendId].sort().join('_');
+    socketRef.current.emit('join_room', { roomId });
+    socketRef.current.emit('mark_seen', { roomId, userId: myId, lastMessageId: 'all' });
   }, [activeFriend, connected, user]);
 
   const sendMessage = () => {
     if (!message.trim() || !connected || !activeFriend || !user || !socketRef.current) return;
-    const myId = user.id || user._id;
+    const myId     = user.id || user._id;
     const friendId = (activeFriend as any).id || (activeFriend as any)._id;
     socketRef.current.emit('send_message', {
       roomId: [myId, friendId].sort().join('_'), senderId: myId,
@@ -346,9 +406,17 @@ function ChatTab({ user, token, isAuthenticated }: {
 
   if (activeFriend) {
     const myId = user?.id || user?._id;
+    const lastSeenIndex = (() => {
+      if (!lastSeenByFriend) return -1;
+      if (lastSeenByFriend === 'all') {
+        for (let i = messages.length - 1; i >= 0; i--) { if (messages[i].senderId === myId) return i; }
+        return -1;
+      }
+      return messages.findIndex(m => m._id === lastSeenByFriend);
+    })();
+
     return (
       <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F7FAFF' }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        {/* Chat header */}
         <View style={{ backgroundColor: NAVY, flexDirection: 'row', alignItems: 'center', height: 60, paddingHorizontal: 8 }}>
           <TouchableOpacity onPress={() => setActiveFriend(null)} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}>
             <ArrowLeft color="#FFFFFF" size={24} />
@@ -357,15 +425,8 @@ function ChatTab({ user, token, isAuthenticated }: {
             <UserRound color="#FFFFFF" size={20} />
           </View>
           <View style={{ flex: 1, marginLeft: 10 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '700' }}>
-                {(activeFriend as any).name || (activeFriend as any).email?.split('@')[0]}
-              </Text>
-              {(activeFriend as any).role === 'ORGANIZER' && <Award color={YELLOW} size={16} style={{ marginLeft: 6 }} />}
-            </View>
-            <Text style={{ color: connected ? '#B8C7E0' : '#FFC4C0', fontSize: 13 }}>
-              {connected ? '● Đã kết nối' : '● Mất kết nối'}
-            </Text>
+            <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '700' }}>{(activeFriend as any).name || (activeFriend as any).email?.split('@')[0]}</Text>
+            <Text style={{ color: connected ? '#B8C7E0' : '#FFC4C0', fontSize: 13 }}>{connected ? '● Đã kết nối' : '● Mất kết nối'}</Text>
           </View>
         </View>
 
@@ -378,18 +439,22 @@ function ChatTab({ user, token, isAuthenticated }: {
         <ScrollView ref={messagesRef} style={{ flex: 1 }} contentContainerStyle={{ padding: 16, flexGrow: 1, justifyContent: messages.length ? 'flex-start' : 'center' }}>
           {!messages.length
             ? <Text style={{ color: MUTED, textAlign: 'center', fontSize: 15 }}>Bắt đầu cuộc trò chuyện.</Text>
-            : messages.map(item => {
+            : messages.map((item, index) => {
                 const mine = item.senderId === myId;
+                const showSeen = mine && index === lastSeenIndex;
                 return (
-                  <View key={item._id} style={{
-                    alignSelf: mine ? 'flex-end' : 'flex-start', maxWidth: '78%',
-                    backgroundColor: mine ? BLUE : '#FFFFFF',
-                    borderWidth: mine ? 0 : 1, borderColor: BORDER,
-                    borderRadius: 16, borderBottomRightRadius: mine ? 4 : 16,
-                    borderBottomLeftRadius: mine ? 16 : 4,
-                    paddingHorizontal: 14, paddingVertical: 10, marginBottom: 8,
-                  }}>
-                    <Text style={{ color: mine ? '#FFFFFF' : NAVY, fontSize: 15 }}>{item.content}</Text>
+                  <View key={item._id}>
+                    <View style={{
+                      alignSelf: mine ? 'flex-end' : 'flex-start', maxWidth: '78%',
+                      backgroundColor: mine ? BLUE : '#FFFFFF',
+                      borderWidth: mine ? 0 : 1, borderColor: BORDER,
+                      borderRadius: 16, borderBottomRightRadius: mine ? 4 : 16,
+                      borderBottomLeftRadius: mine ? 16 : 4,
+                      paddingHorizontal: 14, paddingVertical: 10, marginBottom: 2,
+                    }}>
+                      <Text style={{ color: mine ? '#FFFFFF' : NAVY, fontSize: 15 }}>{item.content}</Text>
+                    </View>
+                    <SeenReceipt visible={showSeen} />
                   </View>
                 );
               })
@@ -397,15 +462,8 @@ function ChatTab({ user, token, isAuthenticated }: {
         </ScrollView>
 
         <View style={{ paddingHorizontal: 12, paddingTop: 8, paddingBottom: 12, backgroundColor: '#FFFFFF', borderTopWidth: 1, borderTopColor: BORDER, flexDirection: 'row', alignItems: 'flex-end' }}>
-          <TextInput
-            value={message} onChangeText={setMessage}
-            placeholder="Nhập tin nhắn…" placeholderTextColor="#7B8AA3" multiline
-            style={{ flex: 1, minHeight: 48, maxHeight: 112, borderRadius: 16, backgroundColor: '#F1F6FD', color: NAVY, fontSize: 15, paddingHorizontal: 16, paddingVertical: 12 }}
-          />
-          <TouchableOpacity
-            disabled={!message.trim() || !connected} onPress={sendMessage}
-            style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: message.trim() && connected ? BLUE : '#B7C5D8', alignItems: 'center', justifyContent: 'center', marginLeft: 8 }}
-          >
+          <TextInput value={message} onChangeText={setMessage} placeholder="Nhập tin nhắn…" placeholderTextColor="#7B8AA3" multiline style={{ flex: 1, minHeight: 48, maxHeight: 112, borderRadius: 16, backgroundColor: '#F1F6FD', color: NAVY, fontSize: 15, paddingHorizontal: 16, paddingVertical: 12 }} />
+          <TouchableOpacity disabled={!message.trim() || !connected} onPress={sendMessage} style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: message.trim() && connected ? BLUE : '#B7C5D8', alignItems: 'center', justifyContent: 'center', marginLeft: 8 }}>
             <Send color="#FFFFFF" size={20} />
           </TouchableOpacity>
         </View>
@@ -419,53 +477,45 @@ function ChatTab({ user, token, isAuthenticated }: {
         <Text style={{ color: NAVY, fontSize: 22, fontWeight: '700', marginBottom: 12 }}>Tin nhắn</Text>
         <View style={{ height: 46, borderRadius: 12, borderWidth: 1, borderColor: BORDER, backgroundColor: '#FFFFFF', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12 }}>
           <Search color={MUTED} size={18} />
-          <TextInput
-            value={query} onChangeText={setQuery}
-            placeholder="Tìm người dùng..." placeholderTextColor={MUTED}
-            style={{ flex: 1, color: NAVY, fontSize: 15, marginLeft: 8 }}
-          />
+          <TextInput value={query} onChangeText={setQuery} placeholder="Tìm người dùng..." placeholderTextColor={MUTED} style={{ flex: 1, color: NAVY, fontSize: 15, marginLeft: 8 }} />
         </View>
       </View>
 
       {loading ? <ActivityIndicator size="large" color={BLUE} style={{ marginTop: 48 }} /> : (
-        <ScrollView
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadFriends(true)} tintColor={BLUE} />}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
-        >
+        <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadFriends(true)} tintColor={BLUE} />} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}>
           {!visibleFriends.length ? (
             <View style={{ marginTop: 60, alignItems: 'center', paddingHorizontal: 24 }}>
               <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: NAVY, alignItems: 'center', justifyContent: 'center' }}>
                 <MessageCircle color={YELLOW} size={30} />
               </View>
               <Text style={{ color: NAVY, fontSize: 18, fontWeight: '700', marginTop: 20, textAlign: 'center' }}>Chưa có cuộc trò chuyện</Text>
-              <Text style={{ color: MUTED, fontSize: 14, textAlign: 'center', marginTop: 8 }}>
-                Người chơi liên hệ với bạn sẽ xuất hiện ở đây.
-              </Text>
+              <Text style={{ color: MUTED, fontSize: 14, textAlign: 'center', marginTop: 8 }}>Người chơi liên hệ với bạn sẽ xuất hiện ở đây.</Text>
             </View>
           ) : (
             <View style={{ backgroundColor: '#FFFFFF', borderRadius: 16, borderWidth: 1, borderColor: BORDER, overflow: 'hidden' }}>
               {visibleFriends.map((friend, index) => {
-                const id = (friend as any).id || (friend as any)._id;
-                const isOrg = (friend as any).role === 'ORGANIZER';
+                const id        = (friend as any).id || (friend as any)._id;
+                const isOrg     = (friend as any).role === 'ORGANIZER';
+                const unread    = unreadCounts[id] || 0;
+                const hasUnread = unread > 0;
                 return (
-                  <TouchableOpacity
-                    key={id} activeOpacity={0.75} onPress={() => setActiveFriend(friend)}
-                    style={{ minHeight: 72, padding: 12, flexDirection: 'row', alignItems: 'center', borderTopWidth: index ? 1 : 0, borderTopColor: BORDER }}
-                  >
-                    <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: NAVY, alignItems: 'center', justifyContent: 'center' }}>
-                      <UserRound color="#FFFFFF" size={20} />
+                  <TouchableOpacity key={id} activeOpacity={0.75} onPress={() => openChat(friend)} style={{ minHeight: 72, padding: 12, flexDirection: 'row', alignItems: 'center', borderTopWidth: index ? 1 : 0, borderTopColor: BORDER, backgroundColor: hasUnread ? '#EEF5FF' : '#FFFFFF' }}>
+                    <View style={{ position: 'relative' }}>
+                      <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: NAVY, alignItems: 'center', justifyContent: 'center' }}>
+                        <UserRound color="#FFFFFF" size={20} />
+                      </View>
+                      {hasUnread && <View style={{ position: 'absolute', bottom: 0, right: 0, width: 14, height: 14, borderRadius: 7, backgroundColor: '#22C55E', borderWidth: 2, borderColor: '#FFFFFF' }} />}
                     </View>
                     <View style={{ flex: 1, marginLeft: 12 }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={{ color: NAVY, fontSize: 15, fontWeight: '600' }} numberOfLines={1}>
-                          {(friend as any).name || (friend as any).email?.split('@')[0]}
-                        </Text>
+                        <Text style={{ color: NAVY, fontSize: 15, fontWeight: hasUnread ? '700' : '600' }} numberOfLines={1}>{(friend as any).name || (friend as any).email?.split('@')[0]}</Text>
                         {isOrg && <Award color={YELLOW} size={15} style={{ marginLeft: 6 }} />}
                       </View>
-                      <Text style={{ color: MUTED, fontSize: 13 }} numberOfLines={1}>
-                        {isOrg ? 'Ban tổ chức · Nhấn để trò chuyện' : 'Người chơi · Nhấn để trò chuyện'}
+                      <Text style={{ color: hasUnread ? BLUE : MUTED, fontSize: 13, fontWeight: hasUnread ? '600' : '400' }} numberOfLines={1}>
+                        {hasUnread ? `${unread} tin nhắn mới` : isOrg ? 'Ban tổ chức · Nhấn để trò chuyện' : 'Người chơi · Nhấn để trò chuyện'}
                       </Text>
                     </View>
+                    <UnreadBadge count={unread} />
                   </TouchableOpacity>
                 );
               })}

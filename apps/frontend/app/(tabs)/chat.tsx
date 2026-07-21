@@ -3,7 +3,7 @@ import {
   ActivityIndicator, Animated, KeyboardAvoidingView, Platform,
   RefreshControl, ScrollView, Text, TextInput, TouchableOpacity, View,
 } from 'react-native';
-import { ArrowLeft, Award, MessageCircle, Search, Send, UserRound } from 'lucide-react-native';
+import { ArrowLeft, Award, CheckCheck, MessageCircle, Search, Send, UserRound } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { io, Socket } from 'socket.io-client';
@@ -22,10 +22,9 @@ interface ChatMessage {
   _id: string; senderId: string; senderName: string; content: string; createdAt: string;
 }
 
-// ── Animated unread badge ────────────────────────────────────────────────────
+// ── Animated unread badge ─────────────────────────────────────────────────────
 function UnreadBadge({ count }: { count: number }) {
   const scale = useRef(new Animated.Value(1)).current;
-
   useEffect(() => {
     if (count === 0) return;
     Animated.sequence([
@@ -35,7 +34,6 @@ function UnreadBadge({ count }: { count: number }) {
   }, [count]);
 
   if (count === 0) return null;
-
   return (
     <Animated.View style={{
       transform: [{ scale }],
@@ -49,10 +47,22 @@ function UnreadBadge({ count }: { count: number }) {
   );
 }
 
-// ── Main ChatTab ─────────────────────────────────────────────────────────────
+// ── Seen receipt indicator ────────────────────────────────────────────────────
+function SeenReceipt({ visible }: { visible: boolean }) {
+  if (!visible) return null;
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-end', marginTop: 2, marginBottom: 4, marginRight: 2 }}>
+      <CheckCheck color={BLUE} size={13} />
+      <Text style={{ color: BLUE, fontSize: 11, fontWeight: '600', marginLeft: 3 }}>Đã xem</Text>
+    </View>
+  );
+}
+
+// ── Main ChatTab ──────────────────────────────────────────────────────────────
 export default function ChatTab() {
   const { user, token, isAuthenticated } = useLogin();
   const insets = useSafeAreaInsets();
+
   const [friends, setFriends]           = useState<User[]>([]);
   const [activeFriend, setActiveFriend] = useState<User | null>(null);
   const [messages, setMessages]         = useState<ChatMessage[]>([]);
@@ -61,15 +71,14 @@ export default function ChatTab() {
   const [loading, setLoading]           = useState(true);
   const [refreshing, setRefreshing]     = useState(false);
   const [connected, setConnected]       = useState(false);
-
-  // unreadCounts: { [friendId]: number }
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+  // lastSeenMsgId: id of last message the FRIEND has read (shown on my sent msgs)
+  const [lastSeenByFriend, setLastSeenByFriend] = useState<string | null>(null);
 
-  const socketRef    = useRef<Socket | null>(null);
-  const messagesRef  = useRef<ScrollView>(null);
+  const socketRef       = useRef<Socket | null>(null);
+  const messagesRef     = useRef<ScrollView>(null);
   const activeFriendRef = useRef<User | null>(null);
 
-  // Keep ref in sync so socket handler can read latest activeFriend without stale closure
   useEffect(() => { activeFriendRef.current = activeFriend; }, [activeFriend]);
 
   const loadFriends = useCallback(async (refresh = false) => {
@@ -104,16 +113,27 @@ export default function ChatTab() {
       setMessages(prev => [...prev, incoming]);
       setTimeout(() => messagesRef.current?.scrollToEnd({ animated: true }), 80);
 
-      // Increment unread count only if we're NOT currently chatting with this sender
-      const curFriend = activeFriendRef.current;
-      const curFriendId = curFriend
-        ? ((curFriend as any).id || (curFriend as any)._id)
-        : null;
-      if (incoming.senderId !== myId && incoming.senderId !== curFriendId) {
+      // Auto-emit seen if this is from our active chat partner
+      const curFriend   = activeFriendRef.current;
+      const curFriendId = curFriend ? ((curFriend as any).id || (curFriend as any)._id) : null;
+      if (incoming.senderId !== myId && incoming.senderId === curFriendId && socketRef.current) {
+        const roomId = [myId, curFriendId].sort().join('_');
+        socketRef.current.emit('mark_seen', { roomId, userId: myId, lastMessageId: incoming._id });
+      } else if (incoming.senderId !== myId) {
+        // Not current chat — count as unread
         setUnreadCounts(prev => ({
           ...prev,
           [incoming.senderId]: (prev[incoming.senderId] || 0) + 1,
         }));
+      }
+    });
+
+    // Friend has seen my messages
+    socket.on('message_seen', ({ userId, lastMessageId }: { userId: string; lastMessageId: string }) => {
+      const curFriend   = activeFriendRef.current;
+      const curFriendId = curFriend ? ((curFriend as any).id || (curFriend as any)._id) : null;
+      if (userId === curFriendId) {
+        setLastSeenByFriend(lastMessageId);
       }
     });
 
@@ -122,8 +142,8 @@ export default function ChatTab() {
 
   const openChat = (friend: User) => {
     const friendId = (friend as any).id || (friend as any)._id;
-    // Clear unread for this friend
     setUnreadCounts(prev => ({ ...prev, [friendId]: 0 }));
+    setLastSeenByFriend(null);
     setActiveFriend(friend);
   };
 
@@ -132,7 +152,10 @@ export default function ChatTab() {
     if (!activeFriend || !connected || !user || !socketRef.current) return;
     const myId     = user.id || (user as any)._id;
     const friendId = (activeFriend as any).id || (activeFriend as any)._id;
-    socketRef.current.emit('join_room', { roomId: [myId, friendId].sort().join('_') });
+    const roomId   = [myId, friendId].sort().join('_');
+    socketRef.current.emit('join_room', { roomId });
+    // Notify friend that I've seen the latest messages
+    socketRef.current.emit('mark_seen', { roomId, userId: myId, lastMessageId: 'all' });
   }, [activeFriend, connected, user]);
 
   const sendMessage = () => {
@@ -141,35 +164,26 @@ export default function ChatTab() {
     const friendId = (activeFriend as any).id || (activeFriend as any)._id;
     socketRef.current.emit('send_message', {
       roomId: [myId, friendId].sort().join('_'),
-      senderId: myId,
-      senderName: user.name || user.email.split('@')[0],
-      receiverId: friendId,
-      content: message.trim(),
+      senderId: myId, senderName: user.name || user.email.split('@')[0],
+      receiverId: friendId, content: message.trim(),
     });
     setMessage('');
   };
 
-  const visibleFriends = friends.filter(friend =>
-    `${(friend as any).name} ${(friend as any).email}`.toLowerCase().includes(query.toLowerCase())
+  const visibleFriends = friends.filter(f =>
+    `${(f as any).name} ${(f as any).email}`.toLowerCase().includes(query.toLowerCase())
   );
 
-  // ── Friend list ────────────────────────────────────────────────────────────
+  // ── Friend list view ───────────────────────────────────────────────────────
   if (!activeFriend) {
     return (
       <View style={{ flex: 1, backgroundColor: '#F7FAFF' }}>
         <View style={{ padding: 16, paddingBottom: 8 }}>
-          <Text style={{ color: NAVY, fontSize: 28, lineHeight: 34, fontWeight: '600' }}>
-            Cuộc trò chuyện
-          </Text>
+          <Text style={{ color: NAVY, fontSize: 28, lineHeight: 34, fontWeight: '600' }}>Cuộc trò chuyện</Text>
           {!!friends.length && (
             <View style={{ height: 48, marginTop: 16, borderRadius: 12, borderWidth: 1, borderColor: BORDER, backgroundColor: '#FFFFFF', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14 }}>
               <Search color={MUTED} size={20} />
-              <TextInput
-                value={query} onChangeText={setQuery}
-                placeholder="Tìm người hoặc ban tổ chức"
-                placeholderTextColor="#7B8AA3"
-                style={{ flex: 1, color: NAVY, fontSize: 16, marginLeft: 10 }}
-              />
+              <TextInput value={query} onChangeText={setQuery} placeholder="Tìm người hoặc ban tổ chức" placeholderTextColor="#7B8AA3" style={{ flex: 1, color: NAVY, fontSize: 16, marginLeft: 10 }} />
             </View>
           )}
         </View>
@@ -184,16 +198,9 @@ export default function ChatTab() {
                 <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: NAVY, alignItems: 'center', justifyContent: 'center' }}>
                   <MessageCircle color={YELLOW} size={30} />
                 </View>
-                <Text style={{ color: NAVY, fontSize: 20, lineHeight: 24, fontWeight: '600', marginTop: 24 }}>
-                  Chưa có cuộc trò chuyện
-                </Text>
-                <Text style={{ color: MUTED, fontSize: 16, lineHeight: 24, textAlign: 'center', marginTop: 8 }}>
-                  Khi bạn liên hệ với ban tổ chức, cuộc trò chuyện sẽ xuất hiện ở đây.
-                </Text>
-                <TouchableOpacity
-                  onPress={() => router.replace('/(tabs)/home' as any)}
-                  style={{ height: 48, paddingHorizontal: 20, borderRadius: 12, backgroundColor: BLUE, alignItems: 'center', justifyContent: 'center', marginTop: 24 }}
-                >
+                <Text style={{ color: NAVY, fontSize: 20, lineHeight: 24, fontWeight: '600', marginTop: 24 }}>Chưa có cuộc trò chuyện</Text>
+                <Text style={{ color: MUTED, fontSize: 16, lineHeight: 24, textAlign: 'center', marginTop: 8 }}>Khi bạn liên hệ với ban tổ chức, cuộc trò chuyện sẽ xuất hiện ở đây.</Text>
+                <TouchableOpacity onPress={() => router.replace('/(tabs)/home' as any)} style={{ height: 48, paddingHorizontal: 20, borderRadius: 12, backgroundColor: BLUE, alignItems: 'center', justifyContent: 'center', marginTop: 24 }}>
                   <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '600' }}>Khám phá giải đấu</Text>
                 </TouchableOpacity>
               </View>
@@ -204,53 +211,30 @@ export default function ChatTab() {
                   const organizer = (friend as any).role === 'ORGANIZER';
                   const unread    = unreadCounts[id] || 0;
                   const hasUnread = unread > 0;
-
                   return (
                     <TouchableOpacity
-                      key={id}
-                      activeOpacity={0.75}
-                      onPress={() => openChat(friend)}
-                      style={{
-                        minHeight: 76, padding: 12,
-                        flexDirection: 'row', alignItems: 'center',
-                        borderTopWidth: index ? 1 : 0, borderTopColor: BORDER,
-                        backgroundColor: hasUnread ? '#EEF5FF' : '#FFFFFF',
-                      }}
+                      key={id} activeOpacity={0.75} onPress={() => openChat(friend)}
+                      style={{ minHeight: 76, padding: 12, flexDirection: 'row', alignItems: 'center', borderTopWidth: index ? 1 : 0, borderTopColor: BORDER, backgroundColor: hasUnread ? '#EEF5FF' : '#FFFFFF' }}
                     >
-                      {/* Avatar with online dot if has unread */}
                       <View style={{ position: 'relative' }}>
                         <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: NAVY, alignItems: 'center', justifyContent: 'center' }}>
                           <UserRound color="#FFFFFF" size={22} />
                         </View>
                         {hasUnread && (
-                          <View style={{
-                            position: 'absolute', bottom: 0, right: 0,
-                            width: 14, height: 14, borderRadius: 7,
-                            backgroundColor: '#22C55E',
-                            borderWidth: 2, borderColor: '#FFFFFF',
-                          }} />
+                          <View style={{ position: 'absolute', bottom: 0, right: 0, width: 14, height: 14, borderRadius: 7, backgroundColor: '#22C55E', borderWidth: 2, borderColor: '#FFFFFF' }} />
                         )}
                       </View>
-
                       <View style={{ flex: 1, marginLeft: 12 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                          <Text style={{
-                            color: NAVY, fontSize: 16, lineHeight: 24,
-                            fontWeight: hasUnread ? '700' : '600',
-                          }} numberOfLines={1}>
+                          <Text style={{ color: NAVY, fontSize: 16, lineHeight: 24, fontWeight: hasUnread ? '700' : '600' }} numberOfLines={1}>
                             {(friend as any).name || (friend as any).email?.split('@')[0]}
                           </Text>
                           {organizer && <Award color={YELLOW} size={17} style={{ marginLeft: 6 }} />}
                         </View>
                         <Text style={{ color: hasUnread ? BLUE : MUTED, fontSize: 14, lineHeight: 20, fontWeight: hasUnread ? '600' : '400' }} numberOfLines={1}>
-                          {hasUnread
-                            ? `${unread} tin nhắn mới`
-                            : organizer ? 'Ban tổ chức · Nhấn để trò chuyện' : 'Vận động viên · Nhấn để trò chuyện'
-                          }
+                          {hasUnread ? `${unread} tin nhắn mới` : organizer ? 'Ban tổ chức · Nhấn để trò chuyện' : 'Vận động viên · Nhấn để trò chuyện'}
                         </Text>
                       </View>
-
-                      {/* Real unread badge with bounce animation */}
                       <UnreadBadge count={unread} />
                     </TouchableOpacity>
                   );
@@ -264,18 +248,26 @@ export default function ChatTab() {
   }
 
   // ── Chat window ────────────────────────────────────────────────────────────
-  const friendId = (activeFriend as any).id || (activeFriend as any)._id;
-  const myId     = user?.id || (user as any)?._id;
+  const myId = user?.id || (user as any)?._id;
+
+  // Find index of last message sent by ME that friend has seen
+  const lastSeenIndex = (() => {
+    if (!lastSeenByFriend) return -1;
+    if (lastSeenByFriend === 'all') {
+      // Find the last message sent by me
+      for (let i = messages.length - 1; i >= 0; i--) {
+        if (messages[i].senderId === myId) return i;
+      }
+      return -1;
+    }
+    return messages.findIndex(m => m._id === lastSeenByFriend);
+  })();
 
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#F7FAFF' }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={{ paddingTop: insets.top, backgroundColor: NAVY }}>
         <View style={{ height: 60, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8 }}>
-          <TouchableOpacity
-            accessibilityLabel="Quay lại danh sách trò chuyện"
-            onPress={() => setActiveFriend(null)}
-            style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
-          >
+          <TouchableOpacity accessibilityLabel="Quay lại" onPress={() => setActiveFriend(null)} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}>
             <ArrowLeft color="#FFFFFF" size={24} />
           </TouchableOpacity>
           <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: BLUE, alignItems: 'center', justifyContent: 'center' }}>
@@ -297,35 +289,32 @@ export default function ChatTab() {
 
       {!connected && (
         <View style={{ backgroundColor: '#FFF2F1', paddingHorizontal: 16, paddingVertical: 8 }}>
-          <Text style={{ color: '#A62F27', fontSize: 14, lineHeight: 20 }}>
-            Đang mất kết nối. Tin nhắn chưa thể gửi.
-          </Text>
+          <Text style={{ color: '#A62F27', fontSize: 14 }}>Đang mất kết nối. Tin nhắn chưa thể gửi.</Text>
         </View>
       )}
 
-      <ScrollView
-        ref={messagesRef}
-        style={{ flex: 1 }}
-        contentContainerStyle={{ padding: 16, flexGrow: 1, justifyContent: messages.length ? 'flex-start' : 'center' }}
-      >
+      <ScrollView ref={messagesRef} style={{ flex: 1 }} contentContainerStyle={{ padding: 16, flexGrow: 1, justifyContent: messages.length ? 'flex-start' : 'center' }}>
         {!messages.length
           ? <Text style={{ color: MUTED, fontSize: 16, lineHeight: 24, textAlign: 'center' }}>
               Bắt đầu cuộc trò chuyện với {(activeFriend as any).name || 'người này'}.
             </Text>
-          : messages.map(item => {
+          : messages.map((item, index) => {
               const mine = item.senderId === myId;
+              // Show "Đã xem" only below the last message of mine that friend has seen
+              const showSeen = mine && index === lastSeenIndex;
               return (
-                <View key={item._id} style={{
-                  alignSelf: mine ? 'flex-end' : 'flex-start', maxWidth: '78%',
-                  backgroundColor: mine ? BLUE : '#FFFFFF',
-                  borderWidth: mine ? 0 : 1, borderColor: BORDER,
-                  borderRadius: 16, borderBottomRightRadius: mine ? 4 : 16,
-                  borderBottomLeftRadius: mine ? 16 : 4,
-                  paddingHorizontal: 14, paddingVertical: 10, marginBottom: 8,
-                }}>
-                  <Text style={{ color: mine ? '#FFFFFF' : NAVY, fontSize: 16, lineHeight: 24 }}>
-                    {item.content}
-                  </Text>
+                <View key={item._id}>
+                  <View style={{
+                    alignSelf: mine ? 'flex-end' : 'flex-start', maxWidth: '78%',
+                    backgroundColor: mine ? BLUE : '#FFFFFF',
+                    borderWidth: mine ? 0 : 1, borderColor: BORDER,
+                    borderRadius: 16, borderBottomRightRadius: mine ? 4 : 16,
+                    borderBottomLeftRadius: mine ? 16 : 4,
+                    paddingHorizontal: 14, paddingVertical: 10, marginBottom: 2,
+                  }}>
+                    <Text style={{ color: mine ? '#FFFFFF' : NAVY, fontSize: 16, lineHeight: 24 }}>{item.content}</Text>
+                  </View>
+                  <SeenReceipt visible={showSeen} />
                 </View>
               );
             })
@@ -333,17 +322,8 @@ export default function ChatTab() {
       </ScrollView>
 
       <View style={{ paddingHorizontal: 12, paddingTop: 8, paddingBottom: Math.max(insets.bottom, 8), backgroundColor: '#FFFFFF', borderTopWidth: 1, borderTopColor: BORDER, flexDirection: 'row', alignItems: 'flex-end' }}>
-        <TextInput
-          value={message} onChangeText={setMessage}
-          placeholder="Nhập tin nhắn…" placeholderTextColor="#7B8AA3" multiline
-          style={{ flex: 1, minHeight: 48, maxHeight: 112, borderRadius: 16, backgroundColor: '#F1F6FD', color: NAVY, fontSize: 16, paddingHorizontal: 16, paddingVertical: 12 }}
-        />
-        <TouchableOpacity
-          accessibilityLabel="Gửi tin nhắn"
-          disabled={!message.trim() || !connected}
-          onPress={sendMessage}
-          style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: message.trim() && connected ? BLUE : '#B7C5D8', alignItems: 'center', justifyContent: 'center', marginLeft: 8 }}
-        >
+        <TextInput value={message} onChangeText={setMessage} placeholder="Nhập tin nhắn…" placeholderTextColor="#7B8AA3" multiline style={{ flex: 1, minHeight: 48, maxHeight: 112, borderRadius: 16, backgroundColor: '#F1F6FD', color: NAVY, fontSize: 16, paddingHorizontal: 16, paddingVertical: 12 }} />
+        <TouchableOpacity accessibilityLabel="Gửi tin nhắn" disabled={!message.trim() || !connected} onPress={sendMessage} style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: message.trim() && connected ? BLUE : '#B7C5D8', alignItems: 'center', justifyContent: 'center', marginLeft: 8 }}>
           <Send color="#FFFFFF" size={21} />
         </TouchableOpacity>
       </View>
