@@ -26,22 +26,37 @@ export function ScheduleCalendar({ registrations, apiTournaments }: ScheduleCale
     const events: Record<string, any[]> = {};
     
     registrations.forEach(reg => {
-      const t = apiTournaments.find(item => item.id === reg.tournamentId || item._id === reg.tournamentId);
-      if (!t || !t.matchDates) return;
+      // Robust string comparison for IDs (converting both to string)
+      const t = apiTournaments.find(item => 
+        String(item.id || item._id) === String(reg.tournamentId)
+      );
+      if (!t) return;
+
+      const dates = t.matchDates || [t.startDate, t.endDate].filter(Boolean);
+      if (!dates || dates.length === 0) return;
       
-      t.matchDates.forEach((dateString: string) => {
+      dates.forEach((dateString: any) => {
+        if (!dateString) return;
         const dateObj = new Date(dateString);
+        if (isNaN(dateObj.getTime())) return;
+        
+        // Use local date part to format dateKey to avoid timezone shift
         const dateKey = `${dateObj.getFullYear()}-${dateObj.getMonth()}-${dateObj.getDate()}`;
         
         if (!events[dateKey]) events[dateKey] = [];
-        events[dateKey].push({
-          id: reg.id || reg._id,
-          title: t.title,
-          sport: t.sport,
-          location: t.location || t.info,
-          status: reg.status,
-          time: t.time || '08:00', // Mock time if not available
-        });
+        
+        // Avoid duplicate events on same date for the same registration
+        const isDuplicate = events[dateKey].some(e => e.id === (reg.id || reg._id));
+        if (!isDuplicate) {
+          events[dateKey].push({
+            id: reg.id || reg._id,
+            title: t.title,
+            sport: t.sport,
+            location: t.location || t.info || 'Đang cập nhật địa điểm',
+            status: reg.status,
+            time: t.time || '08:00',
+          });
+        }
       });
     });
     
@@ -154,7 +169,7 @@ export function ScheduleCalendar({ registrations, apiTournaments }: ScheduleCale
             const dateKey = `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}`;
             const eventsOnDay = matchEvents[dateKey] || [];
             const hasEvent = eventsOnDay.length > 0;
-            const isSelected = selectedDate?.getDate() === day.getDate();
+            const isSelected = selectedDate?.getDate() === day.getDate() && selectedDate?.getMonth() === day.getMonth() && selectedDate?.getFullYear() === day.getFullYear();
             const isToday = new Date().toDateString() === day.toDateString();
 
             return (
