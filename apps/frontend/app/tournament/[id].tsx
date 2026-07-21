@@ -97,7 +97,7 @@ export default function TournamentDetailRoute() {
     }
   }, [id, actualPlayerId]);
 
-  const isRegistered = registrations.some(reg => reg.tournamentId === id);
+  const isRegistered = registrations.some(reg => String(reg.tournamentId) === String(id));
 
   const minFee = useMemo(() => (tournament ? getMinFee(tournament) : 0), [tournament]);
   const imageUrl = (tournament as any)?.image as string | undefined;
