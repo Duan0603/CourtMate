@@ -13,8 +13,10 @@ import { ReportsModule } from './modules/reports/reports.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
+import { AppController } from './app.controller';
 
 @Module({
+  controllers: [AppController],
   imports: [
     // Load config globally
     ConfigModule.forRoot({
