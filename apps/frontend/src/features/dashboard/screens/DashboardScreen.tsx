@@ -18,11 +18,7 @@ export const FACEBOOK_TOURNAMENTS: any[] = [];
 export const MOCK_RECOMMENDED: any[] = [];
 
 const SPORTS = ['Tất cả', 'Pickleball', 'Cầu lông', 'Tennis', 'Bóng đá'];
-const PLAYERS = [
-  { id: 'p1', name: 'Nguyễn Văn Hùng', sport: 'Tennis', level: 'Bán chuyên', location: 'Hải Châu, Đà Nẵng' },
-  { id: 'p2', name: 'Trần Thị Mai', sport: 'Cầu lông', level: 'Trung bình', location: 'Sơn Trà, Đà Nẵng' },
-  { id: 'p3', name: 'Phạm Minh Đức', sport: 'Pickleball', level: 'Phong trào', location: 'Thanh Khê, Đà Nẵng' },
-];
+const PLAYERS: any[] = [];
 
 function sportName(value: string) {
   const labels: Record<string, string> = { PICKLEBALL: 'Pickleball', BADMINTON: 'Cầu lông', TENNIS: 'Tennis', FOOTBALL: 'Bóng đá' };

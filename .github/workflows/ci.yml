@@ -19,20 +19,19 @@ jobs:
           node-version: 18.x
           cache: 'npm'
           cache-dependency-path: |
-            apps/frontend/package-lock.json
+            apps/web/package-lock.json
             apps/backend/package-lock.json
 
-      - name: Install Shared Dependencies
-        run: npm install --prefix packages/shared
+      - name: Install & Build Shared Package
+        run: |
+          npm install --prefix packages/shared
+          npm run build --prefix packages/shared
 
       - name: Install Backend Dependencies
         run: npm ci --prefix apps/backend
 
-      - name: Install Frontend Dependencies
-        run: npm ci --prefix apps/frontend
-
-      - name: Build Shared Package
-        run: npm run build --prefix packages/shared
+      - name: Install Web Dependencies
+        run: npm ci --prefix apps/web
 
       - name: Typecheck Workspaces
         run: npm run typecheck
@@ -40,5 +39,9 @@ jobs:
       - name: Build Backend App
         run: npm run build --prefix apps/backend
 
-      - name: Verify Frontend App
-        run: npm run typecheck --prefix apps/frontend
+      - name: Build Web App
+        run: npm run build --prefix apps/web
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL || 'http://localhost:3000' }}
+          NEXT_PUBLIC_SOCKET_URL: ${{ secrets.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3000' }}
+          NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '85275426952-vgg294ip0cmnh08t9ekchk12lk1p0eee.apps.googleusercontent.com' }}

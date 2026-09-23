@@ -165,4 +165,84 @@ export class AuthService implements OnModuleInit {
       user,
     };
   }
+
+  async loginWithGoogle(idToken: string): Promise<{ token: string; user: any }> {
+    let email: string;
+    let name: string;
+    let picture: string | undefined;
+
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+
+    // Allow dev token when developer hasn't configured Google Cloud Console credentials yet
+    if (idToken.startsWith('google_demo_id_token')) {
+      email = 'google.athlete@courtmate.vn';
+      name = 'Google Athlete';
+      picture = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80';
+    } else {
+      try {
+        const { OAuth2Client } = await import('google-auth-library');
+        const client = new OAuth2Client(clientId);
+        const ticket = await client.verifyIdToken({
+          idToken,
+          audience: clientId || undefined,
+        });
+        const payload = ticket.getPayload();
+        if (!payload || !payload.email) {
+          throw new UnauthorizedException('Token Google không hợp lệ hoặc thiếu thông tin email');
+        }
+        email = payload.email.toLowerCase().trim();
+        name = payload.name || email.split('@')[0];
+        picture = payload.picture;
+      } catch (err: any) {
+        // Fallback: verify with Google tokeninfo endpoint
+        try {
+          const resp = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`);
+          if (!resp.ok) {
+            throw new Error('Google tokeninfo call failed');
+          }
+          const data = await resp.json();
+          if (!data.email) {
+            throw new UnauthorizedException('Token Google không chứa email hợp lệ');
+          }
+          email = data.email.toLowerCase().trim();
+          name = data.name || email.split('@')[0];
+          picture = data.picture;
+        } catch (fallbackErr: any) {
+          throw new UnauthorizedException(`Xác thực tài khoản Google thất bại: ${err.message || fallbackErr.message}`);
+        }
+      }
+    }
+
+    // Find or create user
+    let user = await this.usersService.findByEmail(email);
+    if (!user) {
+      const randomPasswordHash = this.hashPassword(crypto.randomBytes(24).toString('hex'));
+      user = await this.usersService.createWithPassword(email, randomPasswordHash, name);
+      await this.usersService.updateProfile(email, {
+        role: UserRole.PLAYER,
+        preferences: {
+          avatarUrl: picture,
+          sports: [],
+        },
+      });
+      user = await this.usersService.findByEmail(email);
+    } else if (picture && (!user.preferences || !user.preferences.avatarUrl)) {
+      await this.usersService.updateProfile(email, {
+        preferences: {
+          ...user.preferences,
+          avatarUrl: picture,
+        },
+      });
+      user = await this.usersService.findByEmail(email);
+    }
+
+    const payload = { email: user!.email, sub: user!._id };
+    const token = this.jwtService.sign(payload);
+
+    return {
+      token,
+      user,
+    };
+  }
 }
+

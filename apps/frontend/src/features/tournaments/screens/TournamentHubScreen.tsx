@@ -7,7 +7,7 @@ import { TournamentCard } from '../components/TournamentCard';
 import { Tournament, SportType, TournamentFilterDto, TournamentStatus } from '@courtmate/shared';
 
 // Ideally, fetch current city from user preferences context
-const MOCK_USER_CITY = 'Da Nang';
+const DEFAULT_CITY = 'Da Nang';
 
 // Fee range presets (VND)
 const FEE_RANGES = [
@@ -49,7 +49,7 @@ export const TournamentHubScreen = ({ navigation }: any) => {
   const debouncedKeyword = useDebounce(keyword, 300);
   
   const [filters, setFilters] = useState<TournamentFilterDto>({
-    city: MOCK_USER_CITY,
+    city: DEFAULT_CITY,
   });
 
   // Active fee range index
@@ -58,7 +58,7 @@ export const TournamentHubScreen = ({ navigation }: any) => {
   // Sheet State
   const [sheetOpen, setSheetOpen] = useState(false);
   const [tempFilters, setTempFilters] = useState<TournamentFilterDto>({
-    city: MOCK_USER_CITY,
+    city: DEFAULT_CITY,
   });
   const [tempFeeRange, setTempFeeRange] = useState(0);
 
@@ -101,7 +101,7 @@ export const TournamentHubScreen = ({ navigation }: any) => {
   };
   
   const resetFilters = () => {
-    const reset: TournamentFilterDto = { city: MOCK_USER_CITY };
+    const reset: TournamentFilterDto = { city: DEFAULT_CITY };
     setTempFilters(reset);
     setTempFeeRange(0);
     setActiveFeeRange(0);

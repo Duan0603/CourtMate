@@ -7,7 +7,7 @@ import { Card } from '../../../components/ui/Card';
 import { tournamentsApi } from '../../tournaments/services/tournaments.api';
 import { Tournament } from '@courtmate/shared';
 
-const MOCK_QR_URL = 'https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg';
+const getQrUrl = (id?: string) => `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=COURTMATE-TICKET-${encodeURIComponent(id || 'CM')}`;
 
 export const TicketScreen: React.FC = () => {
   const { tournamentId } = useLocalSearchParams<{ tournamentId: string }>();
@@ -55,7 +55,7 @@ export const TicketScreen: React.FC = () => {
 
             <View className="w-[200px] h-[200px] mb-md p-2 border border-gray-border rounded-xl">
               <Image 
-                source={{ uri: MOCK_QR_URL }} 
+                source={{ uri: getQrUrl(tournamentId) }} 
                 className="w-full h-full"
                 resizeMode="contain"
               />

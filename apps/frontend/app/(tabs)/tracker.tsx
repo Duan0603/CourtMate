@@ -5,22 +5,7 @@ import { Typography } from '../../src/components/ui/Typography';
 import { Card } from '../../src/components/ui/Card';
 import { Badge } from '../../src/components/ui/Badge';
 
-const mockHistory = [
-  {
-    id: '1',
-    title: 'Danang Pickleball Open 2026',
-    sport: 'PICKLEBALL',
-    date: '2026-08-15',
-    status: 'Đã xác nhận',
-  },
-  {
-    id: '2',
-    title: 'Giải vô địch Cầu lông Phong trào',
-    sport: 'BADMINTON',
-    date: '2026-07-20',
-    status: 'Hoàn thành',
-  }
-];
+const mockHistory: any[] = [];
 
 export default function TrackerTab() {
   return (
@@ -54,7 +39,14 @@ export default function TrackerTab() {
           </Typography>
 
           <View className="space-y-sm">
-            {mockHistory.map((item) => (
+            {mockHistory.length === 0 ? (
+              <Card padding="lg" className="items-center justify-center p-6">
+                <Typography variant="body-md" color="navy" className="opacity-60 text-center">
+                  Bạn chưa có lịch sử tham gia giải đấu nào gần đây.
+                </Typography>
+              </Card>
+            ) : (
+              mockHistory.map((item) => (
               <Card key={item.id} padding="md" className="mb-sm">
                 <View className="flex-row justify-between items-center mb-sm">
                   <Badge label={item.sport} variant="primary" />
