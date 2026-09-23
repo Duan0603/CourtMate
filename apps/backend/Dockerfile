@@ -10,8 +10,14 @@ COPY package.json package-lock.json ./
 COPY packages/shared/package.json ./packages/shared/
 COPY apps/backend/package.json ./apps/backend/
 
-# Install all deps (including devDeps for build)
+# Install root deps
 RUN npm ci --ignore-scripts
+
+# Install backend deps separately (includes devDeps like typescript)
+WORKDIR /app/apps/backend
+RUN npm ci --ignore-scripts
+
+WORKDIR /app
 
 # Copy source
 COPY packages/shared ./packages/shared
@@ -21,9 +27,9 @@ COPY apps/backend ./apps/backend
 WORKDIR /app/packages/shared
 RUN npm run build 2>/dev/null || true
 
-# Build backend
+# Build backend (uses local node_modules/.bin/tsc)
 WORKDIR /app/apps/backend
-RUN npm run build
+RUN ./node_modules/.bin/tsc
 
 # ────────────────────────────────────────────
 # Stage 2: Production image
@@ -41,6 +47,10 @@ COPY apps/backend/package.json ./apps/backend/
 
 # Install only production deps
 RUN npm ci --omit=dev --ignore-scripts
+WORKDIR /app/apps/backend
+RUN npm ci --omit=dev --ignore-scripts
+
+WORKDIR /app
 
 # Copy built artifacts from builder
 COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
