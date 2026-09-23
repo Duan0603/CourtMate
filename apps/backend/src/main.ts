@@ -1,4 +1,12 @@
 import 'dotenv/config';
+import * as dns from 'dns';
+
+// Fix Windows / Node.js querySrv ECONNREFUSED on MongoDB Atlas
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch {
+  // Ignore in environments where custom DNS servers cannot be set
+}
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
