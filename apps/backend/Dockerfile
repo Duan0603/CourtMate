@@ -5,29 +5,22 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy monorepo manifests
-COPY package.json package-lock.json ./
-COPY packages/shared/package.json ./packages/shared/
-COPY apps/backend/package.json ./apps/backend/
+# Copy entire monorepo
+COPY . .
 
 # Install root deps
-RUN npm ci --ignore-scripts
+RUN npm install --ignore-scripts
 
-# Install backend deps separately (includes devDeps like typescript)
+# Install backend deps (includes devDeps like typescript)
 WORKDIR /app/apps/backend
-RUN npm ci --ignore-scripts
-
-WORKDIR /app
-
-# Copy source
-COPY packages/shared ./packages/shared
-COPY apps/backend ./apps/backend
+RUN npm install --ignore-scripts
 
 # Build shared package
 WORKDIR /app/packages/shared
+RUN npm install --ignore-scripts
 RUN npm run build 2>/dev/null || true
 
-# Build backend (uses local node_modules/.bin/tsc)
+# Build backend
 WORKDIR /app/apps/backend
 RUN ./node_modules/.bin/tsc
 
@@ -41,14 +34,13 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 # Copy monorepo manifests
-COPY package.json package-lock.json ./
+COPY package.json ./
 COPY packages/shared/package.json ./packages/shared/
 COPY apps/backend/package.json ./apps/backend/
 
-# Install only production deps
-RUN npm ci --omit=dev --ignore-scripts
+# Install backend production deps only
 WORKDIR /app/apps/backend
-RUN npm ci --omit=dev --ignore-scripts
+RUN npm install --omit=dev --ignore-scripts
 
 WORKDIR /app
 
