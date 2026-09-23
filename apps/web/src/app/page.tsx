@@ -1,281 +1,403 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { 
-  Trophy, 
-  Search, 
-  MapPin, 
-  Calendar, 
-  Users, 
-  Zap, 
-  CheckCircle2, 
-  ArrowRight, 
-  ShieldCheck, 
-  CreditCard,
-  QrCode,
-  Flame
-} from 'lucide-react';
-import { SportType, Tournament } from '@courtmate/shared';
-import { tournamentsApi } from '../lib/tournaments.api';
-import { TournamentCard } from '../components/tournaments/TournamentCard';
+import Image from 'next/image';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(useGSAP, ScrollTrigger);
+}
+
+// ─── ICON COMPONENTS ────────────────────────────────────────────────────────
+function MouseIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="24" height="34" viewBox="0 0 24 34" fill="none" stroke="currentColor" strokeWidth="2">
+      <rect x="2" y="2" width="20" height="30" rx="10" />
+      <path d="M12 10v4" className="mouse-wheel" />
+    </svg>
+  );
+}
+
+function ArrowDownIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 5v14M19 12l-7 7-7-7" />
+    </svg>
+  );
+}
+
+const SPORT_ICONS = [
+  // Flaticon-style Racket (Detailed Outline)
+  <svg key="rkt" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2C8.686 2 6 5.582 6 10c0 2.378 1.454 4.512 3.618 5.768l-2.325 5.58a1.5 1.5 0 0 0 2.774 1.154l1.246-2.992c.225.032.453.05.687.05.234 0 .462-.018.687-.05l1.246 2.992a1.5 1.5 0 0 0 2.774-1.154l-2.325-5.58C16.546 14.512 18 12.378 18 10c0-4.418-2.686-8-6-8z"/><path d="M9 10h6M10.5 6h3M10.5 14h3M12 2v13.5"/></svg>,
+  // Flaticon-style Shuttlecock
+  <svg key="sht" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22a3 3 0 0 0 3-3c0-3-3-4-3-4s-3 1-3 4a3 3 0 0 0 3 3z"/><path d="M9 15L3 4.5 12 7l9-2.5L15 15"/><path d="M12 7v8M7.5 10l3.5 1M16.5 10l-3.5 1"/></svg>,
+  // Flaticon-style Basketball
+  <svg key="bsk" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/><path d="M4.93 4.93A14 14 0 0 1 12 10a14 14 0 0 1 7.07-5.07M4.93 19.07A14 14 0 0 0 12 14a14 14 0 0 0 7.07 5.07"/></svg>,
+  // Flaticon-style Football (Soccer)
+  <svg key="ftb" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 7.5L8.5 10 10 14h4l1.5-4L12 7.5z"/><path d="M12 2v5.5M5.5 5.5L8.5 10M18.5 5.5L15.5 10M2 12h6M22 12h-6M6.5 19.5L10 14M17.5 19.5L14 14"/></svg>,
+  // Flaticon-style Trophy
+  <svg key="trp" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 21h8M12 17v4M7 4h10v6a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a2 2 0 0 0-2 2v1a4 4 0 0 0 4 4h1M17 6h3a2 2 0 0 1 2 2v1a4 4 0 0 1-4 4h-1"/></svg>
+];
+
+const FLOATING_ITEMS = [
+  { id: 1, icon: 0, left: '5%', size: 40, delay: 0, duration: 18, type: 'desktop' },
+  { id: 2, icon: 1, left: '15%', size: 28, delay: 4, duration: 22, type: 'all' },
+  { id: 3, icon: 2, left: '25%', size: 48, delay: 1, duration: 16, type: 'desktop' },
+  { id: 4, icon: 3, left: '35%', size: 32, delay: 7, duration: 24, type: 'all' },
+  { id: 5, icon: 0, left: '45%', size: 56, delay: 2, duration: 19, type: 'desktop' },
+  { id: 6, icon: 1, left: '55%', size: 36, delay: 5, duration: 21, type: 'all' },
+  { id: 7, icon: 2, left: '65%', size: 30, delay: 8, duration: 20, type: 'desktop' },
+  { id: 8, icon: 3, left: '75%', size: 50, delay: 3, duration: 17, type: 'all' },
+  { id: 9, icon: 0, left: '85%', size: 24, delay: 9, duration: 25, type: 'desktop' },
+  { id: 10, icon: 1, left: '92%', size: 42, delay: 6, duration: 15, type: 'all' },
+];
+
+// ─── MAIN PAGE ──────────────────────────────────────────────────────────────
 export default function HomePage() {
-  const router = useRouter();
-  const [keyword, setKeyword] = useState('');
-  const [city, setCity] = useState('');
-  const [activeSport, setActiveSport] = useState<SportType | 'ALL'>('ALL');
-  const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const [loading, setLoading] = useState(true);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [mobileMenu, setMobileMenu] = useState(false);
 
-  useEffect(() => {
-    async function loadData() {
-      setLoading(true);
-      try {
-        const filters: any = {};
-        if (activeSport !== 'ALL') filters.sport = activeSport;
-        const res = await tournamentsApi.getTournaments(filters);
-        setTournaments(res.data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
+  useGSAP(() => {
+    ScrollTrigger.refresh();
+
+    // Hero Animations
+    gsap.from('.hero-title-line', {
+      y: 40, opacity: 0, duration: 0.8, stagger: 0.15, ease: 'power3.out', delay: 0.1
+    });
+    gsap.to('.mouse-wheel', {
+      y: 8, opacity: 0, duration: 1.5, repeat: -1, ease: 'power1.inOut'
+    });
+
+    // Scroll Animations for the restored vertical sections
+    const features = gsap.utils.toArray('.feature-row');
+    features.forEach((feature: any) => {
+      gsap.from(feature, {
+        opacity: 0,
+        y: 60,
+        duration: 1,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: feature,
+          start: 'top 85%',
+          toggleActions: 'play none none reverse'
+        }
+      });
+    });
+
+    // Final CTA
+    gsap.from('.final-cta-content', {
+      opacity: 0,
+      scale: 0.95,
+      y: 40,
+      duration: 1,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: '.final-cta-section',
+        start: 'top 85%',
+        toggleActions: 'play none none reverse'
       }
-    }
-    loadData();
-  }, [activeSport]);
+    });
 
-  const handleHeroSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const params = new URLSearchParams();
-    if (keyword) params.append('keyword', keyword);
-    if (city) params.append('city', city);
-    if (activeSport !== 'ALL') params.append('sport', activeSport);
-    router.push(`/tournaments?${params.toString()}`);
-  };
-
-  const sports = [
-    { type: 'ALL', name: 'Tất cả môn', icon: '🔥' },
-    { type: SportType.BADMINTON, name: 'Cầu lông', icon: '🏸' },
-    { type: SportType.PICKLEBALL, name: 'Pickleball', icon: '🏓' },
-    { type: SportType.TENNIS, name: 'Quần vợt', icon: '🎾' },
-    { type: SportType.FOOTBALL, name: 'Bóng đá mini', icon: '⚽' },
-  ];
+  }, { scope: containerRef });
 
   return (
-    <div className="flex flex-col">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-[#00102F] via-[#001B4B] to-[#00102F] text-white pt-20 pb-28">
-        {/* Abstract background decorative elements */}
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-court-orange/15 rounded-full blur-3xl pointer-events-none" />
+    <div className="lp-container bg-[#FFFBF7] text-[#101828] min-h-screen font-sans overflow-clip" ref={containerRef}>
+      
+      <style dangerouslySetInnerHTML={{ __html: `
+        /* ─── CSS KEYFRAMES FOR FLOATING ICONS ─── */
+        @keyframes floatY {
+          0% { transform: translateY(10vh); opacity: 0; }
+          10% { opacity: 0.06; }
+          85% { opacity: 0.06; }
+          100% { transform: translateY(-90vh); opacity: 0; }
+        }
+        @keyframes floatX {
+          0%, 100% { transform: translateX(-20px) rotate(-15deg); }
+          50% { transform: translateX(20px) rotate(15deg); }
+        }
+        @keyframes floatXMobile {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center max-w-3xl mx-auto">
-            
-            {/* Live Indicator Pill */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs font-semibold text-court-orange mb-6 shadow-xs animate-pulse">
-              <Flame className="w-4 h-4 text-court-orange" />
-              <span>Hơn 120+ giải đấu thể thao phong trào đang diễn ra</span>
-            </div>
+        .float-wrapper {
+          position: absolute;
+          bottom: 0;
+          opacity: 0; /* Ensures it stays hidden if delay hasn't started or motion reduced */
+          animation: floatY linear infinite backwards;
+        }
+        .float-inner {
+          animation: floatX ease-in-out infinite backwards;
+          color: #1E5AA8;
+        }
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight sm:leading-none">
-              Tìm Đối Thủ On-Demand. <br />
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary-light via-blue-400 to-court-orange">
-                Chinh Phục Giải Đấu.
-              </span>
-            </h1>
+        @media (max-width: 768px) {
+          .float-inner {
+            animation: floatXMobile linear infinite;
+          }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .float-wrapper { display: none !important; animation: none !important; }
+        }
 
-            <p className="mt-6 text-base sm:text-lg text-slate-300 leading-relaxed max-w-2xl mx-auto">
-              Nền tảng thể thao kết nối người chơi tức thì, đặt sân nhanh chóng và tham gia thi đấu chuyên nghiệp với hệ thống xếp hạng DUPR & VĐV tiêu chuẩn.
-            </p>
+        /* ─── NAVBAR ORGANIC CUT-CORNER ─── */
+        .nav-right-block {
+          position: fixed;
+          top: 0;
+          right: 0;
+          background: #FFFFFF;
+          height: 80px;
+          display: flex;
+          align-items: center;
+          padding: 0 40px;
+          gap: 36px;
+          z-index: 50;
+          border-bottom-left-radius: 24px;
+          box-shadow: 0 4px 40px rgba(0,0,0,0.03);
+        }
 
-            {/* Desktop Hero Search Bar */}
-            <div className="mt-10 p-2 sm:p-2.5 bg-white/10 backdrop-blur-xl rounded-2xl sm:rounded-full border border-white/20 shadow-2xl max-w-3xl mx-auto">
-              <form onSubmit={handleHeroSearch} className="flex flex-col sm:flex-row items-center gap-2">
-                <div className="flex-1 flex items-center gap-3 px-4 py-2 w-full">
-                  <Search className="w-5 h-5 text-slate-300 shrink-0" />
-                  <input
-                    type="text"
-                    placeholder="Tìm tên giải đấu, từ khóa..."
-                    value={keyword}
-                    onChange={(e) => setKeyword(e.target.value)}
-                    className="w-full bg-transparent text-white placeholder:text-slate-400 text-sm focus:outline-none"
-                  />
-                </div>
+        /* Concave curve on the bottom-left of the block */
+        .nav-right-block::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: -24px;
+          width: 24px;
+          height: 24px;
+          border-top-right-radius: 24px;
+          box-shadow: 12px -12px 0 12px #FFFFFF;
+          pointer-events: none;
+        }
 
-                <div className="hidden sm:block w-[1px] h-8 bg-white/20" />
+        /* Nav links styles */
+        .nav-link-item {
+          color: #475467;
+          font-weight: 500;
+          font-size: 0.95rem;
+          transition: color 0.2s;
+        }
+        .nav-link-item:hover {
+          color: #101828;
+        }
 
-                <div className="flex items-center gap-2 px-4 py-2 w-full sm:w-auto">
-                  <MapPin className="w-4 h-4 text-court-orange shrink-0" />
-                  <select
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    className="bg-transparent text-sm text-white focus:outline-none cursor-pointer [&>option]:text-navy"
-                  >
-                    <option value="">Tất cả địa điểm</option>
-                    <option value="Đà Nẵng">Đà Nẵng</option>
-                    <option value="Ha Noi">Hà Nội</option>
-                    <option value="Ho Chi Minh">TP. Hồ Chí Minh</option>
-                  </select>
-                </div>
+        /* ─── VERTICAL FEATURES ─── */
+        .feature-row {
+          padding: 8rem 2rem;
+          position: relative;
+        }
+        .visual-card-inner {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          border-radius: 32px;
+          overflow: hidden;
+          box-shadow: 0 32px 80px rgba(0,0,0,0.08);
+        }
 
-                <button
-                  type="submit"
-                  className="w-full sm:w-auto px-7 py-3 rounded-full bg-primary hover:bg-primary-light text-white text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary/30 transition transform hover:scale-[1.02]"
+        /* Final CTA */
+        .cta-box {
+          background: #1E5AA8; color: #FFF;
+          padding: 6rem 3rem; border-radius: 40px;
+          text-align: center; max-width: 900px; width: 100%;
+          box-shadow: 0 32px 80px rgba(30,90,168,0.3);
+          position: relative; overflow: hidden;
+        }
+      `}} />
+
+      {/* ─── NAVBAR ─── */}
+      {/* Left Logo (Independent) */}
+      <div className="fixed top-0 left-0 z-50 h-[80px] flex items-center px-8 md:px-12 pointer-events-auto">
+        <Link href="/" className="text-2xl font-black tracking-tight flex items-center gap-1 text-[#101828]">
+          Court<span className="text-[#1E5AA8]">Mate</span>
+        </Link>
+      </div>
+
+      {/* Right Unified Block (Organic Cut-Corner) */}
+      <div className="nav-right-block hidden lg:flex">
+        <Link href="/tournaments" className="nav-link-item">Giải đấu</Link>
+        <Link href="#about" className="nav-link-item ml-4">Về chúng tôi</Link>
+        <Link href="/register" className="bg-[#1E5AA8] text-white px-7 py-3 rounded-full text-[0.95rem] font-bold hover:bg-[#154687] transition-colors whitespace-nowrap shadow-md ml-4">
+          Tham gia ngay
+        </Link>
+      </div>
+
+      {/* Mobile Nav Button */}
+      <button className="fixed top-6 right-6 z-50 lg:hidden pointer-events-auto bg-white p-3 rounded-xl shadow-sm border border-gray-100" onClick={() => setMobileMenu(!mobileMenu)}>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          {mobileMenu ? <path d="M18 6L6 18M6 6l12 12"/> : <path d="M4 6h16M4 12h16M4 18h16"/>}
+        </svg>
+      </button>
+
+      {mobileMenu && (
+        <div className="fixed top-[80px] left-4 right-4 bg-white/95 backdrop-blur-lg rounded-2xl p-6 z-40 flex flex-col gap-6 font-medium shadow-2xl border border-gray-100 lg:hidden text-lg">
+          <Link href="/tournaments" onClick={() => setMobileMenu(false)} className="text-[#101828]">Giải đấu</Link>
+          <Link href="#about" onClick={() => setMobileMenu(false)} className="text-[#101828]">Về chúng tôi</Link>
+          <hr className="border-gray-100" />
+          <Link href="/register" onClick={() => setMobileMenu(false)} className="bg-[#1E5AA8] text-white text-center py-3 rounded-full font-bold">Tham gia ngay</Link>
+        </div>
+      )}
+
+      {/* ─── HERO ─── */}
+      <section id="hero" className="hero-section min-h-[100svh] flex flex-col relative px-4 pt-24 pb-8">
+        
+        {/* Background Animation */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+           {FLOATING_ITEMS.map((item) => (
+             <div 
+                key={item.id} 
+                className={`float-wrapper ${item.type === 'desktop' ? 'hidden md:block' : ''}`}
+                style={{ 
+                  left: item.left, 
+                  animationDuration: `${item.duration}s`, 
+                  animationDelay: `${item.delay}s` 
+                }}
+             >
+                <div 
+                  className="float-inner"
+                  style={{ 
+                    width: item.size, 
+                    height: item.size, 
+                    animationDuration: `${item.duration * 0.6}s`,
+                    animationDelay: `${item.delay}s`
+                  }}
                 >
-                  <Search className="w-4 h-4" />
-                  <span>Tìm kiếm</span>
-                </button>
-              </form>
-            </div>
-
-            {/* Sports Pills */}
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
-              {sports.map((sport) => {
-                const isActive = activeSport === sport.type;
-                return (
-                  <button
-                    key={sport.type}
-                    onClick={() => setActiveSport(sport.type as any)}
-                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all ${
-                      isActive
-                        ? 'bg-white text-navy shadow-md scale-105'
-                        : 'bg-white/10 text-white/90 hover:bg-white/20 border border-white/10'
-                    }`}
-                  >
-                    <span>{sport.icon}</span>
-                    <span>{sport.name}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Tournaments Section */}
-      <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-10">
-          <div>
-            <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-wider mb-1">
-              <Trophy className="w-4 h-4" />
-              <span>Đang mở đăng ký</span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-navy">
-              Giải Đấu Nổi Bật Mới Nhất
-            </h2>
-            <p className="text-sm text-slate-500 mt-1">
-              Các giải đấu thể thao phong trào và bán chuyên quy mô hấp dẫn trên toàn quốc
-            </p>
-          </div>
-
-          <Link
-            href="/tournaments"
-            className="inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:text-primary-dark transition group"
-          >
-            <span>Xem tất cả giải đấu</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Link>
+                  {SPORT_ICONS[item.icon]}
+                </div>
+             </div>
+           ))}
+           {/* Gradients */}
+           <div className="absolute w-[40vw] h-[40vw] bg-[#1E5AA8] rounded-full blur-[120px] opacity-[0.06] top-1/4 left-1/4" />
+           <div className="absolute w-[30vw] h-[30vw] bg-[#101828] rounded-full blur-[120px] opacity-[0.06] bottom-1/4 right-1/4" />
         </div>
 
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map((n) => (
-              <div key={n} className="h-96 rounded-2xl bg-slate-200 animate-pulse" />
-            ))}
+        <div className="flex-1 flex flex-col items-center justify-center w-full max-w-4xl mx-auto z-10 relative mt-8 text-center">
+          {/* Soft background glow to guarantee text readability */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[150%] bg-[#FFFBF7]/80 blur-[80px] rounded-full z-[-1]" />
+          
+          <div className="hero-title-line inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white text-[#1E5AA8] text-xs font-bold uppercase tracking-widest mb-8 border border-[#1E5AA8]/15 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-[#1E5AA8] animate-pulse" />
+            Nền tảng toàn diện tại Đà Nẵng
           </div>
-        ) : tournaments.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
-            <Trophy className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <h3 className="text-base font-bold text-navy">Không tìm thấy giải đấu phù hợp</h3>
-            <p className="text-xs text-slate-500 mt-1">Hãy thử đổi môn thể thao hoặc khu vực lọc</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tournaments.slice(0, 3).map((tournament) => (
-              <TournamentCard key={tournament.id} tournament={tournament} />
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Value Pillars / Feature Highlights */}
-      <section className="py-20 bg-white border-y border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl font-extrabold text-navy">
-              Trải Nghiệm Thể Thao Đẳng Cấp Cùng CourtMate
-            </h2>
-            <p className="text-slate-600 mt-3 text-sm">
-              Đồng bộ hoàn hảo giữa vận động viên, ban tổ chức và chủ sân thể thao
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Feature 1 */}
-            <div className="p-8 rounded-2xl bg-slate-50 border border-slate-100 hover:border-primary/30 transition hover:shadow-lg">
-              <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-6">
-                <Zap className="w-7 h-7" />
-              </div>
-              <h3 className="text-xl font-bold text-navy mb-3">On-Demand Matchmaking</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Tìm bạn chơi thể thao và ghép cặp thi đấu theo vị trí gần bạn tức thì, đồng bộ trình độ thi đấu (DUPR / UTR / Ranking).
-              </p>
-            </div>
-
-            {/* Feature 2 */}
-            <div className="p-8 rounded-2xl bg-slate-50 border border-slate-100 hover:border-primary/30 transition hover:shadow-lg">
-              <div className="w-14 h-14 rounded-2xl bg-court-orange/15 text-court-orange flex items-center justify-center mb-6">
-                <CreditCard className="w-7 h-7" />
-              </div>
-              <h3 className="text-xl font-bold text-navy mb-3">Thanh Toán Trực Tuyến</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Tích hợp cổng thanh toán bảo mật PayOS, MoMo, VNPay. Nhận xác nhận đăng ký giải đấu tức thì qua SMS và Email.
-              </p>
-            </div>
-
-            {/* Feature 3 */}
-            <div className="p-8 rounded-2xl bg-slate-50 border border-slate-100 hover:border-primary/30 transition hover:shadow-lg">
-              <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-6">
-                <QrCode className="w-7 h-7" />
-              </div>
-              <h3 className="text-xl font-bold text-navy mb-3">Vé Điện Tử & Check-in QR</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Vận động viên nhận vé QR trực tuyến để làm thủ tục điểm danh tại sân nhanh chóng trong vài giây, loại bỏ thủ tục giấy tờ.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA For Organizers */}
-      <section className="py-20 bg-gradient-to-r from-primary to-primary-dark text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-            Bạn Là Ban Tổ Chức Giải Đấu?
-          </h2>
-          <p className="mt-4 text-base sm:text-lg text-white/90 max-w-2xl mx-auto">
-            CourtMate cung cấp giải pháp trọn gói: thu lệ phí thi đấu, chia bảng tự động, phân chia ca sân và kết nối truyền thông đến hàng chục nghìn VĐV.
+          
+          <h1 className="text-[clamp(2.5rem,5.5vw,5.5rem)] font-black leading-[1.15] tracking-tight mb-8 text-[#101828] flex flex-wrap justify-center gap-x-3 md:gap-x-5">
+            <span className="hero-title-line">Tìm Kiếm.</span>
+            <span className="hero-title-line text-[#1E5AA8]">Kết Nối.</span>
+            <span className="hero-title-line">Thi Đấu.</span>
+          </h1>
+          
+          <p className="hero-title-line text-lg md:text-xl text-[#475467] max-w-2xl mx-auto font-medium leading-relaxed relative z-10">
+            Mạng lưới kết nối thể thao hàng đầu. Khám phá các giải đấu phù hợp, theo dõi lịch trình và nâng tầm kỹ năng của bạn.
           </p>
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              href="/tournaments/create"
-              className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-white text-navy font-bold text-sm hover:bg-slate-100 transition shadow-lg"
-            >
-              Đăng ký tổ chức giải đấu
-            </Link>
-            <Link
-              href="/organizer"
-              className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-primary-dark/80 text-white font-bold text-sm border border-white/30 hover:bg-primary-deep transition"
-            >
-              Xem giao diện quản lý giải
+        </div>
+
+        <div className="hero-scroll-indicator flex flex-col items-center gap-3 text-[#475467] z-10 mt-auto pt-8">
+          <span className="text-xs font-bold uppercase tracking-widest">Cuộn để khám phá</span>
+          <MouseIcon className="text-[#1E5AA8]" />
+          <ArrowDownIcon className="text-[#1E5AA8] animate-bounce w-5 h-5 opacity-50 -mt-1" />
+        </div>
+      </section>
+
+      {/* ─── RESTORED VERTICAL SCROLL FEATURES ─── */}
+      <div id="features" className="max-w-[1200px] mx-auto overflow-hidden">
+        
+        {/* Feature 1 */}
+        <section className="feature-row grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
+          <div className="order-2 lg:order-1 relative aspect-[4/5] w-full max-w-[460px] mx-auto lg:mx-0">
+             <div className="visual-card-inner bg-[#F2F4F7]">
+                <Image src="/feat-hub.png" fill className="object-cover" alt="Tournament Hub" priority />
+             </div>
+          </div>
+          <div className="order-1 lg:order-2 space-y-6">
+            <span className="text-[#1E5AA8] font-bold text-sm tracking-[0.15em] uppercase px-4 py-1.5 bg-[#1E5AA8]/10 rounded-full inline-block">
+              Giải Đấu Tập Trung
+            </span>
+            <h2 className="text-4xl lg:text-5xl font-black leading-[1.1] text-[#101828]">
+              Mọi Giải Đấu,<br />Một Nền Tảng
+            </h2>
+            <p className="text-[#475467] text-lg leading-relaxed max-w-md">
+              Truy cập thông tin chi tiết về mọi giải đấu đang diễn ra. Từ quy định, cơ cấu giải thưởng đến số lượng đăng ký — tất cả đều được cập nhật theo thời gian thực.
+            </p>
+          </div>
+        </section>
+
+        {/* Feature 2 */}
+        <section className="feature-row grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
+          <div className="space-y-6 lg:pl-12">
+            <span className="text-[#1E5AA8] font-bold text-sm tracking-[0.15em] uppercase px-4 py-1.5 bg-[#1E5AA8]/10 rounded-full inline-block">
+              Tìm Kiếm Thông Minh
+            </span>
+            <h2 className="text-4xl lg:text-5xl font-black leading-[1.1] text-[#101828]">
+              Tìm Kiếm Nhanh Chóng,<br />Chính Xác
+            </h2>
+            <p className="text-[#475467] text-lg leading-relaxed max-w-md">
+              Bộ lọc nâng cao cho phép bạn tìm kiếm theo khu vực, thời gian và trình độ. Tiết kiệm thời gian, tập trung hoàn toàn vào việc thi đấu.
+            </p>
+          </div>
+          <div className="relative aspect-[4/5] w-full max-w-[460px] mx-auto lg:mx-0">
+             <div className="visual-card-inner bg-[#F2F4F7]">
+                <Image src="/feat-search.png" fill className="object-cover" alt="Smart Search" />
+             </div>
+          </div>
+        </section>
+
+        {/* Feature 3 */}
+        <section className="feature-row grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
+          <div className="order-2 lg:order-1 relative aspect-[4/5] w-full max-w-[460px] mx-auto lg:mx-0">
+             <div className="visual-card-inner bg-[#F2F4F7]">
+                <Image src="/feat-notif.png" fill className="object-cover" alt="Push Notifications" />
+             </div>
+          </div>
+          <div className="order-1 lg:order-2 space-y-6">
+            <span className="text-[#1E5AA8] font-bold text-sm tracking-[0.15em] uppercase px-4 py-1.5 bg-[#1E5AA8]/10 rounded-full inline-block">
+              Thông Báo Tức Thì
+            </span>
+            <h2 className="text-4xl lg:text-5xl font-black leading-[1.1] text-[#101828]">
+              Không Bỏ Lỡ<br />Bất Kỳ Cơ Hội Nào
+            </h2>
+            <p className="text-[#475467] text-lg leading-relaxed max-w-md">
+              Nhận thông báo ngay lập tức khi có giải đấu mới phù hợp với hồ sơ của bạn. Cập nhật lịch thi đấu và kết quả tự động liên tục.
+            </p>
+          </div>
+        </section>
+
+      </div>
+
+      {/* ─── FINAL CTA ─── */}
+      <section className="final-cta-section py-24 px-6 flex justify-center items-center">
+        <div className="final-cta-content cta-box">
+          <div className="absolute inset-0 bg-[url('/hero-bright.png')] opacity-20 bg-cover bg-center mix-blend-overlay" />
+          
+          <h2 className="text-[clamp(2.5rem,5vw,4rem)] font-black leading-tight mb-6 relative z-10">
+            Sẵn Sàng Để Bắt Đầu?
+          </h2>
+          <p className="text-lg md:text-xl font-medium text-white/90 mb-10 relative z-10">
+            Tham gia mạng lưới thể thao phát triển nhanh nhất Đà Nẵng ngay hôm nay.
+          </p>
+          
+          <div className="relative z-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link href="/register" className="inline-flex items-center gap-2 bg-white text-[#1E5AA8] px-10 py-5 rounded-full font-bold text-lg hover:scale-105 transition-transform shadow-xl">
+              Tạo Tài Khoản Miễn Phí
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
             </Link>
           </div>
         </div>
       </section>
+
+      {/* ─── FOOTER ─── */}
+      <footer className="border-t border-[#101828]/10 py-10 px-8 md:px-16 flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-[#475467]">
+        <p>© 2025 CourtMate. Phiên bản Thí điểm.</p>
+        <div className="flex gap-8">
+          <Link href="/tournaments" className="hover:text-[#101828] font-medium transition-colors">Giải đấu</Link>
+          <Link href="#" className="hover:text-[#101828] font-medium transition-colors">Điều khoản</Link>
+          <Link href="#" className="hover:text-[#101828] font-medium transition-colors">Liên hệ</Link>
+        </div>
+      </footer>
+
     </div>
   );
 }
