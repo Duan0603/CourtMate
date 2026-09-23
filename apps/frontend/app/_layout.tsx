@@ -8,7 +8,6 @@ import "../global.css";
 import { useFonts } from 'expo-font';
 import { useEffect } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
-import '../global.css'; // Assuming nativewind setup requires this, or will use classNames
 
 SplashScreen.preventAutoHideAsync();
 

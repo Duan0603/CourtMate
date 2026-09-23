@@ -4,6 +4,7 @@
     "slug": "courtmate-frontend",
     "version": "1.0.0",
     "scheme": "courtmate",
+    "userInterfaceStyle": "automatic",
     "web": {
       "bundler": "metro"
     },

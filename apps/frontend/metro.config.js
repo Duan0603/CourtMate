@@ -5,16 +5,31 @@ const path = require('path');
 const projectRoot = __dirname;
 const workspaceRoot = path.resolve(projectRoot, '../..');
 
-const config = getDefaultConfig(projectRoot);
+const config = getDefaultConfig(projectRoot, { isCSSEnabled: true });
 
-// 1. Watch all files within the monorepo
-config.watchFolders = [workspaceRoot];
+// Limit workers on Windows to prevent NativeWind child_process deadlocks
+config.maxWorkers = 2;
+
+// 1. Watch shared packages and root node_modules only (avoid scanning backend node_modules)
+config.watchFolders = [
+  path.resolve(workspaceRoot, 'packages', 'shared'),
+  path.resolve(workspaceRoot, 'node_modules'),
+];
+
 // 2. Let Metro know where to resolve packages and in what order
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
   path.resolve(workspaceRoot, 'node_modules'),
 ];
-// 3. Force Metro to resolve (sub)dependencies only from the `nodeModulesPaths`
-config.resolver.disableHierarchicalLookup = true;
+
+// Ensure web platform is recognized
+config.resolver.platforms = ['web', 'ios', 'android'];
+
+// Shim Node built-ins and alias react-native for web
+config.resolver.extraNodeModules = {
+  ...config.resolver.extraNodeModules,
+  'react-native': path.resolve(projectRoot, 'node_modules/react-native-web'),
+  crypto: path.resolve(projectRoot, 'src/shims/crypto.js'),
+};
 
 module.exports = withNativeWind(config, { input: "./global.css" });

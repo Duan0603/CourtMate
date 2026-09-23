@@ -1,0 +1,25 @@
+diff --git a/node_modules/nativewind/dist/metro/transformer.js b/node_modules/nativewind/dist/metro/transformer.js
+index fd479c2..7b97b8b 100644
+--- a/node_modules/nativewind/dist/metro/transformer.js
++++ b/node_modules/nativewind/dist/metro/transformer.js
+@@ -8,7 +8,9 @@ const metro_transform_worker_1 = __importDefault(require("metro-transform-worker
+ const path_1 = __importDefault(require("path"));
+ const transformer_1 = require("react-native-css-interop/metro/transformer");
+ async function transform(config, projectRoot, filename, data, options) {
+-    if (path_1.default.resolve(process.cwd(), filename) === config.nativewind.input) {
++    const resolvedFile = path_1.default.resolve(process.cwd(), filename).toLowerCase().replace(/\\/g, '/');
++    const resolvedInput = (config.nativewind?.input || '').toLowerCase().replace(/\\/g, '/');
++    if (resolvedFile === resolvedInput) {
+         if (options.platform !== "web" && options.dev && options.hot) {
+             return metro_transform_worker_1.default.transform(config, projectRoot, filename, Buffer.from(`const { StyleSheet } = require("react-native-css-interop");
+ const url = require("react-native/Libraries/Core/Devtools/getDevServer")().url.replace(/(https?:\\/\\/.*)(:\\d*\\/)(.*)/, "$1$3")
+@@ -16,7 +18,8 @@ new globalThis.WebSocket(\`\${url}:${config.nativewind.fastRefreshPort}\`).addEv
+ StyleSheet.register(JSON.parse('${config.nativewind.initialData}'));`, "utf8"), options);
+         }
+         else {
+-            return metro_transform_worker_1.default.transform(config, projectRoot, filename, Buffer.from(`import '${config.nativewind.output}'`, "utf8"), options);
++            const outPath = (options.platform === 'web' ? `${config.nativewind.output}.web.css` : config.nativewind.output).replace(/\\/g, '/');
++            return metro_transform_worker_1.default.transform(config, projectRoot, filename, Buffer.from(`import '${outPath}'`, "utf8"), options);
+         }
+     }
+     return (0, transformer_1.transform)(config, projectRoot, filename, data, options);

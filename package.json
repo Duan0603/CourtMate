@@ -20,9 +20,6 @@
     "react-native": "0.74.5",
     "@react-native/virtualized-lists": "0.74.87"
   },
-  "dependencies": {
-    "react-native-web": "^0.21.0"
-  },
   "devDependencies": {
     "concurrently": "^10.0.3"
   }
