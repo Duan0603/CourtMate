@@ -29,7 +29,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { tournamentsApi } from '../../lib/tournaments.api';
 import { registrationsApi } from '../../lib/registrations.api';
-import { RegistrationStatus, TournamentStatus } from '@courtmate/shared';
+import { RegistrationStatus, TournamentStatus, UserRole } from '@courtmate/shared';
 
 export default function OrganizerDashboardPage() {
   const { user } = useAuth();

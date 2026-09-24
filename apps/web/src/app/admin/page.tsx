@@ -25,6 +25,7 @@ import {
 import { tournamentsApi } from '../../lib/tournaments.api';
 import { authApi } from '../../lib/auth.api';
 import { useAuth } from '../../context/AuthContext';
+import { UserRole } from '@courtmate/shared';
 
 export default function AdminDashboardPage() {
   const { user } = useAuth();
