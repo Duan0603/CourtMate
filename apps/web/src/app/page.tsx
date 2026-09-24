@@ -6,6 +6,8 @@ import Image from 'next/image';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useAuth } from '../context/AuthContext';
+import { NotificationBell, UserAvatar } from '../components/layout/Navbar';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(useGSAP, ScrollTrigger);
@@ -59,6 +61,7 @@ const FLOATING_ITEMS = [
 export default function HomePage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [mobileMenu, setMobileMenu] = useState(false);
+  const { user, isAuthenticated, logout, switchRole } = useAuth();
 
   useGSAP(() => {
     ScrollTrigger.refresh();
@@ -218,25 +221,61 @@ export default function HomePage() {
       {/* Right Unified Block (Organic Cut-Corner) */}
       <div className="nav-right-block hidden lg:flex">
         <Link href="/tournaments" className="nav-link-item">Giải đấu</Link>
-        <Link href="#about" className="nav-link-item ml-4">Về chúng tôi</Link>
-        <Link href="/register" className="bg-[#1E5AA8] text-white px-7 py-3 rounded-full text-[0.95rem] font-bold hover:bg-[#154687] transition-colors whitespace-nowrap shadow-md ml-4">
-          Tham gia ngay
-        </Link>
+        <Link href="#about" className="nav-link-item">Về chúng tôi</Link>
+        {isAuthenticated && user ? (
+          <div className="flex items-center gap-2 ml-2">
+            <NotificationBell />
+            <UserAvatar user={user} logout={logout} switchRole={switchRole} />
+          </div>
+        ) : (
+          <Link href="/register" className="bg-[#1E5AA8] text-white px-7 py-3 rounded-full text-[0.95rem] font-bold hover:bg-[#154687] transition-colors whitespace-nowrap shadow-md">
+            Tham gia ngay
+          </Link>
+        )}
       </div>
 
       {/* Mobile Nav Button */}
-      <button className="fixed top-6 right-6 z-50 lg:hidden pointer-events-auto bg-white p-3 rounded-xl shadow-sm border border-gray-100" onClick={() => setMobileMenu(!mobileMenu)}>
+      <button
+        className="fixed top-6 right-6 z-50 lg:hidden pointer-events-auto bg-white p-3 rounded-xl shadow-sm border border-gray-100"
+        onClick={() => setMobileMenu(!mobileMenu)}
+        aria-label="Menu"
+      >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           {mobileMenu ? <path d="M18 6L6 18M6 6l12 12"/> : <path d="M4 6h16M4 12h16M4 18h16"/>}
         </svg>
       </button>
 
       {mobileMenu && (
-        <div className="fixed top-[80px] left-4 right-4 bg-white/95 backdrop-blur-lg rounded-2xl p-6 z-40 flex flex-col gap-6 font-medium shadow-2xl border border-gray-100 lg:hidden text-lg">
-          <Link href="/tournaments" onClick={() => setMobileMenu(false)} className="text-[#101828]">Giải đấu</Link>
-          <Link href="#about" onClick={() => setMobileMenu(false)} className="text-[#101828]">Về chúng tôi</Link>
+        <div className="fixed top-[80px] left-4 right-4 bg-white/95 backdrop-blur-lg rounded-2xl p-6 z-40 flex flex-col gap-6 font-medium shadow-2xl border border-gray-100 lg:hidden text-lg animate-fadeIn">
+          <Link href="/tournaments" onClick={() => setMobileMenu(false)} className="text-[#101828] font-semibold">Giải đấu</Link>
+          <Link href="#about" onClick={() => setMobileMenu(false)} className="text-[#101828] font-semibold">Về chúng tôi</Link>
           <hr className="border-gray-100" />
-          <Link href="/register" onClick={() => setMobileMenu(false)} className="bg-[#1E5AA8] text-white text-center py-3 rounded-full font-bold">Tham gia ngay</Link>
+          {isAuthenticated && user ? (
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <img
+                      src={user.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=1E5AA8&color=ffffff&size=128&bold=true`}
+                      alt={user.name}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-white rounded-full" />
+                  </div>
+                  <div>
+                    <p className="font-black text-sm text-[#101828] truncate max-w-[160px]">{user.name}</p>
+                    <p className="text-xs text-[#475467]">{user.email}</p>
+                  </div>
+                </div>
+                <NotificationBell isMobile />
+              </div>
+              <Link href="/profile" onClick={() => setMobileMenu(false)} className="border border-slate-200 text-center py-3 rounded-full font-semibold text-sm text-[#475467]">Hồ sơ cá nhân</Link>
+              <Link href="/tournaments" onClick={() => setMobileMenu(false)} className="bg-[#1E5AA8] text-white text-center py-3 rounded-full font-bold text-sm">Xem giải đấu</Link>
+              <button onClick={() => { setMobileMenu(false); logout(); }} className="border border-slate-200 text-center py-3 rounded-full font-semibold text-sm text-rose-600">Đăng xuất</button>
+            </div>
+          ) : (
+            <Link href="/register" onClick={() => setMobileMenu(false)} className="bg-[#1E5AA8] text-white text-center py-3 rounded-full font-bold">Tham gia ngay</Link>
+          )}
         </div>
       )}
 
