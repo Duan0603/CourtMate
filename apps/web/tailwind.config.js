@@ -40,8 +40,34 @@ module.exports = {
         'soft': '0 4px 20px -2px rgba(0, 16, 47, 0.06)',
         'elevated': '0 12px 32px -4px rgba(0, 16, 47, 0.12)',
         'glow': '0 0 25px rgba(0, 119, 255, 0.25)',
+      },
+      animation: {
+        shimmer: 'shimmer 1.5s infinite',
+      },
+      keyframes: {
+        shimmer: {
+          '100%': { transform: 'translateX(100%)' },
+        }
       }
     },
   },
-  plugins: [],
+  plugins: [
+    function ({ addUtilities }) {
+      addUtilities({
+        '.text-shadow-sm': {
+          textShadow: '0 1px 2px rgba(0, 0, 0, 0.4)',
+        },
+        '.text-shadow': {
+          textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
+        },
+        '.hide-scrollbar': {
+          '-ms-overflow-style': 'none',
+          'scrollbar-width': 'none',
+          '&::-webkit-scrollbar': {
+            display: 'none',
+          },
+        }
+      })
+    }
+  ],
 };

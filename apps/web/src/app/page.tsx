@@ -8,6 +8,7 @@ import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useAuth } from '../context/AuthContext';
 import { NotificationBell, UserAvatar } from '../components/layout/Navbar';
+import { Footer } from '../components/layout/Footer';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(useGSAP, ScrollTrigger);
@@ -221,7 +222,7 @@ export default function HomePage() {
       {/* Right Unified Block (Organic Cut-Corner) */}
       <div className="nav-right-block hidden lg:flex">
         <Link href="/tournaments" className="nav-link-item">Giải đấu</Link>
-        <Link href="#about" className="nav-link-item">Về chúng tôi</Link>
+        <Link href="/about" className="nav-link-item">Về chúng tôi</Link>
         {isAuthenticated && user ? (
           <div className="flex items-center gap-2 ml-2">
             <NotificationBell />
@@ -248,7 +249,7 @@ export default function HomePage() {
       {mobileMenu && (
         <div className="fixed top-[80px] left-4 right-4 bg-white/95 backdrop-blur-lg rounded-2xl p-6 z-40 flex flex-col gap-6 font-medium shadow-2xl border border-gray-100 lg:hidden text-lg animate-fadeIn">
           <Link href="/tournaments" onClick={() => setMobileMenu(false)} className="text-[#101828] font-semibold">Giải đấu</Link>
-          <Link href="#about" onClick={() => setMobileMenu(false)} className="text-[#101828] font-semibold">Về chúng tôi</Link>
+          <Link href="/about" onClick={() => setMobileMenu(false)} className="text-[#101828] font-semibold">Về chúng tôi</Link>
           <hr className="border-gray-100" />
           {isAuthenticated && user ? (
             <div className="flex flex-col gap-3">
@@ -428,15 +429,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── FOOTER ─── */}
-      <footer className="border-t border-[#101828]/10 py-10 px-8 md:px-16 flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-[#475467]">
-        <p>© 2025 CourtMate. Phiên bản Thí điểm.</p>
-        <div className="flex gap-8">
-          <Link href="/tournaments" className="hover:text-[#101828] font-medium transition-colors">Giải đấu</Link>
-          <Link href="#" className="hover:text-[#101828] font-medium transition-colors">Điều khoản</Link>
-          <Link href="#" className="hover:text-[#101828] font-medium transition-colors">Liên hệ</Link>
-        </div>
-      </footer>
-
+      <Footer />
     </div>
   );
 }
