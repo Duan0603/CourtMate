@@ -6,24 +6,25 @@ import { Navbar } from './Navbar';
 import { Footer } from './Footer';
 
 /**
- * Conditionally renders the global Navbar and Footer.
- * Pages that have their own layout (e.g. landing page at "/") are excluded.
+ * Renders the global Navbar and Footer for internal app pages.
+ * Landing page ("/") is self-contained and manages its own chrome.
+ * Auth pages (login, register) are full-screen with no chrome.
  */
 export function LayoutShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  // Pages that manage their own chrome (navbar/footer)
-  const selfContainedRoutes = ['/', '/landing'];
-  const isSelfContained = selfContainedRoutes.includes(pathname);
+  // Pages that fully manage their own layout (no shared navbar/footer)
+  const selfManagedRoutes = ['/', '/login', '/register'];
+  const isSelfManaged = selfManagedRoutes.includes(pathname);
 
-  if (isSelfContained) {
+  if (isSelfManaged) {
     return <>{children}</>;
   }
 
   return (
     <>
       <Navbar />
-      <main className="flex-1 flex flex-col">{children}</main>
+      <main className="flex-1 flex flex-col pt-[72px]">{children}</main>
       <Footer />
     </>
   );
