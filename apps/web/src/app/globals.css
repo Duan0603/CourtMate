@@ -75,3 +75,42 @@
   animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* Navbar Styles */
+.cm-nav-right {
+  position: fixed;
+  top: 0;
+  right: 0;
+  background: #FFFFFF;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  padding: 0 32px;
+  gap: 28px;
+  z-index: 50;
+  border-bottom-left-radius: 24px;
+  box-shadow: 0 4px 40px rgba(0,0,0,0.04);
+}
+.cm-nav-right::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -24px;
+  width: 24px;
+  height: 24px;
+  border-top-right-radius: 24px;
+  box-shadow: 12px -12px 0 12px #FFFFFF;
+  pointer-events: none;
+}
+.cm-nav-link {
+  color: #475467;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: color 0.2s;
+}
+.cm-nav-link:hover, .cm-nav-link.active {
+  color: #101828;
+}
+@media (max-width: 1023px) {
+  .cm-nav-right { display: none; }
+}
+
