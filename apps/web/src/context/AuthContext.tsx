@@ -19,6 +19,14 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const normalizeUser = (u: any): User | null => {
+  if (!u) return null;
+  return {
+    ...u,
+    id: u.id || u._id,
+  };
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -31,7 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (storedToken && storedUser) {
         setToken(storedToken);
-        setUser(JSON.parse(storedUser));
+        setUser(normalizeUser(JSON.parse(storedUser)));
       } else {
         setToken(null);
         setUser(null);
@@ -49,19 +57,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     try {
       const res = await authApi.login(email, password);
-      setUser(res.user);
+      const normalized = normalizeUser(res.user);
+      setUser(normalized);
       setToken(res.token);
       localStorage.setItem('courtmate_token', res.token);
-      localStorage.setItem('courtmate_user', JSON.stringify(res.user));
+      localStorage.setItem('courtmate_user', JSON.stringify(normalized));
     } catch (error: any) {
       // Fallback for UI/UX testing when backend is not connected or seeded
       console.warn('Backend login failed, falling back to mock login data:', error.message);
-      const mockUser = {
+      const mockUser = normalizeUser({
         _id: 'mock-user-1',
         email,
         name: email.split('@')[0],
         role: UserRole.PLAYER,
-      } as unknown as User;
+      });
         const mockToken = 'mock-jwt-token';
         
         setUser(mockUser);
@@ -78,10 +87,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     try {
       const res = await authApi.googleLogin(idToken);
-      setUser(res.user);
+      const normalized = normalizeUser(res.user);
+      setUser(normalized);
       setToken(res.token);
       localStorage.setItem('courtmate_token', res.token);
-      localStorage.setItem('courtmate_user', JSON.stringify(res.user));
+      localStorage.setItem('courtmate_user', JSON.stringify(normalized));
     } finally {
       setIsLoading(false);
     }
@@ -91,18 +101,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     try {
       const res = await authApi.register(email, password, name, role);
-      setUser(res.user);
+      const normalized = normalizeUser(res.user);
+      setUser(normalized);
       setToken(res.token);
       localStorage.setItem('courtmate_token', res.token);
-      localStorage.setItem('courtmate_user', JSON.stringify(res.user));
+      localStorage.setItem('courtmate_user', JSON.stringify(normalized));
     } catch (error: any) {
       console.warn('Backend register failed, falling back to mock register data:', error.message);
-      const mockUser = {
+      const mockUser = normalizeUser({
         _id: 'mock-user-new',
         email,
         name,
         role,
-      } as unknown as User;
+      });
         const mockToken = 'mock-jwt-token';
         
         setUser(mockUser);

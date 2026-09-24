@@ -2,7 +2,24 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import { SkillLevel, RegistrationStatus } from '@courtmate/shared';
 
-@Schema({ timestamps: true })
+@Schema({
+  timestamps: true,
+  toJSON: {
+    virtuals: true,
+    transform: (_, ret: any) => {
+      ret.id = ret._id ? ret._id.toString() : ret.id;
+      delete ret.__v;
+      return ret;
+    },
+  },
+  toObject: {
+    virtuals: true,
+    transform: (_, ret: any) => {
+      ret.id = ret._id ? ret._id.toString() : ret.id;
+      return ret;
+    },
+  },
+})
 export class Registration extends Document {
   @Prop({ required: true, index: true })
   tournamentId!: string;

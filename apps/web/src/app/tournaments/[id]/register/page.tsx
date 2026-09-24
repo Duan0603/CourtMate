@@ -81,6 +81,7 @@ export default function TournamentRegisterPage() {
     setSubmitting(true);
     try {
       // 1. Create registration record
+      const resolvedPlayerId = user?.id || (user as any)?._id || '';
       const reg = await registrationsApi.create(
         {
           tournamentId,
@@ -89,15 +90,23 @@ export default function TournamentRegisterPage() {
           contactPhone,
           skillLevel,
         },
-        user?.id || ''
+        resolvedPlayerId
       );
 
       // 2. Create payment session
-      const payment = await paymentsApi.create(reg.id, paymentProvider);
+      const targetRegId = (reg as any)?.id || (reg as any)?._id;
+      if (!targetRegId) {
+        throw new Error('Không lấy được mã hồ sơ đăng ký');
+      }
+      const payment = await paymentsApi.create(targetRegId, paymentProvider);
 
-      // 3. Navigate to payment or success
-      if (payment.payUrl && payment.payUrl.startsWith('/')) {
-        router.push(payment.payUrl);
+      // 3. Navigate to payment gateway or return page
+      if (payment.payUrl) {
+        if (payment.payUrl.startsWith('http://') || payment.payUrl.startsWith('https://')) {
+          window.location.href = payment.payUrl;
+        } else {
+          router.push(payment.payUrl);
+        }
       } else {
         router.push(`/payment/return?orderId=${payment.orderId}&status=PAID&tournamentId=${tournamentId}`);
       }

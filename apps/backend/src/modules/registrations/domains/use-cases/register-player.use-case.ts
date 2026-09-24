@@ -24,6 +24,14 @@ export class RegisterPlayerUseCase {
 
     // 2. Check for duplicate registration by the same player
     const existingRegs = await this.registrationsService.findByPlayer(playerId);
+    const existingPending = existingRegs.find(
+      (reg) => reg.tournamentId === dto.tournamentId && reg.status === RegistrationStatus.PENDING
+    );
+    if (existingPending) {
+      // Allow proceeding to payment for an existing pending registration
+      return existingPending;
+    }
+
     const hasAlreadyRegistered = existingRegs.some(
       (reg) => reg.tournamentId === dto.tournamentId && reg.status !== RegistrationStatus.REJECTED
     );
