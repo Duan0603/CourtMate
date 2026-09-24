@@ -5,6 +5,7 @@ import { RegistrationsService } from './domains/services/registrations.service';
 import { RegisterPlayerUseCase } from './domains/use-cases/register-player.use-case';
 import { Registration, RegistrationSchema } from './infrastructure/persistence/registration.entity';
 import { TournamentStub, TournamentStubSchema } from './infrastructure/persistence/tournament-stub.entity';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { TournamentStub, TournamentStubSchema } from './infrastructure/persisten
       { name: Registration.name, schema: RegistrationSchema },
       { name: TournamentStub.name, schema: TournamentStubSchema },
     ]),
+    NotificationsModule,
   ],
   controllers: [RegistrationsController],
   providers: [RegistrationsService, RegisterPlayerUseCase],
