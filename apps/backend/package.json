@@ -27,6 +27,7 @@
     "cache-manager": "^5.2.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
+    "courtmate-monorepo": "file:../..",
     "dotenv": "^16.4.5",
     "google-auth-library": "^11.1.0",
     "migrate-mongo": "^11.0.0",

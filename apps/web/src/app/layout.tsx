@@ -2,8 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '../context/AuthContext';
-import { Navbar } from '../components/layout/Navbar';
-import { Footer } from '../components/layout/Footer';
+import { LayoutShell } from '../components/layout/LayoutShell';
 
 const inter = Inter({
   subsets: ['latin', 'vietnamese'],
@@ -26,9 +25,7 @@ export default function RootLayout({
     <html lang="vi" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans bg-[#F8FAFC] text-navy">
         <AuthProvider>
-          <Navbar />
-          <main className="flex-1 flex flex-col">{children}</main>
-          <Footer />
+          <LayoutShell>{children}</LayoutShell>
         </AuthProvider>
       </body>
     </html>
