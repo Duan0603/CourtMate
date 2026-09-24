@@ -102,10 +102,10 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
     }
   };
 
-  const handleQuickDemoLogin = async () => {
+  const handleQuickDemoLogin = async (email: string) => {
     setLoading(true);
     try {
-      await login('test@courtmate.com', 'Password123');
+      await login(email, 'Password123');
       router.push('/tournaments');
     } finally {
       setLoading(false);
@@ -401,15 +401,24 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
 
         {/* Quick Demo Login Option */}
         {mode === 'login' && (
-          <div className="mt-4 pt-4 border-t border-slate-100">
+          <div className="mt-4 pt-4 border-t border-slate-100 flex flex-col gap-2">
             <button
               type="button"
-              onClick={handleQuickDemoLogin}
+              onClick={() => handleQuickDemoLogin('tien.nguyen@courtmate.com')}
               disabled={loading}
               className="w-full py-2.5 rounded-2xl bg-[#F2F4F7] hover:bg-slate-200 text-[#101828] font-bold text-xs transition-all flex items-center justify-center gap-2 disabled:opacity-60"
             >
-              <Zap className="w-4 h-4 text-amber-500" />
-              <span>Đăng Nhập Nhanh 1-Click (Tài khoản thử nghiệm)</span>
+              <User className="w-4 h-4 text-emerald-600" />
+              <span>Vào vai Người chơi (Tiến Nguyễn)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleQuickDemoLogin('vbf.danang@courtmate.vn')}
+              disabled={loading}
+              className="w-full py-2.5 rounded-2xl bg-[#F2F4F7] hover:bg-slate-200 text-[#101828] font-bold text-xs transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+            >
+              <Activity className="w-4 h-4 text-amber-600" />
+              <span>Vào vai BTC Cầu lông (Liên đoàn VBF)</span>
             </button>
           </div>
         )}

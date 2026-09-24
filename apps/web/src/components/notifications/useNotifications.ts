@@ -64,10 +64,20 @@ export function useNotifications() {
     };
     socket.io.on('reconnect', handleReconnect);
 
+    // Listen to local window events for immediate client-side notifications
+    const handleLocalEvent = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        handleNewNotification(customEvent.detail);
+      }
+    };
+    window.addEventListener('local-notification:new', handleLocalEvent);
+
     return () => {
       mountedRef.current = false;
       socket.off('notification:new', handleNewNotification);
       socket.io.off('reconnect', handleReconnect);
+      window.removeEventListener('local-notification:new', handleLocalEvent);
     };
   }, [loadNotifications]);
 

@@ -87,14 +87,25 @@ export class TournamentsService {
     }
     
     if (filters) {
-      if (filters.city) filterObj.city = filters.city;
+      if (filters.city) {
+        if (/hà nội|ha noi/i.test(filters.city)) {
+          filterObj.city = { $regex: 'Hà Nội|Ha Noi', $options: 'i' };
+        } else if (/hồ chí minh|tp\.? hcm|ho chi minh|sài gòn/i.test(filters.city)) {
+          filterObj.city = { $regex: 'TP\\.? HCM|Hồ Chí Minh|Ho Chi Minh|Sài Gòn|HCM', $options: 'i' };
+        } else if (/đà nẵng|da nang/i.test(filters.city)) {
+          filterObj.city = { $regex: 'Đà Nẵng|Da Nang', $options: 'i' };
+        } else {
+          filterObj.city = { $regex: filters.city, $options: 'i' };
+        }
+      }
       if (filters.sport) filterObj.sport = filters.sport;
       if (filters.status) filterObj.status = filters.status;
       
       if (filters.keyword) {
         filterObj.$or = [
           { title: { $regex: filters.keyword, $options: 'i' } },
-          { 'organizer.name': { $regex: filters.keyword, $options: 'i' } }
+          { 'organizer.name': { $regex: filters.keyword, $options: 'i' } },
+          { location: { $regex: filters.keyword, $options: 'i' } }
         ];
       }
 
@@ -110,18 +121,6 @@ export class TournamentsService {
       .find(filterObj)
       .sort({ startDate: 1 })
       .exec();
-
-    // Fallback to national view (all cities) if local city is empty and no other strict filters applied
-    if (tournaments.length === 0 && filters?.city && !filters.keyword && !filters.sport) {
-      const fallbackQuery: any = {};
-      if (!filters?.includeHidden) {
-        fallbackQuery.isHidden = { $ne: true };
-      }
-      tournaments = await this.tournamentModel
-        .find(fallbackQuery)
-        .sort({ startDate: 1 })
-        .exec();
-    }
 
     // Sort to prioritize Open For Registration
     return tournaments.sort((a, b) => {

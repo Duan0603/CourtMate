@@ -120,21 +120,6 @@ export default function TournamentDetailPage() {
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight text-white mb-4 text-shadow-sm">
               {tournament.title}
             </h1>
-
-            <div className="flex flex-wrap items-center gap-6 text-sm text-slate-200 font-medium">
-              <span className="flex items-center gap-2">
-                <div className="p-1.5 bg-white/10 rounded-full backdrop-blur-sm">
-                  <Calendar className="w-4 h-4 text-primary-light" />
-                </div>
-                {startDateFormatted} - {endDateFormatted}
-              </span>
-              <span className="flex items-center gap-2">
-                <div className="p-1.5 bg-white/10 rounded-full backdrop-blur-sm">
-                  <MapPin className="w-4 h-4 text-rose-400" />
-                </div>
-                {tournament.location}
-              </span>
-            </div>
           </div>
         </div>
       </div>
@@ -178,21 +163,49 @@ export default function TournamentDetailPage() {
                       <FileText className="w-5 h-5 text-primary" />
                       Giới thiệu giải đấu
                     </h3>
-                    <p className="text-slate-600 text-[15px] leading-relaxed whitespace-pre-line mb-8">
-                      {tournament.description}
-                    </p>
+                    
+                    <div className="text-slate-600 text-[15px] leading-relaxed mb-8 space-y-4">
+                      {(() => {
+                        const text = tournament.description || '';
+                        // Cut off everything from 'Địa điểm thi đấu' onwards
+                        const cutoffIndex = text.indexOf('Địa điểm thi đấu:');
+                        let content = cutoffIndex > -1 ? text.substring(0, cutoffIndex) : text;
+                        
+                        // Split into separate lines for readability if there are known markers
+                        content = content.replace(/Quy mô:/g, '\n• Quy mô:');
+                        content = content.replace(/Thể thức thi đấu:/g, '\n• Thể thức thi đấu:');
 
-                    <div className="inline-flex items-center gap-4 p-2 pr-6 rounded-full bg-slate-50 border border-slate-100 hover:border-primary/20 hover:shadow-sm transition-all">
-                      <img
-                        src={tournament.organizer?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80'}
-                        alt={tournament.organizer?.name}
-                        className="w-12 h-12 rounded-full object-cover"
-                      />
-                      <div>
-                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Ban tổ chức</span>
-                        <strong className="text-navy text-sm font-bold block">{tournament.organizer?.name || 'Ban tổ chức CourtMate'}</strong>
-                      </div>
+                        return content.split('\n').map((line, i) => (
+                          <p key={i} className={line.trim().startsWith('•') ? "ml-4 text-[#101828] font-medium" : ""}>
+                            {line}
+                          </p>
+                        ));
+                      })()}
                     </div>
+
+                    <button 
+                      onClick={() => router.push(`/chat?userId=${tournament.organizer?.id}&userName=${encodeURIComponent(tournament.organizer?.name || 'Ban tổ chức')}&avatar=${encodeURIComponent(tournament.organizer?.avatar || '')}`)}
+                      className="inline-flex flex-wrap items-center gap-4 p-2 pr-4 rounded-full bg-slate-50 border border-slate-100 hover:border-primary/30 hover:shadow-sm transition-all"
+                    >
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={tournament.organizer?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80'}
+                          alt={tournament.organizer?.name}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                        <div className="text-left">
+                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Ban tổ chức</span>
+                          <strong className="text-navy text-sm font-bold block">{tournament.organizer?.name || 'Ban tổ chức CourtMate'}</strong>
+                        </div>
+                      </div>
+                      
+                      <div className="h-8 w-px bg-slate-200 hidden sm:block" />
+                      
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F0F5FF] text-[#1a56db]">
+                        <MessageCircle className="w-[18px] h-[18px]" strokeWidth={2} />
+                        <span className="text-sm font-bold">Trò chuyện với BTC</span>
+                      </div>
+                    </button>
                   </section>
 
                   <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent my-8" />

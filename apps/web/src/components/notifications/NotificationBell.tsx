@@ -51,10 +51,15 @@ export function NotificationBell({ isMobile = false }: { isMobile?: boolean }) {
   };
 
   return (
-    <div className="relative" ref={ref}>
+    <div className="relative flex items-center justify-center" ref={ref}>
       <button
-        onClick={() => setOpen(!open)}
-        className={`relative p-2 rounded-full transition-all hover:bg-[#1E5AA8]/10 ${open ? 'bg-[#1E5AA8]/10' : ''}`}
+        onClick={() => {
+          if (!open && unreadCount > 0) {
+            markAllRead();
+          }
+          setOpen(!open);
+        }}
+        className={`relative flex items-center justify-center p-2 rounded-full transition-all hover:bg-[#1E5AA8]/10 ${open ? 'bg-[#1E5AA8]/10' : ''}`}
         aria-label="Thông báo"
       >
         <Bell className="w-5 h-5 text-[#475467]" />
@@ -110,11 +115,6 @@ export function NotificationBell({ isMobile = false }: { isMobile?: boolean }) {
                 </div>
               ))
             )}
-          </div>
-          <div className="border-t border-slate-100 px-4 py-2.5">
-            <button className="text-xs font-semibold text-[#1E5AA8] hover:underline w-full text-center">
-              Xem tất cả thông báo
-            </button>
           </div>
         </div>
       )}

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { 
   ShieldCheck, 
   Users, 
@@ -27,12 +28,18 @@ import { useAuth } from '../../context/AuthContext';
 
 export default function AdminDashboardPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [data, setData] = useState(initialAdminDashboardData);
   const [loading, setLoading] = useState(true);
   const [selectedRegion, setSelectedRegion] = useState('ALL');
   const [activeTab, setActiveTab] = useState<'approvals' | 'users' | 'activity'>('approvals');
 
   useEffect(() => {
+    if (user && user.role !== UserRole.SUPER_ADMIN && user.role !== UserRole.REGIONAL_ADMIN) {
+      router.push('/');
+      return;
+    }
+
     async function loadAdminData() {
       setLoading(true);
       try {

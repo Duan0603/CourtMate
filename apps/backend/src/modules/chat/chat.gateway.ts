@@ -30,12 +30,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('register_user')
-  handleRegisterUser(
+  async handleRegisterUser(
     @MessageBody() data: { userId: string },
     @ConnectedSocket() client: Socket,
   ) {
     console.log(`[Socket] User ${data.userId} registered personal room: ${client.id}`);
     client.join(data.userId);
+
+    const recentChats = await this.chatService.getRecentChats(data.userId);
+    client.emit('recent_chats', recentChats);
   }
 
   @SubscribeMessage('join_room')

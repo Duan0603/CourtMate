@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { 
   LayoutDashboard, 
   Trophy, 
@@ -32,11 +33,17 @@ import { RegistrationStatus, TournamentStatus } from '@courtmate/shared';
 
 export default function OrganizerDashboardPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [data, setData] = useState(initialOrganizerDashboardData);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'tournaments' | 'registrations' | 'courts' | 'reports'>('tournaments');
 
   useEffect(() => {
+    if (user && user.role !== UserRole.ORGANIZER && user.role !== UserRole.SUPER_ADMIN && user.role !== UserRole.REGIONAL_ADMIN) {
+      router.push('/');
+      return;
+    }
+
     async function loadOrganizerData() {
       setLoading(true);
       try {

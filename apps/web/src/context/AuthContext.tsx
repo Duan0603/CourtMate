@@ -66,9 +66,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Fallback for UI/UX testing when backend is not connected or seeded
       console.warn('Backend login failed, falling back to mock login data:', error.message);
       const mockUser = normalizeUser({
-        _id: 'mock-user-1',
+        _id: email.toLowerCase(),
         email,
-        name: email.split('@')[0],
+        name: email === 'tien.nguyen@courtmate.com' ? 'Tiến Nguyễn (VĐV)' : email.split('@')[0],
         role: UserRole.PLAYER,
       });
         const mockToken = 'mock-jwt-token';
@@ -135,9 +135,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updateProfile = async (data: Partial<User>) => {
     if (!user) return;
-    const updated = await authApi.updateProfile(data);
-    setUser(updated);
-    localStorage.setItem('courtmate_user', JSON.stringify(updated));
+    try {
+      const updated = await authApi.updateProfile(data);
+      const normalized = normalizeUser(updated);
+      setUser(normalized);
+      localStorage.setItem('courtmate_user', JSON.stringify(normalized));
+    } catch (error) {
+      console.warn('Backend updateProfile failed, falling back to local update');
+      const updatedUser = normalizeUser({ ...user, ...data });
+      setUser(updatedUser);
+      localStorage.setItem('courtmate_user', JSON.stringify(updatedUser));
+    }
   };
 
   const switchRole = async (role: UserRole) => {
