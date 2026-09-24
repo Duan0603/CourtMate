@@ -213,8 +213,14 @@ export default function HomePage() {
 
       {/* ─── NAVBAR ─── */}
       {/* Left Logo (Independent) */}
-      <div className="fixed top-0 left-0 z-50 h-[80px] flex items-center px-8 md:px-12 pointer-events-auto">
-        <Link href="/" className="text-2xl font-black tracking-tight flex items-center gap-1 text-[#101828]">
+      <div className="fixed top-0 left-0 z-50 h-[72px] flex items-center px-6 md:px-10 pointer-events-auto">
+        <Link
+          href="/"
+          className="text-2xl font-black tracking-tight flex items-center gap-1 text-[#101828]"
+        >
+          <img src="/courtMate_logo.png"
+      alt="CourtMate"
+      className="h-10 w-auto"/>
           Court<span className="text-[#1E5AA8]">Mate</span>
         </Link>
       </div>

@@ -189,6 +189,9 @@ export const Navbar: React.FC = () => {
           href="/"
           className="text-2xl font-black tracking-tight flex items-center gap-1 text-[#101828]"
         >
+          <img src="/courtMate_logo.png"
+      alt="CourtMate"
+      className="h-10 w-auto"/>
           Court<span className="text-[#1E5AA8]">Mate</span>
         </Link>
       </div>
