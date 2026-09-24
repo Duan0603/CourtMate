@@ -73,6 +73,7 @@ export class TournamentsController {
         organizer: t.organizer,
         status: t.status,
         categories: t.categories,
+        registrationFee: (t as any).registrationFee ?? (t.categories?.[0]?.fee ?? 0),
       })),
       meta: {
         isFallback,
