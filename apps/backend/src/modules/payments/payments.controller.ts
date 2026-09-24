@@ -33,4 +33,10 @@ export class PaymentsController {
   status(@Param('orderId') orderId: string, @Req() request: any) {
     return this.payments.getStatus(orderId, String(request.user.sub));
   }
+
+  @Post(':orderId/cancel')
+  @UseGuards(JwtAuthGuard)
+  cancel(@Param('orderId') orderId: string, @Req() request: any) {
+    return this.payments.cancelPayment(orderId, String(request.user.sub));
+  }
 }

@@ -52,8 +52,11 @@ export class RegistrationsController {
   }
 
   @Get('tournament/:tournamentId')
-  async findByTournament(@Param('tournamentId') tournamentId: string) {
-    return this.registrationsService.findByTournament(tournamentId);
+  async findByTournament(
+    @Param('tournamentId') tournamentId: string,
+    @Query('status') status?: string,
+  ) {
+    return this.registrationsService.findByTournament(tournamentId, status);
   }
 
   @UseGuards(JwtAuthGuard)

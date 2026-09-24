@@ -71,21 +71,28 @@ function PaymentReturnContent() {
     }
   }
 
-  // Double check with backend DB if orderId is provided
+  // Double check with backend DB and sync cancel if needed
   useEffect(() => {
-    async function checkPaymentStatus() {
+    async function syncPaymentStatus() {
       if (!orderId) return;
       try {
-        const res = await paymentsApi.status(orderId);
-        if (res?.status) {
-          setDbStatus(res.status);
+        if (isCancelled) {
+          const res = await paymentsApi.cancel(orderId);
+          if (res?.status) {
+            setDbStatus(res.status);
+          }
+        } else {
+          const res = await paymentsApi.status(orderId);
+          if (res?.status) {
+            setDbStatus(res.status);
+          }
         }
       } catch {
         // If not logged in or cannot fetch, rely on query params
       }
     }
-    checkPaymentStatus();
-  }, [orderId]);
+    syncPaymentStatus();
+  }, [orderId, isCancelled]);
 
   if (dbStatus) {
     if (dbStatus === 'PAID') {

@@ -37,8 +37,15 @@ export class RegistrationsService {
       .exec();
   }
 
-  async findByTournament(tournamentId: string): Promise<Registration[]> {
-    return this.registrationModel.find({ tournamentId }).exec();
+  async findByTournament(tournamentId: string, status?: string): Promise<Registration[]> {
+    const filter: any = { tournamentId };
+    if (status && status !== 'all') {
+      filter.status = status;
+    } else if (!status) {
+      // By default, public list only shows officially confirmed registrations
+      filter.status = { $in: [RegistrationStatus.PAID, RegistrationStatus.APPROVED] };
+    }
+    return this.registrationModel.find(filter).sort({ createdAt: -1 }).exec();
   }
 
   async countApprovedOrPaidByTournament(tournamentId: string): Promise<number> {

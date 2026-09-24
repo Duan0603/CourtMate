@@ -20,4 +20,8 @@ export const paymentsApi = {
   async status(orderId: string): Promise<PaymentResponse> {
     return apiClient.get<PaymentResponse>(`/payments/${encodeURIComponent(orderId)}`);
   },
+
+  async cancel(orderId: string): Promise<PaymentResponse> {
+    return apiClient.post<PaymentResponse>(`/payments/${encodeURIComponent(orderId)}/cancel`);
+  },
 };

@@ -223,7 +223,27 @@ export class PaymentsService {
           { $inc: { joinedSlots: 1 } }
         ).exec();
       }
+    } else {
+      // If payment failed or was cancelled, mark registration as REJECTED so it does not appear in official roster
+      await this.registrations.findByIdAndUpdate(
+        transaction.registrationId,
+        { $set: { status: RegistrationStatus.REJECTED } },
+        { new: true }
+      ).exec();
     }
+  }
+
+  async cancelPayment(orderId: string, playerId: string) {
+    const transaction = await this.payments.findOne({ orderId }).exec();
+    if (!transaction) throw new NotFoundException('Không tìm thấy giao dịch');
+    const registration = await this.registrations.findById(transaction.registrationId).exec();
+    if (!registration || registration.playerId !== playerId) {
+      throw new ForbiddenException('Bạn không có quyền thao tác trên giao dịch này');
+    }
+    if (transaction.status === 'PENDING') {
+      await this.completeTransaction(transaction, false, '', { cancelledByUser: '1' });
+    }
+    return this.toClientResponse(transaction);
   }
 
   private toClientResponse(transaction: PaymentTransaction) {
