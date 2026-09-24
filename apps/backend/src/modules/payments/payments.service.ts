@@ -157,8 +157,8 @@ export class PaymentsService {
 
   private async createPayosPayment(transaction: PaymentTransaction) {
     const orderCode = Number(transaction.orderId);
-    const returnUrl = this.config.get('PAYOS_RETURN_URL', 'courtmate://payment/return');
-    const cancelUrl = this.config.get('PAYOS_CANCEL_URL', 'courtmate://payment/cancel');
+    const returnUrl = this.config.get('PAYOS_RETURN_URL', 'https://courtmate-v.vercel.app/payment/return');
+    const cancelUrl = this.config.get('PAYOS_CANCEL_URL', 'https://courtmate-v.vercel.app/payment/return?cancel=true');
     
     const body = {
       orderCode,
