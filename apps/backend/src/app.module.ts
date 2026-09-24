@@ -13,6 +13,7 @@ import { ReportsModule } from './modules/reports/reports.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -55,6 +56,7 @@ import { AppController } from './app.controller';
     ChatModule,
     PaymentsModule,
     UploadsModule,
+    NotificationsModule,
   ],
 })
 export class AppModule implements NestModule {

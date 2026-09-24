@@ -3,10 +3,12 @@ import { TournamentsService } from './domains/services/tournaments.service';
 import { TournamentsController } from './controllers/http/tournaments.controller';
 import { Module, OnModuleInit } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Tournament.name, schema: TournamentSchema }]),
+    NotificationsModule,
   ],
   controllers: [TournamentsController],
   providers: [TournamentsService],

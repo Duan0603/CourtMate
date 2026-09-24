@@ -3,11 +3,13 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, FilterQuery } from 'mongoose';
 import { Tournament } from '../../infrastructure/persistence/tournament.entity';
 import { SportType, TournamentStatus, CreateTournamentDto } from '@courtmate/shared';
+import { NotificationsService } from '../../../notifications/notifications.service';
 
 @Injectable()
 export class TournamentsService {
   constructor(
     @InjectModel(Tournament.name) private readonly tournamentModel: Model<Tournament>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async create(createDto: CreateTournamentDto, rulesFileUrl?: string, organizerInfo?: any): Promise<Tournament> {
@@ -20,7 +22,24 @@ export class TournamentsService {
         isVerified: true
       }
     });
-    return createdTournament.save();
+    const saved = await createdTournament.save();
+
+    // Broadcast notification when tournament is publicly visible
+    try {
+      const status = saved.status as string;
+      if (!saved.isHidden && (status === TournamentStatus.UPCOMING || status === TournamentStatus.OPEN)) {
+        await this.notificationsService.send({
+          type: 'TOURNAMENT_LAUNCHED',
+          title: 'Giải đấu mới',
+          body: saved.title,
+          link: `/tournaments/${saved._id}`,
+        });
+      }
+    } catch (error) {
+      console.error('[Notifications] Broadcast error:', error);
+    }
+
+    return saved;
   }
 
   async incrementReportCount(id: string): Promise<Tournament | null> {
