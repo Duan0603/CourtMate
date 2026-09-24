@@ -76,7 +76,7 @@ export class AuthService implements OnModuleInit {
     return crypto.createHash('sha256').update(password).digest('hex');
   }
 
-  async register(email: string, password: string, name: string): Promise<{ token: string; user: any }> {
+  async register(email: string, password: string, name: string, role?: UserRole): Promise<{ token: string; user: any }> {
     const cleanEmail = email.toLowerCase().trim();
     const existingUser = await this.usersService.findByEmail(cleanEmail);
     if (existingUser) {
@@ -84,9 +84,11 @@ export class AuthService implements OnModuleInit {
     }
     try {
       const passwordHash = this.hashPassword(password);
-      const user = await this.usersService.createWithPassword(cleanEmail, passwordHash, name);
+      // Validate role: self-registration only allows PLAYER or ORGANIZER
+      const assignedRole = role === UserRole.ORGANIZER ? UserRole.ORGANIZER : UserRole.PLAYER;
+      const user = await this.usersService.createWithPassword(cleanEmail, passwordHash, name, assignedRole);
       
-      const payload = { email: user.email, sub: user._id };
+      const payload = { email: user.email, sub: user._id, role: user.role, name: user.name };
       const token = this.jwtService.sign(payload);
       return { token, user };
     } catch (error: any) {
@@ -111,7 +113,7 @@ export class AuthService implements OnModuleInit {
       throw new UnauthorizedException('Tài khoản hoặc mật khẩu không đúng');
     }
 
-    const payload = { email: user.email, sub: user._id };
+    const payload = { email: user.email, sub: user._id, role: user.role, name: user.name };
     const token = this.jwtService.sign(payload);
     return { token, user };
   }
@@ -157,7 +159,7 @@ export class AuthService implements OnModuleInit {
       user = await this.usersService.create(cleanEmail, UserRole.USER);
     }
 
-    const payload = { email: user.email, sub: user._id };
+    const payload = { email: user.email, sub: user._id, role: user.role, name: user.name };
     const token = this.jwtService.sign(payload);
 
     return {
@@ -236,7 +238,7 @@ export class AuthService implements OnModuleInit {
       user = await this.usersService.findByEmail(email);
     }
 
-    const payload = { email: user!.email, sub: user!._id };
+    const payload = { email: user!.email, sub: user!._id, role: user!.role, name: user!.name };
     const token = this.jwtService.sign(payload);
 
     return {

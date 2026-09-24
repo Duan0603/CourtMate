@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from '../../infrastructure/persistence/user.entity';
@@ -53,13 +53,13 @@ export class UsersService {
     return newUser.save();
   }
 
-  async createWithPassword(email: string, passwordHash: string, name: string = ''): Promise<User> {
+  async createWithPassword(email: string, passwordHash: string, name: string = '', role: UserRole = UserRole.USER): Promise<User> {
     const newUser = new this.userModel({
       email: email.toLowerCase(),
       identifier: email.toLowerCase(),
       password: passwordHash,
       name,
-      role: UserRole.USER,
+      role,
       preferences: { sports: [] },
       isVerified: true,
     });
@@ -92,7 +92,12 @@ export class UsersService {
     if (updateDto.role !== undefined) {
       // D-02: Role is locked permanently at onboarding. So only allow setting it if it is USER (un-onboarded)
       if (user.role === UserRole.USER || user.role === undefined) {
-        user.role = updateDto.role;
+        // SECURITY: Prevent privilege escalation. Only allow self-assigning PLAYER or ORGANIZER.
+        if (updateDto.role === UserRole.PLAYER || updateDto.role === UserRole.ORGANIZER) {
+          user.role = updateDto.role;
+        } else {
+          throw new BadRequestException('Chỉ được chọn vai trò Vận động viên (PLAYER) hoặc Ban tổ chức (ORGANIZER)');
+        }
       }
     }
 
