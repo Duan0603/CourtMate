@@ -1,5 +1,6 @@
 import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { UserRole } from '@courtmate/shared';
 
 @Controller('auth')
 export class AuthController {
@@ -20,8 +21,8 @@ export class AuthController {
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
-  async register(@Body() body: { email: string; password?: string; name?: string }) {
-    return this.authService.register(body.email, body.password || '', body.name || '');
+  async register(@Body() body: { email: string; password?: string; name?: string; role?: UserRole }) {
+    return this.authService.register(body.email, body.password || '', body.name || '', body.role);
   }
 
   @Post('login')

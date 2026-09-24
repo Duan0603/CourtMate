@@ -1,6 +1,7 @@
-import { Controller, Post, Get, Body, UploadedFile, UseInterceptors, Param, Query } from '@nestjs/common';
+import { Controller, Post, Get, Body, UploadedFile, UseInterceptors, Param, Query, UseGuards, Req, ForbiddenException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { TournamentsService } from '../../domains/services/tournaments.service';
+import { JwtAuthGuard } from '../../../auth/jwt-auth.guard';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 
@@ -16,9 +17,11 @@ const storage = diskStorage({
 export class TournamentsController {
   constructor(private readonly tournamentsService: TournamentsService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
   @UseInterceptors(FileInterceptor('rulesFile', { storage }))
   async create(
+    @Req() req: any,
     @Body() body: any, 
     @UploadedFile() file?: Express.Multer.File
   ) {
@@ -55,14 +58,18 @@ export class TournamentsController {
 
     const fileUrl = file ? `/uploads/${file.filename}` : body.rulesFileUrl;
 
-    // TODO: Retrieve from req.user
-    const mockOrganizer = {
-      id: 'org-123',
-      name: 'Da Nang Sports Hub',
-      isVerified: true,
+    const user = req.user;
+    if (user && user.role && user.role !== 'ORGANIZER' && user.role !== 'SUPER_ADMIN' && user.role !== 'REGIONAL_ADMIN') {
+      throw new ForbiddenException('Chỉ tài khoản Ban tổ chức (ORGANIZER) hoặc Quản trị viên mới có thể tạo giải đấu.');
+    }
+
+    const organizer = {
+      id: user?.sub || 'org-123',
+      name: user?.name || body.organizerName || 'Ban tổ chức giải đấu',
+      isVerified: Boolean(user?.isVerified),
     };
 
-    return this.tournamentsService.create(createDto as any, fileUrl, mockOrganizer);
+    return this.tournamentsService.create(createDto as any, fileUrl, organizer);
   }
 
   @Get()

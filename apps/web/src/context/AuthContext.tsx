@@ -14,7 +14,7 @@ interface AuthContextType {
   register: (email: string, password: string, name: string, role?: UserRole) => Promise<void>;
   logout: () => void;
   updateProfile: (data: Partial<User>) => Promise<void>;
-  switchRole: (role: UserRole) => void;
+  switchRole: (role: UserRole) => Promise<void> | void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -129,7 +129,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('courtmate_user', JSON.stringify(updated));
   };
 
-  const switchRole = (role: UserRole) => {
+  const switchRole = async (role: UserRole) => {
+    try {
+      if (role === UserRole.ORGANIZER) {
+        const res = await authApi.login('organizer@courtmate.com', 'Password123');
+        setUser(res.user);
+        setToken(res.token);
+        localStorage.setItem('courtmate_token', res.token);
+        localStorage.setItem('courtmate_user', JSON.stringify(res.user));
+        return;
+      } else if (role === UserRole.SUPER_ADMIN) {
+        const res = await authApi.login('superadmin@courtmate.com', 'Password123');
+        setUser(res.user);
+        setToken(res.token);
+        localStorage.setItem('courtmate_token', res.token);
+        localStorage.setItem('courtmate_user', JSON.stringify(res.user));
+        return;
+      } else if (role === UserRole.PLAYER) {
+        const res = await authApi.login('test@courtmate.com', 'Password123');
+        setUser(res.user);
+        setToken(res.token);
+        localStorage.setItem('courtmate_token', res.token);
+        localStorage.setItem('courtmate_user', JSON.stringify(res.user));
+        return;
+      }
+    } catch {
+      // Fallback to client-side state update if offline
+    }
     if (!user) return;
     const updated = { ...user, role };
     setUser(updated);

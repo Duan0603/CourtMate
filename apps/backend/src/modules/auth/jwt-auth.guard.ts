@@ -1,10 +1,14 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
@@ -14,15 +18,14 @@ export class JwtAuthGuard implements CanActivate {
       throw new UnauthorizedException('Authentication token missing');
     }
 
-    if (token === 'mock-jwt-token') {
-      (request as any).user = { sub: 'mock-user-1', email: 'mock@courtmate.com' };
+    if (token === 'mock-jwt-token' && process.env.NODE_ENV !== 'production') {
+      (request as any).user = { sub: 'mock-user-1', email: 'mock@courtmate.com', role: 'USER' };
       return true;
     }
 
     try {
-      const payload = await this.jwtService.verifyAsync(token, {
-        secret: 'courtmate-secret-key-12345', // Hardcoded simple secret for MVP
-      });
+      const secret = this.configService.get<string>('JWT_SECRET') || process.env.JWT_SECRET || 'courtmate-secret-key-12345';
+      const payload = await this.jwtService.verifyAsync(token, { secret });
       // Attach user payload to the request
       (request as any).user = payload;
     } catch {
