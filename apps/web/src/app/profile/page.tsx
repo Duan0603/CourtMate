@@ -60,7 +60,7 @@ export default function ProfilePage() {
           const saved = tourRes.data.filter(t => user.bookmarkedTournaments?.includes(t.id));
           setSavedTournaments(saved);
         } else {
-          setSavedTournaments(tourRes.data.slice(0, 2));
+          setSavedTournaments([]);
         }
       } catch (e) {
         console.error('Error loading profile data:', e);

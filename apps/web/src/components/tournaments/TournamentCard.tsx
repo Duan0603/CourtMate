@@ -117,14 +117,32 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
                   return;
                 }
                 onBookmarkToggle(tournament.id);
+                if (!isBookmarked) {
+                  // Dispatch local notification event to Bell
+                  const notificationEvent = new CustomEvent('local-notification:new', {
+                    detail: {
+                      id: `local_noti_${Date.now()}`,
+                      type: 'system',
+                      title: 'Lưu giải đấu thành công',
+                      body: `Bạn đã thêm giải đấu "${tournament.title}" vào danh sách yêu thích.`,
+                      link: `/tournaments/${tournament.id}`,
+                      createdAt: new Date().toISOString(),
+                    }
+                  });
+                  window.dispatchEvent(notificationEvent);
+                }
               }}
-              className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-md transition ${
-                isBookmarked
-                  ? 'bg-rose-500 text-white'
-                  : 'bg-white/80 text-[#101828] hover:bg-white hover:text-rose-500'
-              }`}
+              className={`absolute top-3 right-3 p-1.5 transition-colors duration-200 drop-shadow-md hover:scale-110 active:scale-95`}
             >
-              <Bookmark className="w-4 h-4 fill-current" />
+              <Bookmark 
+                color={isBookmarked ? '#facc15' : '#ffffff'}
+                fill={isBookmarked ? '#facc15' : 'transparent'}
+                className={`w-6 h-6 transition-all ${
+                  isBookmarked 
+                    ? 'opacity-100' 
+                    : 'opacity-80 hover:opacity-100'
+                }`} 
+              />
             </button>
           )}
 

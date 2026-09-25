@@ -15,12 +15,61 @@ import {
   Ticket,
   Settings,
   ShieldCheck,
+  MessageCircle,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { UserRole } from '@courtmate/shared';
 
 import { NotificationBell } from '../notifications/NotificationBell';
+import { getSocket } from '../../lib/socket';
+
 export { NotificationBell };
+
+export function ChatIcon() {
+  const { user, isAuthenticated } = useAuth();
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
+
+  useEffect(() => {
+    if (!isAuthenticated || !user) return;
+    
+    const socket = getSocket();
+    
+    const handleNewMessage = (msg: any) => {
+      // Ignore if it's from me
+      if (msg.senderId === user.id || (msg as any)._id === user.id) return;
+      
+      // If we are currently on the chat page, assume we read it
+      // In a real app we'd check if we are in the exact chat room, but this is a good approximation for UI
+      if (window.location.pathname.startsWith('/chat')) {
+        return;
+      }
+      
+      setUnreadChatCount(prev => prev + 1);
+    };
+    
+    socket.on('new_message_notification', handleNewMessage);
+    
+    return () => {
+      socket.off('new_message_notification', handleNewMessage);
+    };
+  }, [isAuthenticated, user]);
+
+  return (
+    <Link
+      href="/chat"
+      onClick={() => setUnreadChatCount(0)}
+      className="relative flex items-center justify-center p-2 rounded-full transition-all hover:bg-[#1E5AA8]/10"
+      aria-label="Tin nhắn"
+    >
+      <MessageCircle className="w-5 h-5 text-[#475467]" />
+      {unreadChatCount > 0 && (
+        <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none shadow-sm">
+          {unreadChatCount > 9 ? '9+' : unreadChatCount}
+        </span>
+      )}
+    </Link>
+  );
+}
 
 export function UserAvatar({
   user,
@@ -106,50 +155,49 @@ export function UserAvatar({
             </div>
           </div>
 
-          {/* Demo role switcher */}
-          <div className="px-4 py-2.5 border-b border-slate-100">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-              Chuyển vai trò (Demo):
-            </p>
-            <div className="grid grid-cols-3 gap-1 text-xs">
-              {[
-                { label: 'VĐV', role: UserRole.PLAYER },
-                { label: 'Tổ chức', role: UserRole.ORGANIZER },
-                { label: 'Admin', role: UserRole.SUPER_ADMIN },
-              ].map(({ label, role }) => (
-                <button
-                  key={role}
-                  onClick={() => { switchRole(role); setOpen(false); }}
-                  className={`py-1.5 px-1 rounded-lg text-center font-bold transition-all ${
-                    user.role === role
-                      ? 'bg-[#1E5AA8] text-white'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Nav links */}
           <div className="py-1">
-            {[
-              { href: '/profile', icon: UserIcon, label: 'Hồ sơ cá nhân' },
-              { href: '/ticket/tour-1', icon: Ticket, label: 'Vé điện tử' },
-              { href: '/organizer', icon: LayoutDashboard, label: 'Bảng quản lý giải' },
-              { href: '/admin', icon: ShieldCheck, label: 'Quản trị viên' },
-            ].map(({ href, icon: Icon, label }) => (
+            <Link
+              href="/profile"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 px-4 py-2 text-sm text-[#475467] hover:bg-slate-50 hover:text-[#1E5AA8] transition-colors font-medium"
+            >
+              <UserIcon className="w-4 h-4 shrink-0" />
+              Hồ sơ cá nhân
+            </Link>
+
+            {user.role === UserRole.PLAYER && (
               <Link
-                key={href}
-                href={href}
+                href="/ticket/tour-1"
                 onClick={() => setOpen(false)}
                 className="flex items-center gap-2.5 px-4 py-2 text-sm text-[#475467] hover:bg-slate-50 hover:text-[#1E5AA8] transition-colors font-medium"
               >
-                <Icon className="w-4 h-4 shrink-0" />
-                {label}
+                <Ticket className="w-4 h-4 shrink-0" />
+                Vé điện tử
               </Link>
-            ))}
+            )}
+
+            {user.role === UserRole.ORGANIZER && (
+              <Link
+                href="/organizer"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 px-4 py-2 text-sm text-[#475467] hover:bg-slate-50 hover:text-[#1E5AA8] transition-colors font-medium"
+              >
+                <LayoutDashboard className="w-4 h-4 shrink-0" />
+                Bảng quản lý giải
+              </Link>
+            )}
+
+            {(user.role === UserRole.SUPER_ADMIN || user.role === UserRole.REGIONAL_ADMIN) && (
+              <Link
+                href="/admin"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 px-4 py-2 text-sm text-[#475467] hover:bg-slate-50 hover:text-[#1E5AA8] transition-colors font-medium"
+              >
+                <ShieldCheck className="w-4 h-4 shrink-0" />
+                Quản trị viên
+              </Link>
+            )}
           </div>
 
           <div className="border-t border-slate-100 pt-1 mt-1">
@@ -213,6 +261,7 @@ export const Navbar: React.FC = () => {
         {isAuthenticated && user ? (
           <div className="flex items-center gap-2 ml-2">
             <NotificationBell />
+            <ChatIcon />
             <UserAvatar user={user} logout={logout} switchRole={switchRole} />
           </div>
         ) : (
@@ -271,7 +320,10 @@ export const Navbar: React.FC = () => {
                   <p className="text-xs text-[#475467]">{user.email}</p>
                 </div>
               </div>
-              <NotificationBell isMobile />
+              <div className="flex items-center gap-2">
+                <ChatIcon />
+                <NotificationBell isMobile />
+              </div>
             </div>
           ) : (
             <Link

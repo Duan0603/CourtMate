@@ -1,14 +1,11 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { useAuth } from '../context/AuthContext';
-import { NotificationBell, UserAvatar } from '../components/layout/Navbar';
-import { Footer } from '../components/layout/Footer';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(useGSAP, ScrollTrigger);
@@ -61,8 +58,6 @@ const FLOATING_ITEMS = [
 // ─── MAIN PAGE ──────────────────────────────────────────────────────────────
 export default function HomePage() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [mobileMenu, setMobileMenu] = useState(false);
-  const { user, isAuthenticated, logout, switchRole } = useAuth();
 
   useGSAP(() => {
     ScrollTrigger.refresh();
@@ -75,7 +70,7 @@ export default function HomePage() {
       y: 8, opacity: 0, duration: 1.5, repeat: -1, ease: 'power1.inOut'
     });
 
-    // Scroll Animations for the restored vertical sections
+    // Scroll Animations for features
     const features = gsap.utils.toArray('.feature-row');
     features.forEach((feature: any) => {
       gsap.from(feature, {
@@ -108,7 +103,7 @@ export default function HomePage() {
   }, { scope: containerRef });
 
   return (
-    <div className="lp-container bg-[#FFFBF7] text-[#101828] min-h-screen font-sans overflow-clip" ref={containerRef}>
+    <div className="lp-container bg-[#FFFBF7] text-[#101828] min-h-screen font-sans overflow-clip -mt-[72px]" ref={containerRef}>
       
       <style dangerouslySetInnerHTML={{ __html: `
         /* ─── CSS KEYFRAMES FOR FLOATING ICONS ─── */
@@ -130,7 +125,7 @@ export default function HomePage() {
         .float-wrapper {
           position: absolute;
           bottom: 0;
-          opacity: 0; /* Ensures it stays hidden if delay hasn't started or motion reduced */
+          opacity: 0;
           animation: floatY linear infinite backwards;
         }
         .float-inner {
@@ -147,49 +142,9 @@ export default function HomePage() {
           .float-wrapper { display: none !important; animation: none !important; }
         }
 
-        /* ─── NAVBAR ORGANIC CUT-CORNER ─── */
-        .nav-right-block {
-          position: fixed;
-          top: 0;
-          right: 0;
-          background: #FFFFFF;
-          height: 80px;
-          display: flex;
-          align-items: center;
-          padding: 0 40px;
-          gap: 36px;
-          z-index: 50;
-          border-bottom-left-radius: 24px;
-          box-shadow: 0 4px 40px rgba(0,0,0,0.03);
-        }
-
-        /* Concave curve on the bottom-left of the block */
-        .nav-right-block::before {
-          content: "";
-          position: absolute;
-          top: 0;
-          left: -24px;
-          width: 24px;
-          height: 24px;
-          border-top-right-radius: 24px;
-          box-shadow: 12px -12px 0 12px #FFFFFF;
-          pointer-events: none;
-        }
-
-        /* Nav links styles */
-        .nav-link-item {
-          color: #475467;
-          font-weight: 500;
-          font-size: 0.95rem;
-          transition: color 0.2s;
-        }
-        .nav-link-item:hover {
-          color: #101828;
-        }
-
         /* ─── VERTICAL FEATURES ─── */
         .feature-row {
-          padding: 8rem 2rem;
+          padding: 6rem 2rem;
           position: relative;
         }
         .visual-card-inner {
@@ -211,83 +166,8 @@ export default function HomePage() {
         }
       `}} />
 
-      {/* ─── NAVBAR ─── */}
-      {/* Left Logo (Independent) */}
-      <div className="fixed top-0 left-0 z-50 h-[72px] flex items-center px-6 md:px-10 pointer-events-auto">
-        <Link
-          href="/"
-          className="text-2xl font-black tracking-tight flex items-center gap-1 text-[#101828]"
-        >
-          <img src="/courtMate_logo.png"
-      alt="CourtMate"
-      className="h-10 w-auto"/>
-          Court<span className="text-[#1E5AA8]">Mate</span>
-        </Link>
-      </div>
-
-      {/* Right Unified Block (Organic Cut-Corner) */}
-      <div className="nav-right-block hidden lg:flex">
-        <Link href="/tournaments" className="nav-link-item">Giải đấu</Link>
-        <Link href="/about" className="nav-link-item">Về chúng tôi</Link>
-        {isAuthenticated && user ? (
-          <div className="flex items-center gap-2 ml-2">
-            <NotificationBell />
-            <UserAvatar user={user} logout={logout} switchRole={switchRole} />
-          </div>
-        ) : (
-          <Link href="/register" className="bg-[#1E5AA8] text-white px-7 py-3 rounded-full text-[0.95rem] font-bold hover:bg-[#154687] transition-colors whitespace-nowrap shadow-md">
-            Tham gia ngay
-          </Link>
-        )}
-      </div>
-
-      {/* Mobile Nav Button */}
-      <button
-        className="fixed top-6 right-6 z-50 lg:hidden pointer-events-auto bg-white p-3 rounded-xl shadow-sm border border-gray-100"
-        onClick={() => setMobileMenu(!mobileMenu)}
-        aria-label="Menu"
-      >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          {mobileMenu ? <path d="M18 6L6 18M6 6l12 12"/> : <path d="M4 6h16M4 12h16M4 18h16"/>}
-        </svg>
-      </button>
-
-      {mobileMenu && (
-        <div className="fixed top-[80px] left-4 right-4 bg-white/95 backdrop-blur-lg rounded-2xl p-6 z-40 flex flex-col gap-6 font-medium shadow-2xl border border-gray-100 lg:hidden text-lg animate-fadeIn">
-          <Link href="/tournaments" onClick={() => setMobileMenu(false)} className="text-[#101828] font-semibold">Giải đấu</Link>
-          <Link href="/about" onClick={() => setMobileMenu(false)} className="text-[#101828] font-semibold">Về chúng tôi</Link>
-          <hr className="border-gray-100" />
-          {isAuthenticated && user ? (
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <img
-                      src={user.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=1E5AA8&color=ffffff&size=128&bold=true`}
-                      alt={user.name}
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
-                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-white rounded-full" />
-                  </div>
-                  <div>
-                    <p className="font-black text-sm text-[#101828] truncate max-w-[160px]">{user.name}</p>
-                    <p className="text-xs text-[#475467]">{user.email}</p>
-                  </div>
-                </div>
-                <NotificationBell isMobile />
-              </div>
-              <Link href="/profile" onClick={() => setMobileMenu(false)} className="border border-slate-200 text-center py-3 rounded-full font-semibold text-sm text-[#475467]">Hồ sơ cá nhân</Link>
-              <Link href="/tournaments" onClick={() => setMobileMenu(false)} className="bg-[#1E5AA8] text-white text-center py-3 rounded-full font-bold text-sm">Xem giải đấu</Link>
-              <button onClick={() => { setMobileMenu(false); logout(); }} className="border border-slate-200 text-center py-3 rounded-full font-semibold text-sm text-rose-600">Đăng xuất</button>
-            </div>
-          ) : (
-            <Link href="/register" onClick={() => setMobileMenu(false)} className="bg-[#1E5AA8] text-white text-center py-3 rounded-full font-bold">Tham gia ngay</Link>
-          )}
-        </div>
-      )}
-
       {/* ─── HERO ─── */}
-      <section id="hero" className="hero-section min-h-[100svh] flex flex-col relative px-4 pt-24 pb-8">
+      <section id="hero" className="hero-section min-h-[100svh] flex flex-col relative px-4 pt-32 pb-8">
         
         {/* Background Animation */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
@@ -319,7 +199,7 @@ export default function HomePage() {
            <div className="absolute w-[30vw] h-[30vw] bg-[#101828] rounded-full blur-[120px] opacity-[0.06] bottom-1/4 right-1/4" />
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center w-full max-w-4xl mx-auto z-10 relative mt-8 text-center">
+        <div className="flex-1 flex flex-col items-center justify-center w-full max-w-4xl mx-auto z-10 relative mt-4 text-center">
           {/* Soft background glow to guarantee text readability */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[150%] bg-[#FFFBF7]/80 blur-[80px] rounded-full z-[-1]" />
           
@@ -398,7 +278,7 @@ export default function HomePage() {
           </div>
           <div className="order-1 lg:order-2 space-y-6">
             <span className="text-[#1E5AA8] font-bold text-sm tracking-[0.15em] uppercase px-4 py-1.5 bg-[#1E5AA8]/10 rounded-full inline-block">
-              Thông Báo Tức Thì
+              Thông Báo Tức Thời
             </span>
             <h2 className="text-4xl lg:text-5xl font-black leading-[1.1] text-[#101828]">
               Không Bỏ Lỡ<br />Bất Kỳ Cơ Hội Nào
@@ -434,8 +314,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── FOOTER ─── */}
-      <Footer />
     </div>
   );
 }
