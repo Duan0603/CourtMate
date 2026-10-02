@@ -65,11 +65,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error: any) {
       // Fallback for UI/UX testing when backend is not connected or seeded
       console.warn('Backend login failed, falling back to mock login data:', error.message);
+      // Try to detect organizer role from known seeded organizer emails
+      const organizerEmails = [
+        'btc.laughing@courtmate.vn', 'btc.fub@courtmate.vn', 'dpf.danang@courtmate.vn',
+        'jci.hoian@courtmate.vn', 'nhabaodanang@courtmate.vn', 'dpf.fptcity@courtmate.vn',
+        'worldcup.pickleball@courtmate.vn', 'ubnd.lienchieu@courtmate.vn', 'vbf.danang@courtmate.vn',
+        'sovhtt.danang@courtmate.vn', 'nvhlaodong.danang@courtmate.vn', 'organizer@courtmate.com',
+      ];
+      const isOrganizer = organizerEmails.includes(email.toLowerCase().trim());
+      const fallbackRole = isOrganizer ? UserRole.ORGANIZER
+        : email.toLowerCase().includes('admin') ? UserRole.SUPER_ADMIN
+        : UserRole.PLAYER;
       const mockUser = normalizeUser({
         _id: email.toLowerCase(),
         email,
-        name: email === 'tien.nguyen@courtmate.com' ? 'Tiến Nguyễn (VĐV)' : email.split('@')[0],
-        role: UserRole.PLAYER,
+        name: email.split('@')[0],
+        role: fallbackRole,
       });
         const mockToken = 'mock-jwt-token';
         
