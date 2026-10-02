@@ -12,18 +12,21 @@ export class ChatService {
   }
 
   async getRecentChats(userId: string): Promise<any[]> {
-    // Find all messages where senderId or receiverId matches (wait, messages don't store receiverId natively, only roomId)
-    // roomId is constructed as "userId1_userId2". We can parse it.
-    const userRooms = this.messages.filter(m => m.roomId.includes(userId));
+    // Find all rooms this user participates in by checking the exact segments of roomId
+    const userRooms = this.messages.filter(m => {
+      const ids = m.roomId.split('_');
+      return ids[0] === userId || ids[1] === userId;
+    });
     
     const partnersMap = new Map<string, any>();
     
     for (const msg of userRooms) {
-      // Find the partner ID
+      // Find the partner ID from the roomId segments
       const ids = msg.roomId.split('_');
       const partnerId = ids[0] === userId ? ids[1] : ids[0];
       
-      if (partnerId === userId) continue;
+      // Skip if partner is the user themselves (safety check)
+      if (!partnerId || partnerId === userId) continue;
       
       if (!partnersMap.has(partnerId)) {
         // We need a name. If the partner sent a message, their name is senderName.

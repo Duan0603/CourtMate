@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { 
   MessageSquare, 
@@ -39,6 +39,8 @@ function ChatContent() {
   const [lastMessagesMap, setLastMessagesMap] = useState<Record<string, ChatMessage>>({});
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  // Use a ref to track activeFriend inside socket callbacks to avoid stale closures
+  const activeFriendRef = useRef<User | null>(null);
   const myId = user?.id || '';
 
   const searchParams = useSearchParams();
@@ -46,21 +48,23 @@ function ChatContent() {
   const targetUserName = searchParams.get('userName');
   const targetUserAvatar = searchParams.get('avatar');
 
+  // Keep the ref in sync
+  useEffect(() => {
+    activeFriendRef.current = activeFriend;
+  }, [activeFriend]);
+
   // Load chat partners / friends
   useEffect(() => {
     async function loadFriends() {
       try {
-        // Clear mock data as requested, only show people we actually chat with
         let list: User[] = [];
         
-        // If we have a target user ID from URL, make sure they are active
         if (targetUserId && targetUserId !== myId) {
           const found = list.find((u) => u.id === targetUserId || (u as any)._id === targetUserId);
           if (found) {
             setFriends(list);
             setActiveFriend(found);
           } else {
-            // Inject the mock user from query params so we can chat with them
             const parsedName = targetUserName && targetUserName !== 'null' ? targetUserName : 'Ban tổ chức';
             const mockTarget: User = {
               id: targetUserId,
@@ -86,8 +90,9 @@ function ChatContent() {
     loadFriends();
   }, [targetUserId, targetUserName, targetUserAvatar]);
 
-  // Connect to Socket.IO
+  // Connect to Socket.IO — register once, use refs for activeFriend
   useEffect(() => {
+    if (!myId) return;
     const socket = getSocket();
 
     const registerUser = () => {
@@ -104,33 +109,46 @@ function ChatContent() {
     socket.on('disconnect', () => setConnected(false));
     socket.on('connect_error', () => setConnected(false));
 
+    // Chat history for the current room
     socket.on('chat_history', (history: ChatMessage[]) => {
       setMessages(history);
-      if (history.length > 0 && activeFriend) {
+      const currentFriend = activeFriendRef.current;
+      if (history.length > 0 && currentFriend) {
+        const friendId = currentFriend.id || (currentFriend as any)._id;
         setLastMessagesMap(prev => ({
           ...prev,
-          [activeFriend.id]: history[history.length - 1]
+          [friendId]: history[history.length - 1]
         }));
       }
       scrollToBottom();
     });
 
+    // Receive message in the current room
     socket.on('receive_message', (incoming: ChatMessage) => {
-      // Only append if it's from someone else to prevent duplicates since we do optimistic updates
+      // Only append if it's from someone else (we already did optimistic update for our own messages)
       if (incoming.senderId !== myId) {
-        setMessages((prev) => [...prev, incoming]);
-        if (activeFriend) {
+        const currentFriend = activeFriendRef.current;
+        const currentFriendId = currentFriend?.id || (currentFriend as any)?._id;
+        
+        // Only add to messages if the sender is the person we're currently chatting with
+        if (currentFriend && incoming.senderId === currentFriendId) {
+          setMessages((prev) => {
+            // Prevent duplicates
+            if (prev.some(m => m._id === incoming._id)) return prev;
+            return [...prev, incoming];
+          });
           setLastMessagesMap(prev => ({
             ...prev,
-            [activeFriend.id]: incoming
+            [currentFriendId]: incoming
           }));
+          scrollToBottom();
         }
-        scrollToBottom();
       }
     });
 
     socket.on('message_seen', ({ userId, lastMessageId }: { userId: string; lastMessageId: string }) => {
-      if (activeFriend && (activeFriend.id === userId || (activeFriend as any)._id === userId)) {
+      const currentFriend = activeFriendRef.current;
+      if (currentFriend && (currentFriend.id === userId || (currentFriend as any)._id === userId)) {
         setLastSeenByFriend(lastMessageId);
       }
     });
@@ -138,19 +156,19 @@ function ChatContent() {
     // Handle recent chats loading
     socket.on('recent_chats', (recentChats: any[]) => {
       setFriends(prev => {
-        // We only want to append recent chats if they aren't already in the list
-        // (to preserve the target user injected from the tournament if they have no chat history)
         const newFriends = [...prev];
         recentChats.forEach(rc => {
+          // NEVER add yourself as a chat partner
+          if (rc.id === myId || (rc as any)._id === myId) return;
           if (!newFriends.find(f => f.id === rc.id || (f as any)._id === rc.id)) {
             newFriends.push(rc);
           }
         });
         
-        // Also update last messages map for these
         setLastMessagesMap(prevMap => {
           const map = { ...prevMap };
           recentChats.forEach(rc => {
+            if (rc.id === myId || (rc as any)._id === myId) return;
             if (rc.lastMessage) {
               map[rc.id] = rc.lastMessage;
             }
@@ -162,17 +180,20 @@ function ChatContent() {
       });
     });
 
-    // Handle global notifications when a new message arrives from any user
+    // Global notification when a new message arrives from any user
     socket.on('new_message_notification', (incoming: any) => {
       const senderId = incoming.senderId;
       
-      // 1. Update last messages map
+      // Ignore notifications from yourself (should not happen, but safety check)
+      if (senderId === myId) return;
+      
+      // Update last messages map for the sidebar preview
       setLastMessagesMap(prev => ({
         ...prev,
         [senderId]: incoming
       }));
 
-      // 2. If sender is not in friends list, add them to sidebar dynamically
+      // If sender is not in friends list, add them to sidebar
       setFriends(prev => {
         const exists = prev.some(f => f.id === senderId || (f as any)._id === senderId);
         if (!exists) {
@@ -187,33 +208,41 @@ function ChatContent() {
         return prev;
       });
       
-      // If we are currently chatting with this user but for some reason receive_message didn't catch it
-      if (activeFriend && (activeFriend.id === senderId || (activeFriend as any)._id === senderId)) {
+      // If we are currently chatting with this sender, add the message to the view
+      const currentFriend = activeFriendRef.current;
+      const currentFriendId = currentFriend?.id || (currentFriend as any)?._id;
+      if (currentFriend && senderId === currentFriendId) {
         setMessages(prev => {
-          if (!prev.find(m => m._id === incoming._id)) {
-            return [...prev, incoming];
-          }
-          return prev;
+          if (prev.some(m => m._id === incoming._id)) return prev;
+          return [...prev, incoming];
         });
         scrollToBottom();
       }
     });
 
     return () => {
-      socket.off('connect');
+      socket.off('connect', registerUser);
       socket.off('disconnect');
+      socket.off('connect_error');
       socket.off('chat_history');
       socket.off('receive_message');
       socket.off('message_seen');
       socket.off('new_message_notification');
       socket.off('recent_chats');
     };
-  }, [myId, activeFriend]);
+  }, [myId]); // Only depend on myId, use activeFriendRef inside handlers
 
   // Join room when active friend changes
   useEffect(() => {
     if (!activeFriend) return;
     const friendId = activeFriend.id || (activeFriend as any)._id;
+    
+    // NEVER join a room with yourself
+    if (friendId === myId) {
+      setActiveFriend(null);
+      return;
+    }
+    
     const roomId = [myId, friendId].sort().join('_');
     const socket = getSocket();
 
@@ -224,7 +253,9 @@ function ChatContent() {
   }, [activeFriend, myId]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 50);
   };
 
   const handleSendMessage = (e?: React.FormEvent) => {
@@ -259,12 +290,15 @@ function ChatContent() {
     });
 
     setInputText('');
-    setTimeout(scrollToBottom, 50);
+    scrollToBottom();
   };
 
-  const filteredFriends = friends.filter((f) =>
-    `${f.name} ${f.email}`.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredFriends = friends.filter((f) => {
+    const fId = f.id || (f as any)._id;
+    // Never show yourself in the contacts sidebar
+    if (fId === myId) return false;
+    return `${f.name} ${f.email}`.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   if (!isAuthenticated && !user) {
     return (
@@ -332,14 +366,15 @@ function ChatContent() {
                 </div>
               ) : (
                 filteredFriends.map((friend, index) => {
-                // Fix mock data issue where multiple friends might have same ID
-                const isActive = activeFriend?.id === friend.id && activeFriend?.name === friend.name;
+                const friendId = friend.id || (friend as any)._id;
+                const activeFriendId = activeFriend?.id || (activeFriend as any)?._id;
+                const isActive = activeFriendId === friendId;
                 
                 // Get display last message from map or fallback
                 let displayLastMsg = `Tin nhắn mới đến ${friend.name}`;
                 let displayTime = '';
                 
-                const friendLastMsg = lastMessagesMap[friend.id];
+                const friendLastMsg = lastMessagesMap[friendId];
                 if (friendLastMsg) {
                   const sender = friendLastMsg.senderId === myId ? 'Bạn' : friend.name.split(' ')[0];
                   displayLastMsg = `${sender}: ${friendLastMsg.content}`;
@@ -348,7 +383,7 @@ function ChatContent() {
 
                 return (
                   <button
-                    key={`${friend.id}-${index}`}
+                    key={`${friendId}-${index}`}
                     onClick={() => setActiveFriend(friend)}
                     className={`w-full p-3.5 flex items-center gap-3 text-left transition ${
                       isActive ? 'bg-[#EFF4FF]' : 'hover:bg-slate-100/80'

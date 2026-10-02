@@ -71,7 +71,7 @@ export function NotificationBell({ isMobile = false }: { isMobile?: boolean }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.12)] border border-slate-200/80 z-50 overflow-hidden animate-fadeIn">
+        <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.12)] border border-slate-200/80 z-50 overflow-hidden animate-fadeIn">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
             <span className="text-sm font-black text-[#101828]">Thông báo</span>
             {unreadCount > 0 && (
