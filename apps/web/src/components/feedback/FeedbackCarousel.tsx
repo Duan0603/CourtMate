@@ -19,7 +19,62 @@ export function FeedbackCarousel() {
     recommendRate: 96,
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isSlowMode, setIsSlowMode] = useState(false);
+
+  // Smooth hover deceleration refs & Web Animations API controllers
+  const row1Ref = React.useRef<HTMLDivElement>(null);
+  const row2Ref = React.useRef<HTMLDivElement>(null);
+  const currentSpeedRef = React.useRef(1.0);
+  const targetSpeedRef = React.useRef(1.0);
+  const rafRef = React.useRef<number | null>(null);
+
+  const updateSpeed = React.useCallback(() => {
+    const current = currentSpeedRef.current;
+    const target = targetSpeedRef.current;
+    const diff = target - current;
+
+    if (Math.abs(diff) < 0.005) {
+      currentSpeedRef.current = target;
+    } else {
+      // Smooth lerp: ~0.08 per frame creates a buttery ~300ms deceleration/acceleration
+      currentSpeedRef.current += diff * 0.08;
+    }
+
+    const anims: Animation[] = [];
+    if (row1Ref.current) anims.push(...row1Ref.current.getAnimations());
+    if (row2Ref.current) anims.push(...row2Ref.current.getAnimations());
+
+    for (const anim of anims) {
+      anim.playbackRate = currentSpeedRef.current;
+    }
+
+    if (currentSpeedRef.current !== target) {
+      rafRef.current = requestAnimationFrame(updateSpeed);
+    } else {
+      rafRef.current = null;
+    }
+  }, []);
+
+  const handleMouseEnter = () => {
+    targetSpeedRef.current = 0.2; // Slow down to 20% speed smoothly without resetting position
+    if (!rafRef.current) {
+      rafRef.current = requestAnimationFrame(updateSpeed);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    targetSpeedRef.current = 1.0; // Return to 100% normal speed smoothly
+    if (!rafRef.current) {
+      rafRef.current = requestAnimationFrame(updateSpeed);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
+    };
+  }, []);
 
   // Fetch from backend API on mount
   useEffect(() => {
@@ -88,12 +143,6 @@ export function FeedbackCarousel() {
           will-change: transform;
         }
 
-        /* "hover thì slow" - Smoothly slows down when user hovers over carousel */
-        .marquee-container:hover .marquee-track-left,
-        .marquee-container:hover .marquee-track-right {
-          animation-duration: 420s !important;
-        }
-
         /* Specific card hover highlights and lifts up */
         .feedback-card:hover {
           transform: translateY(-6px) scale(1.02);
@@ -103,10 +152,6 @@ export function FeedbackCarousel() {
         @media (max-width: 768px) {
           .marquee-track-left { animation-duration: 130s; }
           .marquee-track-right { animation-duration: 140s; }
-          .marquee-container:hover .marquee-track-left,
-          .marquee-container:hover .marquee-track-right {
-            animation-duration: 350s !important;
-          }
         }
       `}} />
 
@@ -168,20 +213,26 @@ export function FeedbackCarousel() {
       </div>
 
       {/* ─── INFINITE CAROUSEL CONTAINER (HOVER TO SLOW) ─── */}
-      <div className="marquee-container relative w-full overflow-hidden space-y-6 select-none group">
+      <div
+        className="marquee-container relative w-full overflow-hidden space-y-6 select-none group"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onTouchStart={handleMouseEnter}
+        onTouchEnd={handleMouseLeave}
+      >
         {/* Left & Right gradient fade masks for seamless infinite look */}
         <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-r from-[#FFFBF7] to-transparent z-20" />
         <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-l from-[#FFFBF7] to-transparent z-20" />
 
         {/* ROW 1: Scrolls to the Left */}
-        <div className="marquee-track-left py-2 px-4">
+        <div ref={row1Ref} className="marquee-track-left py-2 px-4">
           {infiniteRow1.map((item, idx) => (
             <FeedbackCard key={`r1-${item._id || item.id || idx}-${idx}`} feedback={item} />
           ))}
         </div>
 
         {/* ROW 2: Scrolls to the Right */}
-        <div className="marquee-track-right py-2 px-4">
+        <div ref={row2Ref} className="marquee-track-right py-2 px-4">
           {infiniteRow2.map((item, idx) => (
             <FeedbackCard key={`r2-${item._id || item.id || idx}-${idx}`} feedback={item} />
           ))}
