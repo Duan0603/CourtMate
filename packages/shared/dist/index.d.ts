@@ -203,3 +203,26 @@ export interface TournamentFilterDto {
     maxFee?: number;
     status?: TournamentStatus;
 }
+export interface PlatformFeedback {
+    _id?: string;
+    id?: string;
+    userName: string;
+    userEmail?: string;
+    userAvatar?: string;
+    userRole?: string;
+    rating: number;
+    comment: string;
+    category?: string;
+    isVerified?: boolean;
+    createdAt: Date | string;
+    updatedAt?: Date | string;
+}
+export interface CreatePlatformFeedbackDto {
+    userName: string;
+    userEmail?: string;
+    userAvatar?: string;
+    userRole?: string;
+    rating: number;
+    comment: string;
+    category?: string;
+}

@@ -4,6 +4,7 @@ import React from 'react';
 import { usePathname } from 'next/navigation';
 import { Navbar } from './Navbar';
 import { Footer } from './Footer';
+import { FeedbackFloatingBubble } from '../feedback/FeedbackFloatingBubble';
 
 /**
  * Renders the single unified global Navbar and Footer across all pages.
@@ -25,6 +26,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
       <Navbar />
       <main className="flex-1 flex flex-col pt-[72px]">{children}</main>
       <Footer />
+      <FeedbackFloatingBubble />
     </>
   );
 }
