@@ -6,6 +6,7 @@ import Image from 'next/image';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { FeedbackCarousel } from '../components/feedback/FeedbackCarousel';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(useGSAP, ScrollTrigger);
@@ -290,6 +291,9 @@ export default function HomePage() {
         </section>
 
       </div>
+
+      {/* ─── PLATFORM FEEDBACK INFINITE CAROUSEL ─── */}
+      <FeedbackCarousel />
 
       {/* ─── FINAL CTA ─── */}
       <section className="final-cta-section py-24 px-6 flex justify-center items-center">
