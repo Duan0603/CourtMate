@@ -114,7 +114,7 @@ export function FeedbackCarousel() {
   const infiniteRow2 = [...row2, ...row2];
 
   return (
-    <section id="feedback-section" className="py-20 md:py-28 relative overflow-hidden bg-gradient-to-b from-[#FFFBF7] via-white to-[#FFFBF7]">
+    <section id="feedback-section" className="py-20 md:py-28 relative overflow-hidden bg-gradient-to-b from-[white] via-white to-[white]">
       {/* ─── STYLES FOR MARQUEE ANIMATION & HOVER SLOWDOWN ─── */}
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes scrollLeft {
@@ -159,56 +159,58 @@ export function FeedbackCarousel() {
       <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-[#1E5AA8]/5 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-amber-400/5 rounded-full blur-[140px] pointer-events-none" />
 
-      {/* Section Header */}
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 text-center mb-12 md:mb-16 relative z-10">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#E8F1FA] text-[#1E5AA8] text-xs font-bold uppercase tracking-widest mb-4 border border-[#1E5AA8]/15">
-          <Sparkles size={14} className="text-[#1E5AA8]" />
-          50 Đánh Giá Mới Nhất Từ Hệ Thống
-        </div>
-
-        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#101828] tracking-tight leading-[1.15] mb-5">
-          Cộng Đồng Người Chơi Nói Gì Về <span className="text-[#1E5AA8]">CourtMate</span>?
-        </h2>
-
-        <p className="text-[#475467] text-base sm:text-lg max-w-2xl mx-auto font-medium leading-relaxed mb-8">
-          Tổng hợp 50 trải nghiệm thực tế từ các vận động viên, người chơi phong trào và ban tổ chức giải đấu trên khắp Đà Nẵng.
-        </p>
-
-        {/* Stats Pill Badges */}
-        <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 mb-8">
-          <div className="inline-flex items-center gap-2 bg-white px-4 py-2.5 rounded-full border border-slate-200/80 shadow-sm text-sm">
-            <div className="flex items-center">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-              ))}
+      {/* Section Header (Redesigned like Image 5) */}
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 mb-16 md:mb-20 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-end">
+          
+          {/* Left Column */}
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#1E5AA8] text-white text-xs font-bold uppercase tracking-widest mb-6 shadow-sm">
+              <MessageSquarePlus size={14} />
+              100+ Đánh Giá Từ Người Dùng
             </div>
-            <span className="font-extrabold text-[#101828]">{(stats.averageRating || 4.24).toFixed(2)}/5.0</span>
-            <span className="text-[#667085] text-xs">Đánh giá trung bình</span>
+            <h2 className="text-4xl sm:text-5xl lg:text-7xl font-black text-[#101828] uppercase tracking-tighter leading-[0.95]">
+              Cộng Đồng Người Chơi Nói Gì Về <br className="hidden lg:block"/> CourtMate?
+            </h2>
           </div>
 
-          <div className="inline-flex items-center gap-2 bg-white px-4 py-2.5 rounded-full border border-slate-200/80 shadow-sm text-sm">
-            <Trophy className="w-4 h-4 text-[#1E5AA8]" />
-            <span className="font-extrabold text-[#101828]">{stats.recommendRate || 96}%</span>
-            <span className="text-[#667085] text-xs">Hài lòng đánh giá</span>
-          </div>
+          {/* Right Column */}
+          <div className="space-y-8">
+            <p className="text-[#475467] text-lg lg:text-xl font-medium leading-relaxed">
+              Tổng hợp 100 trải nghiệm thực tế từ các vận động viên, người chơi phong trào và ban tổ chức giải đấu trên khắp Đà Nẵng.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 pt-6 border-t border-gray-200">
+              {/* Rating */}
+              <div>
+                <div className="flex items-center gap-1 mb-2">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-5 h-5 fill-amber-400 text-amber-400" />
+                  ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-3xl font-bold text-[#101828]">{(stats.averageRating || 5.0).toFixed(1)}/5</span>
+                  <span className="text-[#667085] text-sm font-medium whitespace-nowrap">Hơn +100 khách hàng</span>
+                </div>
+              </div>
 
-          <div className="inline-flex items-center gap-2 bg-white px-4 py-2.5 rounded-full border border-slate-200/80 shadow-sm text-sm">
-            <Flame className="w-4 h-4 text-orange-500" />
-            <span className="font-extrabold text-[#101828]">{feedbacks.length} Feedback</span>
-            <span className="text-[#667085] text-xs">Cập nhật liên tục</span>
-          </div>
-        </div>
+              {/* Separator */}
+              <div className="hidden sm:block w-px h-12 bg-gray-200 mx-4"></div>
 
-        {/* Action Button: Gửi đánh giá ngay */}
-        <div>
-          <button
-            type="button"
-            onClick={() => setIsModalOpen(true)}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#1E5AA8] hover:bg-[#154687] text-white text-sm font-bold shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300"
-          >
-            <MessageSquarePlus size={18} />
-            <span>Để Lại Đánh Giá Của Bạn</span>
-          </button>
+              {/* Avatars */}
+              <div className="flex items-center gap-4">
+                <div className="flex -space-x-3 bg-gray-100 p-1.5 rounded-full border border-gray-200">
+                  <img className="w-10 h-10 shrink-0 rounded-full border-2 border-white object-cover shadow-sm" src="https://i.pravatar.cc/100?img=1" alt="Avatar" />
+                  <img className="w-10 h-10 shrink-0 rounded-full border-2 border-white object-cover shadow-sm" src="https://i.pravatar.cc/100?img=2" alt="Avatar" />
+                  <img className="w-10 h-10 shrink-0 rounded-full border-2 border-white object-cover shadow-sm" src="https://i.pravatar.cc/100?img=3" alt="Avatar" />
+                  <div className="w-10 h-10 shrink-0 rounded-full border-2 border-white bg-[#1E5AA8] text-white flex items-center justify-center text-xs font-bold shadow-sm z-10 relative">
+                    +99
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
         </div>
       </div>
 
@@ -221,8 +223,8 @@ export function FeedbackCarousel() {
         onTouchEnd={handleMouseLeave}
       >
         {/* Left & Right gradient fade masks for seamless infinite look */}
-        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-r from-[#FFFBF7] to-transparent z-20" />
-        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-l from-[#FFFBF7] to-transparent z-20" />
+        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-r from-[white] to-transparent z-20" />
+        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-l from-[white] to-transparent z-20" />
 
         {/* ROW 1: Scrolls to the Left */}
         <div ref={row1Ref} className="marquee-track-left py-2 px-4">
@@ -237,13 +239,6 @@ export function FeedbackCarousel() {
             <FeedbackCard key={`r2-${item._id || item.id || idx}-${idx}`} feedback={item} />
           ))}
         </div>
-      </div>
-
-      {/* Hover hint */}
-      <div className="text-center mt-6">
-        <span className="text-xs text-[#98A2B3] font-medium tracking-wide">
-          💡 Rê chuột vào thẻ để giảm tốc độ đọc đánh giá chi tiết
-        </span>
       </div>
 
       {/* Direct Modal instance */}

@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 
 async function run() {
-  await mongoose.connect('mongodb://root:examplepassword@localhost:27018/courtmate?authSource=admin');
+  const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://root:examplepassword@localhost:27017/courtmate?authSource=admin';
+  await mongoose.connect(MONGODB_URI);
 
   // Get all users
   const users = await mongoose.connection.db.collection('users').find({}).toArray();

@@ -23,7 +23,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="vi" className={`${inter.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col font-sans bg-[#F8FAFC] text-navy">
+      <body className="min-h-full flex flex-col font-sans bg-white text-navy">
         <AuthProvider>
           <LayoutShell>{children}</LayoutShell>
         </AuthProvider>
