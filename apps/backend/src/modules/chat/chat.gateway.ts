@@ -34,10 +34,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() data: { userId: string },
     @ConnectedSocket() client: Socket,
   ) {
-    console.log(`[Socket] User ${data.userId} registered personal room: ${client.id}`);
-    client.join(data.userId);
+    const uid = String(data.userId);
+    console.log(`[Socket] User ${uid} registered personal room: ${client.id}`);
+    client.join(uid);
 
-    const recentChats = await this.chatService.getRecentChats(data.userId);
+    const recentChats = await this.chatService.getRecentChats(uid);
     client.emit('recent_chats', recentChats);
   }
 
@@ -68,6 +69,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       receiverId: string;
       content: string;
     },
+    @ConnectedSocket() client: Socket,
   ) {
     console.log(
       `[Socket] Message in Room ${data.roomId} by ${data.senderName}: "${data.content}"`,
@@ -75,18 +77,22 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       const savedMsg = await this.chatService.saveMessage(
         data.roomId,
-        data.senderId,
+        String(data.senderId),
         data.senderName,
         data.content,
       );
 
-      // Broadcast to room members only
-      this.server.to(data.roomId).emit('receive_message', savedMsg);
+      // Broadcast to room members EXCEPT sender (sender already did optimistic update)
+      client.to(data.roomId).emit('receive_message', savedMsg);
 
-      // Emit notification to receiver's personal room
-      this.server.to(data.receiverId).emit('new_message_notification', {
-        _id: savedMsg._id,
-        senderId: data.senderId,
+      // Emit ack directly to sender socket to confirm delivery with server-generated ID
+      client.emit('message_ack', savedMsg);
+
+      // Emit notification to receiver's personal room (for sidebar preview and counter)
+      const receiverRoom = String(data.receiverId);
+      this.server.to(receiverRoom).emit('new_message_notification', {
+        _id: String(savedMsg._id),
+        senderId: String(data.senderId),
         senderName: data.senderName,
         content: data.content,
         createdAt: (savedMsg as any).createdAt || new Date().toISOString(),
