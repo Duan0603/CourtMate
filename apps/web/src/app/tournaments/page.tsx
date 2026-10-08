@@ -16,7 +16,9 @@ import {
   Sparkles,
   Bell,
   RefreshCw,
-  Layers
+  Layers,
+  LayoutGrid,
+  List as ListIcon
 } from 'lucide-react';
 import { Tournament, TournamentFilterDto } from '@courtmate/shared';
 import { tournamentsApi } from '../../lib/tournaments.api';
@@ -43,6 +45,9 @@ function TournamentsContent() {
   
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
+
+  // View mode state
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // Drawer state
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -276,7 +281,7 @@ function TournamentsContent() {
             }`}
           >
             <SlidersHorizontal className="w-4 h-4" />
-            <span>Bộ lọc {activeDrawerFiltersCount > 0 && `· ${activeDrawerFiltersCount}`}</span>
+            <span className="hidden sm:inline">Bộ lọc {activeDrawerFiltersCount > 0 && `· ${activeDrawerFiltersCount}`}</span>
             {activeDrawerFiltersCount > 0 && (
               <div 
                 className="ml-1 p-0.5 rounded-full hover:bg-white/20 transition-colors"
@@ -289,6 +294,32 @@ function TournamentsContent() {
               </div>
             )}
           </button>
+
+          {/* View Mode Toggle */}
+          <div className="shrink-0 flex items-center bg-white border border-slate-200/90 rounded-2xl sm:rounded-full p-1 shadow-sm">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-2 rounded-xl sm:rounded-full transition-all ${
+                viewMode === 'grid' 
+                  ? 'bg-[#1E5AA8]/10 text-[#1E5AA8] shadow-sm' 
+                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
+              }`}
+              title="Xem dạng lưới (5 cột)"
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-2 rounded-xl sm:rounded-full transition-all ${
+                viewMode === 'list' 
+                  ? 'bg-[#1E5AA8]/10 text-[#1E5AA8] shadow-sm' 
+                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
+              }`}
+              title="Xem dạng danh sách (2 cột)"
+            >
+              <ListIcon className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Top Anchor for Scroll */}
@@ -392,12 +423,13 @@ function TournamentsContent() {
           </div>
         ) : (
           <>
-            {/* Tournaments Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Tournaments Grid/List */}
+            <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-5' : 'grid-cols-1 lg:grid-cols-2'}`}>
               {currentTournaments.map((tournament) => (
                 <TournamentCard
                   key={tournament.id}
                   tournament={tournament}
+                  viewMode={viewMode}
                   onBookmarkToggle={handleBookmarkToggle}
                   isBookmarked={bookmarkedIds.includes(tournament.id)}
                 />
@@ -496,7 +528,6 @@ function TournamentsContent() {
           onClose={() => setIsFilterOpen(false)}
         />
       </div>
-
     </div>
   );
 }

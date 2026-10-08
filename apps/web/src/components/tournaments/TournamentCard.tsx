@@ -5,21 +5,21 @@ import Link from 'next/link';
 import { Calendar, MapPin, Users, ChevronRight, Bookmark } from 'lucide-react';
 import { Tournament, TournamentStatus, SportType } from '@courtmate/shared';
 import { useAuth } from '../../context/AuthContext';
-import { LoginPromptModal } from '../auth/LoginPromptModal';
 
 interface TournamentCardProps {
   tournament: Tournament;
   onBookmarkToggle?: (id: string) => void;
   isBookmarked?: boolean;
+  viewMode?: 'grid' | 'list';
 }
 
 export const TournamentCard: React.FC<TournamentCardProps> = ({
   tournament,
   onBookmarkToggle,
   isBookmarked = false,
+  viewMode = 'grid',
 }) => {
   const { isAuthenticated } = useAuth();
-  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   const getSportBadge = (sport: SportType) => {
     switch (sport) {
@@ -69,25 +69,77 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
       })
     : 'Đang cập nhật';
 
-  // Guard: if Guest clicks detail link → show LoginPromptModal instead
-  const handleDetailClick = (e: React.MouseEvent) => {
-    if (!isAuthenticated) {
-      e.preventDefault();
-      setShowLoginPrompt(true);
-    }
-  };
+  if (viewMode === 'list') {
+    return (
+      <Link 
+        href={`/tournaments/${tournament.id}`}
+        className="group bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-lg hover:border-[#1E5AA8]/40 transition-all duration-300 flex cursor-pointer"
+      >
+        {/* Horizontal Layout Cover Image */}
+        <div className="relative w-48 sm:w-56 shrink-0 overflow-hidden bg-slate-100">
+          <img
+            src={tournament.coverImage || 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=800&q=80'}
+            alt={tournament.title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+          <div className="absolute top-2 left-2">
+            <span className={`px-2 py-0.5 text-[10px] font-bold rounded-md shadow-sm ${statusInfo.color}`}>
+              {statusInfo.label}
+            </span>
+          </div>
+          <div className="absolute bottom-2 left-2 flex items-center gap-1">
+             <span className={`px-1.5 py-0.5 text-[10px] font-semibold rounded border ${sportInfo.color} bg-white/95 backdrop-blur-sm shadow-xs`}>
+              {sportInfo.label}
+            </span>
+          </div>
+        </div>
 
+        {/* Content */}
+        <div className="p-4 flex-1 flex flex-col justify-between">
+          <div className="flex justify-between items-start gap-2">
+            <h3 className="font-bold text-base text-[#101828] line-clamp-2 group-hover:text-[#1E5AA8] transition">
+              {tournament.title}
+            </h3>
+            {onBookmarkToggle && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onBookmarkToggle(tournament.id);
+                }}
+                className="p-1 shrink-0 text-slate-300 hover:text-yellow-400 transition"
+              >
+                <Bookmark 
+                  fill={isBookmarked ? '#facc15' : 'transparent'} 
+                  color={isBookmarked ? '#facc15' : 'currentColor'}
+                  className="w-5 h-5" 
+                />
+              </button>
+            )}
+          </div>
+          
+          <div className="mt-2 grid grid-cols-2 gap-y-1.5 text-xs text-slate-500">
+            <div className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-[#1E5AA8]"/> <span className="font-medium text-slate-700">{startDateFormatted}</span></div>
+            <div className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-rose-500"/> <span className="truncate">{tournament.location}</span></div>
+            <div className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-amber-500"/> <span>{tournament.slotsLimit || 32} VĐV</span></div>
+          </div>
+          
+          <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
+            <span className="text-sm font-black text-[#101828]">{formattedFee}</span>
+            <span className="text-[#1E5AA8] text-xs font-bold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+              Xem chi tiết <ChevronRight className="w-3.5 h-3.5" />
+            </span>
+          </div>
+        </div>
+      </Link>
+    );
+  }
+
+  // Grid Mode (Compact, for 5 items per row)
   return (
-    <>
-      {/* Login Prompt Modal for Guests */}
-      <LoginPromptModal
-        isOpen={showLoginPrompt}
-        onClose={() => setShowLoginPrompt(false)}
-        title="Đăng nhập để xem chi tiết"
-        description={`Bạn cần đăng nhập để xem chi tiết giải đấu "${tournament.title}" và đăng ký tham gia.`}
-      />
-
-      <div className="group bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-xl hover:border-[#1E5AA8]/40 transition-all duration-300 flex flex-col justify-between">
+    <Link 
+      href={`/tournaments/${tournament.id}`}
+      className="group bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-lg hover:border-[#1E5AA8]/40 transition-all duration-300 flex flex-col cursor-pointer h-full relative"
+    >
         {/* Cover Image & Badges */}
         <div className="relative h-48 w-full overflow-hidden bg-slate-100">
           <img
@@ -112,35 +164,18 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
             <button
               onClick={(e) => {
                 e.preventDefault();
-                if (!isAuthenticated) {
-                  setShowLoginPrompt(true);
-                  return;
-                }
+                e.stopPropagation();
                 onBookmarkToggle(tournament.id);
-                if (!isBookmarked) {
-                  // Dispatch local notification event to Bell
-                  const notificationEvent = new CustomEvent('local-notification:new', {
-                    detail: {
-                      id: `local_noti_${Date.now()}`,
-                      type: 'system',
-                      title: 'Lưu giải đấu thành công',
-                      body: `Bạn đã thêm giải đấu "${tournament.title}" vào danh sách yêu thích.`,
-                      link: `/tournaments/${tournament.id}`,
-                      createdAt: new Date().toISOString(),
-                    }
-                  });
-                  window.dispatchEvent(notificationEvent);
-                }
               }}
-              className={`absolute top-3 right-3 p-1.5 transition-colors duration-200 drop-shadow-md hover:scale-110 active:scale-95`}
+              className={`absolute top-2 right-2 p-1.5 bg-black/20 backdrop-blur-sm rounded-full transition-colors duration-200 hover:bg-black/40 hover:scale-110 active:scale-95`}
             >
               <Bookmark 
                 color={isBookmarked ? '#facc15' : '#ffffff'}
                 fill={isBookmarked ? '#facc15' : 'transparent'}
-                className={`w-6 h-6 transition-all ${
+                className={`w-4 h-4 transition-all ${
                   isBookmarked 
                     ? 'opacity-100' 
-                    : 'opacity-80 hover:opacity-100'
+                    : 'opacity-90 hover:opacity-100'
                 }`} 
               />
             </button>
@@ -157,66 +192,33 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
           </div>
         </div>
 
-        {/* Content */}
-        <div className="p-5 flex-1 flex flex-col justify-between">
-          <div>
-            {/* Title — clicking triggers guard */}
-            <a
-              href={`/tournaments/${tournament.id}`}
-              onClick={handleDetailClick}
-              className="cursor-pointer"
-            >
-              <h3 className="font-bold text-lg text-[#101828] line-clamp-2 hover:text-[#1E5AA8] transition group-hover:text-[#1E5AA8]">
-                {tournament.title}
-              </h3>
-            </a>
+        {/* Content - Compact for Grid */}
+        <div className="p-4 flex-1 flex flex-col justify-between gap-3">
+          <div className="space-y-2.5">
+            <h3 className="font-bold text-sm text-[#101828] line-clamp-2 leading-snug group-hover:text-[#1E5AA8] transition-colors">
+              {tournament.title}
+            </h3>
 
-            <p className="text-xs text-[#475467] mt-1.5 line-clamp-2 leading-relaxed">
-              {tournament.description}
-            </p>
-
-            {/* Key Details */}
-            <div className="mt-4 space-y-2 text-xs text-slate-600">
+            {/* Key Details using Icons to save space */}
+            <div className="space-y-1.5 text-[11px] text-slate-500 font-medium">
               <div className="flex items-center gap-2">
                 <Calendar className="w-3.5 h-3.5 text-[#1E5AA8] shrink-0" />
-                <span>
-                  Khởi tranh:{' '}
-                  <strong className="text-[#101828]">{startDateFormatted}</strong>
-                </span>
+                <span className="text-slate-600">{startDateFormatted}</span>
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                <span className="truncate">{tournament.location}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Users className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                <span>
-                  Quy mô: <strong>{tournament.slotsLimit || 32}</strong> VĐV / Cặp đấu
-                </span>
+                <span className="truncate">{tournament.location}, {tournament.city}</span>
               </div>
             </div>
           </div>
 
-          {/* Footer & Actions */}
-          <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between">
-            <div>
-              <span className="text-[11px] text-slate-400 font-medium block">Lệ phí tham gia</span>
-              <span className="text-base font-black text-[#101828]">{formattedFee}</span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <a
-                href={`/tournaments/${tournament.id}`}
-                onClick={handleDetailClick}
-                className="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-[#1E5AA8]/10 hover:bg-[#1E5AA8] hover:text-white text-[#1E5AA8] text-xs font-bold transition-all"
-              >
-                <span>Chi tiết</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </a>
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+            <span className="text-sm font-black text-[#1E5AA8] tracking-tight">{formattedFee}</span>
+            <div className="w-7 h-7 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-[#1E5AA8] group-hover:text-white transition-all shadow-sm">
+              <ChevronRight className="w-3.5 h-3.5" />
             </div>
           </div>
         </div>
-      </div>
-    </>
+      </Link>
   );
 };
