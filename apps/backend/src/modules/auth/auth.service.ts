@@ -18,55 +18,44 @@ export class AuthService implements OnModuleInit {
     try {
       console.log('[AuthService] Checking & seeding test accounts...');
       
-      const testUserEmail = 'test@courtmate.com';
-      const testUserPasswordHash = this.hashPassword('Password123');
-      const existingUser = await this.usersService.findByEmail(testUserEmail);
-      if (!existingUser) {
-        await this.usersService.createWithPassword(testUserEmail, testUserPasswordHash, 'Test Player');
-        console.log(`[AuthService] Seeded test player account: ${testUserEmail} / Password123`);
+      const seedAccounts = [
+        { email: 'test@courtmate.com', name: 'Test Player', role: UserRole.PLAYER },
+        { email: 'player1@courtmate.com', name: 'Nguyễn Văn Hùng (VĐV Cầu lông)', role: UserRole.PLAYER },
+        { email: 'player2@courtmate.com', name: 'Trần Thị Mai (VĐV Pickleball)', role: UserRole.PLAYER },
+        { email: 'player3@courtmate.com', name: 'Lê Hoàng Nam (VĐV Tennis)', role: UserRole.PLAYER },
+        { email: 'organizer@courtmate.com', name: 'Test Organizer (BTC)', role: UserRole.ORGANIZER },
+        { email: 'btc.danang@courtmate.com', name: 'CLB Cầu Lông Đà Nẵng (BTC)', role: UserRole.ORGANIZER },
+        { email: 'admin@courtmate.com', name: 'Test Regional Admin', role: UserRole.REGIONAL_ADMIN },
+        { email: 'superadmin@courtmate.com', name: 'Test Super Admin', role: UserRole.SUPER_ADMIN },
+      ];
+
+      const defaultPasswordHash = this.hashPassword('Password123');
+
+      for (const acc of seedAccounts) {
+        let existing = await this.usersService.findByEmail(acc.email);
+        if (!existing) {
+          await this.usersService.createWithPassword(acc.email, defaultPasswordHash, acc.name, acc.role);
+          console.log(`[AuthService] Seeded test account: ${acc.email} / Password123 (${acc.name})`);
+        } else if (existing.name !== acc.name) {
+          await this.usersService.updateProfile(acc.email, { name: acc.name, role: acc.role });
+        }
       }
 
-      const testOrgEmail = 'organizer@courtmate.com';
-      const testOrgPasswordHash = this.hashPassword('Password123');
-      const existingOrg = await this.usersService.findByEmail(testOrgEmail);
-      if (!existingOrg) {
-        await this.usersService.createWithPassword(testOrgEmail, testOrgPasswordHash, 'Test Organizer');
-        await this.usersService.updateProfile(testOrgEmail, { role: UserRole.ORGANIZER });
-        console.log(`[AuthService] Seeded test organizer account: ${testOrgEmail} / Password123`);
+      // Fetch all seed users to get their _ids
+      const seededUsers = await Promise.all(
+        seedAccounts.map(acc => this.usersService.findByEmail(acc.email))
+      );
+      const validUsers = seededUsers.filter(Boolean) as any[];
+      const allUserIds = validUsers.map(u => u._id.toString());
+
+      // Link friendships: each user has all OTHER seed users in their friends list
+      for (const u of validUsers) {
+        const uId = u._id.toString();
+        const friendIds = allUserIds.filter(id => id !== uId);
+        await this.usersService.updateProfile(u.email, { friends: friendIds } as any);
       }
 
-      const testAdminEmail = 'admin@courtmate.com';
-      const testAdminPasswordHash = this.hashPassword('Password123');
-      const existingAdmin = await this.usersService.findByEmail(testAdminEmail);
-      if (!existingAdmin) {
-        await this.usersService.createWithPassword(testAdminEmail, testAdminPasswordHash, 'Test Regional Admin');
-        await this.usersService.updateProfile(testAdminEmail, { role: UserRole.REGIONAL_ADMIN, preferences: { location: 'Da Nang', sports: [] } });
-        console.log(`[AuthService] Seeded test admin account: ${testAdminEmail} / Password123`);
-      }
-
-      const testSuperEmail = 'superadmin@courtmate.com';
-      const testSuperPasswordHash = this.hashPassword('Password123');
-      const existingSuper = await this.usersService.findByEmail(testSuperEmail);
-      if (!existingSuper) {
-        await this.usersService.createWithPassword(testSuperEmail, testSuperPasswordHash, 'Test Super Admin');
-        await this.usersService.updateProfile(testSuperEmail, { role: UserRole.SUPER_ADMIN });
-        console.log(`[AuthService] Seeded test superadmin account: ${testSuperEmail} / Password123`);
-      }
-
-      // Link friendships
-      const player = await this.usersService.findByEmail('test@courtmate.com');
-      const organizer = await this.usersService.findByEmail('organizer@courtmate.com');
-      const admin = await this.usersService.findByEmail('admin@courtmate.com');
-      const superadmin = await this.usersService.findByEmail('superadmin@courtmate.com');
-      // Link friendships sequentially to avoid VersionError
-      if (player && organizer && admin && superadmin) {
-        await this.usersService.updateProfile('test@courtmate.com', { friends: [organizer._id.toString(), admin._id.toString()] } as any);
-        await this.usersService.updateProfile('organizer@courtmate.com', { friends: [player._id.toString(), superadmin._id.toString()] } as any);
-        await this.usersService.updateProfile('admin@courtmate.com', { friends: [player._id.toString()] } as any);
-        await this.usersService.updateProfile('superadmin@courtmate.com', { friends: [organizer._id.toString()] } as any);
-
-        console.log('[AuthService] Successfully linked test friendships!');
-      }
+      console.log('[AuthService] Successfully linked test friendships for all test accounts!');
     } catch (e) {
       console.error('[AuthService] Error during seeding:', e);
     }

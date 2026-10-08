@@ -1,61 +1,80 @@
 import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { Message } from './chat.schema';
 
 @Injectable()
 export class ChatService {
-  private messages: any[] = [];
+  constructor(
+    @InjectModel(Message.name) private readonly messageModel: Model<Message>,
+  ) {}
 
-  async getHistory(roomId: string, limit = 50): Promise<Message[]> {
-    return this.messages
-      .filter((m) => m.roomId === roomId)
-      .slice(-limit);
+  async getHistory(roomId: string, limit = 100): Promise<any[]> {
+    try {
+      const dbMessages = await this.messageModel
+        .find({ roomId })
+        .sort({ createdAt: 1 })
+        .limit(limit)
+        .lean()
+        .exec();
+
+      return dbMessages.map(m => ({
+        _id: m._id.toString(),
+        roomId: m.roomId,
+        senderId: m.senderId,
+        senderName: m.senderName,
+        content: m.content,
+        createdAt: (m as any).createdAt || new Date(),
+      }));
+    } catch (e) {
+      console.error('[ChatService] getHistory error:', e);
+      return [];
+    }
   }
 
   async getRecentChats(userId: string): Promise<any[]> {
-    // Find all rooms this user participates in by checking the exact segments of roomId
-    const userRooms = this.messages.filter(m => {
-      const ids = m.roomId.split('_');
-      return ids[0] === userId || ids[1] === userId;
-    });
-    
-    const partnersMap = new Map<string, any>();
-    
-    for (const msg of userRooms) {
-      // Find the partner ID from the roomId segments
-      const ids = msg.roomId.split('_');
-      const partnerId = ids[0] === userId ? ids[1] : ids[0];
-      
-      // Skip if partner is the user themselves (safety check)
-      if (!partnerId || partnerId === userId) continue;
-      
-      if (!partnersMap.has(partnerId)) {
-        // We need a name. If the partner sent a message, their name is senderName.
-        let partnerName = 'Người dùng';
-        if (msg.senderId === partnerId) partnerName = msg.senderName;
-        else {
-          // If we sent the message, we might not know the partner's name unless they also sent one.
-          // Let's try to find if they ever sent a message in this room
-          const partnerMsg = userRooms.find(m => m.senderId === partnerId);
-          if (partnerMsg) partnerName = partnerMsg.senderName;
-        }
+    try {
+      // Find messages where this user is part of the room
+      const regex = new RegExp(`(^|_)${userId}(_|$)`);
+      const userRooms = await this.messageModel
+        .find({ roomId: { $regex: regex } })
+        .sort({ createdAt: -1 })
+        .limit(100)
+        .lean()
+        .exec();
 
-        partnersMap.set(partnerId, {
-          id: partnerId,
-          name: partnerName,
-          email: '',
-          avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80',
-          role: 'PLAYER',
-          lastMessage: msg
-        });
-      } else {
-        const p = partnersMap.get(partnerId);
-        if (msg.createdAt > p.lastMessage.createdAt) {
-          p.lastMessage = msg;
+      const partnersMap = new Map<string, any>();
+
+      for (const msg of userRooms) {
+        const ids = msg.roomId.split('_');
+        const partnerId = ids[0] === userId ? ids[1] : ids[0];
+        if (!partnerId || partnerId === userId) continue;
+
+        if (!partnersMap.has(partnerId)) {
+          let partnerName = msg.senderId === partnerId ? msg.senderName : 'Người dùng';
+          partnersMap.set(partnerId, {
+            id: partnerId,
+            name: partnerName,
+            email: '',
+            avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80',
+            role: 'PLAYER',
+            lastMessage: {
+              _id: msg._id.toString(),
+              roomId: msg.roomId,
+              senderId: msg.senderId,
+              senderName: msg.senderName,
+              content: msg.content,
+              createdAt: (msg as any).createdAt,
+            },
+          });
         }
       }
+
+      return Array.from(partnersMap.values());
+    } catch (e) {
+      console.error('[ChatService] getRecentChats error:', e);
+      return [];
     }
-    
-    return Array.from(partnersMap.values()).sort((a, b) => b.lastMessage.createdAt - a.lastMessage.createdAt);
   }
 
   async saveMessage(
@@ -63,17 +82,33 @@ export class ChatService {
     senderId: string,
     senderName: string,
     content: string,
-  ): Promise<Message> {
-    const newMessage = {
-      _id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-      roomId,
-      senderId,
-      senderName,
-      content,
-      createdAt: new Date(),
-    };
-    
-    this.messages.push(newMessage);
-    return newMessage as any;
+  ): Promise<any> {
+    try {
+      const created = await this.messageModel.create({
+        roomId,
+        senderId,
+        senderName,
+        content,
+      });
+
+      return {
+        _id: created._id.toString(),
+        roomId: created.roomId,
+        senderId: created.senderId,
+        senderName: created.senderName,
+        content: created.content,
+        createdAt: (created as any).createdAt || new Date(),
+      };
+    } catch (e) {
+      console.error('[ChatService] Error saving message to MongoDB, fallback to generated ID:', e);
+      return {
+        _id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        roomId,
+        senderId,
+        senderName,
+        content,
+        createdAt: new Date(),
+      };
+    }
   }
 }

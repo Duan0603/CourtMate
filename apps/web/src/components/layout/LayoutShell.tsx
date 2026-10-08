@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { usePathname } from 'next/navigation';
+import { Toaster } from 'react-hot-toast';
 import { Navbar } from './Navbar';
 import { Footer } from './Footer';
 
@@ -17,11 +18,17 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
   const isNoLayout = noLayoutRoutes.includes(pathname);
 
   if (isNoLayout) {
-    return <>{children}</>;
+    return (
+      <>
+        <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
+        {children}
+      </>
+    );
   }
 
   return (
     <>
+      <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
       <Navbar />
       <main className="flex-1 flex flex-col pt-[72px]">{children}</main>
       <Footer />

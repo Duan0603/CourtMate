@@ -12,8 +12,11 @@ import {
   Smile, 
   Paperclip, 
   Award,
-  Circle
+  Circle,
+  Bell,
+  X
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { User, UserRole } from '@courtmate/shared';
 import { useAuth } from '../../context/AuthContext';
 import { authApi } from '../../lib/auth.api';
@@ -37,11 +40,13 @@ function ChatContent() {
   const [connected, setConnected] = useState(false);
   const [lastSeenByFriend, setLastSeenByFriend] = useState<string | null>(null);
   const [lastMessagesMap, setLastMessagesMap] = useState<Record<string, ChatMessage>>({});
+  const [unreadCountsMap, setUnreadCountsMap] = useState<Record<string, number>>({});
+  const [newMessageBanner, setNewMessageBanner] = useState<{ senderId: string; senderName: string; content: string } | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   // Use a ref to track activeFriend inside socket callbacks to avoid stale closures
   const activeFriendRef = useRef<User | null>(null);
-  const myId = user?.id || '';
+  const myId = user?.id || (user as any)?._id || '';
 
   const searchParams = useSearchParams();
   const targetUserId = searchParams.get('userId');
@@ -53,12 +58,17 @@ function ChatContent() {
     activeFriendRef.current = activeFriend;
   }, [activeFriend]);
 
-  // Load chat partners / friends
+  // Load chat partners / friends from API
   useEffect(() => {
     async function loadFriends() {
       try {
         let list: User[] = [];
-        
+        try {
+          list = await authApi.getFriends();
+        } catch (e) {
+          console.warn('Could not fetch friends from API, using fallback:', e);
+        }
+
         if (targetUserId && targetUserId !== myId) {
           const found = list.find((u) => u.id === targetUserId || (u as any)._id === targetUserId);
           if (found) {
@@ -79,7 +89,7 @@ function ChatContent() {
           }
         } else {
           setFriends(list);
-          if (list.length > 0 && !activeFriend) {
+          if (list.length > 0 && !activeFriendRef.current) {
             setActiveFriend(list[0]);
           }
         }
@@ -88,7 +98,30 @@ function ChatContent() {
       }
     }
     loadFriends();
-  }, [targetUserId, targetUserName, targetUserAvatar]);
+  }, [targetUserId, targetUserName, targetUserAvatar, myId]);
+
+  // Helper to safely append a message without duplication
+  const appendMessageSafely = useCallback((incoming: ChatMessage) => {
+    setMessages((prev) => {
+      // 1. Check if message already exists by ID
+      if (prev.some(m => m._id === incoming._id)) return prev;
+
+      // 2. Check if matching optimistic message (same sender + same content within 5 seconds)
+      const matchingIdx = prev.findIndex(m =>
+        m.senderId === incoming.senderId &&
+        m.content === incoming.content &&
+        Math.abs(new Date(m.createdAt).getTime() - new Date(incoming.createdAt).getTime()) < 5000
+      );
+
+      if (matchingIdx !== -1) {
+        const next = [...prev];
+        next[matchingIdx] = incoming;
+        return next;
+      }
+
+      return [...prev, incoming];
+    });
+  }, []);
 
   // Connect to Socket.IO — register once, use refs for activeFriend
   useEffect(() => {
@@ -111,9 +144,9 @@ function ChatContent() {
 
     // Chat history for the current room
     socket.on('chat_history', (history: ChatMessage[]) => {
-      setMessages(history);
+      setMessages(history || []);
       const currentFriend = activeFriendRef.current;
-      if (history.length > 0 && currentFriend) {
+      if (history && history.length > 0 && currentFriend) {
         const friendId = currentFriend.id || (currentFriend as any)._id;
         setLastMessagesMap(prev => ({
           ...prev,
@@ -125,25 +158,32 @@ function ChatContent() {
 
     // Receive message in the current room
     socket.on('receive_message', (incoming: ChatMessage) => {
-      // Only append if it's from someone else (we already did optimistic update for our own messages)
-      if (incoming.senderId !== myId) {
-        const currentFriend = activeFriendRef.current;
-        const currentFriendId = currentFriend?.id || (currentFriend as any)?._id;
-        
-        // Only add to messages if the sender is the person we're currently chatting with
-        if (currentFriend && incoming.senderId === currentFriendId) {
-          setMessages((prev) => {
-            // Prevent duplicates
-            if (prev.some(m => m._id === incoming._id)) return prev;
-            return [...prev, incoming];
-          });
-          setLastMessagesMap(prev => ({
-            ...prev,
-            [currentFriendId]: incoming
-          }));
-          scrollToBottom();
-        }
+      // Ignore if it's from me (sender already did optimistic update)
+      if (incoming.senderId === myId) return;
+
+      const currentFriend = activeFriendRef.current;
+      const currentFriendId = currentFriend?.id || (currentFriend as any)?._id;
+      
+      // If we are currently chatting with this person
+      if (currentFriend && (incoming.senderId === currentFriendId || (incoming as any).roomId?.includes(currentFriendId))) {
+        appendMessageSafely(incoming);
+        setLastMessagesMap(prev => ({
+          ...prev,
+          [currentFriendId]: incoming
+        }));
+        scrollToBottom();
       }
+    });
+
+    // Server confirmed our sent message — update temporary optimistic ID
+    socket.on('message_ack', (savedMsg: ChatMessage) => {
+      setMessages((prev) =>
+        prev.map(m =>
+          (m.senderId === myId && m.content === savedMsg.content && m._id.startsWith('msg-') && !m._id.includes('-' + savedMsg._id))
+            ? { ...m, _id: savedMsg._id }
+            : m
+        )
+      );
     });
 
     socket.on('message_seen', ({ userId, lastMessageId }: { userId: string; lastMessageId: string }) => {
@@ -184,18 +224,21 @@ function ChatContent() {
     socket.on('new_message_notification', (incoming: any) => {
       const senderId = incoming.senderId;
       
-      // Ignore notifications from yourself (should not happen, but safety check)
+      // Ignore notifications from yourself
       if (senderId === myId) return;
       
+      const currentFriend = activeFriendRef.current;
+      const currentFriendId = currentFriend?.id || (currentFriend as any)?._id;
+
       // Update last messages map for the sidebar preview
       setLastMessagesMap(prev => ({
         ...prev,
         [senderId]: incoming
       }));
 
-      // If sender is not in friends list, add them to sidebar
+      // If sender is not in friends list, add them to sidebar; move them to top
       setFriends(prev => {
-        const exists = prev.some(f => f.id === senderId || (f as any)._id === senderId);
+        const exists = prev.some(f => (f.id || (f as any)._id) === senderId);
         if (!exists) {
           return [{
             id: senderId,
@@ -205,18 +248,59 @@ function ChatContent() {
             role: 'PLAYER' as any,
           } as any, ...prev];
         }
-        return prev;
+        const senderFriend = prev.find(f => (f.id || (f as any)._id) === senderId);
+        const others = prev.filter(f => (f.id || (f as any)._id) !== senderId);
+        return senderFriend ? [senderFriend, ...others] : prev;
       });
-      
-      // If we are currently chatting with this sender, add the message to the view
-      const currentFriend = activeFriendRef.current;
-      const currentFriendId = currentFriend?.id || (currentFriend as any)?._id;
-      if (currentFriend && senderId === currentFriendId) {
-        setMessages(prev => {
-          if (prev.some(m => m._id === incoming._id)) return prev;
-          return [...prev, incoming];
-        });
+
+      // CASE 1: We are ALREADY looking at this sender's chat
+      if (currentFriend && currentFriendId === senderId) {
+        appendMessageSafely(incoming);
         scrollToBottom();
+      } else {
+        // CASE 2: Message from someone else (or no active chat)
+        // 1. Increment unread count badge for this sender
+        setUnreadCountsMap(prev => ({
+          ...prev,
+          [senderId]: (prev[senderId] || 0) + 1
+        }));
+
+        // 2. Set new message banner on top of the chat area
+        setNewMessageBanner({
+          senderId,
+          senderName: incoming.senderName || 'Người dùng',
+          content: incoming.content,
+        });
+
+        // 3. Show rich interactive Toast popup
+        toast.custom((t) => (
+          <div
+            onClick={() => {
+              setFriends(currentList => {
+                const target = currentList.find(f => (f.id || (f as any)._id) === senderId);
+                if (target) {
+                  setActiveFriend(target);
+                  setUnreadCountsMap(p => ({ ...p, [senderId]: 0 }));
+                  setNewMessageBanner(null);
+                }
+                return currentList;
+              });
+              toast.dismiss(t.id);
+            }}
+            className={`${t.visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} transition-all duration-300 max-w-sm w-full bg-white shadow-2xl rounded-2xl border border-primary/30 p-3.5 flex items-center gap-3 cursor-pointer hover:border-primary hover:shadow-lg`}
+          >
+            <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <MessageSquare className="w-5 h-5 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-bold text-navy truncate">{incoming.senderName || 'Tin nhắn mới'}</p>
+                <span className="text-[10px] text-primary font-bold ml-2 shrink-0">Xem ngay</span>
+              </div>
+              <p className="text-xs text-slate-600 truncate mt-0.5">{incoming.content}</p>
+            </div>
+          </div>
+        ), { duration: 5000 });
       }
     });
 
@@ -226,15 +310,16 @@ function ChatContent() {
       socket.off('connect_error');
       socket.off('chat_history');
       socket.off('receive_message');
+      socket.off('message_ack');
       socket.off('message_seen');
       socket.off('new_message_notification');
       socket.off('recent_chats');
     };
-  }, [myId]); // Only depend on myId, use activeFriendRef inside handlers
+  }, [myId, appendMessageSafely]); // Only depend on myId, use activeFriendRef inside handlers
 
   // Join room when active friend changes
   useEffect(() => {
-    if (!activeFriend) return;
+    if (!activeFriend || !myId) return;
     const friendId = activeFriend.id || (activeFriend as any)._id;
     
     // NEVER join a room with yourself
@@ -258,6 +343,18 @@ function ChatContent() {
     }, 50);
   };
 
+  const handleSelectFriend = (friend: User) => {
+    setActiveFriend(friend);
+    const friendId = friend.id || (friend as any)._id;
+    setUnreadCountsMap(prev => ({
+      ...prev,
+      [friendId]: 0,
+    }));
+    if (newMessageBanner?.senderId === friendId) {
+      setNewMessageBanner(null);
+    }
+  };
+
   const handleSendMessage = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!inputText.trim() || !activeFriend) return;
@@ -274,8 +371,16 @@ function ChatContent() {
       createdAt: new Date().toISOString(),
     };
 
-    // Optimistic UI update
-    setMessages((prev) => [...prev, newMsg]);
+    // Optimistic UI update with double-submit guard
+    setMessages((prev) => {
+      const isDuplicate = prev.some(m =>
+        m.senderId === myId &&
+        m.content === newMsg.content &&
+        Math.abs(new Date(m.createdAt).getTime() - new Date(newMsg.createdAt).getTime()) < 600
+      );
+      if (isDuplicate) return prev;
+      return [...prev, newMsg];
+    });
     setLastMessagesMap(prev => ({
       ...prev,
       [friendId]: newMsg
@@ -322,6 +427,8 @@ function ChatContent() {
     );
   }
 
+  const activeFriendId = activeFriend?.id || (activeFriend as any)?._id;
+
   return (
     <div className="bg-[#F8FAFC] flex-1 flex flex-col h-[calc(100vh-65px)]">
       <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4 flex-1 flex flex-col">
@@ -367,8 +474,8 @@ function ChatContent() {
               ) : (
                 filteredFriends.map((friend, index) => {
                 const friendId = friend.id || (friend as any)._id;
-                const activeFriendId = activeFriend?.id || (activeFriend as any)?._id;
                 const isActive = activeFriendId === friendId;
+                const unreadCount = unreadCountsMap[friendId] || 0;
                 
                 // Get display last message from map or fallback
                 let displayLastMsg = `Tin nhắn mới đến ${friend.name}`;
@@ -384,8 +491,8 @@ function ChatContent() {
                 return (
                   <button
                     key={`${friendId}-${index}`}
-                    onClick={() => setActiveFriend(friend)}
-                    className={`w-full p-3.5 flex items-center gap-3 text-left transition ${
+                    onClick={() => handleSelectFriend(friend)}
+                    className={`w-full p-3.5 flex items-center gap-3 text-left transition relative ${
                       isActive ? 'bg-[#EFF4FF]' : 'hover:bg-slate-100/80'
                     }`}
                   >
@@ -410,9 +517,16 @@ function ChatContent() {
                         )}
                       </div>
 
-                      <p className={`text-[11px] truncate mt-0.5 ${!friendLastMsg ? 'text-primary/70 italic' : 'text-slate-500'}`}>
-                        {displayLastMsg}
-                      </p>
+                      <div className="flex items-center justify-between gap-2 mt-0.5">
+                        <p className={`text-[11px] truncate ${unreadCount > 0 ? 'text-primary font-bold' : (!friendLastMsg ? 'text-primary/70 italic' : 'text-slate-500')}`}>
+                          {displayLastMsg}
+                        </p>
+                        {unreadCount > 0 && (
+                          <span className="min-w-[18px] h-4.5 px-1.5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0 shadow-xs animate-pulse">
+                            {unreadCount > 9 ? '9+' : unreadCount}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </button>
                 );
@@ -446,6 +560,38 @@ function ChatContent() {
                   </div>
                 </div>
               </div>
+
+              {/* Notification Banner when message arrives from another friend while chatting */}
+              {newMessageBanner && newMessageBanner.senderId !== activeFriendId && (
+                <div className="mx-4 mt-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-2">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-ping shrink-0" />
+                    <div className="text-xs truncate">
+                      <span className="font-bold text-navy">{newMessageBanner.senderName}: </span>
+                      <span className="text-slate-600 italic">&ldquo;{newMessageBanner.content}&rdquo;</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0 ml-3">
+                    <button
+                      onClick={() => {
+                        const target = friends.find(item => (item.id || (item as any)._id) === newMessageBanner.senderId);
+                        if (target) {
+                          handleSelectFriend(target);
+                        }
+                      }}
+                      className="px-3 py-1 bg-primary text-white text-xs font-semibold rounded-xl hover:bg-primary-dark transition shadow-xs"
+                    >
+                      Trả lời ngay
+                    </button>
+                    <button
+                      onClick={() => setNewMessageBanner(null)}
+                      className="p-1 text-slate-400 hover:text-slate-600 rounded-lg"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Message Stream */}
               <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-slate-50/40">
@@ -547,3 +693,4 @@ export default function ChatPage() {
     </Suspense>
   );
 }
+
