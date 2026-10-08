@@ -5,10 +5,10 @@ module.exports = {
     const feedbacksCollection = db.collection('feedbacks');
     const existingCount = await feedbacksCollection.countDocuments();
 
-    if (existingCount < 100) {
+    if (existingCount < 50) {
       const mockFeedbacks = generate100Feedbacks();
       await feedbacksCollection.insertMany(mockFeedbacks);
-      console.log(`Successfully seeded ${mockFeedbacks.length} authentic 5-star positive mock feedbacks into 'feedbacks' collection.`);
+      console.log(`Successfully seeded ${mockFeedbacks.length} authentic balanced mock feedbacks into 'feedbacks' collection.`);
     } else {
       console.log(`'feedbacks' collection already contains ${existingCount} documents, skipping seed.`);
     }
@@ -19,6 +19,6 @@ module.exports = {
 
   async down(db, client) {
     // Drop the feedbacks collection or clean up mock feedbacks
-    await db.collection('feedbacks').deleteMany({ rating: 5, isVerified: true });
+    await db.collection('feedbacks').deleteMany({ isVerified: true });
   }
 };

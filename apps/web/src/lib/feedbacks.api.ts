@@ -17,10 +17,10 @@ export interface FeedbackResponse {
 
 export const feedbacksApi = {
   /**
-   * Fetches latest 100 feedbacks from the backend.
-   * If the API fails or is unreachable, seamlessly returns the local 100 mock feedbacks.
+   * Fetches latest feedbacks from the backend (default 50).
+   * If the API fails or is unreachable, seamlessly returns the local mock feedbacks.
    */
-  async getLatestFeedbacks(limit: number = 100): Promise<{ feedbacks: PlatformFeedback[]; stats: FeedbackStats }> {
+  async getLatestFeedbacks(limit: number = 50): Promise<{ feedbacks: PlatformFeedback[]; stats: FeedbackStats }> {
     try {
       const response = await apiClient.get<FeedbackResponse>(`/feedbacks?limit=${limit}`);
       if (response && Array.isArray(response.feedbacks) && response.feedbacks.length > 0) {
@@ -28,9 +28,9 @@ export const feedbacksApi = {
           feedbacks: response.feedbacks,
           stats: response.stats || {
             total: response.feedbacks.length,
-            averageRating: 5.0,
-            fiveStarPercent: 100,
-            recommendRate: 99,
+            averageRating: 4.24,
+            fiveStarPercent: 40,
+            recommendRate: 96,
           },
         };
       }
@@ -39,13 +39,19 @@ export const feedbacksApi = {
     }
 
     const fallbacks = getFallbackFeedbacks().slice(0, limit);
+    const avgRating = fallbacks.length > 0
+      ? Math.round((fallbacks.reduce((a, b) => a + (b.rating || 5), 0) / fallbacks.length) * 100) / 100
+      : 4.24;
+    const fiveStarCount = fallbacks.filter((f) => f.rating === 5).length;
+    const fourPlusCount = fallbacks.filter((f) => (f.rating || 5) >= 4).length;
+
     return {
       feedbacks: fallbacks,
       stats: {
-        total: 100,
-        averageRating: 5.0,
-        fiveStarPercent: 100,
-        recommendRate: 99,
+        total: fallbacks.length,
+        averageRating: avgRating,
+        fiveStarPercent: fallbacks.length > 0 ? Math.round((fiveStarCount / fallbacks.length) * 100) : 40,
+        recommendRate: fallbacks.length > 0 ? Math.round((fourPlusCount / fallbacks.length) * 100) : 96,
       },
     };
   },

@@ -49,14 +49,22 @@ export function FeedbackCard({ feedback }: FeedbackCardProps) {
         {/* Top bar: Stars & Category */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-1">
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                className="w-4 h-4 fill-amber-400 text-amber-400 drop-shadow-[0_1px_3px_rgba(251,191,36,0.4)]"
-              />
-            ))}
+            {[...Array(5)].map((_, i) => {
+              const rating = typeof feedback.rating === 'number' ? feedback.rating : 5;
+              const isFilled = i < rating;
+              return (
+                <Star
+                  key={i}
+                  className={`w-4 h-4 transition-colors ${
+                    isFilled
+                      ? 'fill-amber-400 text-amber-400 drop-shadow-[0_1px_3px_rgba(251,191,36,0.4)]'
+                      : 'fill-slate-100 text-slate-300'
+                  }`}
+                />
+              );
+            })}
             <span className="ml-1.5 text-xs font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-full">
-              5.0
+              {(typeof feedback.rating === 'number' ? feedback.rating : 5).toFixed(1)}
             </span>
           </div>
 

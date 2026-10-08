@@ -10,13 +10,13 @@ import { getFallbackFeedbacks } from '../../lib/mock-feedbacks';
 
 export function FeedbackCarousel() {
   const [feedbacks, setFeedbacks] = useState<PlatformFeedback[]>(() =>
-    getFallbackFeedbacks().slice(0, 100)
+    getFallbackFeedbacks().slice(0, 50)
   );
   const [stats, setStats] = useState<FeedbackStats>({
-    total: 100,
-    averageRating: 5.0,
-    fiveStarPercent: 100,
-    recommendRate: 99,
+    total: 50,
+    averageRating: 4.24,
+    fiveStarPercent: 40,
+    recommendRate: 96,
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSlowMode, setIsSlowMode] = useState(false);
@@ -24,7 +24,7 @@ export function FeedbackCarousel() {
   // Fetch from backend API on mount
   useEffect(() => {
     let isMounted = true;
-    feedbacksApi.getLatestFeedbacks(100).then((res) => {
+    feedbacksApi.getLatestFeedbacks(50).then((res) => {
       if (isMounted && res.feedbacks && res.feedbacks.length > 0) {
         setFeedbacks(res.feedbacks);
         if (res.stats) setStats(res.stats);
@@ -35,7 +35,7 @@ export function FeedbackCarousel() {
     const handleNewFeedback = (event: Event) => {
       const customEvent = event as CustomEvent<PlatformFeedback>;
       if (customEvent.detail) {
-        setFeedbacks((prev) => [customEvent.detail, ...prev].slice(0, 100));
+        setFeedbacks((prev) => [customEvent.detail, ...prev].slice(0, 50));
         setStats((prev) => ({
           ...prev,
           total: prev.total + 1,
@@ -50,7 +50,7 @@ export function FeedbackCarousel() {
     };
   }, []);
 
-  // Split feedbacks into 2 balanced rows of 50 items each for the dual-track infinite marquee
+  // Split feedbacks into 2 balanced rows of 25 items each for the dual-track infinite marquee
   const row1 = feedbacks.slice(0, Math.ceil(feedbacks.length / 2));
   const row2 = feedbacks.slice(Math.ceil(feedbacks.length / 2));
 
@@ -118,7 +118,7 @@ export function FeedbackCarousel() {
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 text-center mb-12 md:mb-16 relative z-10">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#E8F1FA] text-[#1E5AA8] text-xs font-bold uppercase tracking-widest mb-4 border border-[#1E5AA8]/15">
           <Sparkles size={14} className="text-[#1E5AA8]" />
-          100 Đánh Giá Mới Nhất Từ Hệ Thống
+          50 Đánh Giá Mới Nhất Từ Hệ Thống
         </div>
 
         <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#101828] tracking-tight leading-[1.15] mb-5">
@@ -126,7 +126,7 @@ export function FeedbackCarousel() {
         </h2>
 
         <p className="text-[#475467] text-base sm:text-lg max-w-2xl mx-auto font-medium leading-relaxed mb-8">
-          Tổng hợp 100 trải nghiệm thực tế từ các vận động viên, người chơi phong trào và ban tổ chức giải đấu trên khắp Đà Nẵng.
+          Tổng hợp 50 trải nghiệm thực tế từ các vận động viên, người chơi phong trào và ban tổ chức giải đấu trên khắp Đà Nẵng.
         </p>
 
         {/* Stats Pill Badges */}
@@ -137,14 +137,14 @@ export function FeedbackCarousel() {
                 <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
               ))}
             </div>
-            <span className="font-extrabold text-[#101828]">{stats.averageRating.toFixed(1)}/5.0</span>
+            <span className="font-extrabold text-[#101828]">{(stats.averageRating || 4.24).toFixed(2)}/5.0</span>
             <span className="text-[#667085] text-xs">Đánh giá trung bình</span>
           </div>
 
           <div className="inline-flex items-center gap-2 bg-white px-4 py-2.5 rounded-full border border-slate-200/80 shadow-sm text-sm">
             <Trophy className="w-4 h-4 text-[#1E5AA8]" />
-            <span className="font-extrabold text-[#101828]">100%</span>
-            <span className="text-[#667085] text-xs">Hài lòng tuyệt đối</span>
+            <span className="font-extrabold text-[#101828]">{stats.recommendRate || 96}%</span>
+            <span className="text-[#667085] text-xs">Hài lòng đánh giá</span>
           </div>
 
           <div className="inline-flex items-center gap-2 bg-white px-4 py-2.5 rounded-full border border-slate-200/80 shadow-sm text-sm">
@@ -200,7 +200,7 @@ export function FeedbackCarousel() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={(newFeedback) => {
-          setFeedbacks((prev) => [newFeedback, ...prev].slice(0, 100));
+          setFeedbacks((prev) => [newFeedback, ...prev].slice(0, 50));
           setStats((prev) => ({ ...prev, total: prev.total + 1 }));
         }}
       />

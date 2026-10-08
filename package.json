@@ -14,6 +14,7 @@
     "migration:status": "npm run migrate:status --prefix apps/backend",
     "migration:down": "npm run migrate:down --prefix apps/backend",
     "migration:create": "npm run migrate:create --prefix apps/backend",
+    "seed:feedbacks": "npm run seed:feedbacks --prefix apps/backend",
     "build": "npm run build --prefix packages/shared && npm run build --prefix apps/backend && npm run build --prefix apps/web",
     "typecheck": "npm run typecheck --prefix apps/web && npm run typecheck --prefix apps/backend"
   },

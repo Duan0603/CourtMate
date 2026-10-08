@@ -1,5 +1,7 @@
 /**
- * Standalone seed script for 100 positive 5-star feedbacks (Badminton & Pickleball only)
+ * Standalone seed script for 50 balanced mock feedbacks (Badminton & Pickleball only)
+ * Rating distribution: 20x 5★, 22x 4★, 8x 3★ (Average ~4.24★)
+ * Gender-matched avatars: 100% accurate (25 Nam, 25 Nữ)
  * Usage: node scripts/seed-feedbacks.js [--reset]
  */
 
@@ -11,7 +13,7 @@ const dotenv = require('dotenv');
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 const { MongoClient } = require('mongodb');
-const { generate100Feedbacks } = require('./generate-mock-feedbacks');
+const { generate50Feedbacks } = require('./generate-mock-feedbacks');
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://root:examplepassword@localhost:27017/courtmate?authSource=admin';
 
@@ -31,9 +33,18 @@ async function seed() {
       console.log('Cleaned old feedbacks from collection.');
     }
 
-    const mockFeedbacks = generate100Feedbacks();
+    const mockFeedbacks = generate50Feedbacks();
     await collection.insertMany(mockFeedbacks);
-    console.log(`Inserted ${mockFeedbacks.length} positive 5-star feedbacks (100% Cầu lông & Pickleball) into 'feedbacks' collection.`);
+
+    const counts = {
+      five: mockFeedbacks.filter(f => f.rating === 5).length,
+      four: mockFeedbacks.filter(f => f.rating === 4).length,
+      three: mockFeedbacks.filter(f => f.rating === 3).length,
+    };
+    const avgRating = (mockFeedbacks.reduce((acc, f) => acc + f.rating, 0) / mockFeedbacks.length).toFixed(2);
+
+    console.log(`Inserted ${mockFeedbacks.length} balanced mock feedbacks (100% Cầu lông & Pickleball) into 'feedbacks' collection.`);
+    console.log(`Rating breakdown: 5★ = ${counts.five}, 4★ = ${counts.four}, 3★ = ${counts.three} (Average: ${avgRating}★)`);
 
     await collection.createIndex({ createdAt: -1 });
     console.log('Index on createdAt: -1 verified.');
