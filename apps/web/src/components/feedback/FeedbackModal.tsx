@@ -99,11 +99,11 @@ export function FeedbackModal({ isOpen, onClose, onSuccess }: FeedbackModalProps
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div
-        className="relative w-full max-w-lg bg-white rounded-[32px] shadow-2xl border border-slate-100 overflow-hidden"
+        className="relative w-full max-w-lg max-h-[90vh] flex flex-col bg-white rounded-[32px] shadow-2xl border border-slate-100 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top header bar */}
-        <div className="bg-gradient-to-r from-[#1E5AA8] to-[#154687] text-white p-6 sm:p-7 relative">
+        <div className="shrink-0 bg-gradient-to-r from-[#1E5AA8] to-[#154687] text-white p-6 sm:p-7 relative">
           <button
             onClick={onClose}
             type="button"
@@ -129,155 +129,157 @@ export function FeedbackModal({ isOpen, onClose, onSuccess }: FeedbackModalProps
           </p>
         </div>
 
-        {isSubmitted ? (
-          <div className="p-10 flex flex-col items-center justify-center text-center space-y-4">
-            <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center animate-bounce">
-              <CheckCircle2 size={36} />
-            </div>
-            <h4 className="text-xl font-bold text-[#101828]">
-              Gửi Đánh Giá Thành Công!
-            </h4>
-            <p className="text-[#475467] text-sm max-w-xs">
-              Cảm ơn đóng góp của bạn. Đánh giá của bạn đã được cập nhật trực tiếp vào hệ thống.
-            </p>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="p-6 sm:p-7 space-y-5">
-            {errorMsg && (
-              <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 text-red-700 text-xs font-semibold border border-red-200">
-                <AlertCircle size={16} className="shrink-0" />
-                <span>{errorMsg}</span>
+        <div className="overflow-y-auto">
+          {isSubmitted ? (
+            <div className="p-10 flex flex-col items-center justify-center text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center animate-bounce">
+                <CheckCircle2 size={36} />
               </div>
-            )}
+              <h4 className="text-xl font-bold text-[#101828]">
+                Gửi Đánh Giá Thành Công!
+              </h4>
+              <p className="text-[#475467] text-sm max-w-xs">
+                Cảm ơn đóng góp của bạn. Đánh giá của bạn đã được cập nhật trực tiếp vào hệ thống.
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="p-6 sm:p-7 space-y-5">
+              {errorMsg && (
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 text-red-700 text-xs font-semibold border border-red-200">
+                  <AlertCircle size={16} className="shrink-0" />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
 
-            {/* Rating Stars */}
-            <div className="flex flex-col items-center justify-center py-2.5 bg-slate-50 rounded-2xl border border-slate-100">
-              <span className="text-xs font-semibold text-[#667085] uppercase tracking-wider mb-2">
-                Mức độ hài lòng của bạn
-              </span>
-              <div className="flex items-center gap-2">
-                {[1, 2, 3, 4, 5].map((star) => {
-                  const active = (hoverRating || rating) >= star;
-                  return (
+              {/* Rating Stars */}
+              <div className="flex flex-col items-center justify-center py-2.5 bg-slate-50 rounded-2xl border border-slate-100">
+                <span className="text-xs font-semibold text-[#667085] uppercase tracking-wider mb-2">
+                  Mức độ hài lòng của bạn
+                </span>
+                <div className="flex items-center gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => {
+                    const active = (hoverRating || rating) >= star;
+                    return (
+                      <button
+                        key={star}
+                        type="button"
+                        onMouseEnter={() => setHoverRating(star)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        onClick={() => setRating(star)}
+                        className="p-1 transition-transform hover:scale-125 focus:outline-none"
+                      >
+                        <Star
+                          size={28}
+                          className={`${
+                            active
+                              ? 'fill-amber-400 text-amber-400 drop-shadow-[0_2px_8px_rgba(251,191,36,0.5)]'
+                              : 'text-slate-300'
+                          } transition-colors`}
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+                <span className="text-xs font-bold text-amber-600 mt-2">
+                  {RATING_LABELS[hoverRating || rating]}
+                </span>
+              </div>
+
+              {/* Category selection */}
+              <div>
+                <label className="block text-xs font-bold text-[#344054] uppercase tracking-wider mb-2">
+                  Chủ đề góp ý
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {CATEGORIES.map((cat) => (
                     <button
-                      key={star}
+                      key={cat}
                       type="button"
-                      onMouseEnter={() => setHoverRating(star)}
-                      onMouseLeave={() => setHoverRating(0)}
-                      onClick={() => setRating(star)}
-                      className="p-1 transition-transform hover:scale-125 focus:outline-none"
+                      onClick={() => setCategory(cat)}
+                      className={`text-xs px-3 py-1.5 rounded-full font-medium transition-all ${
+                        category === cat
+                          ? 'bg-[#1E5AA8] text-white shadow-sm'
+                          : 'bg-slate-100 text-[#475467] hover:bg-slate-200'
+                      }`}
                     >
-                      <Star
-                        size={28}
-                        className={`${
-                          active
-                            ? 'fill-amber-400 text-amber-400 drop-shadow-[0_2px_8px_rgba(251,191,36,0.5)]'
-                            : 'text-slate-300'
-                        } transition-colors`}
-                      />
+                      {cat}
                     </button>
-                  );
-                })}
+                  ))}
+                </div>
               </div>
-              <span className="text-xs font-bold text-amber-600 mt-2">
-                {RATING_LABELS[hoverRating || rating]}
-              </span>
-            </div>
 
-            {/* Category selection */}
-            <div>
-              <label className="block text-xs font-bold text-[#344054] uppercase tracking-wider mb-2">
-                Chủ đề góp ý
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {CATEGORIES.map((cat) => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setCategory(cat)}
-                    className={`text-xs px-3 py-1.5 rounded-full font-medium transition-all ${
-                      category === cat
-                        ? 'bg-[#1E5AA8] text-white shadow-sm'
-                        : 'bg-slate-100 text-[#475467] hover:bg-slate-200'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
+              {/* User Info Fields */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-[#344054] uppercase tracking-wider mb-1">
+                    Họ và tên <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={userName}
+                    onChange={(e) => setUserName(e.target.value)}
+                    placeholder="Ví dụ: Nguyễn Văn An"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E5AA8]/30 focus:border-[#1E5AA8] transition-all"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#344054] uppercase tracking-wider mb-1">
+                    Môn thể thao / Vai trò
+                  </label>
+                  <input
+                    type="text"
+                    value={userRole}
+                    onChange={(e) => setUserRole(e.target.value)}
+                    placeholder="Ví dụ: Pickleball Sơn Trà"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E5AA8]/30 focus:border-[#1E5AA8] transition-all"
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* User Info Fields */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Comment Textarea */}
               <div>
                 <label className="block text-xs font-bold text-[#344054] uppercase tracking-wider mb-1">
-                  Họ và tên <span className="text-red-500">*</span>
+                  Nội dung cảm nhận <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  value={userName}
-                  onChange={(e) => setUserName(e.target.value)}
-                  placeholder="Ví dụ: Nguyễn Văn An"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E5AA8]/30 focus:border-[#1E5AA8] transition-all"
+                <textarea
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  rows={3}
+                  placeholder="Chia sẻ trải nghiệm của bạn khi ghép trận, tìm đối thủ, đặt sân hoặc tham gia giải đấu trên CourtMate..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E5AA8]/30 focus:border-[#1E5AA8] transition-all resize-none"
                   required
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-[#344054] uppercase tracking-wider mb-1">
-                  Môn thể thao / Vai trò
-                </label>
-                <input
-                  type="text"
-                  value={userRole}
-                  onChange={(e) => setUserRole(e.target.value)}
-                  placeholder="Ví dụ: Pickleball Sơn Trà"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E5AA8]/30 focus:border-[#1E5AA8] transition-all"
-                />
+              {/* Submit CTA */}
+              <div className="pt-2 flex items-center justify-end gap-3 pb-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-5 py-2.5 rounded-full border border-slate-200 text-sm font-semibold text-[#475467] hover:bg-slate-50 transition-colors"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#1E5AA8] hover:bg-[#154687] text-white text-sm font-bold shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+                >
+                  {isSubmitting ? (
+                    <span>Đang gửi...</span>
+                  ) : (
+                    <>
+                      <span>Gửi Đánh Giá</span>
+                      <Send size={15} />
+                    </>
+                  )}
+                </button>
               </div>
-            </div>
-
-            {/* Comment Textarea */}
-            <div>
-              <label className="block text-xs font-bold text-[#344054] uppercase tracking-wider mb-1">
-                Nội dung cảm nhận <span className="text-red-500">*</span>
-              </label>
-              <textarea
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                rows={3}
-                placeholder="Chia sẻ trải nghiệm của bạn khi ghép trận, tìm đối thủ, đặt sân hoặc tham gia giải đấu trên CourtMate..."
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E5AA8]/30 focus:border-[#1E5AA8] transition-all resize-none"
-                required
-              />
-            </div>
-
-            {/* Submit CTA */}
-            <div className="pt-2 flex items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-5 py-2.5 rounded-full border border-slate-200 text-sm font-semibold text-[#475467] hover:bg-slate-50 transition-colors"
-              >
-                Hủy
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#1E5AA8] hover:bg-[#154687] text-white text-sm font-bold shadow-md hover:shadow-lg transition-all disabled:opacity-50"
-              >
-                {isSubmitting ? (
-                  <span>Đang gửi...</span>
-                ) : (
-                  <>
-                    <span>Gửi Đánh Giá</span>
-                    <Send size={15} />
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
-        )}
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );

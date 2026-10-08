@@ -424,7 +424,7 @@ function TournamentsContent() {
         ) : (
           <>
             {/* Tournaments Grid/List */}
-            <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-5' : 'grid-cols-1 lg:grid-cols-2'}`}>
+            <div className={`grid ${viewMode === 'grid' ? 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-5' : 'grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5'}`}>
               {currentTournaments.map((tournament) => (
                 <TournamentCard
                   key={tournament.id}

@@ -69,7 +69,7 @@ export const CursorBackground = () => {
   }, []);
 
   return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 bg-[#FFFBF7]">
+    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 bg-[white]">
       {/* Tiny dots grid pattern (chấm li ti đằng sau) */}
       <div 
         className="absolute inset-0 opacity-[0.3]" 
@@ -94,7 +94,7 @@ export const CursorBackground = () => {
       />
 
       {/* A subtle static vignette overlay to make it look premium */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#FFFBF7]/80" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[white]/80" />
     </div>
   );
 };

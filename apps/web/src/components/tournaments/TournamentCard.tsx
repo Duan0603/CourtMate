@@ -138,10 +138,10 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
   return (
     <Link 
       href={`/tournaments/${tournament.id}`}
-      className="group bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-lg hover:border-[#1E5AA8]/40 transition-all duration-300 flex flex-col cursor-pointer h-full relative"
+      className="group bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-xs hover:shadow-xl hover:border-[#1E5AA8]/40 transition-all duration-300 flex flex-col cursor-pointer h-full relative"
     >
         {/* Cover Image & Badges */}
-        <div className="relative h-48 w-full overflow-hidden bg-slate-100">
+        <div className="relative h-40 sm:h-44 w-full overflow-hidden bg-slate-100">
           <img
             src={
               tournament.coverImage ||
@@ -150,11 +150,11 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
             alt={tournament.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#101828]/80 via-transparent to-transparent opacity-80" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#101828]/80 via-transparent to-transparent opacity-75" />
 
           {/* Status Badge */}
-          <div className="absolute top-3 left-3">
-            <span className={`px-2.5 py-1 text-xs font-bold rounded-full shadow-sm ${statusInfo.color}`}>
+          <div className="absolute top-2.5 left-2.5">
+            <span className={`px-2 py-0.5 text-[11px] font-bold rounded-md shadow-xs ${statusInfo.color}`}>
               {statusInfo.label}
             </span>
           </div>
@@ -167,12 +167,12 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
                 e.stopPropagation();
                 onBookmarkToggle(tournament.id);
               }}
-              className={`absolute top-2 right-2 p-1.5 bg-black/20 backdrop-blur-sm rounded-full transition-colors duration-200 hover:bg-black/40 hover:scale-110 active:scale-95`}
+              className={`absolute top-2.5 right-2.5 p-1.5 bg-black/30 backdrop-blur-md rounded-full transition-colors duration-200 hover:bg-black/50 hover:scale-110 active:scale-95`}
             >
               <Bookmark 
                 color={isBookmarked ? '#facc15' : '#ffffff'}
                 fill={isBookmarked ? '#facc15' : 'transparent'}
-                className={`w-4 h-4 transition-all ${
+                className={`w-3.5 h-3.5 transition-all ${
                   isBookmarked 
                     ? 'opacity-100' 
                     : 'opacity-90 hover:opacity-100'
@@ -182,40 +182,52 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
           )}
 
           {/* Sport Type Badge + City */}
-          <div className="absolute bottom-3 left-3 flex items-center gap-2">
+          <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between gap-1.5">
             <span
-              className={`px-2.5 py-0.5 text-xs font-semibold rounded-md border ${sportInfo.color} bg-white/95 backdrop-blur-sm shadow-xs`}
+              className={`px-2 py-0.5 text-[10px] font-bold rounded border ${sportInfo.color} bg-white/95 backdrop-blur-sm shadow-2xs shrink-0`}
             >
               {sportInfo.label}
             </span>
-            <span className="text-xs text-white/90 font-medium">{tournament.city}</span>
+            <span className="text-[11px] text-white/95 font-semibold truncate shadow-xs">
+              {tournament.city}
+            </span>
           </div>
         </div>
 
         {/* Content - Compact for Grid */}
-        <div className="p-4 flex-1 flex flex-col justify-between gap-3">
-          <div className="space-y-2.5">
-            <h3 className="font-bold text-sm text-[#101828] line-clamp-2 leading-snug group-hover:text-[#1E5AA8] transition-colors">
+        <div className="p-3.5 sm:p-4 flex-1 flex flex-col justify-between gap-2.5">
+          <div className="space-y-2">
+            <h3 className="font-bold text-sm text-[#101828] line-clamp-2 leading-snug min-h-[2.5rem] group-hover:text-[#1E5AA8] transition-colors">
               {tournament.title}
             </h3>
 
-            {/* Key Details using Icons to save space */}
-            <div className="space-y-1.5 text-[11px] text-slate-500 font-medium">
-              <div className="flex items-center gap-2">
+            {/* Key Details using Icons */}
+            <div className="space-y-1.5 text-[11px] sm:text-xs text-slate-600 font-medium">
+              <div className="flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5 text-[#1E5AA8] shrink-0" />
-                <span className="text-slate-600">{startDateFormatted}</span>
+                <span className="truncate">{startDateFormatted}</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                <span className="truncate">{tournament.location}, {tournament.city}</span>
+                <span className="truncate" title={tournament.location}>{tournament.location}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <span className="truncate">{tournament.slotsLimit || 32} VĐV</span>
               </div>
             </div>
           </div>
 
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-            <span className="text-sm font-black text-[#1E5AA8] tracking-tight">{formattedFee}</span>
-            <div className="w-7 h-7 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-[#1E5AA8] group-hover:text-white transition-all shadow-sm">
-              <ChevronRight className="w-3.5 h-3.5" />
+          {/* Footer - Fixed price & expandable CTA on hover */}
+          <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2">
+            <span className="text-sm font-black text-[#1E5AA8] tracking-tight shrink-0 whitespace-nowrap">
+              {formattedFee}
+            </span>
+            <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-slate-100 group-hover:bg-[#1E5AA8] text-slate-500 group-hover:text-white transition-all duration-300 shrink-0 shadow-2xs">
+              <span className="text-[11px] font-bold hidden group-hover:inline-block animate-in fade-in slide-in-from-right-1 duration-200 whitespace-nowrap">
+                Xem thêm
+              </span>
+              <ChevronRight className="w-3.5 h-3.5 shrink-0" />
             </div>
           </div>
         </div>
