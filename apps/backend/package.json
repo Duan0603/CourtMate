@@ -10,7 +10,8 @@
     "migrate:create": "migrate-mongo create",
     "migrate:up": "migrate-mongo up",
     "migrate:down": "migrate-mongo down",
-    "migrate:status": "migrate-mongo status"
+    "migrate:status": "migrate-mongo status",
+    "seed:danang-tournaments": "node scripts/seed-50-tournaments-danang.js"
   },
   "dependencies": {
     "@courtmate/shared": "file:../../packages/shared",
