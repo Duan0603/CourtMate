@@ -48,8 +48,9 @@ WORKDIR /app
 COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
 COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
 
-# Copy migrations
+# Copy migrations and scripts
 COPY apps/backend/migrations ./apps/backend/migrations
+COPY apps/backend/scripts ./apps/backend/scripts
 COPY apps/backend/migrate-mongo-config.js ./apps/backend/migrate-mongo-config.js
 
 WORKDIR /app/apps/backend
