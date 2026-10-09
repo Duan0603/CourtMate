@@ -12,6 +12,7 @@
     "migrate:down": "migrate-mongo down",
     "migrate:status": "migrate-mongo status",
     "seed:danang-tournaments": "node scripts/seed-50-tournaments-danang.js",
+    "seed:all-registrations": "node scripts/seed-registrations-for-all-tournaments.js",
     "seed:feedbacks": "node scripts/seed-feedbacks.js"
   },
   "dependencies": {

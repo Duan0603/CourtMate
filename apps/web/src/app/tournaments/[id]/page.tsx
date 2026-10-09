@@ -36,6 +36,10 @@ export default function TournamentDetailPage() {
   const confirmedParticipants = participants.filter(
     (p) => p.status === 'PAID' || p.status === 'APPROVED'
   );
+  const enrolledCount = Math.max(
+    confirmedParticipants.length,
+    (tournament as any)?.joinedSlots || 0
+  );
 
   useEffect(() => {
     async function loadData() {
@@ -373,16 +377,25 @@ export default function TournamentDetailPage() {
               {/* Progress limit */}
               <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
                 <div className="flex items-center justify-between text-sm font-semibold text-navy mb-3">
-                  <span>Số lượng còn lại:</span>
-                  <span className="text-primary">
-                    {tournament.slotsLimit ? `${participants.length} / ${tournament.slotsLimit} slots` : 'Không giới hạn'}
+                  <span>Đã đăng ký:</span>
+                  <span className="text-primary font-bold">
+                    {tournament.slotsLimit ? (
+                      <>
+                        {enrolledCount} / {tournament.slotsLimit} slots
+                        <span className="text-xs text-slate-500 font-normal ml-1.5">
+                          (Còn {Math.max(0, tournament.slotsLimit - enrolledCount)})
+                        </span>
+                      </>
+                    ) : (
+                      'Không giới hạn'
+                    )}
                   </span>
                 </div>
                 <div className="w-full h-2.5 rounded-full bg-slate-200 overflow-hidden shadow-inner">
                   <div
                     className="h-full bg-gradient-to-r from-primary to-primary-light rounded-full transition-all duration-1000 ease-out"
                     style={{
-                      width: `${Math.min(100, (participants.length / (tournament.slotsLimit || 50)) * 100)}%`,
+                      width: `${Math.min(100, (enrolledCount / (tournament.slotsLimit || 50)) * 100)}%`,
                     }}
                   />
                 </div>
