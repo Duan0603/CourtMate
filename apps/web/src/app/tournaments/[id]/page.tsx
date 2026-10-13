@@ -42,6 +42,10 @@ export default function TournamentDetailPage() {
   const confirmedParticipants = participants.filter(
     (p) => p.status === 'PAID' || p.status === 'APPROVED'
   );
+  const enrolledCount = Math.max(
+    confirmedParticipants.length,
+    (tournament as any)?.joinedSlots || 0
+  );
 
   useEffect(() => {
     async function loadData() {
@@ -455,9 +459,9 @@ export default function TournamentDetailPage() {
                   <span className="text-[#1E5AA8] font-bold">
                     {tournament.slotsLimit ? (
                       <>
-                        {confirmedParticipants.length} / {tournament.slotsLimit} slots
+                        {enrolledCount} / {tournament.slotsLimit} slots
                         <span className="text-xs text-slate-500 font-normal ml-1.5">
-                          (Còn {Math.max(0, tournament.slotsLimit - confirmedParticipants.length)})
+                          (Còn {Math.max(0, tournament.slotsLimit - enrolledCount)})
                         </span>
                       </>
                     ) : (
@@ -469,7 +473,7 @@ export default function TournamentDetailPage() {
                   <div
                     className="h-full bg-gradient-to-r from-[#1E5AA8] to-sky-400 rounded-full transition-all duration-1000 ease-out"
                     style={{
-                      width: `${Math.min(100, (confirmedParticipants.length / (tournament.slotsLimit || 50)) * 100)}%`,
+                      width: `${Math.min(100, (enrolledCount / (tournament.slotsLimit || 50)) * 100)}%`,
                     }}
                   />
                 </div>
