@@ -226,3 +226,87 @@ export interface CreatePlatformFeedbackDto {
     comment: string;
     category?: string;
 }
+export declare enum BadmintonSkillLevel {
+    YEU = "YEU",// Yếu / Mới chơi
+    TBY = "TBY",// Trung bình yếu
+    TB = "TB",// Trung bình
+    TB_PLUS = "TB_PLUS",// Trung bình khá
+    KHA = "KHA",// Khá
+    KHA_PLUS = "KHA_PLUS"
+}
+export declare const BADMINTON_SKILL_LABELS: Record<BadmintonSkillLevel, {
+    label: string;
+    description: string;
+    color: string;
+}>;
+export declare enum MatchStatus {
+    OPEN = "OPEN",// Đang tuyển người
+    FULL = "FULL",// Đã đủ slot
+    COMPLETED = "COMPLETED",// Đã hoàn thành
+    CANCELLED = "CANCELLED"
+}
+export interface MatchPlayer {
+    userId: string;
+    name: string;
+    phone?: string;
+    avatarUrl?: string;
+    skillLevel?: BadmintonSkillLevel | SkillLevel;
+    joinedAt: Date | string;
+}
+export interface Match {
+    id: string;
+    _id?: string;
+    hostId: string;
+    hostName: string;
+    hostAvatar?: string;
+    hostPhone?: string;
+    sport: SportType;
+    title: string;
+    venueId?: string;
+    venueName: string;
+    venueAddress: string;
+    district: string;
+    city: string;
+    courtNumber?: string;
+    startTime: string;
+    endTime: string;
+    totalSlots: number;
+    joinedCount: number;
+    players: MatchPlayer[];
+    minSkillLevel: BadmintonSkillLevel;
+    maxSkillLevel: BadmintonSkillLevel;
+    estimatedCostText: string;
+    notes?: string;
+    shuttleType?: string;
+    status: MatchStatus;
+    shareCode?: string;
+    createdAt: Date | string;
+    updatedAt?: Date | string;
+}
+export interface CreateMatchDto {
+    sport: SportType;
+    title: string;
+    venueId?: string;
+    venueName: string;
+    venueAddress: string;
+    district: string;
+    city?: string;
+    courtNumber?: string;
+    startTime: string;
+    endTime: string;
+    totalSlots: number;
+    minSkillLevel: BadmintonSkillLevel;
+    maxSkillLevel: BadmintonSkillLevel;
+    estimatedCostText?: string;
+    notes?: string;
+    shuttleType?: string;
+}
+export interface MatchFilterDto {
+    sport?: SportType;
+    district?: string;
+    city?: string;
+    skillLevel?: BadmintonSkillLevel;
+    status?: MatchStatus;
+    date?: string;
+    keyword?: string;
+}
