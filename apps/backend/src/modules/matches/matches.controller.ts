@@ -7,6 +7,7 @@ import {
   Query,
   UseGuards,
   Request,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { MatchesService } from './matches.service';
 import {
@@ -21,17 +22,30 @@ export class MatchesController {
   constructor(private readonly matchesService: MatchesService) {}
 
   /**
+   * Trích xuất thông tin người dùng từ JWT an toàn
+   * Hỗ trợ đầy đủ các dạng payload: sub (chuẩn JWT), userId, id, _id
+   */
+  private extractUser(req: any) {
+    const u = req.user || {};
+    const id = u.sub || u.userId || u.id || u._id;
+    if (!id) {
+      throw new UnauthorizedException('Không tìm thấy định danh người dùng trong token');
+    }
+    return {
+      id: String(id),
+      name: u.name || u.username || 'Người chơi',
+      avatarUrl: u.avatarUrl || '',
+      phone: u.phone || '',
+    };
+  }
+
+  /**
    * Tạo kèo mới (cần đăng nhập)
    */
   @Post()
   @UseGuards(JwtAuthGuard)
   async createMatch(@Request() req: any, @Body() dto: CreateMatchDto) {
-    const user = {
-      id: req.user.userId || req.user.id || req.user._id,
-      name: req.user.name || req.user.username || 'Người chơi',
-      avatarUrl: req.user.avatarUrl,
-      phone: req.user.phone,
-    };
+    const user = this.extractUser(req);
     return await this.matchesService.createMatch(user, dto);
   }
 
@@ -65,12 +79,7 @@ export class MatchesController {
     @Param('id') id: string,
     @Body('skillLevel') skillLevel?: BadmintonSkillLevel,
   ) {
-    const user = {
-      id: req.user.userId || req.user.id || req.user._id,
-      name: req.user.name || req.user.username || 'Người chơi',
-      avatarUrl: req.user.avatarUrl,
-      phone: req.user.phone,
-    };
+    const user = this.extractUser(req);
     return await this.matchesService.joinMatch(user, id, skillLevel);
   }
 
@@ -80,8 +89,8 @@ export class MatchesController {
   @Post(':id/leave')
   @UseGuards(JwtAuthGuard)
   async leaveMatch(@Request() req: any, @Param('id') id: string) {
-    const userId = req.user.userId || req.user.id || req.user._id;
-    return await this.matchesService.leaveMatch(userId, id);
+    const user = this.extractUser(req);
+    return await this.matchesService.leaveMatch(user.id, id);
   }
 
   /**
@@ -90,7 +99,7 @@ export class MatchesController {
   @Post(':id/cancel')
   @UseGuards(JwtAuthGuard)
   async cancelMatch(@Request() req: any, @Param('id') id: string) {
-    const userId = req.user.userId || req.user.id || req.user._id;
-    return await this.matchesService.cancelMatch(userId, id);
+    const user = this.extractUser(req);
+    return await this.matchesService.cancelMatch(user.id, id);
   }
 }

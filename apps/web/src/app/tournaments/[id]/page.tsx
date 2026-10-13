@@ -448,18 +448,29 @@ export default function TournamentDetailPage() {
                 </p>
               </div>
 
-              {/* Progress bar slots */}
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <div className="flex items-center justify-between text-xs font-bold text-slate-700 mb-2">
-                  <span>Số slot còn lại:</span>
-                  <span className="text-[#1E5AA8]">
-                    {tournament.slotsLimit ? `${confirmedParticipants.length}/${tournament.slotsLimit} slots` : 'Mở tự do'}
+              {/* Progress limit */}
+              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                <div className="flex items-center justify-between text-xs sm:text-sm font-semibold text-slate-800 mb-2.5">
+                  <span>Đã đăng ký:</span>
+                  <span className="text-[#1E5AA8] font-bold">
+                    {tournament.slotsLimit ? (
+                      <>
+                        {confirmedParticipants.length} / {tournament.slotsLimit} slots
+                        <span className="text-xs text-slate-500 font-normal ml-1.5">
+                          (Còn {Math.max(0, tournament.slotsLimit - confirmedParticipants.length)})
+                        </span>
+                      </>
+                    ) : (
+                      'Không giới hạn'
+                    )}
                   </span>
                 </div>
-                <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
+                <div className="w-full h-2.5 rounded-full bg-slate-200 overflow-hidden shadow-inner">
                   <div
-                    className="h-full bg-gradient-to-r from-[#1E5AA8] to-sky-400 rounded-full transition-all duration-700"
-                    style={{ width: `${fillPercentage}%` }}
+                    className="h-full bg-gradient-to-r from-[#1E5AA8] to-sky-400 rounded-full transition-all duration-1000 ease-out"
+                    style={{
+                      width: `${Math.min(100, (confirmedParticipants.length / (tournament.slotsLimit || 50)) * 100)}%`,
+                    }}
                   />
                 </div>
               </div>
