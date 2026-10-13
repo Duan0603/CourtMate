@@ -261,3 +261,123 @@ export interface CreatePlatformFeedbackDto {
   category?: string;
 }
 
+// ─── MATCHMAKING & BADMINTON SKILL LEVELS ─────────────────────────────────────
+export enum BadmintonSkillLevel {
+  YEU = 'YEU',             // Yếu / Mới chơi
+  TBY = 'TBY',             // Trung bình yếu
+  TB = 'TB',               // Trung bình
+  TB_PLUS = 'TB_PLUS',     // Trung bình khá
+  KHA = 'KHA',             // Khá
+  KHA_PLUS = 'KHA_PLUS',   // Khá+ / Bán chuyên
+}
+
+export const BADMINTON_SKILL_LABELS: Record<BadmintonSkillLevel, { label: string; description: string; color: string }> = {
+  [BadmintonSkillLevel.YEU]: {
+    label: 'Yếu (Mới chơi)',
+    description: 'Đang tập phát cầu, đánh qua lại căn bản',
+    color: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  },
+  [BadmintonSkillLevel.TBY]: {
+    label: 'Trung bình yếu (TBY)',
+    description: 'Đã nắm luật, đánh được qua lại nhưng phản xạ còn chậm',
+    color: 'bg-teal-50 text-teal-700 border-teal-200',
+  },
+  [BadmintonSkillLevel.TB]: {
+    label: 'Trung bình (TB)',
+    description: 'Nắm vững kỹ thuật, phông/chặt/đập ổn định, hiểu ý đồng đội',
+    color: 'bg-blue-50 text-blue-700 border-blue-200',
+  },
+  [BadmintonSkillLevel.TB_PLUS]: {
+    label: 'Trung bình khá (TB+)',
+    description: 'Lực cổ tay tốt, bao sân nhanh, bắt lưới và tấn công tốt',
+    color: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+  },
+  [BadmintonSkillLevel.KHA]: {
+    label: 'Khá',
+    description: 'Phong trào lâu năm, thể lực dồi dào, chiến thuật đôi rõ ràng',
+    color: 'bg-purple-50 text-purple-700 border-purple-200',
+  },
+  [BadmintonSkillLevel.KHA_PLUS]: {
+    label: 'Khá+ (Bán chuyên)',
+    description: 'Từng tập năng khiếu hoặc đánh giải phong trào có thành tích',
+    color: 'bg-rose-50 text-rose-700 border-rose-200',
+  },
+};
+
+export enum MatchStatus {
+  OPEN = 'OPEN',           // Đang tuyển người
+  FULL = 'FULL',           // Đã đủ slot
+  COMPLETED = 'COMPLETED', // Đã hoàn thành
+  CANCELLED = 'CANCELLED', // Đã hủy
+}
+
+export interface MatchPlayer {
+  userId: string;
+  name: string;
+  phone?: string;
+  avatarUrl?: string;
+  skillLevel?: BadmintonSkillLevel | SkillLevel;
+  joinedAt: Date | string;
+}
+
+export interface Match {
+  id: string;
+  _id?: string;
+  hostId: string;
+  hostName: string;
+  hostAvatar?: string;
+  hostPhone?: string;
+  sport: SportType;
+  title: string;
+  venueId?: string;
+  venueName: string;
+  venueAddress: string;
+  district: string;
+  city: string;
+  courtNumber?: string; // e.g. "Sân 3"
+  startTime: string; // ISO string
+  endTime: string;   // ISO string
+  totalSlots: number; // e.g. 4 hoặc 6
+  joinedCount: number;
+  players: MatchPlayer[];
+  minSkillLevel: BadmintonSkillLevel;
+  maxSkillLevel: BadmintonSkillLevel;
+  estimatedCostText: string; // e.g. "Chia đều tiền sân tại chỗ ~35k-45k/người"
+  notes?: string;
+  shuttleType?: string; // e.g. "Cầu Hải Yến đỏ", "Cầu Thành Công"
+  status: MatchStatus;
+  shareCode?: string;
+  createdAt: Date | string;
+  updatedAt?: Date | string;
+}
+
+export interface CreateMatchDto {
+  sport: SportType;
+  title: string;
+  venueId?: string;
+  venueName: string;
+  venueAddress: string;
+  district: string;
+  city?: string;
+  courtNumber?: string;
+  startTime: string;
+  endTime: string;
+  totalSlots: number;
+  minSkillLevel: BadmintonSkillLevel;
+  maxSkillLevel: BadmintonSkillLevel;
+  estimatedCostText?: string;
+  notes?: string;
+  shuttleType?: string;
+}
+
+export interface MatchFilterDto {
+  sport?: SportType;
+  district?: string;
+  city?: string;
+  skillLevel?: BadmintonSkillLevel;
+  status?: MatchStatus;
+  date?: string; // YYYY-MM-DD
+  keyword?: string;
+}
+
+

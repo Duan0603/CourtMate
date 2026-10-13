@@ -18,7 +18,11 @@ import {
   AlertCircle,
   MessageCircle,
   Phone,
-  ChevronRight
+  ChevronRight,
+  Sparkles,
+  Check,
+  Award,
+  CircleAlert
 } from 'lucide-react';
 import { Tournament, TournamentStatus, SportType } from '@courtmate/shared';
 import { tournamentsApi } from '../../../lib/tournaments.api';
@@ -33,6 +37,8 @@ export default function TournamentDetailPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'categories' | 'rules' | 'participants'>('overview');
   const [participants, setParticipants] = useState<any[]>([]);
+  const [copiedLink, setCopiedLink] = useState(false);
+
   const confirmedParticipants = participants.filter(
     (p) => p.status === 'PAID' || p.status === 'APPROVED'
   );
@@ -59,23 +65,40 @@ export default function TournamentDetailPage() {
     loadData();
   }, [tournamentId]);
 
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
+  };
+
+  const handleShareZalo = () => {
+    const url = encodeURIComponent(window.location.href);
+    const text = encodeURIComponent(`🏆 [CourtMate] Tham gia giải đấu: ${tournament?.title || ''}`);
+    window.open(`https://zalo.me/share?url=${url}&text=${text}`, '_blank');
+  };
+
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-16 text-center">
-        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-slate-500 text-sm">Đang tải thông tin giải đấu...</p>
+      <div className="min-h-[70vh] flex flex-col items-center justify-center">
+        <div className="w-10 h-10 border-4 border-[#1E5AA8] border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-slate-500 text-sm font-medium">Đang tải thông tin giải đấu...</p>
       </div>
     );
   }
 
   if (!tournament) {
     return (
-      <div className="max-w-md mx-auto px-4 py-20 text-center">
-        <AlertCircle className="w-12 h-12 text-rose-500 mx-auto mb-3" />
-        <h2 className="text-xl font-bold text-navy">Không tìm thấy giải đấu</h2>
-        <p className="text-sm text-slate-500 mt-1 mb-6">Giải đấu không tồn tại hoặc đã bị gỡ bỏ.</p>
-        <Link href="/tournaments" className="px-5 py-2.5 rounded-xl bg-primary text-white font-semibold text-sm">
-          Quay lại danh sách
+      <div className="max-w-md mx-auto px-4 py-24 text-center">
+        <div className="w-16 h-16 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center mx-auto mb-4">
+          <AlertCircle className="w-8 h-8" />
+        </div>
+        <h2 className="text-xl font-bold text-slate-900 mb-1">Không tìm thấy giải đấu</h2>
+        <p className="text-sm text-slate-500 mb-6">Giải đấu này không tồn tại hoặc đã bị ẩn khỏi hệ thống.</p>
+        <Link
+          href="/tournaments"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#1E5AA8] text-white font-semibold text-sm shadow hover:bg-[#154687] transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" /> Quay lại danh sách
         </Link>
       </div>
     );
@@ -93,63 +116,123 @@ export default function TournamentDetailPage() {
     ? new Date(tournament.endDate).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
     : 'Đang cập nhật';
 
+  const slotsLimit = tournament.slotsLimit || 50;
+  const slotsLeft = Math.max(0, slotsLimit - confirmedParticipants.length);
+  const fillPercentage = Math.min(100, (confirmedParticipants.length / slotsLimit) * 100);
+
   return (
-    <div className="bg-slate-50 min-h-screen pb-24 selection:bg-primary/20">
-      {/* Main Cover Banner */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-        <div className="relative h-72 sm:h-96 lg:h-[420px] w-full rounded-[2rem] overflow-hidden shadow-elevated group">
-          <div className="absolute inset-0 bg-slate-200 animate-pulse" /> {/* Placeholder */}
-          <img
-            src={tournament.coverImage || 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=1400&q=80'}
-            alt={tournament.title}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-            onLoad={(e) => (e.currentTarget.previousElementSibling as HTMLElement).style.display = 'none'}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-navy/95 via-navy/40 to-transparent" />
+    <div className="bg-[#F8FAFC] min-h-screen pb-24">
+      {/* ─── BREADCRUMB & BACK NAV ─── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-4">
+        <div className="flex items-center justify-between">
+          <Link
+            href="/tournaments"
+            className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-[#1E5AA8] transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Tất cả giải đấu</span>
+          </Link>
 
-          {/* Banner Floating Content */}
-          <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-10 text-white">
-            <div className="flex flex-wrap items-center gap-3 mb-4">
-              <span className="px-4 py-1.5 rounded-full text-xs font-bold bg-primary text-white shadow-soft">
-                {tournament.sport}
-              </span>
-              <span className="px-4 py-1.5 rounded-full text-xs font-bold bg-emerald-500 text-white shadow-soft">
-                {tournament.status === TournamentStatus.OPEN ? 'Đang mở đăng ký' : 'Sắp diễn ra'}
-              </span>
-              <span className="px-4 py-1.5 rounded-full text-xs font-medium bg-white/20 backdrop-blur-md border border-white/20">
-                {tournament.city}
-              </span>
-            </div>
-
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight text-white mb-4 text-shadow-sm">
-              {tournament.title}
-            </h1>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleCopyLink}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+              title="Chia sẻ liên kết"
+            >
+              {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Share2 className="w-3.5 h-3.5" />}
+              <span>{copiedLink ? 'Đã sao chép' : 'Chia sẻ'}</span>
+            </button>
+            <button
+              onClick={handleShareZalo}
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#0068FF] text-white text-xs font-bold hover:bg-[#0052cc] transition-colors shadow-sm"
+            >
+              Zalo
+            </button>
           </div>
         </div>
       </div>
 
-      {/* 2-Column Detail Layout */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+      {/* ─── HERO COVER BANNER (Premium Gradient Overlay) ─── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative h-72 sm:h-96 lg:h-[440px] w-full rounded-3xl overflow-hidden shadow-xl group border border-slate-200/60 bg-slate-900">
+          <img
+            src={tournament.coverImage || 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=1400&q=80'}
+            alt={tournament.title}
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-90"
+          />
+          {/* Subtle multi-layer gradient */}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/70 via-transparent to-transparent hidden sm:block" />
+
+          {/* Floating Content on Hero */}
+          <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-10 text-white">
+            <div className="flex flex-wrap items-center gap-2.5 mb-3">
+              <span className="px-3.5 py-1 rounded-full text-xs font-bold bg-[#1E5AA8] text-white shadow-sm">
+                🏸 {tournament.sport}
+              </span>
+
+              <span
+                className={`px-3.5 py-1 rounded-full text-xs font-bold shadow-sm ${
+                  tournament.status === TournamentStatus.OPEN
+                    ? 'bg-emerald-500 text-white'
+                    : 'bg-amber-500 text-white'
+                }`}
+              >
+                {tournament.status === TournamentStatus.OPEN ? 'Đang mở đăng ký' : 'Sắp diễn ra'}
+              </span>
+
+              <span className="px-3.5 py-1 rounded-full text-xs font-semibold bg-white/15 backdrop-blur-md border border-white/20 text-slate-100">
+                📍 {tournament.city}
+              </span>
+
+              {tournament.organizer?.isVerified && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-400 text-slate-950 shadow-sm">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  BTC Xác Thực
+                </span>
+              )}
+            </div>
+
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight text-white mb-3">
+              {tournament.title}
+            </h1>
+
+            <div className="flex flex-wrap items-center gap-y-2 gap-x-6 text-xs sm:text-sm text-slate-300">
+              <div className="flex items-center gap-1.5">
+                <MapPin className="w-4 h-4 text-sky-400 shrink-0" />
+                <span>{tournament.location} • {tournament.city}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Calendar className="w-4 h-4 text-amber-400 shrink-0" />
+                <span>{startDateFormatted} - {endDateFormatted}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── 2-COLUMN MAIN CONTENT ─── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           
           {/* Left Column (2/3): Tabs & Content */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2 space-y-6">
             
-            {/* Tab Navigation */}
-            <div className="bg-white/60 backdrop-blur-xl rounded-full border border-slate-200/60 p-1.5 flex gap-1 shadow-sm overflow-x-auto hide-scrollbar">
+            {/* Tab Navigation Pill Bar */}
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-1.5 flex gap-1 shadow-sm overflow-x-auto hide-scrollbar">
               {[
                 { id: 'overview', label: 'Tổng quan' },
-                { id: 'categories', label: 'Hạng mục & Giải thưởng' },
+                { id: 'categories', label: 'Nội dung & Lệ phí' },
                 { id: 'rules', label: 'Điều lệ thi đấu' },
-                { id: 'participants', label: `Vận động viên (${participants.length})` },
+                { id: 'participants', label: `Vận động viên (${confirmedParticipants.length})` },
               ].map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`px-5 py-3 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-300 flex-1 text-center ${
+                  className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex-1 text-center ${
                     activeTab === tab.id
-                      ? 'bg-navy text-white shadow-md scale-100'
-                      : 'text-slate-500 hover:text-navy hover:bg-slate-100/80 scale-95 hover:scale-100'
+                      ? 'bg-[#1E5AA8] text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                   }`}
                 >
                   {tab.label}
@@ -157,228 +240,223 @@ export default function TournamentDetailPage() {
               ))}
             </div>
 
-            {/* Content Sections Wrapper */}
-            <div className="bg-white rounded-[2rem] border border-slate-100 p-6 sm:p-10 shadow-soft">
+            {/* Tab Content Box */}
+            <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-sm">
+              
               {/* Tab 1: Overview */}
               {activeTab === 'overview' && (
-                <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <section>
-                    <h3 className="text-xl font-extrabold text-navy mb-4 flex items-center gap-2">
-                      <FileText className="w-5 h-5 text-primary" />
-                      Giới thiệu giải đấu
-                    </h3>
-                    
-                    <div className="text-slate-600 text-[15px] leading-relaxed mb-8 space-y-4">
-                      {(() => {
-                        const text = tournament.description || '';
-                        // Cut off everything from 'Địa điểm thi đấu' onwards
-                        const cutoffIndex = text.indexOf('Địa điểm thi đấu:');
-                        let content = cutoffIndex > -1 ? text.substring(0, cutoffIndex) : text;
-                        
-                        // Split into separate lines for readability if there are known markers
-                        content = content.replace(/Quy mô:/g, '\n• Quy mô:');
-                        content = content.replace(/Thể thức thi đấu:/g, '\n• Thể thức thi đấu:');
-
-                        return content.split('\n').map((line, i) => (
-                          <p key={i} className={line.trim().startsWith('•') ? "ml-4 text-[#101828] font-medium" : ""}>
-                            {line}
-                          </p>
-                        ));
-                      })()}
+                <div className="space-y-8 animate-in fade-in duration-300">
+                  {/* Organizer Badge Card */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200/60">
+                    <div className="flex items-center gap-3.5">
+                      <img
+                        src={tournament.organizer?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80'}
+                        alt={tournament.organizer?.name}
+                        className="w-12 h-12 rounded-full object-cover ring-2 ring-white shadow-sm"
+                      />
+                      <div>
+                        <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Đơn vị tổ chức</div>
+                        <div className="text-slate-900 font-extrabold text-sm sm:text-base flex items-center gap-1.5">
+                          <span>{tournament.organizer?.name || 'Ban tổ chức CourtMate'}</span>
+                          {tournament.organizer?.isVerified && (
+                            <ShieldCheck className="w-4 h-4 text-[#1E5AA8]" />
+                          )}
+                        </div>
+                      </div>
                     </div>
 
-                    <button 
+                    <button
                       onClick={() => router.push(`/chat?userId=${tournament.organizer?.id}&userName=${encodeURIComponent(tournament.organizer?.name || 'Ban tổ chức')}&avatar=${encodeURIComponent(tournament.organizer?.avatar || '')}`)}
-                      className="inline-flex flex-wrap items-center gap-4 p-2 pr-4 rounded-full bg-slate-50 border border-slate-100 hover:border-primary/30 hover:shadow-sm transition-all"
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-[#1E5AA8] hover:bg-sky-50 text-xs sm:text-sm font-bold transition-colors shadow-sm"
                     >
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={tournament.organizer?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80'}
-                          alt={tournament.organizer?.name}
-                          className="w-12 h-12 rounded-full object-cover"
-                        />
-                        <div className="text-left">
-                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Ban tổ chức</span>
-                          <strong className="text-navy text-sm font-bold block">{tournament.organizer?.name || 'Ban tổ chức CourtMate'}</strong>
-                        </div>
-                      </div>
-                      
-                      <div className="h-8 w-px bg-slate-200 hidden sm:block" />
-                      
-                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F0F5FF] text-[#1a56db]">
-                        <MessageCircle className="w-[18px] h-[18px]" strokeWidth={2} />
-                        <span className="text-sm font-bold">Trò chuyện với BTC</span>
-                      </div>
+                      <MessageCircle className="w-4 h-4" />
+                      <span>Nhắn tin với BTC</span>
                     </button>
-                  </section>
+                  </div>
 
-                  <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent my-8" />
+                  {/* Description Section */}
+                  <div>
+                    <h3 className="text-base sm:text-lg font-black text-slate-900 mb-3 flex items-center gap-2">
+                      <FileText className="w-5 h-5 text-[#1E5AA8]" />
+                      Thông tin giới thiệu giải
+                    </h3>
 
-                  <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="text-slate-600 text-sm sm:text-[15px] leading-relaxed space-y-3 whitespace-pre-line bg-slate-50/50 p-5 rounded-2xl border border-slate-100">
+                      {tournament.description || 'Chưa có thông tin mô tả chi tiết từ ban tổ chức.'}
+                    </div>
+                  </div>
+
+                  {/* Highlights Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                     {/* Time Card */}
-                    <div className="relative overflow-hidden rounded-[24px] bg-white border border-slate-100 shadow-sm p-6 group hover:shadow-md hover:border-primary/30 transition-all duration-300">
-                      <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors" />
-                      <div className="flex items-start gap-5">
-                        <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                          <Calendar className="w-7 h-7 text-primary" />
+                    <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex items-start gap-3.5">
+                      <div className="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                        <Calendar className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Thời gian thi đấu</div>
+                        <div className="text-slate-900 font-bold text-sm sm:text-base">
+                          {startDateFormatted}
                         </div>
-                        <div>
-                          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Thời gian thi đấu</h4>
-                          <div className="space-y-1.5">
-                            <div className="flex items-center gap-3">
-                              <span className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary),0.6)]" />
-                              <span className="text-navy font-bold text-base">{startDateFormatted}</span>
-                            </div>
-                            <div className="flex items-center gap-3 text-slate-300">
-                              <div className="w-0.5 h-4 bg-slate-200 ml-1 rounded-full" />
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <span className="w-2.5 h-2.5 rounded-full bg-slate-300" />
-                              <span className="text-navy font-bold text-base">{endDateFormatted}</span>
-                            </div>
-                          </div>
+                        <div className="text-slate-500 text-xs mt-0.5">
+                          Đến hết ngày {endDateFormatted}
                         </div>
                       </div>
                     </div>
 
                     {/* Location Card */}
-                    <div className="relative overflow-hidden rounded-[24px] bg-white border border-slate-100 shadow-sm p-6 group hover:shadow-md hover:border-rose-500/30 transition-all duration-300">
-                      <div className="absolute -right-4 -top-4 w-24 h-24 bg-rose-500/5 rounded-full blur-2xl group-hover:bg-rose-500/10 transition-colors" />
-                      <div className="flex items-start gap-5">
-                        <div className="w-14 h-14 rounded-2xl bg-rose-500/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                          <MapPin className="w-7 h-7 text-rose-500" />
+                    <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex items-start gap-3.5">
+                      <div className="w-11 h-11 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                        <MapPin className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Địa điểm sân đấu</div>
+                        <div className="text-slate-900 font-bold text-sm sm:text-base leading-snug">
+                          {tournament.location}
                         </div>
-                        <div>
-                          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Địa điểm tổ chức</h4>
-                          <strong className="block text-navy font-bold text-lg leading-snug mb-1.5">
-                            {tournament.location}
-                          </strong>
-                          <span className="text-slate-500 text-sm font-medium block">
-                            {tournament.city}
-                          </span>
+                        <div className="text-slate-500 text-xs mt-0.5">
+                          {tournament.city}
                         </div>
                       </div>
                     </div>
-                  </section>
+                  </div>
                 </div>
               )}
 
               {/* Tab 2: Categories */}
               {activeTab === 'categories' && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <h3 className="text-xl font-extrabold text-navy flex items-center gap-2">
-                    <Trophy className="w-5 h-5 text-primary" />
-                    Các nội dung thi đấu
+                <div className="space-y-4 animate-in fade-in duration-300">
+                  <h3 className="text-base sm:text-lg font-black text-slate-900 mb-2 flex items-center gap-2">
+                    <Trophy className="w-5 h-5 text-[#1E5AA8]" />
+                    Nội dung & Hạng mục thi đấu
                   </h3>
+
                   <div className="space-y-3">
-                    {tournament.categories?.map((cat) => (
-                      <div key={cat.id} className="p-5 rounded-2xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:border-primary/30 hover:shadow-soft transition-all flex items-center justify-between group">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                            <Trophy className="w-5 h-5 text-primary" />
+                    {tournament.categories && tournament.categories.length > 0 ? (
+                      tournament.categories.map((cat, idx) => (
+                        <div
+                          key={cat.id || idx}
+                          className="p-5 rounded-2xl border border-slate-200/80 bg-white hover:border-[#1E5AA8]/40 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                        >
+                          <div className="flex items-center gap-3.5">
+                            <div className="w-11 h-11 rounded-xl bg-sky-50 text-[#1E5AA8] flex items-center justify-center shrink-0 font-black text-sm">
+                              #{idx + 1}
+                            </div>
+                            <div>
+                              <div className="font-extrabold text-slate-900 text-base">{cat.name}</div>
+                              <div className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5">
+                                <Users className="w-3.5 h-3.5 text-slate-400" />
+                                <span>Giới hạn: {cat.maxParticipants || 32} cặp/VĐV</span>
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <strong className="text-base text-navy block font-bold mb-1">{cat.name}</strong>
-                            <span className="text-sm text-slate-500 flex items-center gap-1.5">
-                              <Users className="w-4 h-4" />
-                              Giới hạn: {cat.maxParticipants || 32} VĐV
+
+                          <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center">
+                            <span className="text-base sm:text-lg font-black text-[#1E5AA8]">
+                              {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(cat.fee)}
+                            </span>
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md mt-0.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                              Mở đăng ký
                             </span>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <span className="text-lg font-extrabold text-primary block mb-1">
-                            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(cat.fee)}
-                          </span>
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold bg-emerald-100 text-emerald-700">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                            Còn nhận đăng ký
-                          </span>
-                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-10 text-slate-500 text-sm">
+                        Chưa có danh mục cụ thể cho giải đấu này.
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               )}
 
               {/* Tab 3: Rules */}
               {activeTab === 'rules' && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <h3 className="text-xl font-extrabold text-navy flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-primary" />
-                    Điều lệ giải đấu chính thức
+                <div className="space-y-4 animate-in fade-in duration-300">
+                  <h3 className="text-base sm:text-lg font-black text-slate-900 mb-2 flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-[#1E5AA8]" />
+                    Điều lệ thi đấu chính thức
                   </h3>
-                  <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100 text-slate-700 text-[15px] whitespace-pre-line leading-relaxed font-mono shadow-inner">
-                    {tournament.rulesText || 'Đang cập nhật điều lệ chính thức từ ban tổ chức...'}
+
+                  <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200/80 text-slate-700 text-sm leading-relaxed whitespace-pre-line font-medium">
+                    {tournament.rulesText || tournament.rules || 'Đang cập nhật điều lệ chính thức từ ban tổ chức...'}
                   </div>
                 </div>
               )}
 
               {/* Tab 4: Participants */}
               {activeTab === 'participants' && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
-                    <h3 className="text-xl font-extrabold text-navy flex items-center gap-2">
-                      <Users className="w-5 h-5 text-primary" />
-                      Danh sách Vận động viên chính thức
+                <div className="space-y-4 animate-in fade-in duration-300">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                      <Users className="w-5 h-5 text-[#1E5AA8]" />
+                      Danh sách VĐV đã đăng ký
                     </h3>
-                    <div className="px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-bold">
-                      Đã ghi danh: {confirmedParticipants.length}
-                    </div>
+                    <span className="text-xs font-bold px-3 py-1 rounded-full bg-[#1E5AA8]/10 text-[#1E5AA8]">
+                      {confirmedParticipants.length} VĐV
+                    </span>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {confirmedParticipants.map((reg, idx) => (
-                      <div key={reg.id || idx} className="p-4 rounded-xl border border-slate-100 bg-white shadow-sm hover:shadow-md transition-shadow flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-light text-white font-bold text-sm flex items-center justify-center shadow-inner">
-                            #{idx + 1}
+                  {confirmedParticipants.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {confirmedParticipants.map((reg, idx) => (
+                        <div
+                          key={reg.id || idx}
+                          className="p-4 rounded-xl border border-slate-200/80 bg-white flex items-center justify-between"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-full bg-[#1E5AA8]/10 text-[#1E5AA8] font-bold text-xs flex items-center justify-center shrink-0">
+                              #{idx + 1}
+                            </div>
+                            <div>
+                              <div className="font-bold text-slate-900 text-sm">{reg.playerName}</div>
+                              {reg.partnerName && (
+                                <div className="text-[11px] text-slate-500 font-medium">
+                                  Cùng: {reg.partnerName}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          <div>
-                            <strong className="text-sm text-navy block font-bold">{reg.playerName}</strong>
-                            {reg.partnerName && (
-                              <span className="text-xs text-slate-500 font-medium mt-0.5 block">Cùng: {reg.partnerName}</span>
-                            )}
-                          </div>
+
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            {reg.status === 'PAID' ? 'ĐÃ ĐÓNG PHÍ' : 'ĐÃ DUYỆT'}
+                          </span>
                         </div>
-
-                        <span className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100">
-                          {reg.status === 'PAID' ? 'ĐÃ THANH TOÁN' : 'ĐÃ DUYỆT'}
-                        </span>
-                      </div>
-                    ))}
-                    {confirmedParticipants.length === 0 && (
-                      <div className="col-span-full py-10 text-center text-slate-500 text-sm">
-                        Chưa có vận động viên nào hoàn tất thủ tục đăng ký.
-                      </div>
-                    )}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 text-slate-400 text-sm bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                      Chưa có vận động viên nào hoàn tất thủ tục đăng ký.
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
 
+            </div>
           </div>
 
           {/* Right Column (1/3): Sticky Registration Card */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-[2rem] border border-slate-100/80 p-8 shadow-elevated sticky top-28 space-y-8 relative overflow-hidden">
-              {/* Decorative top gradient */}
-              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary via-primary-light to-emerald-400" />
+            <div className="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-7 shadow-lg sticky top-24 space-y-6">
               
-              <div className="text-center">
-                <span className="text-sm text-slate-400 font-medium block uppercase tracking-wider mb-2">Lệ phí tham gia từ</span>
-                <div className="text-3xl sm:text-4xl font-black text-navy tracking-tight">
+              <div className="text-center pb-5 border-b border-slate-100">
+                <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block mb-1">
+                  Lệ phí thi đấu từ
+                </span>
+                <div className="text-3xl font-black text-[#1E5AA8] tracking-tight">
                   {formattedFee}
                 </div>
-                <span className="text-xs text-slate-500 block mt-3 px-4 leading-relaxed">
-                  Bao gồm chi phí sân bãi, nước uống, áo thi đấu & kỷ niệm chương
-                </span>
+                <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+                  Bao gồm phí sân bãi, nước uống, áo thi đấu & kỷ niệm chương của BTC
+                </p>
               </div>
 
               {/* Progress limit */}
               <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                <div className="flex items-center justify-between text-sm font-semibold text-navy mb-3">
+                <div className="flex items-center justify-between text-xs sm:text-sm font-semibold text-slate-800 mb-2.5">
                   <span>Đã đăng ký:</span>
-                  <span className="text-primary font-bold">
+                  <span className="text-[#1E5AA8] font-bold">
                     {tournament.slotsLimit ? (
                       <>
                         {enrolledCount} / {tournament.slotsLimit} slots
@@ -393,7 +471,7 @@ export default function TournamentDetailPage() {
                 </div>
                 <div className="w-full h-2.5 rounded-full bg-slate-200 overflow-hidden shadow-inner">
                   <div
-                    className="h-full bg-gradient-to-r from-primary to-primary-light rounded-full transition-all duration-1000 ease-out"
+                    className="h-full bg-gradient-to-r from-[#1E5AA8] to-sky-400 rounded-full transition-all duration-1000 ease-out"
                     style={{
                       width: `${Math.min(100, (enrolledCount / (tournament.slotsLimit || 50)) * 100)}%`,
                     }}
@@ -401,35 +479,28 @@ export default function TournamentDetailPage() {
                 </div>
               </div>
 
-              {/* Primary CTA Button */}
+              {/* Primary CTA */}
               <Link
                 href={`/tournaments/${tournament.id}/register`}
-                className="group relative w-full py-4 rounded-2xl bg-primary text-white font-bold text-lg text-center flex items-center justify-center gap-2 shadow-glow hover:shadow-primary/40 transition-all duration-300 transform hover:-translate-y-1 overflow-hidden"
+                className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#1E5AA8] to-[#123E75] hover:from-[#154687] hover:to-[#0A2540] text-white font-bold text-base text-center flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
                 <span>Đăng ký tham gia ngay</span>
-                <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <ChevronRight className="w-5 h-5" />
               </Link>
 
-              {/* Guarantee highlights */}
-              <div className="space-y-3.5 pt-6 border-t border-slate-100 text-sm text-slate-600 font-medium">
-                <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  </div>
-                  <span>Xác nhận vé điện tử QR tức thì</span>
+              {/* Guarantees list */}
+              <div className="space-y-3 pt-4 border-t border-slate-100 text-xs text-slate-600 font-medium">
+                <div className="flex items-center gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <span>Nhận Vé điện tử QR check-in ngay sau khi duyệt</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  </div>
-                  <span>Hoàn tiền 100% nếu giải bị hủy</span>
+                <div className="flex items-center gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <span>Hoàn tiền 100% nếu giải đấu bị hủy lịch</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  </div>
-                  <span>Hỗ trợ kỹ thuật 24/7 từ CourtMate</span>
+                <div className="flex items-center gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <span>Hỗ trợ kỹ thuật 24/7 từ đội ngũ CourtMate</span>
                 </div>
               </div>
 
