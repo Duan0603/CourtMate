@@ -13,7 +13,8 @@
   }
 
   html {
-    scroll-behavior: smooth;
+    /* Prevent native smooth scroll collision with GSAP ScrollSmoother */
+    scroll-behavior: auto !important;
   }
 
   body {
@@ -116,5 +117,32 @@
 }
 @media (max-width: 1023px) {
   .cm-nav-right { display: none; }
+}
+
+/* ─── Founder Card Micro-Interactions (Inspired by image 1) ─── */
+.founder-card {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.founder-card .profile-image svg {
+  stroke: #ffffff;
+  transition: stroke 0.35s ease, transform 0.35s ease;
+}
+
+.founder-card:hover .profile-image svg {
+  stroke: rgb(110, 252, 205);
+}
+
+.founder-card .card-content-desc {
+  white-space: pre-line;
+  margin-left: 2px;
+  transform: translateY(16px);
+  opacity: 0;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+
+.founder-card:hover .card-content-desc {
+  opacity: 1;
+  transform: translateY(0);
 }
 

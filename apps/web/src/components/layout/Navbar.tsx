@@ -224,6 +224,7 @@ export const Navbar: React.FC = () => {
   const navLinks = [
     { href: '/tournaments', label: 'Giải đấu' },
     { href: '/matches', label: 'Giao lưu / Ghép kèo' },
+    { href: '/coaches', label: 'Huấn luyện viên' },
     { href: '/about', label: 'Về chúng tôi' },
   ];
 

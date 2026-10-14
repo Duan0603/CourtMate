@@ -299,7 +299,6 @@ export function InitialPreloader() {
         {/* Brand Name & Typography */}
         <div ref={brandTextRef} className="flex flex-col items-center">
           <div className="flex items-center gap-2 mb-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#1E5AA8] animate-ping" />
             <span className="text-xs font-black tracking-[0.25em] text-[#1E5AA8] uppercase">
               CourtMate Sports
             </span>
