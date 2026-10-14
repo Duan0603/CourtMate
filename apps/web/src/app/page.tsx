@@ -9,7 +9,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ScrollSmoother } from 'gsap/ScrollSmoother';
 import { SplitText } from 'gsap/SplitText';
 import { FeedbackCarousel } from '../components/feedback/FeedbackCarousel';
-import Phone3D from '../components/Phone3D';
+import { SportsShowcase3D } from '../components/3d';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(useGSAP, ScrollTrigger, ScrollSmoother, SplitText);
@@ -274,7 +274,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <Phone3D />
+        <SportsShowcase3D />
 
         {/* ─── PLATFORM FEEDBACK INFINITE CAROUSEL ─── */}
         <FeedbackCarousel />
