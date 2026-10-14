@@ -30,13 +30,13 @@ export class RegisterPlayerUseCase {
       if (existingReg.status === RegistrationStatus.PAID || existingReg.status === RegistrationStatus.APPROVED) {
         throw new BadRequestException('Bạn đã đăng ký và hoàn tất thủ tục tham gia giải đấu này rồi.');
       }
-      // If registration was PENDING or REJECTED (e.g. payment failed/cancelled), update details and reset status to PENDING
+      // If registration was PENDING or REJECTED (e.g. payment failed/cancelled/retry), update details and keep status PENDING
       existingReg.playerName = dto.playerName;
       existingReg.partnerName = dto.partnerName;
       existingReg.contactPhone = dto.contactPhone;
       existingReg.skillLevel = dto.skillLevel;
       existingReg.status = RegistrationStatus.PENDING;
-      return (existingReg as any).save();
+      return await (existingReg as any).save();
     }
 
     // 3. Verify slots availability

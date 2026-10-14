@@ -25,6 +25,8 @@ import { tournamentsApi } from '../../lib/tournaments.api';
 import { TournamentCard } from '../../components/tournaments/TournamentCard';
 import { TournamentFilters } from '../../components/tournaments/TournamentFilters';
 import { useAuth } from '../../context/AuthContext';
+import { useSmartAsync } from '../../context/useSmartAsync';
+import { SmartAsyncContainer } from '../../components/loading/SmartAsyncContainer';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -41,7 +43,12 @@ function TournamentsContent() {
   const { user, updateProfile } = useAuth();
 
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    loading,
+    isThresholdElapsed,
+    error,
+    execute,
+  } = useSmartAsync({ initialLoading: true });
   
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -87,10 +94,9 @@ function TournamentsContent() {
   }, [user]);
 
   // Fetch data
-  useEffect(() => {
-    async function fetchTournaments() {
-      setLoading(true);
-      try {
+  const fetchTournaments = async () => {
+    try {
+      await execute(async () => {
         const filters: TournamentFilterDto = {};
         if (keyword) filters.keyword = keyword;
         if (sport) filters.sport = sport as any;
@@ -105,13 +111,13 @@ function TournamentsContent() {
 
         setTournaments(list);
         setCurrentPage(1); // Reset to page 1 on filter change
-      } catch (err) {
-        console.error('Error fetching tournaments:', err);
-      } finally {
-        setLoading(false);
-      }
+      });
+    } catch (err) {
+      console.error('Error fetching tournaments:', err);
     }
+  };
 
+  useEffect(() => {
     fetchTournaments();
   }, [keyword, sport, city, status, level, maxFee, isFreeOnly]);
 
@@ -339,19 +345,14 @@ function TournamentsContent() {
         </div>
 
         {/* Tournaments Grid / Loading / Empty State */}
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="h-80 rounded-2xl bg-white border border-slate-100 p-4 animate-pulse flex flex-col justify-between shadow-xs">
-                <div className="h-44 bg-slate-200 rounded-xl w-full" />
-                <div className="space-y-2.5 mt-3">
-                  <div className="h-5 bg-slate-200 rounded-md w-3/4" />
-                  <div className="h-4 bg-slate-100 rounded-md w-1/2" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : totalTournaments === 0 ? (
+        <SmartAsyncContainer
+          loading={loading}
+          isThresholdElapsed={isThresholdElapsed}
+          error={error}
+          onRetry={fetchTournaments}
+          errorMessage="Không thể kết nối đến máy chủ để tải danh sách giải đấu."
+        >
+          {totalTournaments === 0 ? (
           /* High-end Animated Empty State */
           <div className="relative overflow-hidden bg-white/90 backdrop-blur-md rounded-3xl border border-slate-200/80 p-8 sm:p-14 text-center shadow-lg my-6 max-w-3xl mx-auto transition-all">
             {/* Glowing Accent Effect */}
@@ -435,6 +436,9 @@ function TournamentsContent() {
                 />
               ))}
             </div>
+          </>
+        )}
+        </SmartAsyncContainer>
 
             {/* Pagination Controls (Only displayed when there are items) */}
             {totalPages > 1 && (
@@ -496,8 +500,6 @@ function TournamentsContent() {
 
               </div>
             )}
-          </>
-        )}
       </div>
 
       {/* ─── FILTER DRAWER ─── */}

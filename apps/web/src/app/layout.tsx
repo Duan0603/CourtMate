@@ -2,7 +2,9 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '../context/AuthContext';
+import { LoadingProvider } from '../context/LoadingContext';
 import { LayoutShell } from '../components/layout/LayoutShell';
+import { InitialPreloader, RouteTransitionLoader } from '../components/loading';
 
 const inter = Inter({
   subsets: ['latin', 'vietnamese'],
@@ -23,10 +25,21 @@ export default function RootLayout({
 }) {
   return (
     <html lang="vi" className={`${inter.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col font-sans bg-white text-navy">
-        <AuthProvider>
-          <LayoutShell>{children}</LayoutShell>
-        </AuthProvider>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `if('scrollRestoration' in history){history.scrollRestoration='manual';}window.scrollTo(0,0);`,
+          }}
+        />
+      </head>
+      <body className="min-h-full flex flex-col font-sans bg-[#F8FAFC] text-navy">
+        <LoadingProvider>
+          <InitialPreloader />
+          <RouteTransitionLoader />
+          <AuthProvider>
+            <LayoutShell>{children}</LayoutShell>
+          </AuthProvider>
+        </LoadingProvider>
       </body>
     </html>
   );

@@ -48,10 +48,19 @@ const SKILL_OPTIONS: { value: BadmintonSkillLevel | 'ALL'; label: string }[] = [
   { value: BadmintonSkillLevel.KHA_PLUS, label: 'Khá+ (Bán chuyên)' },
 ];
 
+import { useSmartAsync } from '@/context/useSmartAsync';
+import { SmartAsyncContainer } from '@/components/loading/SmartAsyncContainer';
+
 export default function MatchesPage() {
   const { user, isAuthenticated } = useAuth();
   const [matches, setMatches] = useState<Match[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    loading,
+    isThresholdElapsed,
+    error,
+    execute,
+    resetError,
+  } = useSmartAsync({ initialLoading: true });
 
   // Filters
   const [selectedSport, setSelectedSport] = useState<SportType>(SportType.BADMINTON);
@@ -81,19 +90,18 @@ export default function MatchesPage() {
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   const fetchMatches = async () => {
-    setLoading(true);
     try {
-      const res = await matchesApi.getMatches({
-        sport: selectedSport,
-        district: selectedDistrict !== 'Tất cả' ? selectedDistrict : undefined,
-        skillLevel: selectedSkill !== 'ALL' ? selectedSkill : undefined,
-        keyword: searchKeyword || undefined,
+      await execute(async () => {
+        const res = await matchesApi.getMatches({
+          sport: selectedSport,
+          district: selectedDistrict !== 'Tất cả' ? selectedDistrict : undefined,
+          skillLevel: selectedSkill !== 'ALL' ? selectedSkill : undefined,
+          keyword: searchKeyword || undefined,
+        });
+        setMatches(res.data);
       });
-      setMatches(res.data);
     } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+      console.error('Lỗi tải danh sách kèo đấu:', err);
     }
   };
 
@@ -141,7 +149,7 @@ export default function MatchesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pt-24 pb-20">
+    <div className="min-h-screen bg-[#F8FAFC] pt-8 sm:pt-10 pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* HERO BANNER */}
         <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-[#1E5AA8] via-[#154689] to-[#0A2540] text-white p-8 sm:p-12 mb-10 shadow-xl">
@@ -262,13 +270,14 @@ export default function MatchesPage() {
           </h2>
         </div>
 
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="h-64 rounded-2xl bg-slate-100 animate-pulse border border-slate-200" />
-            ))}
-          </div>
-        ) : matches.length === 0 ? (
+        <SmartAsyncContainer
+          loading={loading}
+          isThresholdElapsed={isThresholdElapsed}
+          error={error}
+          onRetry={fetchMatches}
+          errorMessage="Không thể kết nối đến máy chủ để tải danh sách kèo đấu."
+        >
+          {matches.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-3xl border border-slate-200/80 p-8 shadow-sm">
             <div className="w-16 h-16 rounded-2xl bg-[#1E5AA8]/10 text-[#1E5AA8] flex items-center justify-center mx-auto mb-4">
               <Calendar className="w-8 h-8" />
@@ -381,6 +390,7 @@ export default function MatchesPage() {
             })}
           </div>
         )}
+        </SmartAsyncContainer>
 
         {/* MODAL: ĐĂNG KÈO MỚI */}
         {isCreateOpen && (
