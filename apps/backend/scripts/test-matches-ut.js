@@ -154,7 +154,42 @@ async function runTests() {
     } else throw e;
   }
 
-  console.log(`\n🎉 HOÀN THÀNH 100% UNIT TESTS: ${passed}/6 PASSED!`);
+  // Test 7: Ngăn chặn user đã join 1 slot ở kèo khác tham gia thêm slot kèo mới
+  const anotherMatch = {
+    _id: 'match_another',
+    title: 'Kèo mới mở',
+    venueName: 'Sân Quân Khu 5',
+    status: MatchStatus.OPEN,
+    totalSlots: 4,
+    joinedCount: 1,
+    players: [{ userId: 'u_other_host', name: 'Other Host' }],
+    minSkillLevel: BadmintonSkillLevel.TB,
+    save: async function () {
+      return this;
+    },
+  };
+  mockMatchModel.findById = () => ({ exec: async () => anotherMatch });
+  // Giả lập user 'u_busy' đã có 1 slot ở kèo trước đó đang active
+  mockMatchModel.findOne = () => ({
+    exec: async () => ({
+      _id: 'match_first',
+      title: 'Kèo Kỳ Đồng Tối Nay',
+      venueName: 'Sân Kỳ Đồng',
+      status: MatchStatus.OPEN,
+    }),
+  });
+
+  try {
+    await service.joinMatch({ id: 'u_busy', name: 'Người chơi bận rộn' }, 'match_another');
+    throw new Error('Test 7 failed: Không chặn user đã có slot ở kèo khác');
+  } catch (e) {
+    if (e.message.includes('Mỗi người chơi chỉ được tham gia 1 slot')) {
+      console.log('✅ TEST 7 PASSED: Ngăn chặn thành công user đã join slot khác tham gia slot mới');
+      passed++;
+    } else throw e;
+  }
+
+  console.log(`\n🎉 HOÀN THÀNH 100% UNIT TESTS: ${passed}/7 PASSED!`);
 }
 
 runTests().catch((err) => {

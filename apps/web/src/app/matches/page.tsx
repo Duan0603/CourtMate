@@ -15,6 +15,34 @@ import { useAuth } from '@/context/AuthContext';
 import { useSmartAsync } from '@/context/useSmartAsync';
 import { SmartAsyncContainer } from '@/components/loading/SmartAsyncContainer';
 
+// Ant Design Components & Icons
+import {
+  Button,
+  Input,
+  Select,
+  Card,
+  Badge,
+  Tag,
+  Modal,
+  InputNumber,
+  Segmented,
+  Empty,
+  Alert,
+  Tooltip,
+} from 'antd';
+import {
+  PlusOutlined,
+  SearchOutlined,
+  EnvironmentOutlined,
+  ClockCircleOutlined,
+  TeamOutlined,
+  FilterOutlined,
+  ReloadOutlined,
+  DollarCircleOutlined,
+  CalendarOutlined,
+  CheckCircleFilled,
+} from '@ant-design/icons';
+
 const DISTRICTS = [
   'Tất cả',
   'Hải Châu',
@@ -73,6 +101,41 @@ export default function MatchesPage() {
 
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
+  // Trận đấu active mà user đang tham gia
+  const userActiveMatch = matches.find((m) => {
+    if (!user) return false;
+    const uid = user.id || (user as any)._id;
+    return (
+      m.players?.some((p) => p.userId === uid) &&
+      m.status !== MatchStatus.CANCELLED &&
+      m.status !== MatchStatus.COMPLETED
+    );
+  });
+
+  const getGoogleCalendarUrl = (m: Match) => {
+    try {
+      const start = new Date(m.startTime);
+      const end = m.endTime
+        ? new Date(m.endTime)
+        : new Date(start.getTime() + 2 * 60 * 60 * 1000);
+      const pad = (n: number) => (n < 10 ? '0' + n : n);
+      const formatTime = (d: Date) =>
+        `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}00Z`;
+
+      const title = encodeURIComponent(`[CourtMate] ${m.title}`);
+      const details = encodeURIComponent(
+        `Trận đấu: ${m.title}\nBộ môn: ${m.sport === SportType.BADMINTON ? 'Cầu lông' : 'Pickleball'
+        }\nĐịa điểm: ${m.venueName} (${m.courtNumber || 'Sân giao lưu'})\nĐịa chỉ: ${m.venueAddress
+        }, Q. ${m.district}\nChi phí: ${m.estimatedCostText
+        }\n\n* Nhắc nhở từ CourtMate: Có mặt trước 15 phút để khởi động và gặp gỡ bạn chơi!`
+      );
+      const location = encodeURIComponent(`${m.venueName}, ${m.venueAddress}, Đà Nẵng`);
+      return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${formatTime(start)}/${formatTime(end)}&details=${details}&location=${location}`;
+    } catch {
+      return '#';
+    }
+  };
+
   const fetchMatches = async () => {
     try {
       await execute(async () => {
@@ -93,9 +156,16 @@ export default function MatchesPage() {
     fetchMatches();
   }, [selectedSport, selectedDistrict, selectedSkill]);
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSearchSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     fetchMatches();
+  };
+
+  const handleResetFilters = () => {
+    setSelectedSport(SportType.BADMINTON);
+    setSelectedDistrict('Tất cả');
+    setSelectedSkill('ALL');
+    setSearchKeyword('');
   };
 
   const handleCreateMatch = async (e: React.FormEvent) => {
@@ -136,17 +206,20 @@ export default function MatchesPage() {
     }
   };
 
+  const hasActiveFilters =
+    selectedDistrict !== 'Tất cả' || selectedSkill !== 'ALL' || Boolean(searchKeyword);
+
   return (
-    <div className="min-h-screen bg-slate-50 py-8 sm:py-10">
+    <div className="min-h-screen bg-[#F8FAFC] py-8 sm:py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* TOP COMMAND BAR (Anti-Slop: Clean, High contrast, No icons, Clear intent) */}
+        {/* TOP COMMAND BAR */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-slate-200">
           <div>
-            <span className="text-xs font-mono font-bold uppercase tracking-widest text-slate-500">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-[#1E5AA8] text-xs font-bold uppercase tracking-wider mb-2 border border-blue-100">
+              <span className="w-2 h-2 rounded-full bg-[#1E5AA8] animate-pulse" />
               On-Demand Matchmaking · Đà Nẵng
-            </span>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-1">
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
               Ghép Kèo Giao Lưu & Tìm Bạn Chơi
             </h1>
             <p className="text-sm text-slate-600 mt-1 max-w-2xl font-normal">
@@ -155,116 +228,211 @@ export default function MatchesPage() {
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            <button
+            <Button
+              type="primary"
+              size="large"
+              icon={<PlusOutlined />}
               onClick={() => {
                 if (!isAuthenticated) {
                   window.location.href = '/login?redirect=/matches';
+                } else if (userActiveMatch) {
+                  alert(
+                    `Bạn đang tham gia kèo "${userActiveMatch.title}". Mỗi người chơi chỉ được giữ 1 slot tại một thời điểm để đảm bảo lịch trình!`
+                  );
                 } else {
                   setIsCreateOpen(true);
                 }
               }}
-              className="px-5 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm tracking-tight transition-colors shadow-sm"
+              className="font-bold shadow-md shadow-blue-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
             >
-              + Đăng Kèo Mới
-            </button>
+              Đăng Kèo Mới
+            </Button>
           </div>
         </div>
 
         {/* NOTIFICATION MESSAGE */}
         {message && (
-          <div className="mt-4 p-4 rounded-lg bg-emerald-50 border border-emerald-300 text-emerald-900 flex items-center justify-between text-sm font-semibold">
-            <span>{message.text}</span>
-            <button
-              onClick={() => setMessage(null)}
-              className="text-emerald-700 hover:text-emerald-950 text-xs uppercase tracking-wider font-bold"
-            >
-              Đóng
-            </button>
+          <div className="mt-4">
+            <Alert
+              message={message.text}
+              type={message.type}
+              showIcon
+              closable
+              onClose={() => setMessage(null)}
+              className="rounded-xl shadow-xs font-medium"
+            />
           </div>
         )}
 
-        {/* SEARCH & FILTER CONTROLS BAR (No icons, high legibility) */}
-        <div className="bg-white rounded-xl border border-slate-200 p-4 mt-6 shadow-xs">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        {/* BANNER NHẮC LỊCH THI ĐẤU ĐÃ THAM GIA */}
+        {userActiveMatch && (
+          <div className="mt-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-blue-50/90 via-sky-50/60 to-white border border-[#1E5AA8]/30 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-start sm:items-center gap-3.5">
+              <div className="w-11 h-11 rounded-2xl bg-[#1E5AA8] text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/25 text-lg">
+                <CalendarOutlined />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <Tag color="green" className="font-bold text-xs rounded-full px-2.5 py-0.5 border-none uppercase">
+                    Đã giữ slot
+                  </Tag>
+                  <span className="text-xs font-bold text-[#1E5AA8] bg-blue-100/70 px-2 py-0.5 rounded-full">
+                    {userActiveMatch.sport === SportType.BADMINTON ? '🏸 Cầu lông' : '🏓 Pickleball'}
+                  </span>
+                  <span className="text-xs text-slate-500 font-medium">
+                    (Mỗi người chơi tham gia 1 slot/lần)
+                  </span>
+                </div>
+                <h4 className="text-sm sm:text-base font-black text-slate-900 tracking-tight">
+                  {userActiveMatch.title}
+                </h4>
+                <div className="flex items-center gap-3 text-xs text-slate-600 mt-1 flex-wrap font-medium">
+                  <span className="flex items-center gap-1 font-bold text-slate-800">
+                    <ClockCircleOutlined className="text-amber-500" />
+                    {formatDateTime(userActiveMatch.startTime)}
+                  </span>
+                  <span>·</span>
+                  <span className="flex items-center gap-1">
+                    <EnvironmentOutlined className="text-[#1E5AA8]" />
+                    {userActiveMatch.venueName} {userActiveMatch.courtNumber ? `(${userActiveMatch.courtNumber})` : ''} - Q. {userActiveMatch.district}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5 w-full md:w-auto shrink-0">
+              <a
+                href={getGoogleCalendarUrl(userActiveMatch)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 md:flex-none"
+              >
+                <Button
+                  type="primary"
+                  icon={<CalendarOutlined />}
+                  className="w-full font-bold text-xs rounded-xl shadow-md shadow-blue-500/20"
+                >
+                  Lưu vào Google Calendar
+                </Button>
+              </a>
+              <Link href={`/matches/${userActiveMatch.id || userActiveMatch._id}`} className="flex-1 md:flex-none">
+                <Button className="w-full font-bold text-xs rounded-xl text-slate-700">
+                  Chi tiết kèo →
+                </Button>
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* SEARCH & FILTER CONTROLS BAR */}
+        <div className="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 mt-6 shadow-sm">
+          {/* Row 1: Sport Selection Segmented */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Bộ môn:</span>
+              <Segmented
+                options={[
+                  { label: '🏸 Cầu lông', value: SportType.BADMINTON },
+                  { label: '🏓 Pickleball', value: SportType.PICKLEBALL },
+                ]}
+                value={selectedSport}
+                onChange={(val) => setSelectedSport(val as SportType)}
+                className="bg-slate-100 font-semibold p-1 rounded-xl"
+              />
+            </div>
+
+            {hasActiveFilters && (
+              <Button
+                type="link"
+                size="small"
+                icon={<ReloadOutlined />}
+                onClick={handleResetFilters}
+                className="text-xs text-slate-500 hover:text-[#1E5AA8] font-semibold self-start sm:self-auto p-0"
+              >
+                Đặt lại bộ lọc
+              </Button>
+            )}
+          </div>
+
+          {/* Row 2: Search Input & Dropdown Filters */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-4">
             {/* Search Input */}
-            <form onSubmit={handleSearchSubmit}>
-              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+            <div>
+              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">
                 Tìm kiếm sân / kèo
               </label>
-              <input
-                type="text"
+              <Input
                 placeholder="Nhập tên sân, địa chỉ..."
+                prefix={<SearchOutlined className="text-slate-400" />}
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-sm font-medium text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900"
+                onPressEnter={() => handleSearchSubmit()}
+                allowClear
+                size="large"
+                className="rounded-xl border-slate-200 hover:border-[#1E5AA8]"
               />
-            </form>
-
-            {/* Sport Select */}
-            <div>
-              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
-                Bộ môn
-              </label>
-              <select
-                value={selectedSport}
-                onChange={(e) => setSelectedSport(e.target.value as SportType)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-sm font-bold text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900"
-              >
-                <option value={SportType.BADMINTON}>Cầu lông</option>
-                <option value={SportType.PICKLEBALL}>Pickleball</option>
-              </select>
             </div>
 
             {/* District Select */}
             <div>
-              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">
                 Khu vực (Đà Nẵng)
               </label>
-              <select
+              <Select
                 value={selectedDistrict}
-                onChange={(e) => setSelectedDistrict(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-sm font-medium text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900"
-              >
-                {DISTRICTS.map((d) => (
-                  <option key={d} value={d}>
-                    {d === 'Tất cả' ? 'Tất cả các quận' : `Quận ${d}`}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setSelectedDistrict(val)}
+                size="large"
+                className="w-full"
+                options={DISTRICTS.map((d) => ({
+                  value: d,
+                  label: d === 'Tất cả' ? 'Tất cả các quận' : `Quận ${d}`,
+                }))}
+              />
             </div>
 
             {/* Skill Level Select */}
             <div>
-              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">
                 Trình độ yêu cầu
               </label>
-              <select
+              <Select
                 value={selectedSkill}
-                onChange={(e) => setSelectedSkill(e.target.value as any)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-sm font-medium text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900"
+                onChange={(val) => setSelectedSkill(val)}
+                size="large"
+                className="w-full"
+                options={SKILL_OPTIONS.map((opt) => ({
+                  value: opt.value,
+                  label: opt.label,
+                }))}
+              />
+            </div>
+
+            {/* Submit Filter Button */}
+            <div className="flex items-end">
+              <Button
+                size="large"
+                icon={<FilterOutlined />}
+                onClick={() => handleSearchSubmit()}
+                className="w-full font-bold rounded-xl border-slate-200 text-slate-700 hover:border-[#1E5AA8] hover:text-[#1E5AA8]"
               >
-                {SKILL_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+                Lọc kết quả
+              </Button>
             </div>
           </div>
         </div>
 
         {/* LIST STATUS HEADER */}
-        <div className="mt-6 mb-4 flex items-center justify-between">
+        <div className="mt-8 mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h2 className="text-base font-bold text-slate-900">
-              Danh sách trận đấu
+            <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+              Danh Sách Kèo Đang Mở
             </h2>
-            <span className="text-xs font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-800">
-              {matches.length} kèo
-            </span>
+            <Tag color="#1E5AA8" className="font-bold text-xs rounded-full px-2.5 py-0.5 border-none">
+              {matches.length} trận
+            </Tag>
           </div>
-          <span className="text-xs text-slate-500 font-medium">
-            Tự do tham gia hoặc mời đồng đội
+          <span className="text-xs text-slate-500 font-medium hidden sm:inline">
+            Tự do tham gia hoặc mời đồng đội chia sẻ chi phí
           </span>
         </div>
 
@@ -277,28 +445,37 @@ export default function MatchesPage() {
           errorMessage="Không thể kết nối đến máy chủ để tải danh sách kèo đấu."
         >
           {matches.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-xl border border-slate-200 p-8 shadow-xs">
-              <h3 className="text-base font-bold text-slate-900 mb-1">
-                Chưa có kèo nào phù hợp tiêu chí lọc
-              </h3>
-              <p className="text-slate-600 text-xs sm:text-sm max-w-md mx-auto mb-6">
-                Bạn có thể chọn quận khác, hoặc là người đầu tiên tạo kèo để các tay vợt quanh khu vực tham gia.
-              </p>
-              <button
-                onClick={() => {
-                  if (!isAuthenticated) {
-                    window.location.href = '/login?redirect=/matches';
-                  } else {
-                    setIsCreateOpen(true);
-                  }
-                }}
-                className="px-5 py-2.5 rounded-lg bg-slate-900 text-white font-bold text-xs tracking-tight hover:bg-slate-800 transition-colors"
+            <div className="text-center py-16 bg-white rounded-2xl border border-slate-200/90 p-8 shadow-xs">
+              <Empty
+                description={
+                  <div className="space-y-1">
+                    <p className="text-base font-bold text-slate-800">
+                      Chưa có kèo nào phù hợp tiêu chí lọc
+                    </p>
+                    <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
+                      Bạn có thể chọn quận khác, hoặc là người đầu tiên tạo kèo để các tay vợt quanh khu vực tham gia.
+                    </p>
+                  </div>
+                }
               >
-                + Đăng Kèo Mới Ngay
-              </button>
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => {
+                    if (!isAuthenticated) {
+                      window.location.href = '/login?redirect=/matches';
+                    } else {
+                      setIsCreateOpen(true);
+                    }
+                  }}
+                  className="mt-3 font-bold cursor-pointer"
+                >
+                  Đăng Kèo Mới Ngay
+                </Button>
+              </Empty>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {matches.map((match) => {
                 const minMeta = BADMINTON_SKILL_LABELS[match.minSkillLevel] || {
                   label: match.minSkillLevel,
@@ -311,286 +488,356 @@ export default function MatchesPage() {
                 const availableSlots = match.totalSlots - match.joinedCount;
                 const isFull = match.status === MatchStatus.FULL || availableSlots <= 0;
 
+                const uid = user ? (user.id || (user as any)._id) : null;
+                const isUserInThisMatch = Boolean(
+                  uid && match.players?.some((p) => p.userId === uid)
+                );
+
                 return (
-                  <div
+                  <Card
                     key={match.id || match._id}
-                    className="bg-white rounded-xl border border-slate-200 hover:border-slate-400 transition-colors shadow-xs flex flex-col justify-between"
+                    hoverable
+                    className={`rounded-2xl border transition-all flex flex-col justify-between overflow-hidden ${isUserInThisMatch
+                        ? 'border-emerald-500/80 ring-2 ring-emerald-500/15 shadow-sm bg-gradient-to-b from-white to-emerald-50/20'
+                        : 'border-slate-200/90 shadow-xs hover:shadow-md hover:border-[#1E5AA8]/50'
+                      }`}
+                    bodyStyle={{ padding: '20px', display: 'flex', flexDirection: 'column', height: '100%' }}
                   >
-                    <div className="p-4 sm:p-5">
+                    <div>
                       {/* Top Badges */}
                       <div className="flex items-center justify-between gap-2 mb-3">
-                        <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-200">
-                          {match.sport === SportType.BADMINTON ? 'Cầu lông' : 'Pickleball'}
-                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <Tag
+                            color={match.sport === SportType.BADMINTON ? 'blue' : 'orange'}
+                            className="font-bold text-xs rounded-lg px-2.5 py-0.5 border-none uppercase tracking-wider"
+                          >
+                            {match.sport === SportType.BADMINTON ? '🏸 Cầu lông' : '🏓 Pickleball'}
+                          </Tag>
+                          {isUserInThisMatch && (
+                            <Tag color="green" className="font-bold text-[11px] rounded-md px-2 py-0.5 border-none">
+                              Đã giữ slot
+                            </Tag>
+                          )}
+                        </div>
 
-                        <span
-                          className={`text-xs font-bold px-2 py-0.5 rounded ${
-                            isFull
-                              ? 'bg-slate-100 text-slate-600 border border-slate-200'
-                              : 'bg-emerald-50 text-emerald-800 border border-emerald-300'
-                          }`}
-                        >
-                          {isFull ? 'Đã đủ người' : `Còn trống ${availableSlots} chỗ`}
-                        </span>
+                        <Badge
+                          status={isFull ? 'default' : 'success'}
+                          text={
+                            <span className={`text-xs font-bold ${isFull ? 'text-slate-500' : 'text-emerald-700'}`}>
+                              {isFull ? 'Đã đủ người' : `Còn trống ${availableSlots} chỗ`}
+                            </span>
+                          }
+                          className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${isFull ? 'bg-slate-100' : 'bg-emerald-50 border border-emerald-200'
+                            }`}
+                        />
                       </div>
 
                       {/* Title */}
-                      <h3 className="font-bold text-slate-900 text-base mb-2 line-clamp-2 hover:text-[#1E5AA8] transition-colors">
+                      <h3 className="font-black text-slate-900 text-base mb-2 line-clamp-2 hover:text-[#1E5AA8] transition-colors leading-snug">
                         <Link href={`/matches/${match.id || match._id}`}>
                           {match.title}
                         </Link>
                       </h3>
 
-                      {/* Venue & Time (No icons, clear structured hierarchy) */}
-                      <div className="space-y-1 text-xs text-slate-600 mb-3">
-                        <div className="font-semibold text-slate-900 truncate">
-                          {match.venueName} {match.courtNumber ? `· ${match.courtNumber}` : ''}
+                      {/* Venue & Time with Icons */}
+                      <div className="space-y-1.5 text-xs text-slate-600 mb-3.5">
+                        <div className="font-bold text-slate-900 truncate flex items-center gap-1.5">
+                          <EnvironmentOutlined className="text-[#1E5AA8] shrink-0" />
+                          <span>
+                            {match.venueName} {match.courtNumber ? `· ${match.courtNumber}` : ''}
+                          </span>
                         </div>
-                        <div className="truncate text-slate-600">
+                        <div className="truncate text-slate-500 pl-4">
                           {match.venueAddress} · Q. {match.district}
                         </div>
-                        <div className="font-mono text-slate-800 pt-1">
-                          {formatDateTime(match.startTime)}
+                        <div className="font-mono text-slate-800 flex items-center gap-1.5 pt-0.5">
+                          <ClockCircleOutlined className="text-amber-500 shrink-0" />
+                          <span>{formatDateTime(match.startTime)}</span>
                         </div>
                       </div>
 
                       {/* Skill requirements */}
-                      <div className="pt-3 border-t border-slate-100 text-xs">
-                        <span className="text-slate-500 font-medium">Trình độ: </span>
-                        <span className="font-bold text-slate-900">
+                      <div className="pt-3 border-t border-slate-100 text-xs flex items-center gap-1">
+                        <span className="text-slate-500 font-medium">Trình độ:</span>
+                        <Tag color="cyan" className="font-bold rounded-md text-[11px] m-0">
                           {minMeta.label}
-                        </span>
-                        <span className="text-slate-400 mx-1">đến</span>
-                        <span className="font-bold text-slate-900">
+                        </Tag>
+                        <span className="text-slate-400">→</span>
+                        <Tag color="blue" className="font-bold rounded-md text-[11px] m-0">
                           {maxMeta.label}
-                        </span>
+                        </Tag>
                       </div>
 
                       {/* Cost Note */}
-                      <div className="mt-2 text-xs bg-slate-50 rounded p-2 text-slate-700 font-medium border border-slate-100">
-                        Chi phí: {match.estimatedCostText}
+                      <div className="mt-2.5 text-xs bg-slate-50 rounded-xl p-2.5 text-slate-700 font-medium border border-slate-100 flex items-start gap-1.5">
+                        <DollarCircleOutlined className="text-emerald-600 mt-0.5 shrink-0" />
+                        <span className="line-clamp-2">{match.estimatedCostText}</span>
                       </div>
                     </div>
 
                     {/* Card Footer */}
-                    <div className="px-4 py-3 bg-slate-50/70 border-t border-slate-100 flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-700">
-                        {match.joinedCount} / {match.totalSlots} VĐV
-                      </span>
+                    <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+                        <TeamOutlined className="text-slate-400" />
+                        <span>
+                          {match.joinedCount} / {match.totalSlots} VĐV
+                        </span>
+                      </div>
 
-                      <Link
-                        href={`/matches/${match.id || match._id}`}
-                        className="px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs tracking-tight transition-colors"
-                      >
-                        Chi tiết kèo →
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        {isUserInThisMatch && (
+                          <a
+                            href={getGoogleCalendarUrl(match)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Button
+                              type="primary"
+                              size="small"
+                              icon={<CalendarOutlined />}
+                              className="font-bold text-xs rounded-lg bg-emerald-600 hover:bg-emerald-700 border-none shadow-xs"
+                            >
+                              Lưu Calendar 📅
+                            </Button>
+                          </a>
+                        )}
+
+                        <Link href={`/matches/${match.id || match._id}`}>
+                          <Button
+                            type={isUserInThisMatch ? 'default' : 'primary'}
+                            size="small"
+                            className="font-bold text-xs rounded-lg shadow-xs hover:scale-105 transition-all"
+                          >
+                            Chi tiết kèo →
+                          </Button>
+                        </Link>
+                      </div>
                     </div>
-                  </div>
+                  </Card>
                 );
               })}
             </div>
           )}
         </SmartAsyncContainer>
 
-        {/* MODAL: ĐĂNG KÈO MỚI (No icons, clean form fields) */}
-        {isCreateOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
-            <div className="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-xl border border-slate-200 p-6 sm:p-8">
-              <div className="flex items-center justify-between pb-4 border-b border-slate-200 mb-6">
-                <div>
-                  <h3 className="text-lg font-black text-slate-900">
-                    Đăng Kèo Tìm Người Giao Lưu
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Tạo kèo nhanh chóng để ghép người chơi cùng khung giờ
-                  </p>
-                </div>
-                <button
-                  onClick={() => setIsCreateOpen(false)}
-                  className="px-2.5 py-1 text-xs font-bold rounded bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
-                >
-                  Đóng [ESC]
-                </button>
+        {/* MODAL: ĐĂNG KÈO MỚI (Ant Design Modal & Form Components) */}
+        <Modal
+          title={
+            <div>
+              <h3 className="text-lg font-black text-slate-900">
+                Đăng Kèo Tìm Người Giao Lưu
+              </h3>
+              <p className="text-xs text-slate-500 font-normal mt-0.5">
+                Tạo kèo nhanh chóng để ghép người chơi cùng khung giờ quanh khu vực
+              </p>
+            </div>
+          }
+          open={isCreateOpen}
+          onCancel={() => setIsCreateOpen(false)}
+          footer={null}
+          width={640}
+          className="rounded-2xl"
+          destroyOnClose
+        >
+          <form onSubmit={handleCreateMatch} className="space-y-4 pt-3">
+            {/* Bộ môn */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Bộ môn thi đấu *
+              </label>
+              <Segmented
+                options={[
+                  { label: '🏸 Cầu lông', value: SportType.BADMINTON },
+                  { label: '🏓 Pickleball', value: SportType.PICKLEBALL },
+                ]}
+                value={formData.sport}
+                onChange={(val) => setFormData({ ...formData, sport: val as SportType })}
+                className="w-full bg-slate-100 font-bold p-1 rounded-xl"
+                block
+              />
+            </div>
+
+            {/* Tiêu đề */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Tiêu đề kèo đấu *
+              </label>
+              <Input
+                required
+                placeholder="Ví dụ: Tuyển 2 chân giao lưu đôi nam tối Thứ 5"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                size="large"
+                className="rounded-xl"
+              />
+            </div>
+
+            {/* Sân & Quận */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Tên sân thi đấu *
+                </label>
+                <Input
+                  required
+                  placeholder="Ví dụ: Sân Cầu Lông Kỳ Đồng"
+                  value={formData.venueName}
+                  onChange={(e) => setFormData({ ...formData, venueName: e.target.value })}
+                  size="large"
+                  className="rounded-xl"
+                />
               </div>
 
-              <form onSubmit={handleCreateMatch} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Tiêu đề kèo đấu *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ví dụ: Tuyển 2 chân giao lưu đôi nam tối Thứ 5"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm focus:ring-1 focus:ring-slate-900 focus:border-slate-900 outline-none"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                      Tên sân thi đấu *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Ví dụ: Sân Cầu Lông Kỳ Đồng"
-                      value={formData.venueName}
-                      onChange={(e) => setFormData({ ...formData, venueName: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm focus:ring-1 focus:ring-slate-900 focus:border-slate-900 outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                      Quận *
-                    </label>
-                    <select
-                      value={formData.district}
-                      onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm focus:ring-1 focus:ring-slate-900 focus:border-slate-900 outline-none font-medium"
-                    >
-                      {DISTRICTS.filter((d) => d !== 'Tất cả').map((d) => (
-                        <option key={d} value={d}>
-                          Quận {d}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Địa chỉ cụ thể *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ví dụ: 20 Kỳ Đồng, P. Xuân Hà, Thanh Khê, Đà Nẵng"
-                    value={formData.venueAddress}
-                    onChange={(e) => setFormData({ ...formData, venueAddress: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm focus:ring-1 focus:ring-slate-900 focus:border-slate-900 outline-none"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                      Giờ bắt đầu *
-                    </label>
-                    <input
-                      type="datetime-local"
-                      required
-                      value={formData.startTime}
-                      onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm focus:ring-1 focus:ring-slate-900 focus:border-slate-900 outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                      Giờ kết thúc *
-                    </label>
-                    <input
-                      type="datetime-local"
-                      required
-                      value={formData.endTime}
-                      onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm focus:ring-1 focus:ring-slate-900 focus:border-slate-900 outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                      Tổng số người
-                    </label>
-                    <input
-                      type="number"
-                      min={2}
-                      max={12}
-                      value={formData.totalSlots}
-                      onChange={(e) => setFormData({ ...formData, totalSlots: Number(e.target.value) })}
-                      className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm focus:ring-1 focus:ring-slate-900 focus:border-slate-900 outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                      Trình tối thiểu
-                    </label>
-                    <select
-                      value={formData.minSkillLevel}
-                      onChange={(e) => setFormData({ ...formData, minSkillLevel: e.target.value as any })}
-                      className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm focus:ring-1 focus:ring-slate-900 focus:border-slate-900 outline-none"
-                    >
-                      {SKILL_OPTIONS.filter((o) => o.value !== 'ALL').map((o) => (
-                        <option key={o.value} value={o.value}>
-                          {o.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                      Trình tối đa
-                    </label>
-                    <select
-                      value={formData.maxSkillLevel}
-                      onChange={(e) => setFormData({ ...formData, maxSkillLevel: e.target.value as any })}
-                      className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm focus:ring-1 focus:ring-slate-900 focus:border-slate-900 outline-none"
-                    >
-                      {SKILL_OPTIONS.filter((o) => o.value !== 'ALL').map((o) => (
-                        <option key={o.value} value={o.value}>
-                          {o.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Hình thức chi phí
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Ví dụ: Chia đều tiền sân tại chỗ (~40k/người)"
-                    value={formData.estimatedCostText}
-                    onChange={(e) => setFormData({ ...formData, estimatedCostText: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm focus:ring-1 focus:ring-slate-900 focus:border-slate-900 outline-none"
-                  />
-                  <p className="text-[11px] text-slate-500 mt-1">
-                    * CourtMate không thu cọc trung gian. Người chơi chia đều chi phí trực tiếp tại sân.
-                  </p>
-                </div>
-
-                <div className="pt-4 border-t border-slate-200 flex items-center justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setIsCreateOpen(false)}
-                    className="px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
-                  >
-                    Hủy bỏ
-                  </button>
-
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="px-5 py-2 rounded-lg text-sm font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-sm transition-all disabled:opacity-50"
-                  >
-                    {submitting ? 'Đang tạo...' : 'Xác nhận đăng kèo'}
-                  </button>
-                </div>
-              </form>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Quận (Đà Nẵng) *
+                </label>
+                <Select
+                  value={formData.district}
+                  onChange={(val) => setFormData({ ...formData, district: val })}
+                  size="large"
+                  className="w-full"
+                  options={DISTRICTS.filter((d) => d !== 'Tất cả').map((d) => ({
+                    value: d,
+                    label: `Quận ${d}`,
+                  }))}
+                />
+              </div>
             </div>
-          </div>
-        )}
+
+            {/* Địa chỉ cụ thể */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Địa chỉ cụ thể *
+              </label>
+              <Input
+                required
+                placeholder="Ví dụ: 20 Kỳ Đồng, P. Xuân Hà, Thanh Khê, Đà Nẵng"
+                value={formData.venueAddress}
+                onChange={(e) => setFormData({ ...formData, venueAddress: e.target.value })}
+                size="large"
+                className="rounded-xl"
+              />
+            </div>
+
+            {/* Giờ bắt đầu & Giờ kết thúc */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Thời gian bắt đầu *
+                </label>
+                <input
+                  type="datetime-local"
+                  required
+                  value={formData.startTime}
+                  onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                  className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-sm focus:ring-1 focus:ring-[#1E5AA8] focus:border-[#1E5AA8] outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Thời gian kết thúc *
+                </label>
+                <input
+                  type="datetime-local"
+                  required
+                  value={formData.endTime}
+                  onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                  className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-sm focus:ring-1 focus:ring-[#1E5AA8] focus:border-[#1E5AA8] outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Slot & Trình độ */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Tổng số người
+                </label>
+                <InputNumber
+                  min={2}
+                  max={12}
+                  value={formData.totalSlots}
+                  onChange={(val) => setFormData({ ...formData, totalSlots: Number(val) || 4 })}
+                  size="large"
+                  className="w-full rounded-xl"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Trình tối thiểu
+                </label>
+                <Select
+                  value={formData.minSkillLevel}
+                  onChange={(val) => setFormData({ ...formData, minSkillLevel: val })}
+                  size="large"
+                  className="w-full"
+                  options={SKILL_OPTIONS.filter((o) => o.value !== 'ALL').map((o) => ({
+                    value: o.value,
+                    label: o.label,
+                  }))}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Trình tối đa
+                </label>
+                <Select
+                  value={formData.maxSkillLevel}
+                  onChange={(val) => setFormData({ ...formData, maxSkillLevel: val })}
+                  size="large"
+                  className="w-full"
+                  options={SKILL_OPTIONS.filter((o) => o.value !== 'ALL').map((o) => ({
+                    value: o.value,
+                    label: o.label,
+                  }))}
+                />
+              </div>
+            </div>
+
+            {/* Chi phí */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Hình thức chi phí
+              </label>
+              <Input
+                placeholder="Ví dụ: Chia đều tiền sân tại chỗ (~40k/người)"
+                value={formData.estimatedCostText}
+                onChange={(e) => setFormData({ ...formData, estimatedCostText: e.target.value })}
+                size="large"
+                className="rounded-xl"
+              />
+              <p className="text-[11px] text-slate-500 mt-1">
+                * CourtMate không thu cọc trung gian. Người chơi chia đều chi phí trực tiếp tại sân.
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+              <Button
+                onClick={() => setIsCreateOpen(false)}
+                className="rounded-xl font-semibold"
+              >
+                Hủy bỏ
+              </Button>
+
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={submitting}
+                className="rounded-xl font-bold cursor-pointer"
+              >
+                Xác nhận đăng kèo
+              </Button>
+            </div>
+          </form>
+        </Modal>
       </div>
     </div>
   );
 }
+

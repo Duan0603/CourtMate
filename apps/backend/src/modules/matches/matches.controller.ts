@@ -62,6 +62,17 @@ export class MatchesController {
   }
 
   /**
+   * Lấy kèo đấu mà user hiện tại đang tham gia (cần đăng nhập)
+   */
+  @Get('user/my-active')
+  @UseGuards(JwtAuthGuard)
+  async getMyActiveMatch(@Request() req: any) {
+    const user = this.extractUser(req);
+    const match = await this.matchesService.getUserActiveMatch(user.id);
+    return { data: match };
+  }
+
+  /**
    * Xem chi tiết kèo theo ID hoặc ShareCode (công khai)
    */
   @Get(':idOrCode')

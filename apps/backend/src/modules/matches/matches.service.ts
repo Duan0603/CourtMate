@@ -190,6 +190,23 @@ export class MatchesService {
       throw new ConflictException('Bạn đã tham gia vào kèo đấu này rồi');
     }
 
+    // Kiểm tra xem user_id đã tham gia slot ở kèo đấu khác chưa kết thúc chưa
+    const now = new Date();
+    const existingActiveMatch = await this.matchModel
+      .findOne({
+        _id: { $ne: match._id },
+        'players.userId': user.id,
+        status: { $in: [MatchStatus.OPEN, MatchStatus.FULL] },
+        endTime: { $gte: now },
+      })
+      .exec();
+
+    if (existingActiveMatch) {
+      throw new BadRequestException(
+        `Bạn đã tham gia một slot thi đấu khác ("${existingActiveMatch.title}" tại ${existingActiveMatch.venueName}). Mỗi người chơi chỉ được tham gia 1 slot tại một thời điểm để đảm bảo lịch trình!`,
+      );
+    }
+
     if (match.joinedCount >= match.totalSlots) {
       throw new BadRequestException('Kèo đấu đã đủ số lượng người tham gia');
     }
@@ -212,6 +229,21 @@ export class MatchesService {
     }
 
     return await match.save();
+  }
+
+  /**
+   * Lấy kèo đấu hiện tại hoặc sắp tới mà user đang tham gia
+   */
+  async getUserActiveMatch(userId: string): Promise<Match | null> {
+    const now = new Date();
+    return await this.matchModel
+      .findOne({
+        'players.userId': userId,
+        status: { $in: [MatchStatus.OPEN, MatchStatus.FULL] },
+        endTime: { $gte: now },
+      })
+      .sort({ startTime: 1 })
+      .exec();
   }
 
   /**
