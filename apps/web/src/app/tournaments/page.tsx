@@ -40,7 +40,7 @@ const POPULAR_CITIES = [
 function TournamentsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { user, updateProfile } = useAuth();
+  const { user, toggleBookmark } = useAuth();
 
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const {
@@ -145,8 +145,8 @@ function TournamentsContent() {
       
     setBookmarkedIds(newBookmarks);
     
-    if (user) {
-      await updateProfile({ bookmarkedTournaments: newBookmarks });
+    if (toggleBookmark) {
+      await toggleBookmark(id);
     }
   };
 

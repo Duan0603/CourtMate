@@ -76,19 +76,20 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
         className="group bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-lg hover:border-[#1E5AA8]/40 transition-all duration-300 flex cursor-pointer"
       >
         {/* Horizontal Layout Cover Image */}
-        <div className="relative w-48 sm:w-56 shrink-0 overflow-hidden bg-slate-100">
+        <div className="relative w-48 sm:w-56 shrink-0 overflow-hidden bg-slate-900">
           <img
             src={tournament.coverImage || 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=800&q=80'}
             alt={tournament.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
           />
-          <div className="absolute top-2 left-2">
-            <span className={`px-2 py-0.5 text-[10px] font-bold rounded-md shadow-sm ${statusInfo.color}`}>
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/40" />
+          <div className="absolute top-2.5 left-2.5">
+            <span className="px-2.5 py-1 text-xs font-black rounded-lg bg-emerald-600 text-white shadow-md border border-emerald-400/40">
               {statusInfo.label}
             </span>
           </div>
-          <div className="absolute bottom-2 left-2 flex items-center gap-1">
-             <span className={`px-1.5 py-0.5 text-[10px] font-semibold rounded border ${sportInfo.color} bg-white/95 backdrop-blur-sm shadow-xs`}>
+          <div className="absolute bottom-2.5 left-2.5 flex items-center gap-1.5">
+             <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-950/85 text-white border border-white/20 backdrop-blur-md shadow-sm">
               {sportInfo.label}
             </span>
           </div>
@@ -138,99 +139,97 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
   return (
     <Link 
       href={`/tournaments/${tournament.id}`}
-      className="group bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-xs hover:shadow-xl hover:border-[#1E5AA8]/40 transition-all duration-300 flex flex-col cursor-pointer h-full relative"
+      className="group bg-white rounded-2xl border border-slate-200/90 overflow-hidden shadow-xs hover:shadow-lg hover:border-[#1E5AA8]/50 transition-all duration-300 flex flex-col cursor-pointer h-full relative"
     >
-        {/* Cover Image & Badges */}
-        <div className="relative h-40 sm:h-44 w-full overflow-hidden bg-slate-100">
-          <img
-            src={
-              tournament.coverImage ||
-              'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=800&q=80'
-            }
-            alt={tournament.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#101828]/80 via-transparent to-transparent opacity-75" />
+      {/* Cover Image & Badges */}
+      <div className="relative h-44 w-full overflow-hidden bg-slate-900">
+        <img
+          src={
+            tournament.coverImage ||
+            'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=800&q=80'
+          }
+          alt={tournament.title}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
+        />
+        {/* Dark contrast gradient protection */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-slate-950/40" />
 
-          {/* Status Badge */}
-          <div className="absolute top-2.5 left-2.5">
-            <span className={`px-2 py-0.5 text-[11px] font-bold rounded-md shadow-xs ${statusInfo.color}`}>
-              {statusInfo.label}
-            </span>
-          </div>
-
-          {/* Bookmark Action */}
-          {onBookmarkToggle && (
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onBookmarkToggle(tournament.id);
-              }}
-              className={`absolute top-2.5 right-2.5 p-1.5 bg-black/30 backdrop-blur-md rounded-full transition-colors duration-200 hover:bg-black/50 hover:scale-110 active:scale-95`}
-            >
-              <Bookmark 
-                color={isBookmarked ? '#facc15' : '#ffffff'}
-                fill={isBookmarked ? '#facc15' : 'transparent'}
-                className={`w-3.5 h-3.5 transition-all ${
-                  isBookmarked 
-                    ? 'opacity-100' 
-                    : 'opacity-90 hover:opacity-100'
-                }`} 
-              />
-            </button>
-          )}
-
-          {/* Sport Type Badge + City */}
-          <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between gap-1.5">
-            <span
-              className={`px-2 py-0.5 text-[10px] font-bold rounded border ${sportInfo.color} bg-white/95 backdrop-blur-sm shadow-2xs shrink-0`}
-            >
-              {sportInfo.label}
-            </span>
-            <span className="text-[11px] text-white/95 font-semibold truncate shadow-xs">
-              {tournament.city}
-            </span>
-          </div>
+        {/* Status Badge - Top Left with high contrast */}
+        <div className="absolute top-2.5 left-2.5 z-10">
+          <span className="inline-flex items-center px-2.5 py-1 text-xs font-black rounded-lg bg-emerald-600 text-white shadow-md border border-emerald-400/40 tracking-tight">
+            {statusInfo.label}
+          </span>
         </div>
 
-        {/* Content - Compact for Grid */}
-        <div className="p-3.5 sm:p-4 flex-1 flex flex-col justify-between gap-2.5">
-          <div className="space-y-2">
-            <h3 className="font-bold text-sm text-[#101828] line-clamp-2 leading-snug min-h-[2.5rem] group-hover:text-[#1E5AA8] transition-colors">
-              {tournament.title}
-            </h3>
+        {/* Bookmark Action - Top Right */}
+        {onBookmarkToggle && (
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onBookmarkToggle(tournament.id);
+            }}
+            aria-label={isBookmarked ? 'Bỏ lưu giải đấu' : 'Lưu giải đấu'}
+            className="absolute top-2.5 right-2.5 z-10 p-2 bg-slate-950/60 hover:bg-slate-950/90 backdrop-blur-md rounded-xl border border-white/20 transition-all hover:scale-110 active:scale-95 text-white"
+          >
+            <Bookmark 
+              color={isBookmarked ? '#f59e0b' : '#ffffff'}
+              fill={isBookmarked ? '#f59e0b' : 'transparent'}
+              className="w-4 h-4" 
+            />
+          </button>
+        )}
 
-            {/* Key Details using Icons */}
-            <div className="space-y-1.5 text-[11px] sm:text-xs text-slate-600 font-medium">
-              <div className="flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-[#1E5AA8] shrink-0" />
-                <span className="truncate">{startDateFormatted}</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                <span className="truncate" title={tournament.location}>{tournament.location}</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                <span className="truncate">{tournament.slotsLimit || 32} VĐV</span>
-              </div>
+        {/* Sport Type Badge + City - Bottom row */}
+        <div className="absolute bottom-2.5 left-2.5 right-2.5 z-10 flex items-center justify-between gap-2">
+          <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-950/85 text-white border border-white/20 backdrop-blur-md shadow-sm shrink-0">
+            {sportInfo.label}
+          </span>
+          <span className="text-xs text-white font-bold truncate max-w-[55%] text-right drop-shadow-sm">
+            {tournament.city}
+          </span>
+        </div>
+      </div>
+
+      {/* Content - Compact for Grid */}
+      <div className="p-4 flex-1 flex flex-col justify-between gap-3">
+        <div className="space-y-2.5">
+          <h3 className="font-extrabold text-sm sm:text-base text-slate-900 line-clamp-2 leading-snug group-hover:text-[#1E5AA8] transition-colors" title={tournament.title}>
+            {tournament.title}
+          </h3>
+
+          {/* Key Details using Icons with overflow safety */}
+          <div className="space-y-1.5 text-xs text-slate-700 font-medium">
+            <div className="flex items-center gap-2 min-w-0">
+              <Calendar className="w-4 h-4 text-[#1E5AA8] shrink-0" />
+              <span className="truncate">{startDateFormatted}</span>
             </div>
-          </div>
-
-          {/* Footer - Fixed price & expandable CTA on hover */}
-          <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2">
-            <span className="text-sm font-black text-[#1E5AA8] tracking-tight shrink-0 whitespace-nowrap">
-              {formattedFee}
-            </span>
-            <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-slate-100 group-hover:bg-[#1E5AA8] text-slate-500 group-hover:text-white transition-all duration-300 shrink-0 shadow-2xs">
-              <span className="text-[11px] font-bold hidden group-hover:inline-block animate-in fade-in slide-in-from-right-1 duration-200 whitespace-nowrap">
-                Xem thêm
+            <div className="flex items-center gap-2 min-w-0">
+              <MapPin className="w-4 h-4 text-rose-500 shrink-0" />
+              <span className="truncate block flex-1" title={tournament.location}>
+                {tournament.location}
               </span>
-              <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+            </div>
+            <div className="flex items-center gap-2 min-w-0">
+              <Users className="w-4 h-4 text-amber-600 shrink-0" />
+              <span className="truncate">{tournament.slotsLimit || 32} VĐV</span>
             </div>
           </div>
         </div>
-      </Link>
+
+        {/* Footer - Fixed price & expandable CTA on hover */}
+        <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2 mt-auto">
+          <span className="text-sm font-black text-slate-900 tracking-tight shrink-0 whitespace-nowrap">
+            {formattedFee}
+          </span>
+          <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 group-hover:bg-[#1E5AA8] text-slate-700 group-hover:text-white transition-all duration-200 shrink-0">
+            <span className="text-xs font-bold">
+              Chi tiết
+            </span>
+            <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+          </div>
+        </div>
+      </div>
+    </Link>
   );
 };

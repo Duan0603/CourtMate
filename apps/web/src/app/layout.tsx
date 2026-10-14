@@ -4,7 +4,7 @@ import './globals.css';
 import { AuthProvider } from '../context/AuthContext';
 import { LoadingProvider } from '../context/LoadingContext';
 import { LayoutShell } from '../components/layout/LayoutShell';
-import { InitialPreloader, RouteTransitionLoader } from '../components/loading';
+import { InitialPreloader } from '../components/loading';
 
 const inter = Inter({
   subsets: ['latin', 'vietnamese'],
@@ -35,7 +35,6 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col font-sans bg-[#F8FAFC] text-navy">
         <LoadingProvider>
           <InitialPreloader />
-          <RouteTransitionLoader />
           <AuthProvider>
             <LayoutShell>{children}</LayoutShell>
           </AuthProvider>

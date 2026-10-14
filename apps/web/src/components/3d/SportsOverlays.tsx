@@ -3,6 +3,7 @@
 import React, { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import gsap from 'gsap';
+import { useLoading } from '../../context/LoadingContext';
 
 export interface SportsOverlaysProps {
   isAuthenticated: boolean;
@@ -78,29 +79,16 @@ export function SportsOverlays({ isAuthenticated }: SportsOverlaysProps) {
     });
   };
 
-  // CTA Click: Smooth slide transition before navigating
+  const { startNavigation } = useLoading();
+
+  // CTA Click: Use smart navigation loader
   const handleCtaClick = () => {
     if (isTransitioning) return;
     setIsTransitioning(true);
 
     const targetUrl = isAuthenticated ? '/tournaments' : '/register';
-    const curtain = document.getElementById('slide-curtain');
-    if (curtain) {
-      gsap.fromTo(
-        curtain,
-        { x: '-100%' },
-        {
-          x: '0%',
-          duration: 0.65,
-          ease: 'power3.inOut',
-          onComplete: () => {
-            router.push(targetUrl);
-          },
-        },
-      );
-    } else {
-      router.push(targetUrl);
-    }
+    startNavigation(targetUrl);
+    router.push(targetUrl);
   };
 
   return (
@@ -214,27 +202,6 @@ export function SportsOverlays({ isAuthenticated }: SportsOverlaysProps) {
         </div>
       </div>
 
-      {/* ─── SLIDE RIGHT TRANSITION CURTAIN ─── */}
-      <div
-        id="slide-curtain"
-        className="fixed inset-0 bg-gradient-to-r from-[#1E5AA8] via-[#0284c7] to-[#38bdf8] z-50 pointer-events-none transform -translate-x-full shadow-2xl flex items-center justify-center"
-      >
-        <div className="text-white text-2xl font-black flex items-center gap-3 animate-pulse">
-          <span>CourtMate</span>
-          <svg
-            width="28"
-            height="28"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M5 12h14M12 5l7 7-7 7" />
-          </svg>
-        </div>
-      </div>
     </>
   );
 }

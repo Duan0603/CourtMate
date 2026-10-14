@@ -172,8 +172,6 @@ export default function CreateTournamentPage() {
                   >
                     <option value={SportType.BADMINTON}>🏸 Cầu lông</option>
                     <option value={SportType.PICKLEBALL}>🏓 Pickleball</option>
-                    <option value={SportType.TENNIS}>🎾 Quần vợt</option>
-                    <option value={SportType.FOOTBALL}>⚽ Bóng đá mini</option>
                   </select>
                 </div>
 

@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { RefreshCw, AlertTriangle, Sparkles } from 'lucide-react';
 import { useLoading } from '../../context/LoadingContext';
+import { LoadingDots } from '../shared/LoadingDots';
 
 export function InitialPreloader() {
   const {
@@ -11,6 +12,8 @@ export function InitialPreloader() {
     initialPreloaderFailed,
     initialPreloaderError,
     retryInitialPreloader,
+    isNavigating,
+    isNavLoaderVisible,
   } = useLoading();
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -48,10 +51,10 @@ export function InitialPreloader() {
 
       // Initial positions
       gsap.set(paddleRef.current, {
-        x: -40,
+        x: -45,
         y: 10,
         rotation: -25,
-        transformOrigin: '20% 80%',
+        transformOrigin: '35% 85%',
         opacity: 0,
       });
       gsap.set(ballRef.current, {
@@ -59,19 +62,21 @@ export function InitialPreloader() {
         y: 0,
         scale: 0.6,
         opacity: 0,
+        transformOrigin: '50% 50%',
       });
       gsap.set(racketRef.current, {
         x: 60,
         y: -10,
         rotation: 35,
-        transformOrigin: '80% 80%',
+        transformOrigin: '70% 90%',
         opacity: 0,
       });
       gsap.set(shuttlecockRef.current, {
-        x: 40,
-        y: 20,
+        x: 30,
+        y: 10,
         opacity: 0,
-        rotation: -45,
+        rotation: -30,
+        transformOrigin: '50% 50%',
       });
       gsap.set(trajectoryPathRef.current, {
         strokeDasharray: 300,
@@ -102,7 +107,7 @@ export function InitialPreloader() {
       })
       // Pickleball launched across continuous arc
       .to(ballRef.current, {
-        x: 90,
+        x: 80,
         y: -35,
         rotation: 360,
         duration: 0.45,
@@ -115,52 +120,54 @@ export function InitialPreloader() {
       }, '-=0.4')
       // Transition: Ball reaches peak and transforms momentum towards badminton court
       .to(ballRef.current, {
-        x: 150,
-        y: 10,
-        opacity: 0.3,
-        scale: 0.7,
-        duration: 0.35,
+        x: 135,
+        y: -10,
+        opacity: 0,
+        scale: 0.5,
+        duration: 0.25,
       })
       // Badminton racket swings in to meet the shuttlecock
       .to(racketRef.current, {
         opacity: 1,
-        x: 20,
-        y: 5,
-        rotation: 10,
+        x: 10,
+        y: -10,
+        rotation: 15,
         duration: 0.35,
-        ease: 'back.out(1.2)',
-      }, '-=0.3')
+        ease: 'power2.out',
+      }, '-=0.2')
       .to(shuttlecockRef.current, {
         opacity: 1,
-        x: 110,
-        y: -15,
-        rotation: 15,
+        x: 40,
+        y: -5,
+        rotation: 10,
         duration: 0.25,
       }, '-=0.25')
-      // Smash/Drive impact with badminton racket
+      // Smash/Drive impact with badminton racket head
       .to(racketRef.current, {
-        rotation: -30,
-        x: -10,
+        rotation: -35,
+        x: -25,
+        y: 5,
         duration: 0.2,
         ease: 'power3.inOut',
       })
       .to(shuttlecockRef.current, {
-        x: 0,
-        y: -60,
-        rotation: -65,
+        x: -40,
+        y: -75,
+        rotation: -75,
         scale: 1.15,
         duration: 0.4,
         ease: 'power2.out',
       }, '-=0.15')
       // Soft fade / reset transition
       .to([paddleRef.current, racketRef.current, ballRef.current, shuttlecockRef.current], {
-        opacity: 0.3,
-        duration: 0.3,
+        opacity: 0,
+        duration: 0.35,
+        ease: 'power2.in',
       })
       .to(trajectoryPathRef.current, {
         strokeDashoffset: -300,
         duration: 0.3,
-      }, '-=0.2');
+      }, '-=0.25');
 
       // Subtle pulse on brand text
       gsap.to(brandTextRef.current, {
@@ -175,14 +182,26 @@ export function InitialPreloader() {
     return () => ctx.revert();
   }, [initialPreloaderFailed]);
 
-  // Handle exit transition when loading finishes
+  const isBusy = isInitialLoading || (isNavigating && isNavLoaderVisible);
+
+  // Sync render state and animations
   useEffect(() => {
-    if (!isInitialLoading && !initialPreloaderFailed) {
+    if (isBusy) {
+      setShouldRender(true);
+      if (containerRef.current) {
+        gsap.to(containerRef.current, {
+          opacity: 1,
+          scale: 1,
+          duration: 0.25,
+          ease: 'power2.out',
+        });
+      }
+    } else if (!initialPreloaderFailed) {
       if (containerRef.current) {
         gsap.to(containerRef.current, {
           opacity: 0,
           scale: 0.98,
-          duration: 0.4,
+          duration: 0.35,
           ease: 'power2.inOut',
           onComplete: () => {
             setShouldRender(false);
@@ -192,14 +211,14 @@ export function InitialPreloader() {
         setShouldRender(false);
       }
     }
-  }, [isInitialLoading, initialPreloaderFailed]);
+  }, [isBusy, initialPreloaderFailed]);
 
   if (!shouldRender) return null;
 
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#FFFBF7] selection:bg-none"
+      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#F8FAFC] selection:bg-none"
       aria-label="CourtMate Loading Screen"
       role="status"
     >
@@ -293,11 +312,9 @@ export function InitialPreloader() {
 
         {/* Dynamic Status / Error Handling */}
         {!initialPreloaderFailed ? (
-          <div className="mt-4 flex flex-col items-center gap-2">
-            <div className="w-36 h-1.5 bg-slate-200/80 rounded-full overflow-hidden relative">
-              <div className="h-full bg-gradient-to-r from-[#1E5AA8] to-[#0077FF] rounded-full animate-shimmer w-full" />
-            </div>
-            <p ref={statusRef} className="text-xs font-medium text-[#475467] animate-pulse">
+          <div className="mt-4 flex flex-col items-center gap-2.5">
+            <LoadingDots size="md" colorScheme="brand" />
+            <p ref={statusRef} className="text-xs font-semibold text-[#475467] animate-pulse">
               Đang chuẩn bị dữ liệu sân đấu...
             </p>
           </div>

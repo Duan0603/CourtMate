@@ -14,6 +14,7 @@ interface AuthContextType {
   register: (email: string, password: string, name: string, role?: UserRole) => Promise<void>;
   logout: () => void;
   updateProfile: (data: Partial<User>) => Promise<void>;
+  toggleBookmark: (tournamentId: string) => Promise<boolean>;
   switchRole: (role: UserRole) => Promise<void> | void;
 }
 
@@ -159,6 +160,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const toggleBookmark = async (tournamentId: string): Promise<boolean> => {
+    if (!user) {
+      // Store in localStorage for guests if needed
+      return false;
+    }
+    const currentList = user.bookmarkedTournaments || [];
+    const isCurrentlyBookmarked = currentList.includes(tournamentId);
+
+    // Optimistic update
+    const nextList = isCurrentlyBookmarked
+      ? currentList.filter(id => id !== tournamentId)
+      : [...currentList, tournamentId];
+
+    const optimisticUser = { ...user, bookmarkedTournaments: nextList };
+    setUser(optimisticUser);
+    localStorage.setItem('courtmate_user', JSON.stringify(optimisticUser));
+
+    try {
+      let updatedUser: User;
+      if (isCurrentlyBookmarked) {
+        updatedUser = await authApi.removeBookmark(tournamentId);
+      } else {
+        updatedUser = await authApi.addBookmark(tournamentId);
+      }
+      if (updatedUser) {
+        const normalized = normalizeUser(updatedUser);
+        setUser(normalized);
+        localStorage.setItem('courtmate_user', JSON.stringify(normalized));
+      }
+      return !isCurrentlyBookmarked;
+    } catch (error) {
+      console.warn('Backend toggle bookmark failed, preserving optimistic update in localStorage:', error);
+      return !isCurrentlyBookmarked;
+    }
+  };
+
   const switchRole = async (role: UserRole) => {
     try {
       if (role === UserRole.ORGANIZER) {
@@ -204,6 +241,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         register,
         logout,
         updateProfile,
+        toggleBookmark,
         switchRole,
       }}
     >

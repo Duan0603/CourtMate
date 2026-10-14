@@ -27,6 +27,9 @@ import { useAuth } from '../../context/AuthContext';
 import { SportType } from '@courtmate/shared';
 import { registrationsApi } from '../../lib/registrations.api';
 import { tournamentsApi } from '../../lib/tournaments.api';
+import { uploadImageToCloudinary } from '../../lib/cloudinary';
+import { LoadingDots } from '../../components/shared/LoadingDots';
+import toast from 'react-hot-toast';
 
 export default function ProfilePage() {
   const { user, updateProfile } = useAuth();
@@ -34,6 +37,10 @@ export default function ProfilePage() {
   const [myRegistrations, setMyRegistrations] = useState<any[]>([]);
   const [savedTournaments, setSavedTournaments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Avatar Upload State
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   // Edit fields
   const [name, setName] = useState(user?.name || '');
@@ -144,14 +151,61 @@ export default function ProfilePage() {
             <div className="absolute -top-14 sm:-top-16 left-6 sm:left-8">
               <div className="relative group">
                 <img
-                  src={user?.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=240&q=80'}
+                  src={
+                    user?.avatarUrl ||
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || name || 'User')}&background=1E5AA8&color=ffffff&size=256&bold=true`
+                  }
                   alt={user?.name || 'Vận động viên'}
                   className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl object-cover ring-4 ring-white shadow-xl bg-slate-100"
                 />
-                <button 
-                  type="button" 
-                  className="absolute bottom-1 right-1 p-1.5 bg-slate-900/80 hover:bg-slate-900 text-white rounded-lg shadow-lg transition transform hover:scale-105"
-                  title="Đổi ảnh đại diện"
+
+                {/* Upload Status Overlay */}
+                {isUploadingAvatar && (
+                  <div className="absolute inset-0 rounded-3xl bg-black/60 backdrop-blur-xs flex flex-col items-center justify-center text-white z-10">
+                    <LoadingDots size="sm" colorScheme="white" />
+                  </div>
+                )}
+
+                {/* Hidden File Input */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+
+                    setIsUploadingAvatar(true);
+                    const toastId = toast.loading('Đang tải ảnh lên Cloudinary...');
+
+                    try {
+                      const uploadedUrl = await uploadImageToCloudinary(file);
+                      await updateProfile({
+                        avatarUrl: uploadedUrl,
+                        preferences: {
+                          ...(user?.preferences || {}),
+                          avatarUrl: uploadedUrl,
+                        } as any,
+                      });
+                      toast.success('Đã cập nhật ảnh đại diện thành công!', { id: toastId });
+                    } catch (err: any) {
+                      toast.error(err.message || 'Không thể tải ảnh lên', { id: toastId });
+                    } finally {
+                      setIsUploadingAvatar(false);
+                      if (fileInputRef.current) fileInputRef.current.value = '';
+                    }
+                  }}
+                />
+
+                {/* Camera Action Button */}
+                <button
+                  type="button"
+                  disabled={isUploadingAvatar}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute bottom-1 right-1 p-2 bg-[#1E5AA8] hover:bg-[#154687] text-white rounded-xl shadow-lg transition transform hover:scale-110 active:scale-95 disabled:opacity-50 cursor-pointer"
+                  title="Đổi ảnh đại diện (Cloudinary)"
+                  aria-label="Tải ảnh đại diện"
                 >
                   <Camera className="w-3.5 h-3.5" />
                 </button>
