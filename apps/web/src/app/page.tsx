@@ -73,11 +73,16 @@ export default function HomePage() {
         effects: true,
         smoothTouch: 0.1,
       });
+      smoother.scrollTop(0);
     } catch (e) {
       console.warn('ScrollSmoother notice:', e);
     }
 
-    ScrollTrigger.refresh();
+    // Scroll back to top after DOM and ScrollSmoother setup
+    requestAnimationFrame(() => {
+      window.scrollTo(0, 0);
+      ScrollTrigger.refresh();
+    });
 
     // 1. Line-Reveal on Hero Title & Headings
     gsap.from('.line-reveal-item', {
@@ -88,46 +93,9 @@ export default function HomePage() {
       ease: 'power3.out',
     });
 
-    // 2. Mouse Wheel Animation
-    gsap.to('.mouse-wheel', {
-      y: 8, opacity: 0, duration: 1.5, repeat: -1, ease: 'power1.inOut'
-    });
-
-    // 3. Highlight-Reveal Animations for Section Labels & Badges (Removed as per request)
-
-    // 4. Feature Rows Reveal (Simplified for new text effects)
-    const features = gsap.utils.toArray('.feature-row');
-    features.forEach((feature: any) => {
-      gsap.from(feature, {
-        opacity: 0,
-        duration: 0.9,
-        ease: 'power3.out',
-        scrollTrigger: {
-          trigger: feature,
-          start: 'top 82%',
-          toggleActions: 'play none none reverse'
-        }
-      });
-    });
-
-    // 5. Final CTA Reveal
-    gsap.from('.final-cta-content', {
-      opacity: 0,
-      scale: 0.96,
-      y: 30,
-      duration: 0.9,
-      ease: 'power3.out',
-      scrollTrigger: {
-        trigger: '.final-cta-section',
-        start: 'top 85%',
-        toggleActions: 'play none none reverse'
-      }
-    });
-
     return () => {
       if (smoother) smoother.kill();
     };
-
   }, { scope: containerRef });
 
   return (
