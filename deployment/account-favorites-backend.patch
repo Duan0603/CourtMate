@@ -1,0 +1,122 @@
+diff --git a/apps/backend/src/modules/users/domains/services/users.service.ts b/apps/backend/src/modules/users/domains/services/users.service.ts
+index 5c4cca7..6309132 100644
+--- a/apps/backend/src/modules/users/domains/services/users.service.ts
++++ b/apps/backend/src/modules/users/domains/services/users.service.ts
+@@ -130,22 +130,27 @@ export class UsersService {
+   }
+ 
+   async addBookmark(email: string, tournamentId: string): Promise<User | null> {
+-    const user = await this.findByEmail(email);
+-    if (!user) return null;
+-    
+-    if (!user.bookmarkedTournaments.includes(tournamentId)) {
+-      user.bookmarkedTournaments.push(tournamentId);
+-      return user.save();
+-    }
+-    return user;
++    return this.userModel.findOneAndUpdate(
++      { email: email.toLowerCase().trim() }, { $addToSet: { bookmarkedTournaments: tournamentId } }, { new: true },
++    ).exec();
+   }
+ 
+   async removeBookmark(email: string, tournamentId: string): Promise<User | null> {
+-    const user = await this.findByEmail(email);
+-    if (!user) return null;
+-    
+-    user.bookmarkedTournaments = user.bookmarkedTournaments.filter(id => id !== tournamentId);
+-    return user.save();
++    return this.userModel.findOneAndUpdate(
++      { email: email.toLowerCase().trim() }, { $pull: { bookmarkedTournaments: tournamentId } }, { new: true },
++    ).exec();
++  }
++
++  async addCoachBookmark(email: string, coachId: string): Promise<User | null> {
++    return this.userModel.findOneAndUpdate(
++      { email: email.toLowerCase().trim() }, { $addToSet: { bookmarkedCoaches: coachId } }, { new: true },
++    ).exec();
++  }
++
++  async removeCoachBookmark(email: string, coachId: string): Promise<User | null> {
++    return this.userModel.findOneAndUpdate(
++      { email: email.toLowerCase().trim() }, { $pull: { bookmarkedCoaches: coachId } }, { new: true },
++    ).exec();
+   }
+ 
+   async getFriends(email: string): Promise<User[]> {
+diff --git a/apps/backend/src/modules/users/infrastructure/persistence/user.entity.ts b/apps/backend/src/modules/users/infrastructure/persistence/user.entity.ts
+index 25d5301..f8efce2 100644
+--- a/apps/backend/src/modules/users/infrastructure/persistence/user.entity.ts
++++ b/apps/backend/src/modules/users/infrastructure/persistence/user.entity.ts
+@@ -48,6 +48,9 @@ export class User extends Document {
+   @Prop({ type: [String], default: [] })
+   bookmarkedTournaments!: string[];
+ 
++  @Prop({ type: [String], default: [] })
++  bookmarkedCoaches!: string[];
++
+   @Prop({ required: false })
+   password?: string;
+ 
+diff --git a/apps/backend/src/modules/users/user.schema.ts b/apps/backend/src/modules/users/user.schema.ts
+index 24e641a..51cb8f3 100644
+--- a/apps/backend/src/modules/users/user.schema.ts
++++ b/apps/backend/src/modules/users/user.schema.ts
+@@ -37,6 +37,9 @@ export class User extends Document {
+   @Prop({ type: [String], default: [] })
+   bookmarkedTournaments!: string[];
+ 
++  @Prop({ type: [String], default: [] })
++  bookmarkedCoaches!: string[];
++
+   @Prop({ type: String, required: false })
+   password?: string;
+ 
+diff --git a/apps/backend/src/modules/users/users.controller.ts b/apps/backend/src/modules/users/users.controller.ts
+index 50236b2..2345485 100644
+--- a/apps/backend/src/modules/users/users.controller.ts
++++ b/apps/backend/src/modules/users/users.controller.ts
+@@ -62,4 +62,20 @@ export class UsersController {
+     if (!user) throw new NotFoundException('User profile not found');
+     return user;
+   }
++
++  @UseGuards(JwtAuthGuard)
++  @Put('coach-bookmarks/:id')
++  async addCoachBookmark(@Req() req: any, @Param('id') coachId: string) {
++    const user = await this.usersService.addCoachBookmark(req.user.email, coachId);
++    if (!user) throw new NotFoundException('User profile not found');
++    return user;
++  }
++
++  @UseGuards(JwtAuthGuard)
++  @Delete('coach-bookmarks/:id')
++  async removeCoachBookmark(@Req() req: any, @Param('id') coachId: string) {
++    const user = await this.usersService.removeCoachBookmark(req.user.email, coachId);
++    if (!user) throw new NotFoundException('User profile not found');
++    return user;
++  }
+ }
+diff --git a/packages/shared/dist/index.d.ts b/packages/shared/dist/index.d.ts
+index 1e6afcf..db57906 100644
+--- a/packages/shared/dist/index.d.ts
++++ b/packages/shared/dist/index.d.ts
+@@ -38,6 +38,7 @@ export interface User {
+     preferences: UserPreferences;
+     avatarUrl?: string;
+     bookmarkedTournaments?: string[];
++    bookmarkedCoaches?: string[];
+     isVerified: boolean;
+     createdAt: Date;
+ }
+diff --git a/packages/shared/src/index.ts b/packages/shared/src/index.ts
+index 5d4ff98..d83e636 100644
+--- a/packages/shared/src/index.ts
++++ b/packages/shared/src/index.ts
+@@ -45,6 +45,7 @@ export interface User {
+   preferences: UserPreferences;
+   avatarUrl?: string;
+   bookmarkedTournaments?: string[];
++  bookmarkedCoaches?: string[];
+   isVerified: boolean;
+   createdAt: Date;
+ }

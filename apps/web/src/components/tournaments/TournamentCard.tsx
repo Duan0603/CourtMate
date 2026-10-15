@@ -1,14 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { Calendar, MapPin, Users, ChevronRight, Bookmark } from 'lucide-react';
+import { Calendar, MapPin, Users, ChevronRight } from 'lucide-react';
 import { Tournament, TournamentStatus, SportType } from '@courtmate/shared';
+import { FavoriteButton } from '../shared/FavoriteButton';
 import { useAuth } from '../../context/AuthContext';
+import { getTournamentStatus } from '../../lib/tournament-status';
 
 interface TournamentCardProps {
   tournament: Tournament;
-  onBookmarkToggle?: (id: string) => void;
+  onBookmarkToggle?: (id: string) => void | Promise<unknown>;
   isBookmarked?: boolean;
   viewMode?: 'grid' | 'list';
 }
@@ -20,6 +22,7 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
   viewMode = 'grid',
 }) => {
   const { isAuthenticated } = useAuth();
+  const favorite = isAuthenticated && isBookmarked;
 
   const getSportBadge = (sport: SportType) => {
     switch (sport) {
@@ -48,13 +51,15 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
         return { label: 'Đang thi đấu', color: 'bg-amber-500 text-white' };
       case TournamentStatus.COMPLETED:
         return { label: 'Đã kết thúc', color: 'bg-slate-500 text-white' };
+      case 'CANCELLED' as TournamentStatus:
+        return { label: 'Đã hủy', color: 'bg-slate-500 text-white' };
       default:
         return { label: 'Giải đấu', color: 'bg-slate-500 text-white' };
     }
   };
 
   const sportInfo = getSportBadge(tournament.sport);
-  const statusInfo = getStatusBadge(tournament.status);
+  const statusInfo = getStatusBadge(getTournamentStatus(tournament));
   const formattedFee = tournament.registrationFee
     ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(
         tournament.registrationFee
@@ -71,7 +76,7 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
 
   if (viewMode === 'list') {
     return (
-      <Link 
+      <Link
         href={`/tournaments/${tournament.id}`}
         className="group bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-lg hover:border-[#1E5AA8]/40 transition-all duration-300 flex cursor-pointer"
       >
@@ -84,7 +89,7 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/40" />
           <div className="absolute top-2.5 left-2.5">
-            <span className="px-2.5 py-1 text-xs font-black rounded-lg bg-emerald-600 text-white shadow-md border border-emerald-400/40">
+            <span className={`px-2.5 py-1 text-xs font-black rounded-lg ${statusInfo.color} shadow-md`}>
               {statusInfo.label}
             </span>
           </div>
@@ -98,32 +103,20 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
         {/* Content */}
         <div className="p-4 flex-1 flex flex-col justify-between">
           <div className="flex justify-between items-start gap-2">
-            <h3 className="font-bold text-base text-[#101828] line-clamp-2 group-hover:text-[#1E5AA8] transition">
+            <h3 className="font-bold text-base leading-6 h-12 text-[#101828] line-clamp-2 group-hover:text-[#1E5AA8] transition">
               {tournament.title}
             </h3>
             {onBookmarkToggle && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onBookmarkToggle(tournament.id);
-                }}
-                className="p-1 shrink-0 text-slate-300 hover:text-yellow-400 transition"
-              >
-                <Bookmark 
-                  fill={isBookmarked ? '#facc15' : 'transparent'} 
-                  color={isBookmarked ? '#facc15' : 'currentColor'}
-                  className="w-5 h-5" 
-                />
-              </button>
+              <FavoriteButton appearance="icon" selected={favorite} name={tournament.title} onToggle={() => onBookmarkToggle(tournament.id)} />
             )}
           </div>
-          
+
           <div className="mt-2 grid grid-cols-2 gap-y-1.5 text-xs text-slate-500">
             <div className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-[#1E5AA8]"/> <span className="font-medium text-slate-700">{startDateFormatted}</span></div>
             <div className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-rose-500"/> <span className="truncate">{tournament.location}</span></div>
             <div className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-amber-500"/> <span>{tournament.slotsLimit || 32} VĐV</span></div>
           </div>
-          
+
           <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
             <span className="text-sm font-black text-[#101828]">{formattedFee}</span>
             <span className="text-[#1E5AA8] text-xs font-bold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
@@ -137,7 +130,7 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
 
   // Grid Mode (Compact, for 5 items per row)
   return (
-    <Link 
+    <Link
       href={`/tournaments/${tournament.id}`}
       className="group bg-white rounded-2xl border border-slate-200/90 overflow-hidden shadow-xs hover:shadow-lg hover:border-[#1E5AA8]/50 transition-all duration-300 flex flex-col cursor-pointer h-full relative"
     >
@@ -155,29 +148,15 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-slate-950/40" />
 
         {/* Status Badge - Top Left with high contrast */}
-        <div className="absolute top-2.5 left-2.5 z-10">
-          <span className="inline-flex items-center px-2.5 py-1 text-xs font-black rounded-lg bg-emerald-600 text-white shadow-md border border-emerald-400/40 tracking-tight">
+        <div className="absolute top-2.5 left-2.5 right-16 z-10">
+          <span className={`inline-flex max-w-full items-center px-2.5 py-1 text-xs font-black rounded-lg ${statusInfo.color} shadow-md tracking-tight`}>
             {statusInfo.label}
           </span>
         </div>
 
         {/* Bookmark Action - Top Right */}
         {onBookmarkToggle && (
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onBookmarkToggle(tournament.id);
-            }}
-            aria-label={isBookmarked ? 'Bỏ lưu giải đấu' : 'Lưu giải đấu'}
-            className="absolute top-2.5 right-2.5 z-10 p-2 bg-slate-950/60 hover:bg-slate-950/90 backdrop-blur-md rounded-xl border border-white/20 transition-all hover:scale-110 active:scale-95 text-white"
-          >
-            <Bookmark 
-              color={isBookmarked ? '#f59e0b' : '#ffffff'}
-              fill={isBookmarked ? '#f59e0b' : 'transparent'}
-              className="w-4 h-4" 
-            />
-          </button>
+          <FavoriteButton selected={favorite} name={tournament.title} onToggle={() => onBookmarkToggle(tournament.id)} appearance="on-image" className="absolute top-2 right-2 z-10" />
         )}
 
         {/* Sport Type Badge + City - Bottom row */}
@@ -194,7 +173,7 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
       {/* Content - Compact for Grid */}
       <div className="p-4 flex-1 flex flex-col justify-between gap-3">
         <div className="space-y-2.5">
-          <h3 className="font-extrabold text-sm sm:text-base text-slate-900 line-clamp-2 leading-snug group-hover:text-[#1E5AA8] transition-colors" title={tournament.title}>
+          <h3 className="font-extrabold text-sm sm:text-base text-slate-900 line-clamp-2 leading-6 h-12 group-hover:text-[#1E5AA8] transition-colors" title={tournament.title}>
             {tournament.title}
           </h3>
 

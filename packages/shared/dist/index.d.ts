@@ -38,6 +38,7 @@ export interface User {
     preferences: UserPreferences;
     avatarUrl?: string;
     bookmarkedTournaments?: string[];
+    bookmarkedCoaches?: string[];
     isVerified: boolean;
     createdAt: Date;
 }

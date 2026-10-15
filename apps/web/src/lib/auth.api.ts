@@ -35,6 +35,14 @@ export const authApi = {
     return apiClient.delete<User>(`/users/bookmarks/${tournamentId}`);
   },
 
+  async addCoachBookmark(coachId: string): Promise<User> {
+    return apiClient.put<User>(`/users/coach-bookmarks/${encodeURIComponent(coachId)}`);
+  },
+
+  async removeCoachBookmark(coachId: string): Promise<User> {
+    return apiClient.delete<User>(`/users/coach-bookmarks/${encodeURIComponent(coachId)}`);
+  },
+
   async getFriends(): Promise<User[]> {
     try {
       const friends = await apiClient.get<User[]>('/users/friends');

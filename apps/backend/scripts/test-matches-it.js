@@ -14,7 +14,7 @@ const { MongoClient, ObjectId } = require('mongodb');
 const { BadmintonSkillLevel, MatchStatus, SportType } = require('@courtmate/shared');
 
 async function runIntegrationTest() {
-  console.log('🚀 BẮT ĐẦU CHẠY INTEGRATION TEST VỚI MONGODB:');
+  console.log(' BẮT ĐẦU CHẠY INTEGRATION TEST VỚI MONGODB:');
   const uri = process.env.MONGODB_URI;
   if (!uri) {
     throw new Error('Thiếu MONGODB_URI trong .env');
@@ -79,7 +79,7 @@ async function runIntegrationTest() {
 
   const insertRes = await matchesCollection.insertOne(mockMatch);
   const matchId = insertRes.insertedId;
-  console.log(`✅ IT 1 PASSED: Đã lưu Match mới vào MongoDB (ID: ${matchId}, ShareCode: ${testShareCode})`);
+  console.log(` IT 1 PASSED: Đã lưu Match mới vào MongoDB (ID: ${matchId}, ShareCode: ${testShareCode})`);
   passed++;
 
   // 2. Query kiểm tra lọc theo trình độ Cầu lông và Quận
@@ -91,7 +91,7 @@ async function runIntegrationTest() {
   });
 
   if (found && found.title === mockMatch.title) {
-    console.log('✅ IT 2 PASSED: Truy vấn lọc chính xác theo môn BADMINTON, Quận Thanh Khê và Trình độ TBY');
+    console.log(' IT 2 PASSED: Truy vấn lọc chính xác theo môn BADMINTON, Quận Thanh Khê và Trình độ TBY');
     passed++;
   } else {
     throw new Error('IT 2 failed: Không tìm thấy match');
@@ -135,7 +135,7 @@ async function runIntegrationTest() {
 
   const fullMatch = await matchesCollection.findOne({ _id: matchId });
   if (fullMatch.joinedCount === 4 && fullMatch.status === MatchStatus.FULL && fullMatch.players.length === 4) {
-    console.log('✅ IT 3 PASSED: Tham gia đủ 4 slot, chuyển trạng thái FULL thành công trong Database');
+    console.log(' IT 3 PASSED: Tham gia đủ 4 slot, chuyển trạng thái FULL thành công trong Database');
     passed++;
   } else {
     throw new Error('IT 3 failed: Match không cập nhật đúng status FULL');
@@ -144,7 +144,7 @@ async function runIntegrationTest() {
   // 4. Test tìm kiếm bằng ShareCode (để mở link trực tiếp)
   const byCode = await matchesCollection.findOne({ shareCode: testShareCode });
   if (byCode && byCode._id.toString() === matchId.toString()) {
-    console.log(`✅ IT 4 PASSED: Tra cứu chính xác trận đấu qua ShareCode (${testShareCode})`);
+    console.log(` IT 4 PASSED: Tra cứu chính xác trận đấu qua ShareCode (${testShareCode})`);
     passed++;
   } else {
     throw new Error('IT 4 failed');
@@ -154,11 +154,11 @@ async function runIntegrationTest() {
   await matchesCollection.deleteOne({ _id: matchId });
   console.log('✓ Đã dọn dẹp bản ghi test an toàn');
 
-  console.log(`\n🎉 HOÀN THÀNH 100% INTEGRATION TESTS: ${passed}/4 PASSED!`);
+  console.log(`\n HOÀN THÀNH 100% INTEGRATION TESTS: ${passed}/4 PASSED!`);
   await client.close();
 }
 
 runIntegrationTest().catch((err) => {
-  console.error('❌ INTEGRATION TEST FAILED:', err);
+  console.error(' INTEGRATION TEST FAILED:', err);
   process.exit(1);
 });

@@ -16,7 +16,7 @@ export interface LoadingConfig {
 
 export const DEFAULT_LOADING_CONFIG: LoadingConfig = {
   navThresholdMs: 150,
-  initialPreloaderMinMs: 200,
+  initialPreloaderMinMs: 0,
   initialPreloaderMaxMs: 2500,
   asyncThresholdMs: 150,
 };
@@ -142,6 +142,15 @@ export function LoadingProvider({
   // Mark readiness once mounted client-side
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      try {
+        if (sessionStorage.getItem('cm_session_ready')) {
+          setIsInitialLoading(false);
+          return;
+        }
+        sessionStorage.setItem('cm_session_ready', '1');
+      } catch {
+        // sessionStorage not available, fallback to normal finish
+      }
       finishInitialPreloader();
     }
   }, [finishInitialPreloader]);
@@ -239,7 +248,9 @@ export function LoadingProvider({
     const handleDocumentClick = (e: MouseEvent) => {
       // Check if target is an anchor tag with local href
       const target = e.target as HTMLElement | null;
-      if (!target) return;
+      if (!target || e.defaultPrevented || e.button !== 0) return;
+      // Nested controls do not navigate, even when their containing card is a link.
+      if (target.closest('button, input, select, textarea, [role="button"]')) return;
 
       const anchor = target.closest('a');
       if (!anchor) return;

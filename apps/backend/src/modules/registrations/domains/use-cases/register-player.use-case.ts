@@ -22,6 +22,10 @@ export class RegisterPlayerUseCase {
       throw new NotFoundException(`Không tìm thấy giải đấu với ID ${dto.tournamentId}`);
     }
 
+    if (tournament.status !== 'OPEN' || !tournament.startDate || new Date(tournament.startDate).getTime() <= Date.now()) {
+      throw new BadRequestException('Giải đấu đã đóng đăng ký hoặc đã bắt đầu thi đấu.');
+    }
+
     // 2. Check for duplicate registration by the same player
     const existingRegs = await this.registrationsService.findByPlayer(playerId);
     const existingReg = existingRegs.find((reg) => reg.tournamentId === dto.tournamentId);

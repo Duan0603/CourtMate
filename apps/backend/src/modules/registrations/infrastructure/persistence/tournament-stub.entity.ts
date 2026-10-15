@@ -6,6 +6,12 @@ export class TournamentStub extends Document {
   @Prop({ required: true })
   title!: string;
 
+  @Prop({ required: false })
+  status?: string;
+
+  @Prop({ required: false })
+  startDate?: Date;
+
   @Prop({ required: true })
   slotsLimit!: number;
 

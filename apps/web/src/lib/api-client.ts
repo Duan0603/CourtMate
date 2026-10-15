@@ -32,7 +32,7 @@ class ApiClient {
 
     if (!response.ok) {
       const errorBody = await response.json().catch(() => null);
-      throw new Error(errorBody?.message || `Lỗi tải dữ liệu (${response.status})`);
+      throw Object.assign(new Error(errorBody?.message || `Lỗi tải dữ liệu (${response.status})`), { status: response.status });
     }
 
     return response.json();

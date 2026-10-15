@@ -1,5 +1,7 @@
 'use client';
 
+import { FormContainer } from '../../../components/layout/PageContainer';
+
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -88,8 +90,8 @@ export default function CreateTournamentPage() {
   };
 
   return (
-    <div className="bg-[#F8FAFC] min-h-screen py-10">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="bg-[#F8FAFC] min-h-screen page-section">
+      <FormContainer>
         
         {/* Back Link */}
         <Link
@@ -170,8 +172,8 @@ export default function CreateTournamentPage() {
                     onChange={(e) => setSport(e.target.value as SportType)}
                     className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-navy"
                   >
-                    <option value={SportType.BADMINTON}>🏸 Cầu lông</option>
-                    <option value={SportType.PICKLEBALL}>🏓 Pickleball</option>
+                    <option value={SportType.BADMINTON}> Cầu lông</option>
+                    <option value={SportType.PICKLEBALL}> Pickleball</option>
                   </select>
                 </div>
 
@@ -425,7 +427,7 @@ export default function CreateTournamentPage() {
 
         </form>
 
-      </div>
+      </FormContainer>
     </div>
   );
 }

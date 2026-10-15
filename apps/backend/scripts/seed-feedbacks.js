@@ -1,6 +1,6 @@
 /**
  * Standalone seed script for 50 balanced mock feedbacks (Badminton & Pickleball only)
- * Rating distribution: 20x 5★, 22x 4★, 8x 3★ (Average ~4.24★)
+ * Rating distribution: 20x 5, 22x 4, 8x 3 (Average ~4.24)
  * Gender-matched avatars: 100% accurate (25 Nam, 25 Nữ)
  * Usage: node scripts/seed-feedbacks.js [--reset]
  */
@@ -44,7 +44,7 @@ async function seed() {
     const avgRating = (mockFeedbacks.reduce((acc, f) => acc + f.rating, 0) / mockFeedbacks.length).toFixed(2);
 
     console.log(`Inserted ${mockFeedbacks.length} balanced mock feedbacks (100% Cầu lông & Pickleball) into 'feedbacks' collection.`);
-    console.log(`Rating breakdown: 5★ = ${counts.five}, 4★ = ${counts.four}, 3★ = ${counts.three} (Average: ${avgRating}★)`);
+    console.log(`Rating breakdown: 5 = ${counts.five}, 4 = ${counts.four}, 3 = ${counts.three} (Average: ${avgRating})`);
 
     await collection.createIndex({ createdAt: -1 });
     console.log('Index on createdAt: -1 verified.');

@@ -145,7 +145,7 @@ export function SportsOverlays({ isAuthenticated }: SportsOverlaysProps) {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.15),transparent_60%)]" />
 
           <div className="inline-block px-3.5 py-1 rounded-full bg-white/15 text-white text-xs font-semibold tracking-wider uppercase mb-4 backdrop-blur-sm">
-            ✨ Cùng CourtMate Tỏa Sáng
+             Cùng CourtMate Tỏa Sáng
           </div>
 
           <h2 className="text-3xl md:text-5xl font-black mb-4 relative z-10 tracking-tight leading-tight">

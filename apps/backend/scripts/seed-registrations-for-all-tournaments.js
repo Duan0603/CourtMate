@@ -191,7 +191,7 @@ async function run() {
   const finalRegs = await db.collection('registrations').countDocuments();
 
   console.log('\n========================================');
-  console.log(`🎉 COMPLETED SEEDING ALL TOURNAMENTS!`);
+  console.log(` COMPLETED SEEDING ALL TOURNAMENTS!`);
   console.log(`Added ${totalNewRegistrations} new confirmed registrations.`);
   console.log(`Total Tournaments in DB:   ${finalTournaments}`);
   console.log(`Total Users in DB:         ${finalUsers}`);

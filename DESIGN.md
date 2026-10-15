@@ -1,11 +1,23 @@
 # CourtMate Design System (DESIGN.md)
 
+## Quy chuẩn layout web dùng chung
+
+Nguồn thực thi: `apps/web/src/app/globals.css` và `apps/web/src/components/layout/PageContainer.tsx`.
+
+- Khung trang: `PageContainer`, tối đa **1280px**, bao gồm lề trong. Không đặt thêm `max-w-*`, `mx-auto` hoặc `px-*` trên khung này.
+- Lề ngang: **16px** dưới 640px, **24px** từ 640px, **40px** từ 1024px. Logo, menu header, nội dung và footer dùng cùng các token `--page-*`.
+- Khoảng đầu trang: `page-section`, **28 / 32 / 40px** theo cùng breakpoint; khoảng cuối trang **64px**. `LayoutShell` tự chừa chiều cao header **72px**, trang con không cộng thêm lần nữa.
+- Section cần nền tràn màn hình: nền ở wrapper ngoài; nội dung bên trong `PageContainer` hoặc phần tử semantic có class `page-container`.
+- Biểu mẫu: `FormContainer`, dùng khung trang chung và giới hạn nội dung bên trong ở **960px**. Đoạn văn, modal và ticket có thể có chiều rộng đọc riêng bên trong khung; không thay đổi lề ngoài của trang.
+- Trang đăng nhập/đăng ký tài khoản và bề mặt toàn màn hình như chat giữ bố cục chuyên biệt. Hero trang chủ có thể tràn màn hình; nội dung section thông thường vẫn theo khung chung.
+- Khi thêm trang hoặc section, dùng các component/class trên. Chỉ sửa token chung khi cần đổi hệ thống, không thêm breakpoint hoặc chiều rộng riêng cho từng trang.
+
 > Bản quy chuẩn thiết kế UI/UX và Hệ thống Design Tokens dành cho dự án **CourtMate** (Web Landing Page & Mobile React Native App).  
 > Giúp đồng bộ giao diện 100% giữa Web, App Mobile và tất cả các thành phần giao diện (Components).
 
 ---
 
-## 1. 🌟 Triết lý Thiết kế (Design Philosophy)
+## 1.  Triết lý Thiết kế (Design Philosophy)
 
 * **Sporty Premium & Modern Organic**: Kết hợp năng lượng thể thao sôi nổi với nét hiện đại, sang trọng, mềm mại (bo tròn hữu cơ, góc bo cắt tinh tế).
 * **Mobile-First & Single-Hand Touch Target**: Tất cả nút tương tác chính (CTA) có kích thước tối thiểu `48px`, hình hạt đậu/viên thuốc (`rounded-full`), nằm trong tầm với ngón cái.
@@ -14,7 +26,7 @@
 
 ---
 
-## 2. 🎨 Hệ thống Design Tokens (Color Palette)
+## 2.  Hệ thống Design Tokens (Color Palette)
 
 ### 2.1 Bảng màu chính (Brand & Surface Colors)
 
@@ -38,7 +50,7 @@
 
 ---
 
-## 3. ✍️ Typography & Font System
+## 3.  Typography & Font System
 
 * **Primary Font Family**: `Inter`, `-apple-system`, `BlinkMacSystemFont`, `sans-serif`.
 * **Scale & Hierarchy**:
@@ -54,7 +66,7 @@
 
 ---
 
-## 4. 🔲 Bo tròn, Đổ bóng & Hiệu ứng (Shape, Shadows & Effects)
+## 4.  Bo tròn, Đổ bóng & Hiệu ứng (Shape, Shadows & Effects)
 
 ### 4.1 Corner Radii (Bo tròn)
 * **Pill / Fully Rounded**: `9999px` (`rounded-full`) — Dùng cho nút CTA, Badge, Input tìm kiếm tròn.
@@ -79,7 +91,7 @@
 
 ---
 
-## 5. 🧩 Quy chuẩn Component (Component Specifications)
+## 5.  Quy chuẩn Component (Component Specifications)
 
 ### 5.1 Nút bấm (Button Variants)
 
@@ -104,7 +116,7 @@
 
 ---
 
-## 6. 🎬 Hiệu ứng Chuyển động (Motion & Animation Rules)
+## 6.  Hiệu ứng Chuyển động (Motion & Animation Rules)
 
 * **Hero Floating Icons Animation**:
   - `floatY`: Di chuyển từ dưới lên 100vh trong 15s - 25s, opacity 0.06.
@@ -115,7 +127,7 @@
 
 ---
 
-## 7. 📱 Quy chuẩn React Native / Mobile App
+## 7.  Quy chuẩn React Native / Mobile App
 
 Để ứng dụng di động đồng bộ 100% với Web Landing Page:
 

@@ -10,6 +10,13 @@
   :root {
     --background: 210 40% 98%;
     --foreground: 222 47% 11%;
+    --page-max-width: 1280px;
+    --page-form-width: 960px;
+    --page-gutter: 16px;
+    --page-space-top: 28px;
+    --page-space-bottom: 64px;
+    --header-height: 72px;
+    --page-edge: max(var(--page-gutter), calc((100% - var(--page-max-width)) / 2 + var(--page-gutter)));
   }
 
   html {
@@ -21,6 +28,37 @@
     @apply bg-[#F8FAFC] text-[#00102F] antialiased min-h-screen selection:bg-primary/20 selection:text-primary;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
+}
+
+/* One frame for navigation, page content and footer. Keep full-bleed surfaces outside it. */
+.page-container {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--page-max-width);
+  margin-inline: auto;
+  padding-inline: var(--page-gutter);
+}
+.page-section {
+  padding-block: var(--page-space-top) var(--page-space-bottom);
+}
+.page-form { width: 100%; max-width: var(--page-form-width); margin-inline: auto; }
+.site-main { padding-top: var(--header-height); }
+.site-logo {
+  position: fixed;
+  top: 0;
+  left: var(--page-edge);
+  height: var(--header-height);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+}
+.site-menu-toggle { right: var(--page-edge); }
+.site-mobile-menu { left: var(--page-edge); right: var(--page-edge); top: var(--header-height); }
+@media (min-width: 640px) {
+  :root { --page-gutter: 24px; --page-space-top: 32px; }
+}
+@media (min-width: 1024px) {
+  :root { --page-gutter: 40px; --page-space-top: 40px; }
 }
 
 /* Custom scrollbars */
@@ -86,10 +124,10 @@
   top: 0;
   right: 0;
   background: #FFFFFF;
-  height: 72px;
+  height: var(--header-height);
   display: flex;
   align-items: center;
-  padding: 0 32px;
+  padding: 0 var(--page-edge) 0 32px;
   gap: 28px;
   z-index: 50;
   border-bottom-left-radius: 24px;

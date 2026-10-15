@@ -1,5 +1,8 @@
 'use client';
 
+import { PageContainer } from '../../components/layout/PageContainer';
+
+import { ContentSkeleton } from '../../components/loading/ContentSkeleton';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
@@ -210,20 +213,16 @@ export default function MatchesPage() {
     selectedDistrict !== 'Tất cả' || selectedSkill !== 'ALL' || Boolean(searchKeyword);
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] py-8 sm:py-10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#F8FAFC] page-section">
+      <PageContainer>
         {/* TOP COMMAND BAR */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-slate-200">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-[#1E5AA8] text-xs font-bold uppercase tracking-wider mb-2 border border-blue-100">
-              <span className="w-2 h-2 rounded-full bg-[#1E5AA8] animate-pulse" />
-              On-Demand Matchmaking · Đà Nẵng
-            </div>
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-              Ghép Kèo Giao Lưu & Tìm Bạn Chơi
+              Giao Lưu
             </h1>
             <p className="text-sm text-slate-600 mt-1 max-w-2xl font-normal">
-              Các trận cầu đang mở slot tại các cụm sân Đà Nẵng. Không thu phí trung gian, chia đều tiền sân trực tiếp tại chỗ.
+              Các trận giao lưu đang mở slot tại các cụm sân Đà Nẵng. Không thu phí trung gian, chia đều chi phí tại chỗ.
             </p>
           </div>
 
@@ -237,7 +236,7 @@ export default function MatchesPage() {
                   window.location.href = '/login?redirect=/matches';
                 } else if (userActiveMatch) {
                   alert(
-                    `Bạn đang tham gia kèo "${userActiveMatch.title}". Mỗi người chơi chỉ được giữ 1 slot tại một thời điểm để đảm bảo lịch trình!`
+                    `Bạn đang tham gia trận "${userActiveMatch.title}". Mỗi người chơi chỉ được giữ 1 slot tại một thời điểm để đảm bảo lịch trình!`
                   );
                 } else {
                   setIsCreateOpen(true);
@@ -245,7 +244,7 @@ export default function MatchesPage() {
               }}
               className="font-bold shadow-md shadow-blue-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
             >
-              Đăng Kèo Mới
+              Tạo Giao Lưu
             </Button>
           </div>
         </div>
@@ -277,7 +276,7 @@ export default function MatchesPage() {
                     Đã giữ slot
                   </Tag>
                   <span className="text-xs font-bold text-[#1E5AA8] bg-blue-100/70 px-2 py-0.5 rounded-full">
-                    {userActiveMatch.sport === SportType.BADMINTON ? '🏸 Cầu lông' : '🏓 Pickleball'}
+                    {userActiveMatch.sport === SportType.BADMINTON ? ' Cầu lông' : ' Pickleball'}
                   </span>
                   <span className="text-xs text-slate-500 font-medium">
                     (Mỗi người chơi tham gia 1 slot/lần)
@@ -332,8 +331,8 @@ export default function MatchesPage() {
               <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Bộ môn:</span>
               <Segmented
                 options={[
-                  { label: '🏸 Cầu lông', value: SportType.BADMINTON },
-                  { label: '🏓 Pickleball', value: SportType.PICKLEBALL },
+                  { label: ' Cầu lông', value: SportType.BADMINTON },
+                  { label: ' Pickleball', value: SportType.PICKLEBALL },
                 ]}
                 value={selectedSport}
                 onChange={(val) => setSelectedSport(val as SportType)}
@@ -425,10 +424,10 @@ export default function MatchesPage() {
         <div className="mt-8 mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
-              Danh Sách Kèo Đang Mở
+              Danh Sách Trận Giao Lưu
             </h2>
             <Tag color="#1E5AA8" className="font-bold text-xs rounded-full px-2.5 py-0.5 border-none">
-              {matches.length} trận
+              {loading ? 'Đang tải...' : `${matches.length} trận`}
             </Tag>
           </div>
           <span className="text-xs text-slate-500 font-medium hidden sm:inline">
@@ -438,6 +437,7 @@ export default function MatchesPage() {
 
         {/* MATCHES LIST */}
         <SmartAsyncContainer
+          skeleton={<ContentSkeleton layout="matches" count={6} />}
           loading={loading}
           isThresholdElapsed={isThresholdElapsed}
           error={error}
@@ -450,10 +450,10 @@ export default function MatchesPage() {
                 description={
                   <div className="space-y-1">
                     <p className="text-base font-bold text-slate-800">
-                      Chưa có kèo nào phù hợp tiêu chí lọc
+                      Chưa có trận giao lưu nào phù hợp tiêu chí lọc
                     </p>
                     <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
-                      Bạn có thể chọn quận khác, hoặc là người đầu tiên tạo kèo để các tay vợt quanh khu vực tham gia.
+                      Bạn có thể chọn quận khác, hoặc là người đầu tiên tạo buổi giao lưu để các tay vợt quanh khu vực tham gia.
                     </p>
                   </div>
                 }
@@ -470,7 +470,7 @@ export default function MatchesPage() {
                   }}
                   className="mt-3 font-bold cursor-pointer"
                 >
-                  Đăng Kèo Mới Ngay
+                  Tạo Giao Lưu Ngay
                 </Button>
               </Empty>
             </div>
@@ -501,7 +501,7 @@ export default function MatchesPage() {
                         ? 'border-emerald-500/80 ring-2 ring-emerald-500/15 shadow-sm bg-gradient-to-b from-white to-emerald-50/20'
                         : 'border-slate-200/90 shadow-xs hover:shadow-md hover:border-[#1E5AA8]/50'
                       }`}
-                    bodyStyle={{ padding: '20px', display: 'flex', flexDirection: 'column', height: '100%' }}
+                    styles={{ body: { padding: '20px', display: 'flex', flexDirection: 'column', height: '100%' } }}
                   >
                     <div>
                       {/* Top Badges */}
@@ -511,7 +511,7 @@ export default function MatchesPage() {
                             color={match.sport === SportType.BADMINTON ? 'blue' : 'orange'}
                             className="font-bold text-xs rounded-lg px-2.5 py-0.5 border-none uppercase tracking-wider"
                           >
-                            {match.sport === SportType.BADMINTON ? '🏸 Cầu lông' : '🏓 Pickleball'}
+                            {match.sport === SportType.BADMINTON ? ' Cầu lông' : ' Pickleball'}
                           </Tag>
                           {isUserInThisMatch && (
                             <Tag color="green" className="font-bold text-[11px] rounded-md px-2 py-0.5 border-none">
@@ -598,7 +598,7 @@ export default function MatchesPage() {
                               icon={<CalendarOutlined />}
                               className="font-bold text-xs rounded-lg bg-emerald-600 hover:bg-emerald-700 border-none shadow-xs"
                             >
-                              Lưu Calendar 📅
+                              Lưu Calendar
                             </Button>
                           </a>
                         )}
@@ -621,15 +621,15 @@ export default function MatchesPage() {
           )}
         </SmartAsyncContainer>
 
-        {/* MODAL: ĐĂNG KÈO MỚI (Ant Design Modal & Form Components) */}
+        {/* MODAL: TẠO BUỔI GIAO LƯU */}
         <Modal
           title={
             <div>
               <h3 className="text-lg font-black text-slate-900">
-                Đăng Kèo Tìm Người Giao Lưu
+                Tạo Buổi Giao Lưu Mới
               </h3>
               <p className="text-xs text-slate-500 font-normal mt-0.5">
-                Tạo kèo nhanh chóng để ghép người chơi cùng khung giờ quanh khu vực
+                Mở slot giao lưu để tìm bạn chơi cùng khung giờ quanh khu vực
               </p>
             </div>
           }
@@ -638,7 +638,7 @@ export default function MatchesPage() {
           footer={null}
           width={640}
           className="rounded-2xl"
-          destroyOnClose
+          destroyOnHidden
         >
           <form onSubmit={handleCreateMatch} className="space-y-4 pt-3">
             {/* Bộ môn */}
@@ -648,8 +648,8 @@ export default function MatchesPage() {
               </label>
               <Segmented
                 options={[
-                  { label: '🏸 Cầu lông', value: SportType.BADMINTON },
-                  { label: '🏓 Pickleball', value: SportType.PICKLEBALL },
+                  { label: ' Cầu lông', value: SportType.BADMINTON },
+                  { label: ' Pickleball', value: SportType.PICKLEBALL },
                 ]}
                 value={formData.sport}
                 onChange={(val) => setFormData({ ...formData, sport: val as SportType })}
@@ -661,7 +661,7 @@ export default function MatchesPage() {
             {/* Tiêu đề */}
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Tiêu đề kèo đấu *
+                Tiêu đề buổi giao lưu *
               </label>
               <Input
                 required
@@ -831,12 +831,12 @@ export default function MatchesPage() {
                 loading={submitting}
                 className="rounded-xl font-bold cursor-pointer"
               >
-                Xác nhận đăng kèo
+                Xác nhận tạo trận
               </Button>
             </div>
           </form>
         </Modal>
-      </div>
+      </PageContainer>
     </div>
   );
 }

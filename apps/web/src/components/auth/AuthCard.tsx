@@ -15,7 +15,7 @@ import {
   Eye,
   EyeOff,
   CheckCircle2,
-  Activity,
+  Medal,
 } from 'lucide-react';
 import { UserRole } from '@courtmate/shared';
 import { useAuth } from '../../context/AuthContext';
@@ -32,12 +32,22 @@ interface AuthCardProps {
 export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => {
   const router = useRouter();
   const { login, register } = useAuth();
+  const [redirectTo, setRedirectTo] = useState('/tournaments');
+
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get('redirect');
+    if (!requested || !requested.startsWith('/') || requested.startsWith('//')) return;
+    try {
+      const destination = new URL(requested, window.location.origin);
+      if (destination.origin === window.location.origin) setRedirectTo(destination.pathname + destination.search + destination.hash);
+    } catch { /* Keep the default destination for invalid URLs. */ }
+  }, []);
   
   const [mode, setMode] = useState<'login' | 'register'>(initialMode);
   
   // Login State
-  const [loginEmail, setLoginEmail] = useState('test@courtmate.com');
-  const [loginPassword, setLoginPassword] = useState('Password123');
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
   
   // Register State
   const [regName, setRegName] = useState('');
@@ -60,7 +70,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
   const handleToggleMode = (newMode: 'login' | 'register') => {
     setMode(newMode);
     setError('');
-    window.history.replaceState(null, '', newMode === 'login' ? '/login' : '/register');
+    window.history.replaceState(null, '', `${newMode === 'login' ? '/login' : '/register'}${redirectTo !== '/tournaments' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`);
   };
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
@@ -69,7 +79,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
     setError('');
     try {
       await login(loginEmail, loginPassword);
-      router.push('/tournaments');
+      router.push(redirectTo);
     } catch (err: any) {
       setError(err.message || 'Đăng nhập không thành công');
     } finally {
@@ -94,19 +104,9 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
     setLoading(true);
     try {
       await register(regEmail, regPassword, regName, role);
-      router.push('/tournaments');
+      router.push(redirectTo);
     } catch (err: any) {
       setError(err.message || 'Đăng ký tài khoản không thành công.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleQuickDemoLogin = async (email: string) => {
-    setLoading(true);
-    try {
-      await login(email, 'Password123');
-      router.push('/tournaments');
     } finally {
       setLoading(false);
     }
@@ -179,7 +179,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
             >
               <div>
                 <label className="block text-xs font-bold text-[#101828] mb-1.5 uppercase tracking-wider">
-                  Địa chỉ Email
+                  Địa chỉ Email <span className="text-rose-500 font-bold">*</span>
                 </label>
                 <div className="relative">
                   <Mail className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -197,7 +197,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-xs font-bold text-[#101828] uppercase tracking-wider">
-                    Mật khẩu
+                    Mật khẩu <span className="text-rose-500 font-bold">*</span>
                   </label>
                   <Link href="#" className="text-xs text-[#1E5AA8] hover:underline font-semibold">
                     Quên mật khẩu?
@@ -245,32 +245,34 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
               {/* Role Toggle (Moved to Top) */}
               <div>
                 <label className="block text-xs font-bold text-[#101828] mb-1.5 uppercase tracking-wider">
-                  Bạn tham gia CourtMate với vai trò gì?
+                  Bạn tham gia CourtMate với vai trò gì? <span className="text-rose-500 font-bold">*</span>
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setRole(UserRole.PLAYER)}
-                    className={`py-3 px-3 rounded-2xl text-xs font-bold border transition-all flex flex-col items-center justify-center gap-1.5 ${
+                    className={`py-3 px-3 rounded-2xl text-xs font-bold border transition-all flex flex-col items-center justify-center gap-1 ${
                       role === UserRole.PLAYER
-                        ? 'border-[#1E5AA8] bg-[#1E5AA8]/5 text-[#1E5AA8]'
+                        ? 'border-[#1E5AA8] bg-[#1E5AA8]/5 text-[#1E5AA8] shadow-xs'
                         : 'border-slate-200 bg-[#F8FAFC] text-slate-500 hover:bg-slate-100 hover:border-slate-300'
                     }`}
                   >
-                    <CheckCircle2 className="w-5 h-5 mb-0.5" />
+                    <User className="w-5 h-5 mb-0.5" />
                     <span>Vận Động Viên</span>
+                    <span className="text-[10px] font-normal text-slate-400">Giao lưu & thi đấu</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setRole(UserRole.ORGANIZER)}
-                    className={`py-3 px-3 rounded-2xl text-xs font-bold border transition-all flex flex-col items-center justify-center gap-1.5 ${
+                    className={`py-3 px-3 rounded-2xl text-xs font-bold border transition-all flex flex-col items-center justify-center gap-1 ${
                       role === UserRole.ORGANIZER
-                        ? 'border-[#1E5AA8] bg-[#1E5AA8]/5 text-[#1E5AA8]'
+                        ? 'border-[#1E5AA8] bg-[#1E5AA8]/5 text-[#1E5AA8] shadow-xs'
                         : 'border-slate-200 bg-[#F8FAFC] text-slate-500 hover:bg-slate-100 hover:border-slate-300'
                     }`}
                   >
-                    <Activity className="w-5 h-5 mb-0.5" />
+                    <Trophy className="w-5 h-5 mb-0.5" />
                     <span>Ban Tổ Chức</span>
+                    <span className="text-[10px] font-normal text-slate-400">Tạo & quản lý giải</span>
                   </button>
                 </div>
               </div>
@@ -278,7 +280,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
               {/* Full Name */}
               <div>
                 <label className="block text-xs font-bold text-[#101828] mb-1.5 uppercase tracking-wider">
-                  Họ và Tên
+                  Họ và Tên <span className="text-rose-500 font-bold">*</span>
                 </label>
                 <div className="relative">
                   <User className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -297,7 +299,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-[#101828] mb-1.5 uppercase tracking-wider">
-                    Email
+                    Email <span className="text-rose-500 font-bold">*</span>
                   </label>
                   <div className="relative">
                     <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -314,7 +316,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
 
                 <div>
                   <label className="block text-xs font-bold text-[#101828] mb-1.5 uppercase tracking-wider">
-                    Số Điện Thoại
+                    Số Điện Thoại <span className="text-slate-400 font-normal lowercase text-[10px]">(không bắt buộc)</span>
                   </label>
                   <div className="relative">
                     <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -333,7 +335,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-[#101828] mb-1.5 uppercase tracking-wider">
-                    Mật Khẩu
+                    Mật Khẩu <span className="text-rose-500 font-bold">*</span> <span className="text-slate-400 font-normal lowercase text-[10px]">(≥ 6 ký tự)</span>
                   </label>
                   <div className="relative">
                     <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -351,7 +353,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
 
                 <div>
                   <label className="block text-xs font-bold text-[#101828] mb-1.5 uppercase tracking-wider">
-                    Nhập Lại Mật Khẩu
+                    Nhập Lại Mật Khẩu <span className="text-rose-500 font-bold">*</span>
                   </label>
                   <div className="relative">
                     <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -396,32 +398,10 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
         {/* Real Google OAuth Login Button */}
         <GoogleLoginButton
           text={mode === 'login' ? 'Đăng nhập bằng Google' : 'Đăng ký bằng Google'}
-          redirectTo="/tournaments"
+          redirectTo={redirectTo}
         />
 
-        {/* Quick Demo Login Option */}
-        {mode === 'login' && (
-          <div className="mt-4 pt-4 border-t border-slate-100 flex flex-col gap-2">
-            <button
-              type="button"
-              onClick={() => handleQuickDemoLogin('tien.nguyen@courtmate.com')}
-              disabled={loading}
-              className="w-full py-2.5 rounded-2xl bg-[#F2F4F7] hover:bg-slate-200 text-[#101828] font-bold text-xs transition-all flex items-center justify-center gap-2 disabled:opacity-60"
-            >
-              <User className="w-4 h-4 text-emerald-600" />
-              <span>Vào vai Người chơi (Tiến Nguyễn)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickDemoLogin('vbf.danang@courtmate.vn')}
-              disabled={loading}
-              className="w-full py-2.5 rounded-2xl bg-[#F2F4F7] hover:bg-slate-200 text-[#101828] font-bold text-xs transition-all flex items-center justify-center gap-2 disabled:opacity-60"
-            >
-              <Activity className="w-4 h-4 text-amber-600" />
-              <span>Vào vai BTC Cầu lông (Liên đoàn VBF)</span>
-            </button>
-          </div>
-        )}
+
 
       </div>
     </div>

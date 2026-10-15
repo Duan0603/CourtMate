@@ -1,10 +1,11 @@
 import React from 'react';
 import Link from 'next/link';
+import { PageContainer } from './PageContainer';
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="border-t border-slate-200/80 bg-white py-8 px-6 md:px-12 mt-auto">
-      <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-[#475467]">
+    <footer className="border-t border-slate-200/80 bg-white py-8 mt-auto">
+      <PageContainer className="flex flex-col md:flex-row justify-between items-start gap-6 text-sm text-[#475467]">
         <div className="flex items-center gap-2">
           <img src="/courtMate_logo.png" alt="CourtMate" className="h-7 w-auto" />
           <span className="font-black text-[#101828] text-base tracking-tight">
@@ -28,7 +29,7 @@ export const Footer: React.FC = () => {
             Chính sách bảo mật
           </Link>
         </div>
-      </div>
+      </PageContainer>
     </footer>
   );
 };

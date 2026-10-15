@@ -26,9 +26,7 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const initAttempted = useRef(false);
 
-  const clientId =
-    process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
-    '1054394921948-sampleclientid.apps.googleusercontent.com';
+  const clientId =process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
   const parseJwt = useCallback((token: string) => {
     try {
@@ -93,7 +91,7 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
     }
 
     const tryInit = () => {
-      if (!window.google?.accounts?.id || !googleBtnRef.current) return false;
+      if (!clientId || !window.google?.accounts?.id || !googleBtnRef.current) return false;
       try {
         window.google.accounts.id.initialize({
           client_id: clientId,
@@ -158,6 +156,12 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
   };
 
   const openGoogleOAuthPopup = () => {
+    if (!clientId) {
+      alert('Chưa tìm thấy NEXT_PUBLIC_GOOGLE_CLIENT_ID trong file .env. Vui lòng kiểm tra lại file .env và restart dev server.');
+      setLoading(false);
+      return;
+    }
+
     const redirectUri = window.location.origin + window.location.pathname;
     const scope = 'email profile openid';
     const nonce = Math.random().toString(36).substring(2);

@@ -194,7 +194,7 @@ export default function MatchDetailPage() {
   const handleShareZalo = () => {
     const url = encodeURIComponent(window.location.href);
     const text = encodeURIComponent(
-      `🏸 [CourtMate] Kèo Cầu Lông: ${match?.title} tại ${match?.venueName} (${match?.district}). Còn trống ${(match?.totalSlots || 4) - (match?.joinedCount || 1)
+      ` [CourtMate] Kèo Cầu Lông: ${match?.title} tại ${match?.venueName} (${match?.district}). Còn trống ${(match?.totalSlots || 4) - (match?.joinedCount || 1)
       } chỗ! Vào giữ slot ngay nhé:`
     );
     window.open(`https://zalo.me/share?url=${url}&text=${text}`, '_blank');
@@ -277,8 +277,8 @@ export default function MatchDetailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] py-8 sm:py-10">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#F8FAFC] page-section">
+      <div className="page-container">
         {/* TOP COMMAND & BREADCRUMB BAR */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-slate-200">
           <Link
@@ -286,13 +286,8 @@ export default function MatchDetailPage() {
             className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-[#1E5AA8] transition-colors"
           >
             <ArrowLeftOutlined />
-            <span>Quay lại danh sách kèo</span>
+            <span>Quay lại danh sách giao lưu</span>
           </Link>
-
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-[#1E5AA8] text-xs font-bold uppercase tracking-wider border border-blue-100 self-start sm:self-auto">
-            <span className="w-2 h-2 rounded-full bg-[#1E5AA8] animate-pulse" />
-            On-Demand Matchmaking · Đà Nẵng
-          </div>
         </div>
 
         {/* NOTIFICATION STATUS MESSAGE */}
@@ -368,7 +363,7 @@ export default function MatchDetailPage() {
                 color={match.sport === SportType.BADMINTON ? 'blue' : 'orange'}
                 className="font-bold text-xs rounded-lg px-2.5 py-0.5 border-none uppercase tracking-wider m-0"
               >
-                {match.sport === SportType.BADMINTON ? '🏸 Cầu Lông Phong Trào' : '🏓 Pickleball'}
+                {match.sport === SportType.BADMINTON ? ' Cầu Lông Phong Trào' : ' Pickleball'}
               </Tag>
 
               <Tag
@@ -406,7 +401,7 @@ export default function MatchDetailPage() {
                   <ShareAltOutlined className="text-base" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-slate-900">Chia sẻ kèo đấu với nhóm bạn</h4>
+                  <h4 className="text-xs font-bold text-slate-900">Chia sẻ trận giao lưu với bạn bè</h4>
                   <p className="text-[11px] text-slate-500">
                     Gửi link nhanh qua Zalo / Facebook để rủ thêm bạn cùng vào slot
                   </p>
@@ -621,12 +616,12 @@ export default function MatchDetailPage() {
               {isHost ? (
                 <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-medium flex items-center gap-3">
                   <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700 shrink-0 font-bold">
-                    👑
+
                   </div>
                   <div>
-                    <div className="font-bold text-amber-950">Bạn là người tổ chức kèo thi đấu này</div>
+                    <div className="font-bold text-amber-950">Bạn là người tạo trận giao lưu này</div>
                     <p className="text-amber-800 text-[11px] mt-0.5">
-                      Sao chép mã kèo <span className="font-mono font-bold">{match.shareCode}</span> hoặc gửi link Zalo cho bạn bè để nhanh chóng lấp đầy các vị trí trống!
+                      Sao chép mã trận <span className="font-mono font-bold">{match.shareCode}</span> hoặc gửi link Zalo cho bạn bè để nhanh chóng lấp đầy các vị trí trống!
                     </p>
                   </div>
                 </div>
@@ -725,7 +720,7 @@ export default function MatchDetailPage() {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                       <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">
-                        Chọn trình độ thực tế của bạn trước khi vào kèo:
+                        Chọn trình độ thực tế của bạn trước khi tham gia:
                       </label>
                       <p className="text-[11px] text-slate-500">
                         Giúp các thành viên trong nhóm nắm được thể lực và khả năng thi đấu
@@ -769,7 +764,7 @@ export default function MatchDetailPage() {
         width={440}
         centered
         className="rounded-2xl"
-        destroyOnClose
+        destroyOnHidden
       >
         <div className="text-center p-2 pt-4">
           <div className="w-16 h-16 rounded-2xl bg-[#1E5AA8]/10 text-[#1E5AA8] flex items-center justify-center mx-auto mb-4 text-2xl">

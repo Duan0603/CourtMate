@@ -31,7 +31,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
     <>
       <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
       <Navbar />
-      <main className="flex-1 flex flex-col pt-[72px]">{children}</main>
+      <main className="site-main flex-1 flex flex-col">{children}</main>
       <Footer />
       <FeedbackFloatingBubble />
     </>

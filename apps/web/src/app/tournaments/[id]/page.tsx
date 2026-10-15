@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { GuestActionModal } from '../../../components/shared/GuestActionModal';
 import { useParams, useRouter } from 'next/navigation';
 import { 
   Trophy, 
@@ -23,10 +24,9 @@ import {
   Check,
   Award,
   CircleAlert,
-  LogIn,
-  X
 } from 'lucide-react';
 import { Tournament, TournamentStatus, SportType } from '@courtmate/shared';
+import { getTournamentStatus, tournamentStatusLabel } from '../../../lib/tournament-status';
 import { tournamentsApi } from '../../../lib/tournaments.api';
 import { registrationsApi } from '../../../lib/registrations.api';
 import { useSmartAsync } from '../../../context/useSmartAsync';
@@ -58,7 +58,10 @@ export default function TournamentDetailPage() {
     (tournament as any)?.joinedSlots || 0
   );
 
+  const registrationOpen = !!tournament && getTournamentStatus(tournament) === TournamentStatus.OPEN && new Date(tournament.startDate).getTime() > Date.now();
+
   const handleRegisterClick = (e: React.MouseEvent) => {
+    if (!registrationOpen) return;
     if (!isAuthenticated) {
       e.preventDefault();
       setShowLoginModal(true);
@@ -93,7 +96,7 @@ export default function TournamentDetailPage() {
 
   const handleShareZalo = () => {
     const url = encodeURIComponent(window.location.href);
-    const text = encodeURIComponent(`🏆 [CourtMate] Tham gia giải đấu: ${tournament?.title || ''}`);
+    const text = encodeURIComponent(` [CourtMate] Tham gia giải đấu: ${tournament?.title || ''}`);
     window.open(`https://zalo.me/share?url=${url}&text=${text}`, '_blank');
   };
 
@@ -160,7 +163,7 @@ export default function TournamentDetailPage() {
   return (
     <div className="bg-[#F8FAFC] min-h-screen pb-24">
       {/* ─── BREADCRUMB & BACK NAV ─── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-4">
+      <div className="page-container pt-6 pb-4">
         <div className="flex items-center justify-between">
           <Link
             href="/tournaments"
@@ -190,7 +193,7 @@ export default function TournamentDetailPage() {
       </div>
 
       {/* ─── HERO COVER BANNER (Modern Compact Size) ─── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="page-container">
         <div className="relative h-60 sm:h-72 lg:h-[290px] w-full rounded-3xl overflow-hidden shadow-lg group border border-slate-200/60 bg-slate-900">
           <img
             src={tournament.coverImage || 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=1400&q=80'}
@@ -205,21 +208,23 @@ export default function TournamentDetailPage() {
           <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-7 text-white">
             <div className="flex flex-wrap items-center gap-2 mb-2">
               <span className="px-3 py-0.5 rounded-full text-xs font-bold bg-[#1E5AA8] text-white shadow-sm">
-                🏸 {tournament.sport}
+                 {tournament.sport}
               </span>
 
               <span
                 className={`px-3 py-0.5 rounded-full text-xs font-bold shadow-sm ${
-                  tournament.status === TournamentStatus.OPEN
+                  getTournamentStatus(tournament) === TournamentStatus.OPEN
                     ? 'bg-emerald-500 text-white'
-                    : 'bg-amber-500 text-white'
+                    : getTournamentStatus(tournament) === TournamentStatus.COMPLETED || (tournament.status as string) === 'CANCELLED'
+                      ? 'bg-slate-500 text-white'
+                      : 'bg-amber-500 text-white'
                 }`}
               >
-                {tournament.status === TournamentStatus.OPEN ? 'Đang mở đăng ký' : 'Sắp diễn ra'}
+                {tournamentStatusLabel[getTournamentStatus(tournament)]}
               </span>
 
               <span className="px-3 py-0.5 rounded-full text-xs font-semibold bg-white/15 backdrop-blur-md border border-white/20 text-slate-100">
-                📍 {tournament.city}
+                 {tournament.city}
               </span>
 
               {tournament.organizer?.isVerified && (
@@ -249,7 +254,7 @@ export default function TournamentDetailPage() {
       </div>
 
       {/* ─── 2-COLUMN MAIN CONTENT ─── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+      <div className="page-container mt-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           
           {/* Left Column (2/3): Tabs & Content */}
@@ -519,9 +524,10 @@ export default function TournamentDetailPage() {
               {/* Primary CTA */}
               <button
                 onClick={handleRegisterClick}
-                className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#1E5AA8] to-[#123E75] hover:from-[#154687] hover:to-[#0A2540] text-white font-bold text-base text-center flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+                disabled={!registrationOpen}
+                className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#1E5AA8] to-[#123E75] hover:from-[#154687] hover:to-[#0A2540] text-white font-bold text-base text-center flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <span>Đăng ký tham gia ngay</span>
+                <span>{registrationOpen ? 'Đăng ký tham gia ngay' : 'Đã đóng đăng ký'}</span>
                 <ChevronRight className="w-5 h-5" />
               </button>
 
@@ -543,53 +549,7 @@ export default function TournamentDetailPage() {
         </div>
       </div>
 
-      {/* ─── POPUP CHÍNH GIỮA MÀN HÌNH: YÊU CẦU ĐĂNG NHẬP ─── */}
-      {showLoginModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-100 text-center animate-in zoom-in-95 duration-200">
-            {/* Close button */}
-            <button
-              onClick={() => setShowLoginModal(false)}
-              className="absolute top-4 right-4 p-2 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            {/* Icon */}
-            <div className="w-16 h-16 rounded-2xl bg-[#1E5AA8]/10 text-[#1E5AA8] flex items-center justify-center mx-auto mb-4">
-              <LogIn className="w-8 h-8" />
-            </div>
-
-            {/* Content */}
-            <h3 className="text-xl font-black text-slate-900 mb-2">
-              Yêu Cầu Đăng Nhập
-            </h3>
-            <p className="text-slate-600 text-sm leading-relaxed mb-6">
-              Tính năng <strong>Đăng ký tham gia giải đấu</strong> yêu cầu bạn phải có tài khoản CourtMate để Ban tổ chức cấp mã định danh VĐV và xuất Vé điện tử QR Check-in chính thức.
-            </p>
-
-            {/* Actions */}
-            <div className="space-y-3">
-              <button
-                onClick={() => {
-                  router.push(`/login?redirect=/tournaments/${tournamentId}/register`);
-                }}
-                className="w-full py-3 px-5 rounded-xl bg-[#1E5AA8] hover:bg-[#154687] text-white font-bold text-sm shadow-lg shadow-blue-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <LogIn className="w-4 h-4" />
-                <span>Đăng nhập ngay</span>
-              </button>
-
-              <button
-                onClick={() => setShowLoginModal(false)}
-                className="w-full py-2.5 px-5 rounded-xl text-slate-500 hover:text-slate-800 text-xs font-semibold hover:bg-slate-50 transition-colors cursor-pointer"
-              >
-                Để sau, tôi muốn xem thêm thông tin
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <GuestActionModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} redirectUrl={`/tournaments/${tournamentId}/register`} />
     </div>
   );
 }

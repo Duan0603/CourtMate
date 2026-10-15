@@ -1,12 +1,13 @@
 'use client';
 
+import { FormContainer } from '../../../components/layout/PageContainer';
+
 import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { SportType } from '@courtmate/shared';
 import { coachesApi } from '../../../lib/coaches.api';
 import { useAuth } from '../../../context/AuthContext';
-import { GuestActionModal } from '../../../components/shared/GuestActionModal';
 import toast from 'react-hot-toast';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
@@ -38,7 +39,6 @@ export default function RegisterCoachPage() {
 
   const [submitting, setSubmitting] = useState(false);
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
-  const [isGuestModalOpen, setIsGuestModalOpen] = useState(false);
 
   useGSAP(
     () => {
@@ -78,7 +78,7 @@ export default function RegisterCoachPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isAuthenticated) {
-      setIsGuestModalOpen(true);
+      router.push('/login?redirect=%2Fcoaches%2Fregister');
       return;
     }
     if (!headline || !bio) {
@@ -115,8 +115,8 @@ export default function RegisterCoachPage() {
   };
 
   return (
-    <div ref={formRef} className="min-h-screen bg-[#F8FAFC] pb-24 pt-24">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6">
+    <div ref={formRef} className="min-h-screen bg-[#F8FAFC] page-section">
+      <FormContainer>
         <Link
           href="/coaches"
           className="inline-block text-xs font-bold text-slate-500 hover:text-[#1E5AA8] mb-4 transition-colors"
@@ -132,7 +132,7 @@ export default function RegisterCoachPage() {
             </div>
             <button
               type="button"
-              onClick={() => setIsGuestModalOpen(true)}
+              onClick={() => router.push('/login?redirect=%2Fcoaches%2Fregister')}
               className="px-4 py-2 rounded-lg bg-[#1E5AA8] text-white font-bold text-xs hover:bg-[#154687] transition-colors shrink-0 text-center cursor-pointer"
             >
               Đăng nhập ngay
@@ -393,7 +393,7 @@ export default function RegisterCoachPage() {
               ) : (
                 <button
                   type="button"
-                  onClick={() => setIsGuestModalOpen(true)}
+                  onClick={() => router.push('/login?redirect=%2Fcoaches%2Fregister')}
                   className="w-full py-3 bg-slate-200 text-slate-600 rounded-xl font-bold text-xs sm:text-sm hover:bg-slate-300 transition-all cursor-pointer"
                 >
                   Đăng nhập để gửi hồ sơ
@@ -402,15 +402,8 @@ export default function RegisterCoachPage() {
             </form>
           </div>
         )}
-      </div>
+      </FormContainer>
 
-      <GuestActionModal
-        isOpen={isGuestModalOpen}
-        onClose={() => setIsGuestModalOpen(false)}
-        title="Đăng ký làm Huấn luyện viên"
-        description="Khách chưa đăng nhập không thể nộp đơn làm HLV. Vui lòng đăng nhập tài khoản để gửi hồ sơ xét duyệt."
-        redirectUrl="/coaches/register"
-      />
     </div>
   );
 }

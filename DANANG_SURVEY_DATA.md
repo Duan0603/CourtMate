@@ -24,7 +24,7 @@ Tài liệu chi tiết về cấu trúc dữ liệu, các bảng (collections) t
 
 ## 2. Cấu Trúc Bảng Dữ Liệu Trong Database (MongoDB Collections)
 
-### 📋 Bảng 1: `tournaments` (Giải đấu)
+###  Bảng 1: `tournaments` (Giải đấu)
 
 Lưu trữ thông tin chi tiết 13 giải đấu thực tế tại Đà Nẵng thuộc 2 bộ môn Cầu lông và Pickleball.
 
@@ -71,7 +71,7 @@ Lưu trữ thông tin chi tiết 13 giải đấu thực tế tại Đà Nẵng 
 
 ---
 
-### 🏟️ Bảng 2: `venues` (Sân thể thao)
+###  Bảng 2: `venues` (Sân thể thao)
 
 Lưu trữ **50 cơ sở thể thao / sân thi đấu** khảo sát thực tế tại Đà Nẵng:
 * 47 sân chuyên Cầu lông.
@@ -112,7 +112,7 @@ Lưu trữ **50 cơ sở thể thao / sân thi đấu** khảo sát thực tế 
 
 ---
 
-### 👤 Bảng 3: `users` (Tài khoản Ban tổ chức)
+###  Bảng 3: `users` (Tài khoản Ban tổ chức)
 
 Lưu trữ **11 tài khoản Ban tổ chức** tương ứng với các đơn vị tổ chức giải đấu khảo sát:
 
