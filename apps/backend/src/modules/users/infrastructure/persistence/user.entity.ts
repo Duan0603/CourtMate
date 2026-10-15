@@ -36,6 +36,9 @@ export class User extends Document {
   @Prop({ required: false, default: '' })
   name!: string;
 
+  @Prop({ type: String, default: null })
+  avatarUrl?: string;
+
   @Prop({ required: true, enum: ['USER', 'PLAYER', 'ORGANIZER', 'REGIONAL_ADMIN', 'SUPER_ADMIN'], default: 'USER' })
   role!: string;
 

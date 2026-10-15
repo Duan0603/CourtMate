@@ -112,6 +112,7 @@ export function UserAvatar({
           <img
             src={
               user.avatarUrl ||
+              user.preferences?.avatarUrl ||
               `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=1E5AA8&color=ffffff&size=128&bold=true`
             }
             alt={user.name}
@@ -137,6 +138,7 @@ export function UserAvatar({
                 <img
                   src={
                     user.avatarUrl ||
+                    user.preferences?.avatarUrl ||
                     `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=1E5AA8&color=ffffff&size=128&bold=true`
                   }
                   alt={user.name}
@@ -310,6 +312,7 @@ export const Navbar: React.FC = () => {
                   <img
                     src={
                       user.avatarUrl ||
+                      user.preferences?.avatarUrl ||
                       `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=1E5AA8&color=ffffff&size=128&bold=true`
                     }
                     alt={user.name}

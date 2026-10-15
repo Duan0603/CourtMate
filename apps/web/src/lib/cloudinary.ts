@@ -12,8 +12,8 @@ export interface CloudinaryUploadResponse {
 }
 
 export async function uploadImageToCloudinary(file: File): Promise<string> {
-  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'courtmate';
-  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'courtmate_avatars';
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'datmsosje';
+  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'courtmate';
 
   // Check file size (limit 5MB)
   if (file.size > 5 * 1024 * 1024) {
@@ -33,24 +33,14 @@ export async function uploadImageToCloudinary(file: File): Promise<string> {
 
     if (!res.ok) {
       const errorData = await res.json().catch(() => null);
-      console.warn('Cloudinary upload warning:', errorData);
-      // Fallback: Read as base64 data URL for instant client responsiveness
-      return await fileToDataUrl(file);
+      console.error('Cloudinary upload error:', errorData);
+      throw new Error(errorData?.error?.message || 'Upload thất bại');
     }
 
     const data: CloudinaryUploadResponse = await res.json();
     return data.secure_url;
   } catch (err: any) {
-    console.warn('Could not reach Cloudinary endpoint directly, using instant preview:', err.message);
-    return await fileToDataUrl(file);
+    console.error('Cloudinary upload failed:', err);
+    throw err;
   }
-}
-
-function fileToDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = (e) => reject(e);
-    reader.readAsDataURL(file);
-  });
 }

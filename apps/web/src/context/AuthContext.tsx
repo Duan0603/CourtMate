@@ -27,6 +27,11 @@ const normalizeUser = (u: any): User | null => {
   return {
     ...u,
     id: u.id || u._id,
+    avatarUrl: u.avatarUrl || u.preferences?.avatarUrl || undefined,
+    preferences: {
+      ...(u.preferences || {}),
+      avatarUrl: u.avatarUrl || u.preferences?.avatarUrl || undefined,
+    },
   };
 };
 

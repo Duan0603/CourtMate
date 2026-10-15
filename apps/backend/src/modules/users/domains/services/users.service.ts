@@ -101,6 +101,11 @@ export class UsersService {
       }
     }
 
+    const avatar = (updateDto as any).avatarUrl || updateDto.preferences?.avatarUrl;
+    if (avatar !== undefined) {
+      (user as any).avatarUrl = avatar;
+    }
+
     if (updateDto.preferences) {
       const prefs = user.preferences || { sports: [] };
       if (updateDto.preferences.sports !== undefined) {

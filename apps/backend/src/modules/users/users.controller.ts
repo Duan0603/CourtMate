@@ -31,6 +31,7 @@ export class UsersController {
     updateDto: {
       name?: string;
       role?: UserRole;
+      avatarUrl?: string;
       preferences?: {
         sports?: any[];
         location?: string;

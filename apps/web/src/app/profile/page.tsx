@@ -52,6 +52,7 @@ export default function ProfilePage() {
 
   // Edit fields
   const [name, setName] = useState(user?.name || '');
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || user?.preferences?.avatarUrl || '');
   const [bio, setBio] = useState(user?.preferences?.bio || '');
   const [location, setLocation] = useState(user?.preferences?.location || 'Đà Nẵng');
   const [clubName, setClubName] = useState(user?.preferences?.clubName || '');
@@ -62,6 +63,7 @@ export default function ProfilePage() {
   useEffect(() => {
     if (user) {
       setName(user.name || '');
+      setAvatarUrl(user.avatarUrl || user.preferences?.avatarUrl || '');
       setBio(user.preferences?.bio || '');
       setLocation(user.preferences?.location || 'Đà Nẵng');
       setClubName(user.preferences?.clubName || '');
@@ -158,7 +160,9 @@ export default function ProfilePage() {
               <div className="relative group">
                 <img
                   src={
+                    avatarUrl ||
                     user?.avatarUrl ||
+                    user?.preferences?.avatarUrl ||
                     `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || name || 'User')}&background=1E5AA8&color=ffffff&size=256&bold=true`
                   }
                   alt={user?.name || 'Vận động viên'}
@@ -183,10 +187,11 @@ export default function ProfilePage() {
                     if (!file) return;
 
                     setIsUploadingAvatar(true);
-                    const toastId = toast.loading('Đang tải ảnh lên Cloudinary...');
+                    const toastId = toast.loading('Đang upload ảnh lên...');
 
                     try {
                       const uploadedUrl = await uploadImageToCloudinary(file);
+                      setAvatarUrl(uploadedUrl);
                       await updateProfile({
                         avatarUrl: uploadedUrl,
                         preferences: {
@@ -194,9 +199,11 @@ export default function ProfilePage() {
                           avatarUrl: uploadedUrl,
                         } as any,
                       });
-                      toast.success('Đã cập nhật ảnh đại diện thành công!', { id: toastId });
+                      toast.success('Upload thành công', { id: toastId });
                     } catch (err: any) {
-                      toast.error(err.message || 'Không thể tải ảnh lên', { id: toastId });
+                      console.error('Upload avatar error:', err);
+                      const detail = err?.message && err.message !== 'Upload thất bại' ? `: ${err.message}` : '';
+                      toast.error(`Upload thất bại${detail}`, { id: toastId });
                     } finally {
                       setIsUploadingAvatar(false);
                       if (fileInputRef.current) fileInputRef.current.value = '';
