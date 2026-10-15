@@ -7,257 +7,453 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
   Trophy,
-  Target,
-  Zap,
-  Shield,
-  MapPin,
-  Calendar,
   Users,
-  Compass,
+  ShieldCheck,
   ArrowRight,
-  Sparkles,
-  Activity,
-  Flame,
+  RotateCw,
   CheckCircle2,
-  ChevronRight,
+  Sparkles,
 } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
 
 if (typeof window !== 'undefined') {
-  gsap.registerPlugin(ScrollTrigger);
+  gsap.registerPlugin(useGSAP, ScrollTrigger);
 }
 
-// 7 Sáng Lập Viên CourtMate (Tập trung danh xưng, không nhồi nhét chức danh khô cứng)
-const FOUNDERS = [
+// ─── 7 FOUNDERS DATA ────────────────────────────────────────────────────────
+const TEAM_MEMBERS = [
   {
-    id: 'phuc',
     name: 'Hoàng Phúc',
-    highlight: 'Trưởng nhóm dự án',
-    tag: 'Cầu Lông & Pickleball',
-    badge: 'Founder #01',
-    color: 'from-blue-600 via-indigo-600 to-sky-500',
-    number: '01',
+    role: 'Product Lead',
+    task: 'Định hướng sản phẩm & trải nghiệm người chơi',
+    letter: 'P',
+    color: 'bg-[#1E5AA8]',
   },
   {
-    id: 'thinh',
     name: 'Xuân Thịnh',
-    highlight: 'Kiến trúc hệ thống',
-    tag: 'Công nghệ & Nền tảng',
-    badge: 'Founder #02',
-    color: 'from-sky-500 via-blue-600 to-indigo-700',
-    number: '02',
+    role: 'Technical Lead',
+    task: 'Kiến trúc hệ thống, API & bảo mật dữ liệu',
+    letter: 'T',
+    color: 'bg-emerald-600',
   },
   {
-    id: 'huan',
     name: 'Anh Huân',
-    highlight: 'Vận hành thực địa',
-    tag: 'Cộng đồng & Sự kiện',
-    badge: 'Founder #03',
-    color: 'from-indigo-600 via-purple-600 to-blue-700',
-    number: '03',
+    role: 'Field Operations',
+    task: 'Khảo sát thực địa & kết nối các cụm sân',
+    letter: 'H',
+    color: 'bg-indigo-600',
   },
   {
-    id: 'dong',
     name: 'Hà Đông',
-    highlight: 'Phát triển cộng đồng',
-    tag: 'Truyền thông & Kết nối',
-    badge: 'Founder #04',
-    color: 'from-blue-500 via-teal-500 to-indigo-600',
-    number: '04',
+    role: 'Community Growth',
+    task: 'Kết nối các câu lạc bộ & truyền thông phong trào',
+    letter: 'Đ',
+    color: 'bg-amber-600',
   },
   {
-    id: 'duan',
     name: 'Hoàng Duẫn',
-    highlight: 'Hợp tác & Đối tác',
-    tag: 'Mạng lưới sân bãi',
-    badge: 'Founder #05',
-    color: 'from-cyan-600 via-blue-600 to-sky-700',
-    number: '05',
+    role: 'Partnership',
+    task: 'Phát triển mạng lưới sân bãi & đối tác địa phương',
+    letter: 'D',
+    color: 'bg-blue-600',
   },
   {
-    id: 'ngan',
     name: 'Thảo Ngân',
-    highlight: 'Trải nghiệm vận động viên',
-    tag: 'Sản phẩm & Tương tác',
-    badge: 'Founder #06',
-    color: 'from-indigo-500 via-sky-600 to-blue-600',
-    number: '06',
+    role: 'Player Experience',
+    task: 'Hỗ trợ người dùng & hoàn thiện chất lượng dịch vụ',
+    letter: 'N',
+    color: 'bg-rose-600',
   },
   {
-    id: 'thao',
     name: 'Phương Thảo',
-    highlight: 'Nhận diện & Thiết kế',
-    tag: 'Giao diện & Mỹ thuật',
-    badge: 'Founder #07',
-    color: 'from-blue-600 via-indigo-600 to-violet-600',
-    number: '07',
+    role: 'UI/UX Design',
+    task: 'Thiết kế giao diện & trải nghiệm thao tác một tay',
+    letter: 'T',
+    color: 'bg-violet-600',
   },
 ];
 
-const METRICS = [
+// ─── 3 REAL-WORLD PROBLEMS & SOLUTIONS (STACKED FLIP CARDS) ──────────────────
+const CORE_PILLARS = [
   {
-    value: '50+',
-    label: 'Cụm sân xác thực',
-    desc: 'Khảo sát thực địa trên toàn địa bàn TP. Đà Nẵng',
-    icon: <MapPin className="w-5 h-5 text-[#1E5AA8]" />,
+    id: 'skill',
+    icon: Users,
+    title: 'Giao lưu đúng trình độ',
+    before: 'Nhắn tin hỏi dò trong hàng chục nhóm chat, đến sân gặp đối thủ lệch trình hoặc bị huỷ lịch phút chót.',
+    solution: 'Lọc slot theo cấp độ thực tế (Mới chơi, Trung bình, Khá). Xem trước danh sách người tham gia và chia sẻ chi phí minh bạch.',
+    tagBefore: 'THỰC TRẠNG',
+    tagAfter: 'GIẢI PHÁP COURTMATE',
   },
   {
-    value: '13+',
-    label: 'Giải đấu quy chuẩn',
-    desc: 'Hệ thống vận hành số hóa, cập nhật bảng đấu real-time',
-    icon: <Trophy className="w-5 h-5 text-amber-500" />,
+    id: 'tournaments',
+    icon: Trophy,
+    title: 'Số hoá giải phong trào',
+    before: 'Bốc thăm giấy, tính điểm sổ tay, vận động viên ngồi chờ cả ngày không biết bao giờ tới lượt mình vào sân.',
+    solution: 'Cây nhánh đấu tự động, lịch thi đấu rõ ràng và cập nhật tỉ số trực tiếp từng set đấu lên điện thoại theo thời gian thực.',
+    tagBefore: 'THỰC TRẠNG',
+    tagAfter: 'GIẢI PHÁP COURTMATE',
   },
   {
-    value: '< 3 Phút',
-    label: 'Ghép kèo nhanh tức thì',
-    desc: 'Thuật toán tìm đối thủ đúng trình độ ELO quanh bạn',
-    icon: <Zap className="w-5 h-5 text-sky-500" />,
-  },
-  {
-    value: '100%',
-    label: 'Vé điện tử QR',
-    desc: 'Check-in thi đấu minh bạch, không cần giấy tờ',
-    icon: <CheckCircle2 className="w-5 h-5 text-emerald-500" />,
-  },
-];
-
-const VALUES = [
-  {
-    icon: <Flame className="w-6 h-6 text-orange-500" />,
-    title: 'Nhiệt Huyết Thể Thao',
-    desc: 'Xuất phát từ tình yêu thuần khiết với từng đường cầu, cú đập bóng của giới thể thao phong trào.',
-  },
-  {
-    icon: <Zap className="w-6 h-6 text-amber-500" />,
-    title: 'Tức Thì & Tiện Lợi',
-    desc: 'Triệt tiêu hoàn toàn sự chờ đợi: tìm sân và ghép đối thủ chỉ với một chạm duy nhất trên điện thoại.',
-  },
-  {
-    icon: <Shield className="w-6 h-6 text-emerald-500" />,
-    title: 'Minh Bạch & Tôn Trọng',
-    desc: 'Đánh giá cấp độ trung thực, chi phí công khai tại chỗ, tạo sân chơi văn minh và công bằng.',
-  },
-  {
-    icon: <Activity className="w-6 h-6 text-[#1E5AA8]" />,
-    title: 'Đổi Mới Công Nghệ',
-    desc: 'Số hóa giải đấu, cấp mã VĐV tự động và phát triển xếp hạng ELO chuẩn xác theo phong độ.',
+    id: 'transparency',
+    icon: ShieldCheck,
+    title: 'Minh bạch & Trực tiếp',
+    before: 'Mập mờ giá giờ thuê sân, phụ phí đèn ban đêm hoặc tiền đặt cọc qua bên thứ ba không an tâm.',
+    solution: 'Thông tin cụm sân công khai khắp Đà Nẵng, kết nối trực tiếp chủ sân. Người chơi chia đều chi phí tại chỗ, 0đ phụ phí.',
+    tagBefore: 'THỰC TRẠNG',
+    tagAfter: 'GIẢI PHÁP COURTMATE',
   },
 ];
 
+// ─── KEY STATS ──────────────────────────────────────────────────────────────
+const KEY_STATS = [
+  { value: '06', label: 'Quận tại Đà Nẵng', sub: 'Phủ khắp các cụm sân địa phương' },
+  { value: '02', label: 'Bộ môn trọng tâm', sub: 'Cầu lông và Pickleball phong trào' },
+  { value: '0đ', label: 'Phí trung gian', sub: 'Chia đều tiền sân trực tiếp tại chỗ' },
+];
+
+// ─── 3 COMMITMENTS ──────────────────────────────────────────────────────────
+const COMMITMENTS = [
+  {
+    title: 'Không tin ảo, không slot rác',
+    desc: 'Mỗi tài khoản tham gia đều có lịch sử hoạt động và đánh giá uy tín rõ ràng.',
+  },
+  {
+    title: 'Cập nhật thời gian thực',
+    desc: 'Lịch thi đấu, tỉ số từng set và tình trạng slot trống đồng bộ tức thì, không độ trễ.',
+  },
+  {
+    title: 'Vì cộng đồng thể thao phong trào',
+    desc: 'Lắng nghe phản hồi từ từng người chơi để hoàn thiện ứng dụng thiết thực nhất.',
+  },
+];
+
+// ─── STACKED FLIP CARD COMPONENT (IMAGE 2 STYLE) ─────────────────────────────
+function StackedFlipCard({
+  item,
+  index,
+}: {
+  item: (typeof CORE_PILLARS)[number];
+  index: number;
+}) {
+  const [isFlipped, setIsFlipped] = useState(false);
+
+  return (
+    <div
+      className="relative group cursor-pointer select-none perspective-1000 min-h-[380px] w-full"
+      onClick={() => setIsFlipped(!isFlipped)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          setIsFlipped(!isFlipped);
+        }
+      }}
+      tabIndex={0}
+      role="button"
+      aria-label={`Thẻ ${item.title}: chạm để ${isFlipped ? 'quay lại' : 'lật sang giải pháp'}`}
+    >
+      {/* ─── Layer 2 Behind (Bottom Card in Stack) ─── */}
+      <div className="absolute inset-0 rounded-3xl bg-slate-200 border-2 border-slate-900 rotate-2 translate-y-2 translate-x-1.5 pointer-events-none transition-transform duration-300 group-hover:rotate-3 group-hover:translate-x-2.5 group-hover:translate-y-3" />
+
+      {/* ─── Layer 1 Behind (Middle Card in Stack) ─── */}
+      <div className="absolute inset-0 rounded-3xl bg-slate-100 border-2 border-slate-900 -rotate-1 -translate-y-1.5 -translate-x-1 pointer-events-none transition-transform duration-300 group-hover:-rotate-2 group-hover:-translate-x-2 group-hover:-translate-y-2" />
+
+      {/* ─── Main 3D Flip Container ─── */}
+      <div
+        className={`relative w-full h-full min-h-[380px] transition-transform duration-500 transform-style-3d ${
+          isFlipped ? 'rotate-y-180' : ''
+        }`}
+      >
+        {/* ─── FRONT FACE (Thực trạng - Trước đây) ─── */}
+        <div className="absolute inset-0 backface-hidden rounded-3xl bg-white border-2 border-slate-900 shadow-[6px_6px_0px_#0F172A] p-6 sm:p-7 flex flex-col justify-between overflow-hidden">
+          {/* Subtle red margin line on the left (Notebook / index-card style) */}
+          <div className="absolute left-6 top-0 bottom-0 w-[2px] bg-rose-400/40 pointer-events-none" />
+
+          {/* Top header row */}
+          <div className="flex items-center justify-between pl-4">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse" />
+              <span className="text-xs font-black uppercase tracking-wider text-rose-600">
+                {item.tagBefore}
+              </span>
+            </div>
+            <span className="text-xs font-bold text-slate-400">0{index + 1} / 03</span>
+          </div>
+
+          {/* Center Content */}
+          <div className="my-auto py-2 pl-4 text-center">
+            {/* Center Pill Button (Direct match with Image 2) */}
+            <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-slate-900 text-white text-xs font-black tracking-wide shadow-sm mb-4 group-hover:bg-[#1E5AA8] transition-colors">
+              <RotateCw className="w-3.5 h-3.5" />
+              <span>MẶT TRƯỚC · CHẠM ĐỂ LẬT</span>
+            </div>
+
+            <h3 className="text-lg sm:text-xl font-black text-slate-950 tracking-tight leading-snug mb-3">
+              {item.title}
+            </h3>
+
+            <p className="text-sm sm:text-base font-semibold text-slate-800 leading-relaxed max-w-sm mx-auto">
+              "{item.before}"
+            </p>
+          </div>
+
+          {/* Bottom Bar */}
+          <div className="pl-4 pt-3 border-t border-slate-200 flex items-center justify-between text-xs font-bold text-slate-600">
+            <span>Vấn đề người chơi gặp phải</span>
+            <span className="text-[#1E5AA8] font-black flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+              Xem giải pháp <ArrowRight className="w-3.5 h-3.5" />
+            </span>
+          </div>
+        </div>
+
+        {/* ─── BACK FACE (Giải pháp - Với CourtMate) ─── */}
+        <div className="absolute inset-0 backface-hidden rotate-y-180 rounded-3xl bg-[#0F172A] text-white border-2 border-slate-900 shadow-[6px_6px_0px_#1E5AA8] p-6 sm:p-7 flex flex-col justify-between overflow-hidden">
+          {/* Subtle cyan accent line */}
+          <div className="absolute left-6 top-0 bottom-0 w-[2px] bg-cyan-400/40 pointer-events-none" />
+
+          {/* Top header row */}
+          <div className="flex items-center justify-between pl-4">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-xs font-black uppercase tracking-wider text-emerald-400">
+                {item.tagAfter}
+              </span>
+            </div>
+            <span className="text-xs font-bold text-slate-400">0{index + 1} / 03</span>
+          </div>
+
+          {/* Center Content */}
+          <div className="my-auto py-2 pl-4 text-center">
+            {/* Center Pill Button */}
+            <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#1E5AA8] text-white text-xs font-black tracking-wide shadow-sm mb-4">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300" />
+              <span>GIẢI PHÁP · CHẠM ĐỂ QUAY LẠI</span>
+            </div>
+
+            <h3 className="text-lg sm:text-xl font-black text-white tracking-tight leading-snug mb-3">
+              {item.title}
+            </h3>
+
+            <p className="text-sm sm:text-base font-medium text-slate-100 leading-relaxed max-w-sm mx-auto">
+              {item.solution}
+            </p>
+          </div>
+
+          {/* Bottom Bar */}
+          <div className="pl-4 pt-3 border-t border-slate-800 flex items-center justify-between text-xs font-bold text-slate-400">
+            <span className="text-emerald-400 font-bold">✓ Đã có trên CourtMate</span>
+            <span className="text-slate-300 font-bold flex items-center gap-1">
+              Quay lại <RotateCw className="w-3 h-3" />
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── MAIN ABOUT PAGE ────────────────────────────────────────────────────────
 export default function AboutPage() {
-  const container = useRef<HTMLDivElement>(null);
-  const { user, isAuthenticated } = useAuth();
-  const [activeFounder, setActiveFounder] = useState<number | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useGSAP(
     () => {
-      // 1. Reveal header
-      gsap.fromTo(
-        '.reveal-hero',
-        { opacity: 0, y: 40 },
-        { opacity: 1, y: 0, duration: 0.9, stagger: 0.15, ease: 'power3.out' }
-      );
+      gsap.from('.reveal-hero', {
+        opacity: 0,
+        y: 20,
+        duration: 0.5,
+        stagger: 0.08,
+        ease: 'power2.out',
+      });
 
-      // 2. Metrics counter entrance
-      gsap.fromTo(
-        '.metric-box',
-        { opacity: 0, y: 30 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.7,
-          stagger: 0.1,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: '.metrics-strip',
-            start: 'top 85%',
-          },
-        }
-      );
+      gsap.from('.reveal-pillar', {
+        opacity: 0,
+        y: 20,
+        duration: 0.5,
+        stagger: 0.08,
+        ease: 'power2.out',
+        scrollTrigger: {
+          trigger: '.reveal-pillar-grid',
+          start: 'top 85%',
+        },
+      });
 
-      // 3. Sections reveal
-      const sections = gsap.utils.toArray('.reveal-block');
-      sections.forEach((section: any) => {
-        gsap.fromTo(
-          section,
-          { opacity: 0, y: 40 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.8,
-            ease: 'power3.out',
-            scrollTrigger: {
-              trigger: section,
-              start: 'top 80%',
-              toggleActions: 'play none none reverse',
-            },
-          }
-        );
+      gsap.from('.reveal-member', {
+        opacity: 0,
+        y: 16,
+        duration: 0.4,
+        stagger: 0.05,
+        ease: 'power2.out',
+        scrollTrigger: {
+          trigger: '.reveal-team-grid',
+          start: 'top 85%',
+        },
       });
     },
-    { scope: container }
+    { scope: containerRef }
   );
 
   return (
-    <div ref={container} className="bg-[#F8FAFC] min-h-screen text-[#101828] overflow-hidden selection:bg-[#1E5AA8]/20 selection:text-[#1E5AA8]">
-      {/* ─── HERO SECTION ─── */}
-      <section className="relative pt-12 pb-16 lg:pt-20 lg:pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col items-center text-center">
-        {/* Glow orb */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-gradient-to-tr from-[#1E5AA8]/10 via-[#0077FF]/5 to-amber-200/20 rounded-full blur-3xl pointer-events-none -z-10" />
+    <div
+      ref={containerRef}
+      className="bg-[#F8FAFC] text-[#101828] selection:bg-[#1E5AA8]/15 selection:text-[#1E5AA8] min-h-screen pb-24"
+    >
+      {/* ─── 3D PERSPECTIVE STYLES ─── */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+        .perspective-1000 {
+          perspective: 1000px;
+        }
+        .transform-style-3d {
+          transform-style: preserve-3d;
+        }
+        .backface-hidden {
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+          transform: rotateY(180deg);
+        }
+      `,
+        }}
+      />
 
-        <div className="reveal-hero inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#1E5AA8]/10 border border-[#1E5AA8]/20 text-[#1E5AA8] text-xs font-bold uppercase tracking-wider mb-6">
-          <Sparkles className="w-3.5 h-3.5 text-[#1E5AA8]" />
-          <span>Câu chuyện CourtMate</span>
-        </div>
-
-        <h1 className="reveal-hero text-4xl sm:text-6xl lg:text-7xl font-black text-[#101828] tracking-tight leading-[1.1] max-w-4xl mb-6">
-          Sinh ra từ sân đấu,<br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1E5AA8] via-[#0077FF] to-sky-600">
-            Dành cho người yêu thể thao.
-          </span>
+      {/* ─── 1. HERO MANIFESTO ─── */}
+      <section className="page-container page-section text-center pt-16 pb-12">
+        <h1 className="reveal-hero text-3xl sm:text-5xl lg:text-6xl font-black text-slate-950 tracking-tight leading-tight mb-4">
+          Chơi thể thao dễ dàng hơn.<br />
+          <span className="text-[#1E5AA8]">Đúng người, đúng sân, đúng trình độ.</span>
         </h1>
 
-        <p className="reveal-hero text-base sm:text-xl text-[#475467] max-w-2xl font-medium leading-relaxed mb-8">
-          Chúng tôi không xây dựng một phần mềm trong phòng máy lạnh. CourtMate được tạo nên từ chính những buổi chiều gọi cháy máy tìm sân và những lần bỏ lỡ đam mê vì thiếu người ghép cặp.
+        <p className="reveal-hero text-base sm:text-lg text-slate-700 max-w-2xl mx-auto font-medium leading-relaxed mb-8">
+          CourtMate sinh ra để giải quyết thực trạng quen thuộc của người chơi Cầu lông và Pickleball:
+          muốn vung vợt nhưng thiếu người cùng trình, khó tìm sân trống và giải phong trào vẫn quản lý bằng giấy bút.
         </p>
 
-        {/* Dynamic Context Buttons */}
-        <div className="reveal-hero flex flex-wrap items-center justify-center gap-4">
-          <Link
-            href="/tournaments"
-            className="px-7 py-3.5 rounded-full bg-[#1E5AA8] hover:bg-[#154687] text-white font-bold text-sm sm:text-base shadow-lg shadow-[#1E5AA8]/25 hover:scale-105 active:scale-100 transition-all flex items-center gap-2 cursor-pointer"
-          >
-            <Trophy className="w-4 h-4" />
-            <span>Khám phá 13+ Giải đấu</span>
-          </Link>
-
+        {/* Action CTAs */}
+        <div className="reveal-hero flex flex-wrap items-center justify-center gap-3">
           <Link
             href="/matches"
-            className="px-7 py-3.5 rounded-full bg-white hover:bg-slate-50 text-slate-800 border border-slate-200/90 font-bold text-sm sm:text-base shadow-xs hover:border-[#1E5AA8]/40 transition-all flex items-center gap-2 cursor-pointer"
+            className="px-7 py-3.5 rounded-full bg-[#1E5AA8] hover:bg-[#154687] text-white font-black text-sm shadow-md shadow-[#1E5AA8]/25 transition-all flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
           >
-            <Users className="w-4 h-4 text-[#1E5AA8]" />
-            <span>Kèo giao lưu hôm nay</span>
+            <Users className="w-4 h-4" />
+            <span>Tìm bạn giao lưu</span>
+          </Link>
+          <Link
+            href="/tournaments"
+            className="px-7 py-3.5 rounded-full bg-white hover:bg-slate-100 text-slate-950 border-2 border-slate-900 font-black text-sm shadow-[3px_3px_0px_#0F172A] transition-all flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <Trophy className="w-4 h-4 text-[#1E5AA8]" />
+            <span>Khám phá giải đấu</span>
           </Link>
         </div>
       </section>
 
-      {/* ─── REAL DATA METRICS STRIP ─── */}
-      <section className="metrics-strip max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20">
-        <div className="bg-white/80 backdrop-blur-md rounded-3xl border border-slate-200/90 p-6 sm:p-8 shadow-sm">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-            {METRICS.map((item, idx) => (
-              <div key={idx} className="metric-box flex flex-col items-center sm:items-start text-center sm:text-left">
-                <div className="w-10 h-10 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center mb-3">
-                  {item.icon}
+      {/* ─── 2. NUMBERS STRIP (BOLD HIGH-CONTRAST CARDS) ─── */}
+      <section className="page-container mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {KEY_STATS.map((stat, idx) => (
+            <div
+              key={idx}
+              className="p-6 rounded-3xl bg-white border-2 border-slate-900 shadow-[5px_5px_0px_#0F172A] text-center flex flex-col justify-center"
+            >
+              <div className="text-4xl sm:text-5xl font-black text-[#1E5AA8] tracking-tight mb-1">
+                {stat.value}
+              </div>
+              <div className="text-base font-black text-slate-950">{stat.label}</div>
+              <div className="text-xs font-semibold text-slate-600 mt-1">{stat.sub}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ─── 3. PROBLEM & SOLUTION (STACKED FLIP CARDS LIKE IMAGE 2) ─── */}
+      <section className="page-container mb-24">
+        <div className="text-left mb-10">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-100 text-[#1E5AA8] text-xs font-black uppercase tracking-wider mb-2">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Trải nghiệm thực tế · Chạm thẻ để lật</span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight">
+            Chúng tôi thay đổi điều gì?
+          </h2>
+          <p className="text-sm font-medium text-slate-600 mt-1 max-w-xl">
+            Bấm vào từng thẻ bên dưới để xem sự khác biệt giữa cách sinh hoạt thể thao truyền thống và giải pháp CourtMate mang lại.
+          </p>
+        </div>
+
+        {/* Stacked Cards Grid */}
+        <div className="reveal-pillar-grid grid grid-cols-1 md:grid-cols-3 gap-8">
+          {CORE_PILLARS.map((item, idx) => (
+            <div key={item.id} className="reveal-pillar">
+              <StackedFlipCard item={item} index={idx} />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ─── 4. FOUNDERS TEAM (HIGH-CONTRAST BOLD CARDS) ─── */}
+      <section className="page-container mb-20">
+        <div className="text-left mb-8">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-200 text-slate-900 text-xs font-black uppercase tracking-wider mb-2">
+            <span>Đội ngũ sáng lập</span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight">
+            Những người xây dựng dự án
+          </h2>
+          <p className="text-sm font-medium text-slate-600 mt-1 max-w-xl">
+            7 thành viên cùng đam mê thể thao, chung tay phát triển nền tảng số hoá cho phong trào Cầu lông & Pickleball tại Đà Nẵng.
+          </p>
+        </div>
+
+        <div className="reveal-team-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {TEAM_MEMBERS.map((member, idx) => (
+            <div
+              key={idx}
+              className="reveal-member p-4 sm:p-5 rounded-2xl bg-white border-2 border-slate-900 shadow-[4px_4px_0px_#0F172A] hover:shadow-[6px_6px_0px_#1E5AA8] transition-all flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-center gap-3 mb-3">
+                  <div
+                    className={`w-11 h-11 rounded-2xl ${member.color} text-white flex items-center justify-center font-black text-base shrink-0 shadow-sm border border-slate-900`}
+                  >
+                    {member.letter}
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-black text-slate-950 truncate">
+                      {member.name}
+                    </h3>
+                    <span className="inline-block text-[11px] font-bold text-[#1E5AA8] bg-blue-100/80 px-2 py-0.5 rounded-md mt-0.5 border border-blue-200">
+                      {member.role}
+                    </span>
+                  </div>
                 </div>
-                <div className="text-3xl sm:text-4xl font-black text-[#101828] tracking-tight mb-1">
-                  {item.value}
+
+                <p className="text-xs font-medium text-slate-700 leading-snug">
+                  {member.task}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ─── 5. THREE CORE COMMITMENTS (TACTILE BOLD CONTAINER) ─── */}
+      <section className="page-container mb-16">
+        <div className="p-7 sm:p-9 rounded-3xl bg-white border-2 border-slate-900 shadow-[6px_6px_0px_#1E5AA8]">
+          <h3 className="text-lg sm:text-xl font-black text-slate-950 mb-6 tracking-tight flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full bg-[#1E5AA8]" />
+            <span>Cam kết vận hành</span>
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {COMMITMENTS.map((c, idx) => (
+              <div key={idx} className="space-y-1.5">
+                <div className="text-sm font-black text-slate-950 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[#1E5AA8]" />
+                  <span>{c.title}</span>
                 </div>
-                <div className="text-xs sm:text-sm font-bold text-slate-800 mb-1">
-                  {item.label}
-                </div>
-                <p className="text-[11px] sm:text-xs text-slate-500 leading-normal">
-                  {item.desc}
+                <p className="text-xs font-medium text-slate-700 leading-relaxed pl-4">
+                  {c.desc}
                 </p>
               </div>
             ))}
@@ -265,280 +461,32 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ─── BRAND STORY: FROM PAIN POINT TO SOLUTION ─── */}
-      <section className="reveal-block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-24">
-        <div className="bg-white rounded-[32px] sm:rounded-[40px] border border-slate-200/80 p-8 sm:p-14 shadow-lg overflow-hidden relative">
-          <div className="absolute top-0 right-0 w-80 h-80 bg-[#1E5AA8]/5 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            <div className="lg:col-span-7 space-y-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-50 text-rose-600 border border-rose-200/60 text-xs font-bold uppercase tracking-wider">
-                <span>Khởi nguồn từ thực tế</span>
-              </div>
-
-              <h2 className="text-2xl sm:text-4xl font-black text-[#101828] tracking-tight leading-snug">
-                "Tại sao tìm một giờ chơi thể thao lại khó khăn đến thế?"
-              </h2>
-
-              <div className="space-y-4 text-sm sm:text-base text-slate-600 leading-relaxed font-normal">
-                <p>
-                  Tại Đà Nẵng, làn sóng người chơi <strong>Cầu lông</strong> và <strong>Pickleball</strong> bùng nổ mạnh mẽ chưa từng có. Thế nhưng, đằng sau sự hứng khởi đó là vô vàn phiền toái:
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                  <div className="p-4 rounded-2xl bg-rose-50/50 border border-rose-100 flex items-start gap-3">
-                    <span className="w-2 h-2 rounded-full bg-rose-500 mt-2 shrink-0" />
-                    <p className="text-xs text-slate-700">
-                      <strong>Tìm sân thủ công:</strong> Gọi điện thoại từng chủ sân hoặc lướt các bài đăng trôi mất hút trong nhóm Facebook/Zalo.
-                    </p>
-                  </div>
-                  <div className="p-4 rounded-2xl bg-rose-50/50 border border-rose-100 flex items-start gap-3">
-                    <span className="w-2 h-2 rounded-full bg-rose-500 mt-2 shrink-0" />
-                    <p className="text-xs text-slate-700">
-                      <strong>Lệch trình độ:</strong> Ghép đội ngẫu nhiên dẫn đến chênh lệch thể lực, giảm nhiệt huyết của cả buổi giao lưu.
-                    </p>
-                  </div>
-                </div>
-                <p>
-                  Nhóm 7 người chúng tôi quyết định khảo sát thực tế <strong>hơn 50 cụm sân</strong> khắp Hải Châu, Sơn Trà, Cẩm Lệ, Ngũ Hành Sơn... và kết nối cùng hơn <strong>11 Ban tổ chức giải đấu</strong>.
-                </p>
-                <p>
-                  <strong>CourtMate</strong> chính thức thành hình: Một hệ điều hành On-demand — nơi bạn tìm được người chơi vừa tầm chỉ trong 3 phút, giữ slot minh bạch và tự động hóa toàn diện quy trình giải đấu.
-                </p>
-              </div>
-            </div>
-
-            <div className="lg:col-span-5 relative">
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-slate-200/60 group bg-slate-900 aspect-4/3 sm:aspect-square flex items-center justify-center">
-                <img
-                  src="https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=1200&q=80"
-                  alt="CourtMate Danang Sports"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-transparent flex flex-col justify-end p-6 sm:p-8 text-white">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-                    <span className="text-xs font-bold uppercase tracking-wider text-emerald-300">Đà Nẵng • 2026</span>
-                  </div>
-                  <h4 className="text-lg font-black text-white">
-                    Mạng lưới thể thao kết nối tức thì
-                  </h4>
-                  <p className="text-xs text-slate-300 mt-1">
-                    Cầu lông, Pickleball & các giải đấu phong trào hàng đầu miền Trung.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── FOUNDERS: EXPANDABLE NETFLIX-STYLE POSTER CARDS ─── */}
-      <section className="reveal-block py-20 bg-slate-900 text-white relative overflow-hidden">
-        {/* Glow ambient */}
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#1E5AA8]/30 blur-[130px] rounded-full pointer-events-none" />
-        <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-indigo-500/20 blur-[130px] rounded-full pointer-events-none" />
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center max-w-2xl mx-auto mb-14">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1E5AA8]/20 border border-[#1E5AA8]/40 text-sky-300 text-xs font-bold uppercase tracking-wider mb-4">
-              <Users className="w-3.5 h-3.5" />
-              <span>Đội ngũ sáng lập</span>
-            </div>
-            <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-white mb-3">
-              Những Người Tạo Nên CourtMate
+      {/* ─── 6. FINAL DIRECT CALLOUT ─── */}
+      <section className="page-container">
+        <div className="p-8 sm:p-12 rounded-3xl bg-slate-950 text-white flex flex-col md:flex-row items-center justify-between gap-6 border-2 border-slate-900 shadow-[8px_8px_0px_#1E5AA8]">
+          <div className="text-center md:text-left">
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white mb-2">
+              Sẵn sàng cho trận đấu hôm nay?
             </h2>
-            <p className="text-slate-400 text-sm sm:text-base">
-              Bảy thành viên sáng lập — Cùng chung một niềm tin mạnh mẽ vào tương lai số hóa của thể thao Việt Nam.
+            <p className="text-xs sm:text-sm text-slate-300 max-w-lg font-medium">
+              Tham gia giao lưu cùng các tay vợt quanh khu vực hoặc đăng ký thử sức tại giải đấu phong trào gần bạn.
             </p>
           </div>
 
-          {/* NETFLIX-STYLE ACCORDION / EXPANDING POSTER STRIP (Desktop & Mobile) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 sm:gap-4 lg:gap-3">
-            {FOUNDERS.map((founder, idx) => {
-              const isActive = activeFounder === idx;
-
-              return (
-                <div
-                  key={founder.id}
-                  onMouseEnter={() => setActiveFounder(idx)}
-                  onMouseLeave={() => setActiveFounder(null)}
-                  className={`group relative rounded-3xl overflow-hidden cursor-pointer transition-all duration-500 ease-out border border-white/10 ${
-                    isActive
-                      ? 'lg:col-span-2 shadow-2xl shadow-[#1E5AA8]/40 border-sky-400/60 ring-2 ring-sky-400/40 -translate-y-2'
-                      : 'hover:border-white/30 hover:-translate-y-1'
-                  }`}
-                  style={{
-                    minHeight: '340px',
-                  }}
-                >
-                  {/* Poster Background with Gradient */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${founder.color} opacity-90 transition-opacity duration-500 group-hover:opacity-100`} />
-                  
-                  {/* Dark glass overlay */}
-                  <div className="absolute inset-0 bg-slate-950/60 group-hover:bg-slate-950/40 transition-colors duration-500" />
-
-                  {/* Sport Graphic Watermark Number */}
-                  <div className="absolute top-4 right-4 text-5xl font-black text-white/10 select-none group-hover:text-white/25 transition-colors">
-                    {founder.number}
-                  </div>
-
-                  {/* Poster Card Content */}
-                  <div className="relative h-full p-6 flex flex-col justify-between z-10">
-                    {/* Top: Avatar Monogram Badge */}
-                    <div className="flex items-center justify-between">
-                      <div className="w-14 h-14 rounded-2xl bg-white/15 backdrop-blur-md border border-white/30 flex items-center justify-center text-white font-black text-xl shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
-                        {founder.name.split(' ').pop()?.charAt(0) || 'C'}
-                      </div>
-
-                      <span className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full bg-black/40 text-sky-200 border border-white/15 backdrop-blur-sm">
-                        {founder.badge}
-                      </span>
-                    </div>
-
-                    {/* Bottom: Name & Expandable Details */}
-                    <div className="mt-auto">
-                      <div className="text-[11px] font-bold text-sky-300 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
-                        <span>{founder.tag}</span>
-                      </div>
-
-                      <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-                        {founder.name}
-                      </h3>
-
-                      {/* Expanded Section on Hover */}
-                      <div
-                        className={`transition-all duration-300 overflow-hidden ${
-                          isActive
-                            ? 'max-h-24 opacity-100 pt-2.5'
-                            : 'max-h-0 lg:max-h-0 opacity-0 lg:opacity-0 group-hover:max-h-24 group-hover:opacity-100 group-hover:pt-2.5'
-                        }`}
-                      >
-                        <p className="text-xs text-slate-200 font-medium leading-relaxed bg-white/10 backdrop-blur-md p-2.5 rounded-xl border border-white/15">
-                          {founder.highlight}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="mt-10 text-center">
-            <p className="text-xs text-slate-400 font-medium flex items-center justify-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#1E5AA8]" />
-              <span>Cùng hàng ngàn vận động viên và các đơn vị đồng hành tại Đà Nẵng</span>
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── CORE VALUES ─── */}
-      <section className="reveal-block py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1E5AA8]/10 text-[#1E5AA8] text-xs font-bold uppercase tracking-wider mb-3">
-            <span>Tiêu chuẩn vận hành</span>
-          </div>
-          <h2 className="text-3xl sm:text-4xl font-black text-[#101828] tracking-tight">
-            Giá Trị Định Hình CourtMate
-          </h2>
-          <p className="text-slate-500 text-sm sm:text-base mt-2">
-            Mỗi tính năng trên nền tảng đều phục vụ một mục đích duy nhất: Mang lại trải nghiệm thể thao trọn vẹn nhất cho bạn.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {VALUES.map((val, idx) => (
-            <div
-              key={idx}
-              className="p-8 rounded-[32px] bg-white border border-slate-200/90 hover:border-[#1E5AA8]/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+          <div className="flex items-center gap-3 shrink-0">
+            <Link
+              href="/matches"
+              className="px-6 py-3 rounded-full bg-[#1E5AA8] hover:bg-[#154687] text-white font-black text-xs transition-colors flex items-center gap-1.5 shadow-sm"
             >
-              <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center mb-6 shadow-xs">
-                {val.icon}
-              </div>
-              <h4 className="text-lg font-bold text-[#101828] mb-2">{val.title}</h4>
-              <p className="text-slate-500 text-xs sm:text-sm leading-relaxed">{val.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ─── SMART CONTEXTUAL FINAL CTA (NO REDUNDANT LOGIN) ─── */}
-      <section className="reveal-block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
-        <div className="relative rounded-[36px] sm:rounded-[44px] bg-gradient-to-br from-[#1E5AA8] via-[#154687] to-slate-950 p-8 sm:p-16 text-white text-center shadow-2xl overflow-hidden">
-          {/* Subtle Decorative court lines */}
-          <div className="absolute inset-0 court-grid-pattern opacity-15 pointer-events-none" />
-          <div className="absolute -top-24 -left-24 w-72 h-72 bg-sky-400/20 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="relative z-10 max-w-2xl mx-auto space-y-6">
-            <div className="w-16 h-16 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center mx-auto text-amber-300 shadow-inner">
-              <Trophy className="w-8 h-8" />
-            </div>
-
-            {/* Smart Conditional Messaging based on Authentication */}
-            {isAuthenticated && user ? (
-              <>
-                <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-400/20 border border-emerald-400/30 text-emerald-300 text-xs font-bold">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Đã đăng nhập với tư cách: {user.name}</span>
-                </div>
-
-                <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
-                  Chào mừng bạn, {user.name}! Sẵn sàng cho trận đấu mới?
-                </h2>
-
-                <p className="text-slate-200 text-sm sm:text-base leading-relaxed">
-                  Bạn đã là một phần của cộng đồng CourtMate. Hãy chọn giải đấu đang mở hoặc tìm một kèo đấu gần bạn để xách vợt ra sân ngay!
-                </p>
-
-                <div className="pt-4 flex flex-wrap items-center justify-center gap-4">
-                  <Link
-                    href="/tournaments"
-                    className="px-8 py-4 rounded-full bg-white hover:bg-slate-100 text-[#1E5AA8] font-bold text-sm sm:text-base shadow-xl hover:scale-105 active:scale-100 transition-all flex items-center gap-2 cursor-pointer"
-                  >
-                    <span>Xem danh sách giải đấu</span>
-                    <ChevronRight className="w-4 h-4" />
-                  </Link>
-
-                  <Link
-                    href="/matches"
-                    className="px-8 py-4 rounded-full bg-white/15 hover:bg-white/25 border border-white/30 text-white font-bold text-sm sm:text-base backdrop-blur-md hover:scale-105 active:scale-100 transition-all flex items-center gap-2 cursor-pointer"
-                  >
-                    <span>Ghép kèo giao lưu</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-                </div>
-              </>
-            ) : (
-              <>
-                <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
-                  Sẵn Sàng Ra Sân Cùng CourtMate?
-                </h2>
-
-                <p className="text-slate-200 text-sm sm:text-base leading-relaxed">
-                  Tạo tài khoản chỉ trong 30 giây để nhận thông báo giải đấu sớm nhất, lưu các kèo đấu yêu thích và giữ slot thi đấu trực tiếp.
-                </p>
-
-                <div className="pt-4 flex flex-wrap items-center justify-center gap-4">
-                  <Link
-                    href="/register"
-                    className="px-8 py-4 rounded-full bg-white hover:bg-slate-100 text-[#1E5AA8] font-bold text-sm sm:text-base shadow-xl hover:scale-105 active:scale-100 transition-all flex items-center gap-2 cursor-pointer"
-                  >
-                    <span>Tạo tài khoản miễn phí</span>
-                    <ChevronRight className="w-4 h-4" />
-                  </Link>
-
-                  <Link
-                    href="/tournaments"
-                    className="px-8 py-4 rounded-full bg-white/15 hover:bg-white/25 border border-white/30 text-white font-bold text-sm sm:text-base backdrop-blur-md hover:scale-105 active:scale-100 transition-all flex items-center gap-2 cursor-pointer"
-                  >
-                    <span>Xem giải đấu trước</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-                </div>
-              </>
-            )}
+              <span>Vào giao lưu</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+            <Link
+              href="/tournaments"
+              className="px-6 py-3 rounded-full bg-white/10 hover:bg-white/20 text-white font-black text-xs border border-white/20 transition-colors"
+            >
+              Xem giải đấu
+            </Link>
           </div>
         </div>
       </section>

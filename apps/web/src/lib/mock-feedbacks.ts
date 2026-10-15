@@ -116,8 +116,8 @@ const FEEDBACK_ITEMS: FeedbackItemSeed[] = [
     gender: 'male',
     userRole: 'Pickleball Hải Châu • DUPR 4.0',
     rating: 3,
-    comment: 'Ghép kèo khá nhanh nhưng đôi khi gặp người hẹn xong đến muộn 15 phút làm trôi giờ thuê sân. Mong CourtMate có chế độ phạt điểm uy tín nghiêm khắc hơn.',
-    category: 'Ghép trận on-demand'
+    comment: 'Tìm bạn giao lưu khá nhanh nhưng đôi khi gặp người hẹn xong đến muộn 15 phút làm trôi giờ thuê sân. Mong CourtMate có chế độ phạt điểm uy tín nghiêm khắc hơn.',
+    category: 'Giao lưu on-demand'
   },
   {
     userName: 'Ngô Thanh Trúc',
@@ -248,7 +248,7 @@ const FEEDBACK_ITEMS: FeedbackItemSeed[] = [
     gender: 'male',
     userRole: 'Pickleball Cẩm Lệ • DUPR 3.5',
     rating: 5,
-    comment: 'Đã giao lưu với hơn 10 nhóm Pickleball khác nhau qua app, mọi người đều nhiệt tình và fair-play. Hệ thống ghép kèo chuẩn xác.',
+    comment: 'Đã giao lưu với hơn 10 nhóm Pickleball khác nhau qua app, mọi người đều nhiệt tình và fair-play. Hệ thống tìm bạn giao lưu chuẩn xác.',
     category: 'Cộng đồng thể thao'
   },
   {
@@ -298,7 +298,7 @@ const FEEDBACK_ITEMS: FeedbackItemSeed[] = [
     gender: 'male',
     userRole: 'Pickleball Sơn Trà • Trình độ 4.0',
     rating: 3,
-    comment: 'Ghép kèo DUPR ổn nhưng một số sân hiển thị giá cơ bản chưa gồm phụ phí tiền đèn ban đêm, mong hiển thị minh bạch hơn.',
+    comment: 'Kết nối trận theo DUPR ổn nhưng một số sân hiển thị giá cơ bản chưa gồm phụ phí tiền đèn ban đêm, mong hiển thị minh bạch hơn.',
     category: 'Đặt sân & CLB'
   },
   {

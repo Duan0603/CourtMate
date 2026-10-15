@@ -16,6 +16,7 @@ import { UploadsModule } from './modules/uploads/uploads.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { FeedbacksModule } from './modules/feedbacks/feedbacks.module';
 import { MatchesModule } from './modules/matches/matches.module';
+import { CoachesModule } from './modules/coaches/coaches.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -61,6 +62,7 @@ import { AppController } from './app.controller';
     NotificationsModule,
     FeedbacksModule,
     MatchesModule,
+    CoachesModule,
   ],
 })
 export class AppModule implements NestModule {

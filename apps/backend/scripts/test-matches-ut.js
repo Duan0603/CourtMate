@@ -2,7 +2,7 @@ const { MatchesService } = require('../dist/modules/matches/matches.service');
 const { BadmintonSkillLevel, MatchStatus, SportType } = require('@courtmate/shared');
 
 async function runTests() {
-  console.log('🧪 BẮT ĐẦU CHẠY UNIT TEST (MatchesService):');
+  console.log(' BẮT ĐẦU CHẠY UNIT TEST (MatchesService):');
   let passed = 0;
 
   let mockMatchModel = function (dto) {
@@ -46,7 +46,7 @@ async function runTests() {
     res1.players.length === 1 &&
     res1.shareCode.startsWith('CM-')
   ) {
-    console.log('✅ TEST 1 PASSED: Tạo kèo thành công với trình độ TBY -> TB+ và sinh shareCode chuẩn');
+    console.log(' TEST 1 PASSED: Tạo kèo thành công với trình độ TBY -> TB+ và sinh shareCode chuẩn');
     passed++;
   } else {
     throw new Error('Test 1 failed');
@@ -71,7 +71,7 @@ async function runTests() {
     throw new Error('Test 2 failed: Không bắt lỗi quá khứ');
   } catch (e) {
     if (e.message.includes('quá khứ')) {
-      console.log('✅ TEST 2 PASSED: Chặn tạo kèo có giờ bắt đầu ở quá khứ');
+      console.log(' TEST 2 PASSED: Chặn tạo kèo có giờ bắt đầu ở quá khứ');
       passed++;
     } else throw e;
   }
@@ -96,7 +96,7 @@ async function runTests() {
     BadmintonSkillLevel.TB,
   );
   if (joinRes.joinedCount === 2 && joinRes.status === MatchStatus.FULL) {
-    console.log('✅ TEST 3 PASSED: Tham gia slot thành công và tự động chuyển sang FULL khi đủ người');
+    console.log(' TEST 3 PASSED: Tham gia slot thành công và tự động chuyển sang FULL khi đủ người');
     passed++;
   } else throw new Error('Test 3 failed');
 
@@ -119,7 +119,7 @@ async function runTests() {
     throw new Error('Test 4 failed: Không chặn join 2 lần');
   } catch (e) {
     if (e.status === 409 || e.message.includes('đã tham gia')) {
-      console.log('✅ TEST 4 PASSED: Chặn người chơi tham gia 2 lần vào cùng 1 kèo');
+      console.log(' TEST 4 PASSED: Chặn người chơi tham gia 2 lần vào cùng 1 kèo');
       passed++;
     } else throw e;
   }
@@ -131,7 +131,7 @@ async function runTests() {
   existingMatch.hostId = 'u_host';
   const leaveRes = await service.leaveMatch('u_guest_2', 'match_999');
   if (leaveRes.joinedCount === 1 && leaveRes.status === MatchStatus.OPEN) {
-    console.log('✅ TEST 5 PASSED: Rút lui hợp lệ thành công và mở lại slot sang OPEN');
+    console.log(' TEST 5 PASSED: Rút lui hợp lệ thành công và mở lại slot sang OPEN');
     passed++;
   } else throw new Error('Test 5 failed');
 
@@ -149,15 +149,50 @@ async function runTests() {
     throw new Error('Test 6 failed: Chủ kèo rút lui mà không bắt lỗi');
   } catch (e) {
     if (e.message.includes('Chủ kèo không thể rút lui')) {
-      console.log('✅ TEST 6 PASSED: Ngăn chặn chủ kèo tự ý rút lui');
+      console.log(' TEST 6 PASSED: Ngăn chặn chủ kèo tự ý rút lui');
       passed++;
     } else throw e;
   }
 
-  console.log(`\n🎉 HOÀN THÀNH 100% UNIT TESTS: ${passed}/6 PASSED!`);
+  // Test 7: Ngăn chặn user đã join 1 slot ở kèo khác tham gia thêm slot kèo mới
+  const anotherMatch = {
+    _id: 'match_another',
+    title: 'Kèo mới mở',
+    venueName: 'Sân Quân Khu 5',
+    status: MatchStatus.OPEN,
+    totalSlots: 4,
+    joinedCount: 1,
+    players: [{ userId: 'u_other_host', name: 'Other Host' }],
+    minSkillLevel: BadmintonSkillLevel.TB,
+    save: async function () {
+      return this;
+    },
+  };
+  mockMatchModel.findById = () => ({ exec: async () => anotherMatch });
+  // Giả lập user 'u_busy' đã có 1 slot ở kèo trước đó đang active
+  mockMatchModel.findOne = () => ({
+    exec: async () => ({
+      _id: 'match_first',
+      title: 'Kèo Kỳ Đồng Tối Nay',
+      venueName: 'Sân Kỳ Đồng',
+      status: MatchStatus.OPEN,
+    }),
+  });
+
+  try {
+    await service.joinMatch({ id: 'u_busy', name: 'Người chơi bận rộn' }, 'match_another');
+    throw new Error('Test 7 failed: Không chặn user đã có slot ở kèo khác');
+  } catch (e) {
+    if (e.message.includes('Mỗi người chơi chỉ được tham gia 1 slot')) {
+      console.log(' TEST 7 PASSED: Ngăn chặn thành công user đã join slot khác tham gia slot mới');
+      passed++;
+    } else throw e;
+  }
+
+  console.log(`\n HOÀN THÀNH 100% UNIT TESTS: ${passed}/7 PASSED!`);
 }
 
 runTests().catch((err) => {
-  console.error('❌ UNIT TEST FAILED:', err);
+  console.error(' UNIT TEST FAILED:', err);
   process.exit(1);
 });

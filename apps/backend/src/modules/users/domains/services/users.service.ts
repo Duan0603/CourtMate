@@ -130,22 +130,27 @@ export class UsersService {
   }
 
   async addBookmark(email: string, tournamentId: string): Promise<User | null> {
-    const user = await this.findByEmail(email);
-    if (!user) return null;
-    
-    if (!user.bookmarkedTournaments.includes(tournamentId)) {
-      user.bookmarkedTournaments.push(tournamentId);
-      return user.save();
-    }
-    return user;
+    return this.userModel.findOneAndUpdate(
+      { email: email.toLowerCase().trim() }, { $addToSet: { bookmarkedTournaments: tournamentId } }, { new: true },
+    ).exec();
   }
 
   async removeBookmark(email: string, tournamentId: string): Promise<User | null> {
-    const user = await this.findByEmail(email);
-    if (!user) return null;
-    
-    user.bookmarkedTournaments = user.bookmarkedTournaments.filter(id => id !== tournamentId);
-    return user.save();
+    return this.userModel.findOneAndUpdate(
+      { email: email.toLowerCase().trim() }, { $pull: { bookmarkedTournaments: tournamentId } }, { new: true },
+    ).exec();
+  }
+
+  async addCoachBookmark(email: string, coachId: string): Promise<User | null> {
+    return this.userModel.findOneAndUpdate(
+      { email: email.toLowerCase().trim() }, { $addToSet: { bookmarkedCoaches: coachId } }, { new: true },
+    ).exec();
+  }
+
+  async removeCoachBookmark(email: string, coachId: string): Promise<User | null> {
+    return this.userModel.findOneAndUpdate(
+      { email: email.toLowerCase().trim() }, { $pull: { bookmarkedCoaches: coachId } }, { new: true },
+    ).exec();
   }
 
   async getFriends(email: string): Promise<User[]> {

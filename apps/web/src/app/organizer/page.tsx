@@ -1,5 +1,7 @@
 'use client';
 
+import { PageContainer } from '../../components/layout/PageContainer';
+
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -142,8 +144,8 @@ export default function OrganizerDashboardPage() {
   };
 
   return (
-    <div className="bg-[#F8FAFC] min-h-screen py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="bg-[#F8FAFC] min-h-screen page-section">
+      <PageContainer>
         
         {/* Header Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
@@ -446,7 +448,7 @@ export default function OrganizerDashboardPage() {
           </div>
         )}
 
-      </div>
+      </PageContainer>
     </div>
   );
 }

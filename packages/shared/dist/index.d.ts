@@ -12,6 +12,7 @@ export declare enum ActivityType {
 export declare enum UserRole {
     USER = "USER",
     PLAYER = "PLAYER",
+    COACH = "COACH",
     ORGANIZER = "ORGANIZER",
     REGIONAL_ADMIN = "REGIONAL_ADMIN",
     SUPER_ADMIN = "SUPER_ADMIN"
@@ -37,6 +38,7 @@ export interface User {
     preferences: UserPreferences;
     avatarUrl?: string;
     bookmarkedTournaments?: string[];
+    bookmarkedCoaches?: string[];
     isVerified: boolean;
     createdAt: Date;
 }
@@ -309,4 +311,112 @@ export interface MatchFilterDto {
     status?: MatchStatus;
     date?: string;
     keyword?: string;
+}
+export declare enum CoachVerificationStatus {
+    PENDING = "PENDING",
+    APPROVED = "APPROVED",
+    REJECTED = "REJECTED"
+}
+export declare enum CoachBookingType {
+    HOURLY = "HOURLY",
+    COURSE = "COURSE"
+}
+export declare enum CoachBookingStatus {
+    PENDING = "PENDING",
+    CONFIRMED = "CONFIRMED",
+    CANCELLED = "CANCELLED",
+    COMPLETED = "COMPLETED",
+    REJECTED = "REJECTED"
+}
+export interface CoachCertificate {
+    id?: string;
+    title: string;
+    issuedBy: string;
+    year: number;
+    imageUrl?: string;
+}
+export interface CoachReview {
+    id: string;
+    coachId: string;
+    userId: string;
+    userName: string;
+    userAvatar?: string;
+    rating: number;
+    comment: string;
+    bookingType: CoachBookingType;
+    createdAt: Date | string;
+}
+export interface CoachCourse {
+    id: string;
+    coachId: string;
+    title: string;
+    sport: SportType;
+    level: string;
+    price: number;
+    totalSessions: number;
+    durationPerSession: number;
+    scheduleDescription: string;
+    maxStudents: number;
+    enrolledCount: number;
+    location: string;
+    description: string;
+    syllabus?: string[];
+    status: 'OPEN' | 'FULL' | 'COMPLETED';
+    createdAt?: Date | string;
+}
+export interface CoachProfile {
+    id: string;
+    _id?: string;
+    userId: string;
+    fullName: string;
+    headline: string;
+    avatarUrl?: string;
+    coverUrl?: string;
+    phone?: string;
+    email?: string;
+    sports: SportType[];
+    bio: string;
+    experienceYears: number;
+    certificates: CoachCertificate[];
+    hourlyRate: number;
+    city: string;
+    districts: string[];
+    preferredCourts: string[];
+    rating: number;
+    reviewCount: number;
+    verificationStatus: CoachVerificationStatus;
+    reviews?: CoachReview[];
+    courses?: CoachCourse[];
+    availableSlots?: {
+        dayOfWeek: number;
+        startTime: string;
+        endTime: string;
+    }[];
+    createdAt?: Date | string;
+    updatedAt?: Date | string;
+}
+export interface CoachBooking {
+    id: string;
+    _id?: string;
+    coachId: string;
+    coachName?: string;
+    coachAvatar?: string;
+    userId: string;
+    userName: string;
+    userPhone?: string;
+    userEmail?: string;
+    bookingType: CoachBookingType;
+    courseId?: string;
+    courseTitle?: string;
+    sport: SportType;
+    bookingDate: string;
+    startTime?: string;
+    endTime?: string;
+    durationHours?: number;
+    courtLocation: string;
+    totalPrice: number;
+    notes?: string;
+    status: CoachBookingStatus;
+    paymentStatus: 'UNPAID' | 'PAID' | 'REFUNDED';
+    createdAt: Date | string;
 }

@@ -1,8 +1,9 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { User, UserRole } from '@courtmate/shared';
 import { authApi } from '../lib/auth.api';
+import toast from 'react-hot-toast';
 
 interface AuthContextType {
   user: User | null;
@@ -15,6 +16,7 @@ interface AuthContextType {
   logout: () => void;
   updateProfile: (data: Partial<User>) => Promise<void>;
   toggleBookmark: (tournamentId: string) => Promise<boolean>;
+  toggleCoachFavorite: (coachId: string) => Promise<boolean>;
   switchRole: (role: UserRole) => Promise<void> | void;
 }
 
@@ -33,25 +35,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const pendingFavorites = useRef(new Set<string>());
+
   useEffect(() => {
+    let active = true;
+    let refreshing = false;
+    const refreshProfile = async () => {
+      const sessionToken = localStorage.getItem('courtmate_token');
+      if (!sessionToken || refreshing || pendingFavorites.current.size) return;
+      refreshing = true;
+      try {
+        const profile = normalizeUser(await authApi.getProfile());
+        if (active && profile && !pendingFavorites.current.size && localStorage.getItem('courtmate_token') === sessionToken) {
+          setUser(profile);
+          localStorage.setItem('courtmate_user', JSON.stringify(profile));
+        }
+      } catch (error: any) {
+        if (active && error.status === 401 && localStorage.getItem('courtmate_token') === sessionToken) {
+          setToken(null); setUser(null);
+          localStorage.removeItem('courtmate_token'); localStorage.removeItem('courtmate_user');
+        }
+      } finally { refreshing = false; }
+    };
     try {
       const storedToken = localStorage.getItem('courtmate_token');
       const storedUser = localStorage.getItem('courtmate_user');
-
-      if (storedToken && storedUser) {
+      if (storedToken && storedToken !== 'mock-jwt-token' && storedUser) {
         setToken(storedToken);
         setUser(normalizeUser(JSON.parse(storedUser)));
+        void refreshProfile();
       } else {
-        setToken(null);
-        setUser(null);
+        localStorage.removeItem('courtmate_token'); localStorage.removeItem('courtmate_user');
       }
-    } catch (e) {
-      console.error('Error loading session from localStorage:', e);
-      setUser(null);
-      setToken(null);
-    } finally {
-      setIsLoading(false);
-    }
+    } catch { setToken(null); setUser(null); }
+    setIsLoading(false);
+    const onVisible = () => { if (document.visibilityState === 'visible') void refreshProfile(); };
+    window.addEventListener('focus', onVisible);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      active = false;
+      window.removeEventListener('focus', onVisible);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -63,33 +88,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setToken(res.token);
       localStorage.setItem('courtmate_token', res.token);
       localStorage.setItem('courtmate_user', JSON.stringify(normalized));
-    } catch (error: any) {
-      // Fallback for UI/UX testing when backend is not connected or seeded
-      console.warn('Backend login failed, falling back to mock login data:', error.message);
-      // Try to detect organizer role from known seeded organizer emails
-      const organizerEmails = [
-        'btc.laughing@courtmate.vn', 'btc.fub@courtmate.vn', 'dpf.danang@courtmate.vn',
-        'jci.hoian@courtmate.vn', 'nhabaodanang@courtmate.vn', 'dpf.fptcity@courtmate.vn',
-        'worldcup.pickleball@courtmate.vn', 'ubnd.lienchieu@courtmate.vn', 'vbf.danang@courtmate.vn',
-        'sovhtt.danang@courtmate.vn', 'nvhlaodong.danang@courtmate.vn', 'organizer@courtmate.com',
-      ];
-      const isOrganizer = organizerEmails.includes(email.toLowerCase().trim());
-      const fallbackRole = isOrganizer ? UserRole.ORGANIZER
-        : email.toLowerCase().includes('admin') ? UserRole.SUPER_ADMIN
-        : UserRole.PLAYER;
-      const mockUser = normalizeUser({
-        _id: email.toLowerCase(),
-        email,
-        name: email.split('@')[0],
-        role: fallbackRole,
-      });
-        const mockToken = 'mock-jwt-token';
-        
-        setUser(mockUser);
-        setToken(mockToken);
-        localStorage.setItem('courtmate_token', mockToken);
-        localStorage.setItem('courtmate_user', JSON.stringify(mockUser));
-        return; // Success!
     } finally {
       setIsLoading(false);
     }
@@ -118,21 +116,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setToken(res.token);
       localStorage.setItem('courtmate_token', res.token);
       localStorage.setItem('courtmate_user', JSON.stringify(normalized));
-    } catch (error: any) {
-      console.warn('Backend register failed, falling back to mock register data:', error.message);
-      const mockUser = normalizeUser({
-        _id: 'mock-user-new',
-        email,
-        name,
-        role,
-      });
-        const mockToken = 'mock-jwt-token';
-        
-        setUser(mockUser);
-        setToken(mockToken);
-        localStorage.setItem('courtmate_token', mockToken);
-        localStorage.setItem('courtmate_user', JSON.stringify(mockUser));
-        return;
     } finally {
       setIsLoading(false);
     }
@@ -160,41 +143,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const toggleBookmark = async (tournamentId: string): Promise<boolean> => {
-    if (!user) {
-      // Store in localStorage for guests if needed
-      return false;
-    }
-    const currentList = user.bookmarkedTournaments || [];
-    const isCurrentlyBookmarked = currentList.includes(tournamentId);
-
-    // Optimistic update
-    const nextList = isCurrentlyBookmarked
-      ? currentList.filter(id => id !== tournamentId)
-      : [...currentList, tournamentId];
-
-    const optimisticUser = { ...user, bookmarkedTournaments: nextList };
-    setUser(optimisticUser);
-    localStorage.setItem('courtmate_user', JSON.stringify(optimisticUser));
-
+  const toggleFavorite = async (id: string, field: 'bookmarkedTournaments' | 'bookmarkedCoaches'): Promise<boolean> => {
+    if (!user || !token) return false;
+    const requestKey = user.id + ':' + field + ':' + id;
+    const before = user[field] || [];
+    const wasFavorite = before.includes(id);
+    if (pendingFavorites.current.has(requestKey)) return wasFavorite;
+    pendingFavorites.current.add(requestKey);
+    const sessionToken = token;
+    const userId = user.id;
+    const setFavorite = (selected: boolean) => setUser(previous => {
+      if (!previous || previous.id !== userId || localStorage.getItem('courtmate_token') !== sessionToken) return previous;
+      const current = previous[field] || [];
+      const list = selected ? [...new Set([...current, id])] : current.filter(item => item !== id);
+      const updated = { ...previous, [field]: list };
+      localStorage.setItem('courtmate_user', JSON.stringify(updated));
+      return updated;
+    });
+    setFavorite(!wasFavorite);
     try {
-      let updatedUser: User;
-      if (isCurrentlyBookmarked) {
-        updatedUser = await authApi.removeBookmark(tournamentId);
+      if (field === 'bookmarkedCoaches') {
+        await (wasFavorite ? authApi.removeCoachBookmark(id) : authApi.addCoachBookmark(id));
       } else {
-        updatedUser = await authApi.addBookmark(tournamentId);
+        await (wasFavorite ? authApi.removeBookmark(id) : authApi.addBookmark(id));
       }
-      if (updatedUser) {
-        const normalized = normalizeUser(updatedUser);
-        setUser(normalized);
-        localStorage.setItem('courtmate_user', JSON.stringify(normalized));
-      }
-      return !isCurrentlyBookmarked;
-    } catch (error) {
-      console.warn('Backend toggle bookmark failed, preserving optimistic update in localStorage:', error);
-      return !isCurrentlyBookmarked;
-    }
+      return !wasFavorite;
+    } catch {
+      setFavorite(wasFavorite);
+      toast.error('Không thể lưu yêu thích. Vui lòng thử lại.');
+      return wasFavorite;
+    } finally { pendingFavorites.current.delete(requestKey); }
   };
+  const toggleBookmark = (id: string) => toggleFavorite(id, 'bookmarkedTournaments');
+  const toggleCoachFavorite = (id: string) => toggleFavorite(id, 'bookmarkedCoaches');
 
   const switchRole = async (role: UserRole) => {
     try {
@@ -242,6 +223,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout,
         updateProfile,
         toggleBookmark,
+        toggleCoachFavorite,
         switchRole,
       }}
     >

@@ -1,7 +1,10 @@
 'use client';
 
+import { FormContainer } from '../../../../components/layout/PageContainer';
+
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { GuestActionModal } from '../../../../components/shared/GuestActionModal';
 import { useParams, useRouter } from 'next/navigation';
 import { 
   Trophy, 
@@ -16,10 +19,9 @@ import {
   Users, 
   Award,
   ChevronRight,
-  LogIn,
-  X
 } from 'lucide-react';
-import { Tournament, SkillLevel } from '@courtmate/shared';
+import { Tournament, TournamentStatus, SkillLevel } from '@courtmate/shared';
+import { getTournamentStatus } from '../../../../lib/tournament-status';
 import { tournamentsApi } from '../../../../lib/tournaments.api';
 import { registrationsApi } from '../../../../lib/registrations.api';
 import { paymentsApi, PaymentProvider } from '../../../../lib/payments.api';
@@ -86,6 +88,10 @@ export default function TournamentRegisterPage() {
       setShowLoginPrompt(true);
       return;
     }
+    if (!tournament || getTournamentStatus(tournament) !== TournamentStatus.OPEN || new Date(tournament.startDate).getTime() <= Date.now()) {
+      alert('Giải đấu đã đóng đăng ký hoặc đã bắt đầu thi đấu.');
+      return;
+    }
     if (!agreeTerms) {
       alert('Vui lòng đồng ý với điều lệ thi đấu');
       return;
@@ -140,8 +146,8 @@ export default function TournamentRegisterPage() {
   }
 
   return (
-    <div className="bg-[#F8FAFC] min-h-screen py-10">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="bg-[#F8FAFC] min-h-screen page-section">
+      <FormContainer>
         
         {/* Back Link */}
         <Link
@@ -401,58 +407,9 @@ export default function TournamentRegisterPage() {
 
         </form>
 
-      </div>
+      </FormContainer>
 
-      {/* ─── POPUP CHÍNH GIỮA MÀN HÌNH: YÊU CẦU ĐĂNG NHẬP ─── */}
-      {showLoginPrompt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-100 text-center animate-in zoom-in-95 duration-200">
-            {/* Close button */}
-            <button
-              onClick={() => setShowLoginPrompt(false)}
-              className="absolute top-4 right-4 p-2 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            {/* Icon */}
-            <div className="w-16 h-16 rounded-2xl bg-[#1E5AA8]/10 text-[#1E5AA8] flex items-center justify-center mx-auto mb-4">
-              <LogIn className="w-8 h-8" />
-            </div>
-
-            {/* Content */}
-            <h3 className="text-xl font-black text-slate-900 mb-2">
-              Yêu Cầu Đăng Nhập
-            </h3>
-            <p className="text-slate-600 text-sm leading-relaxed mb-6">
-              Bạn cần đăng nhập tài khoản CourtMate để hệ thống ghi nhận hồ sơ VĐV, liên kết thanh toán và gửi Vé điện tử QR check-in qua hòm thư/tài khoản của bạn.
-            </p>
-
-            {/* Actions */}
-            <div className="space-y-3">
-              <button
-                onClick={() => {
-                  router.push(`/login?redirect=/tournaments/${tournamentId}/register`);
-                }}
-                className="w-full py-3 px-5 rounded-xl bg-[#1E5AA8] hover:bg-[#154687] text-white font-bold text-sm shadow-lg shadow-blue-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <LogIn className="w-4 h-4" />
-                <span>Đăng nhập ngay</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setShowLoginPrompt(false);
-                  router.push(`/tournaments/${tournamentId}`);
-                }}
-                className="w-full py-2.5 px-5 rounded-xl text-slate-500 hover:text-slate-800 text-xs font-semibold hover:bg-slate-50 transition-colors cursor-pointer"
-              >
-                Quay lại chi tiết giải đấu
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <GuestActionModal isOpen={showLoginPrompt} onClose={() => setShowLoginPrompt(false)} redirectUrl={`/tournaments/${tournamentId}/register`} />
     </div>
   );
 }

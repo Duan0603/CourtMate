@@ -13,26 +13,32 @@ import {
 import { matchesApi } from '@/lib/matches.api';
 import { useAuth } from '@/context/AuthContext';
 import { useSmartAsync } from '@/context/useSmartAsync';
+
+// Ant Design Components & Icons
 import {
-  MapPin,
-  Calendar,
-  Clock,
-  Users,
-  Share2,
-  Copy,
-  Check,
-  CheckCircle,
-  ArrowLeft,
-  ShieldCheck,
-  Phone,
-  AlertCircle,
-  UserCheck,
-  UserX,
-  LogIn,
-  X,
-  Sparkles,
-  UserPlus,
-} from 'lucide-react';
+  Button,
+  Tag,
+  Badge,
+  Select,
+  Alert,
+  Modal,
+} from 'antd';
+import {
+  ArrowLeftOutlined,
+  EnvironmentOutlined,
+  ClockCircleOutlined,
+  TeamOutlined,
+  DollarCircleOutlined,
+  ShareAltOutlined,
+  CopyOutlined,
+  CheckOutlined,
+  UserAddOutlined,
+  CheckCircleFilled,
+  ExclamationCircleFilled,
+  LoginOutlined,
+  CalendarOutlined,
+  ThunderboltFilled,
+} from '@ant-design/icons';
 
 export default function MatchDetailPage() {
   const params = useParams();
@@ -41,7 +47,9 @@ export default function MatchDetailPage() {
   const { user, isAuthenticated } = useAuth();
 
   const [match, setMatch] = useState<Match | null>(null);
+  const [otherActiveMatch, setOtherActiveMatch] = useState<Match | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
+
   const {
     loading,
     isThresholdElapsed,
@@ -50,9 +58,8 @@ export default function MatchDetailPage() {
   } = useSmartAsync({ initialLoading: true });
   const [joining, setJoining] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [copiedZalo, setCopiedZalo] = useState(false);
   const [selectedSkill, setSelectedSkill] = useState<BadmintonSkillLevel>(BadmintonSkillLevel.TB);
-  const [statusMsg, setStatusMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [statusMsg, setStatusMsg] = useState<{ text: string; type: 'success' | 'error' | 'warning' } | null>(null);
 
   const fetchDetail = async () => {
     if (!idOrCode) return;
@@ -70,6 +77,64 @@ export default function MatchDetailPage() {
     fetchDetail();
   }, [idOrCode]);
 
+  // Kiểm tra xem người dùng hiện tại có đang tham gia slot ở một kèo đấu khác không
+  useEffect(() => {
+    if (!isAuthenticated || !user) {
+      setOtherActiveMatch(null);
+      return;
+    }
+
+    const uid = user.id || (user as any)._id;
+    matchesApi
+      .getMatches()
+      .then((res) => {
+        const found = res.data.find((m) => {
+          const mId = m.id || m._id;
+          const currentId = match?.id || match?._id;
+          const isCurrentMatch =
+            mId === idOrCode ||
+            m.shareCode === idOrCode ||
+            (currentId && mId === currentId);
+
+          return (
+            !isCurrentMatch &&
+            m.players?.some((p) => p.userId === uid) &&
+            m.status !== MatchStatus.CANCELLED &&
+            m.status !== MatchStatus.COMPLETED
+          );
+        });
+        setOtherActiveMatch(found || null);
+      })
+      .catch((err) => {
+        console.error('Lỗi kiểm tra kèo đấu active khác:', err);
+      });
+  }, [isAuthenticated, user, idOrCode, match]);
+
+  // Tạo URL Google Calendar trực tiếp
+  const getGoogleCalendarUrl = (m: Match) => {
+    try {
+      const start = new Date(m.startTime);
+      const end = m.endTime
+        ? new Date(m.endTime)
+        : new Date(start.getTime() + 2 * 60 * 60 * 1000);
+      const pad = (n: number) => (n < 10 ? '0' + n : n);
+      const formatTime = (d: Date) =>
+        `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}00Z`;
+
+      const title = encodeURIComponent(`[CourtMate] ${m.title}`);
+      const details = encodeURIComponent(
+        `Trận đấu: ${m.title}\nBộ môn: ${m.sport === SportType.BADMINTON ? 'Cầu lông' : 'Pickleball'
+        }\nĐịa điểm: ${m.venueName} (${m.courtNumber || 'Sân giao lưu'})\nĐịa chỉ: ${m.venueAddress
+        }, Q. ${m.district}\nChi phí: ${m.estimatedCostText
+        }\n\n* Nhắc nhở từ CourtMate: Có mặt trước 15 phút để khởi động và gặp gỡ bạn chơi!`
+      );
+      const location = encodeURIComponent(`${m.venueName}, ${m.venueAddress}, Đà Nẵng`);
+      return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${formatTime(start)}/${formatTime(end)}&details=${details}&location=${location}`;
+    } catch {
+      return '#';
+    }
+  };
+
   const handleJoin = async () => {
     if (!isAuthenticated) {
       setShowLoginModal(true);
@@ -77,11 +142,23 @@ export default function MatchDetailPage() {
     }
     if (!match) return;
 
+    // Ngăn chặn nếu người chơi đã có slot ở kèo đấu khác
+    if (otherActiveMatch) {
+      setStatusMsg({
+        text: `Bạn đã tham gia slot tại "${otherActiveMatch.title}". Mỗi người chơi chỉ được giữ 1 slot tại một thời điểm!`,
+        type: 'warning',
+      });
+      return;
+    }
+
     setJoining(true);
     try {
       const updated = await matchesApi.joinMatch(match.id || match._id!, selectedSkill);
       setMatch(updated);
-      setStatusMsg({ text: 'Tham gia giữ slot thành công! Hẹn gặp bạn ở sân đấu.', type: 'success' });
+      setStatusMsg({
+        text: 'Tham gia giữ slot thành công! Hẹn gặp bạn ở sân đấu.',
+        type: 'success',
+      });
     } catch (err: any) {
       setStatusMsg({ text: err.message || 'Không thể tham gia', type: 'error' });
     } finally {
@@ -117,8 +194,7 @@ export default function MatchDetailPage() {
   const handleShareZalo = () => {
     const url = encodeURIComponent(window.location.href);
     const text = encodeURIComponent(
-      `🏸 [CourtMate] Kèo Cầu Lông: ${match?.title} tại ${match?.venueName} (${match?.district}). Còn trống ${
-        (match?.totalSlots || 4) - (match?.joinedCount || 1)
+      ` [CourtMate] Kèo Cầu Lông: ${match?.title} tại ${match?.venueName} (${match?.district}). Còn trống ${(match?.totalSlots || 4) - (match?.joinedCount || 1)
       } chỗ! Vào giữ slot ngay nhé:`
     );
     window.open(`https://zalo.me/share?url=${url}&text=${text}`, '_blank');
@@ -129,7 +205,7 @@ export default function MatchDetailPage() {
       const d = new Date(dateStr);
       return (
         d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) +
-        ' - ' +
+        ' · ' +
         d.toLocaleDateString('vi-VN', {
           weekday: 'long',
           day: '2-digit',
@@ -144,34 +220,35 @@ export default function MatchDetailPage() {
 
   if (loading && isThresholdElapsed) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] pt-32 pb-20 flex flex-col justify-center items-center animate-fadeIn">
+      <div className="min-h-screen bg-[#F8FAFC] pt-32 pb-20 flex flex-col justify-center items-center">
         <div className="w-10 h-10 border-4 border-[#1E5AA8] border-t-transparent rounded-full animate-spin mb-3" />
-        <p className="text-slate-500 text-sm font-semibold">Đang chuẩn bị thông tin kèo đấu...</p>
+        <p className="text-slate-500 text-sm font-semibold">Đang tải thông tin kèo đấu...</p>
       </div>
     );
   }
 
   if (error || (!loading && !match)) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] pt-32 pb-20 text-center animate-fadeIn px-4">
-        <div className="w-16 h-16 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center mx-auto mb-4">
-          <AlertCircle className="w-8 h-8" />
+      <div className="min-h-screen bg-[#F8FAFC] pt-32 pb-20 text-center px-4">
+        <div className="w-16 h-16 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center mx-auto mb-4 text-2xl">
+          <ExclamationCircleFilled />
         </div>
         <h2 className="text-xl font-bold text-slate-800 mb-2">
           {error ? 'Không thể tải thông tin trận đấu' : 'Không tìm thấy thông tin trận đấu'}
         </h2>
         <p className="text-sm text-slate-500 max-w-sm mx-auto mb-6">
-          {typeof error === 'string' ? error : (error as any)?.message || 'Kèo đấu này có thể đã kết thúc hoặc bị hủy.'}
+          {typeof error === 'string'
+            ? error
+            : (error as any)?.message || 'Kèo đấu này có thể đã kết thúc hoặc bị hủy.'}
         </p>
         <div className="flex items-center justify-center gap-3">
-          <button
-            onClick={fetchDetail}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#1E5AA8] text-white font-semibold text-sm shadow hover:bg-[#154689] transition-colors"
-          >
+          <Button type="primary" size="large" onClick={fetchDetail} className="font-bold rounded-xl">
             Thử lại
-          </button>
-          <Link href="/matches" className="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-semibold text-sm hover:bg-slate-200 transition-colors">
-            Quay lại danh sách
+          </Button>
+          <Link href="/matches">
+            <Button size="large" className="rounded-xl font-semibold">
+              Quay lại danh sách
+            </Button>
           </Link>
         </div>
       </div>
@@ -180,85 +257,151 @@ export default function MatchDetailPage() {
 
   if (!match) return null;
 
-  const isHost = user && (user.id === match.hostId || (user as any)._id === match.hostId);
-  const isJoined = user && match.players.some((p) => p.userId === user.id || p.userId === (user as any)._id);
+  const currentUserId = user ? (user.id || (user as any)._id) : null;
+  const isHost = Boolean(currentUserId && currentUserId === match.hostId);
+  const isJoined = Boolean(
+    currentUserId && match.players.some((p) => p.userId === currentUserId)
+  );
+  const hasOtherActiveMatch = Boolean(otherActiveMatch);
+
   const availableSlots = match.totalSlots - match.joinedCount;
   const isFull = match.status === MatchStatus.FULL || availableSlots <= 0;
 
-  const minMeta = BADMINTON_SKILL_LABELS[match.minSkillLevel];
-  const maxMeta = BADMINTON_SKILL_LABELS[match.maxSkillLevel];
+  const minMeta = BADMINTON_SKILL_LABELS[match.minSkillLevel as BadmintonSkillLevel] || {
+    label: match.minSkillLevel,
+    color: 'bg-slate-100 text-slate-800 border-slate-200',
+  };
+  const maxMeta = BADMINTON_SKILL_LABELS[match.maxSkillLevel as BadmintonSkillLevel] || {
+    label: match.maxSkillLevel,
+    color: 'bg-slate-100 text-slate-800 border-slate-200',
+  };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pt-6 sm:pt-8 pb-24">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Back Link */}
-        <Link
-          href="/matches"
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-[#1E5AA8] mb-6 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Quay lại danh sách kèo
-        </Link>
-
-        {statusMsg && (
-          <div
-            className={`mb-6 p-4 rounded-2xl flex items-center gap-2.5 ${
-              statusMsg.type === 'success'
-                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                : 'bg-rose-50 text-rose-800 border border-rose-200'
-            }`}
+    <div className="min-h-screen bg-[#F8FAFC] page-section">
+      <div className="page-container">
+        {/* TOP COMMAND & BREADCRUMB BAR */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-slate-200">
+          <Link
+            href="/matches"
+            className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-[#1E5AA8] transition-colors"
           >
-            {statusMsg.type === 'success' ? (
-              <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
-            ) : (
-              <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
-            )}
-            <span className="text-sm font-medium">{statusMsg.text}</span>
+            <ArrowLeftOutlined />
+            <span>Quay lại danh sách giao lưu</span>
+          </Link>
+        </div>
+
+        {/* NOTIFICATION STATUS MESSAGE */}
+        {statusMsg && (
+          <div className="mb-6">
+            <Alert
+              message={statusMsg.text}
+              type={statusMsg.type}
+              showIcon
+              closable
+              onClose={() => setStatusMsg(null)}
+              className="rounded-2xl shadow-xs font-medium"
+            />
           </div>
         )}
 
-        {/* MAIN CARD */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden mb-8">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-[#1E5AA8] to-[#123E75] text-white p-6 sm:p-8">
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-              <span className="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-white/15 backdrop-blur-sm border border-white/20">
-                🏸 {match.sport === SportType.BADMINTON ? 'Cầu Lông Phong Trào' : 'Pickleball'}
-              </span>
-
-              <span className="text-xs font-mono font-bold px-3 py-1 rounded-full bg-amber-400 text-slate-950">
-                Mã kèo: {match.shareCode || 'CM-OPEN'}
-              </span>
+        {/* ACTIVE SLOT REMINDER BANNER FOR OTHER MATCH */}
+        {hasOtherActiveMatch && !isJoined && otherActiveMatch && (
+          <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-amber-50/90 border border-amber-300 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 font-bold shadow-md shadow-amber-500/20 text-lg">
+                <CalendarOutlined />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <Tag color="orange" className="font-bold text-xs rounded-full px-2.5 py-0.5 border-none uppercase">
+                    Đang có 1 slot thi đấu khác
+                  </Tag>
+                  <span className="text-xs text-amber-800 font-medium">
+                    (Mỗi VĐV chỉ tham gia 1 slot/lần)
+                  </span>
+                </div>
+                <h4 className="text-sm font-bold text-slate-900 leading-snug">
+                  Bạn đang giữ slot tại: <u>{otherActiveMatch.title}</u>
+                </h4>
+                <p className="text-xs text-slate-600 mt-0.5">
+                  {otherActiveMatch.venueName} · {formatDateTime(otherActiveMatch.startTime)}
+                </p>
+              </div>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight mb-3">{match.title}</h1>
+            <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+              <a
+                href={getGoogleCalendarUrl(otherActiveMatch)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto"
+              >
+                <Button
+                  type="primary"
+                  icon={<CalendarOutlined />}
+                  className="font-bold text-xs rounded-xl bg-amber-600 hover:bg-amber-700 border-none shadow-md w-full sm:w-auto"
+                >
+                  Lưu vào Google Calendar
+                </Button>
+              </a>
+              <Button
+                onClick={() => router.push(`/matches/${otherActiveMatch.id || otherActiveMatch._id}`)}
+                className="font-bold text-xs rounded-xl text-slate-700 w-full sm:w-auto"
+              >
+                Đến trận đã đặt →
+              </Button>
+            </div>
+          </div>
+        )}
 
-            <div className="flex flex-wrap items-center gap-y-2 gap-x-6 text-xs sm:text-sm text-slate-200">
+        {/* MAIN MATCH CARD */}
+        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden mb-8">
+          {/* Header Banner */}
+          <div className="bg-gradient-to-r from-[#1E5AA8] via-[#164E8E] to-[#123E75] text-white p-6 sm:p-8">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+              <Tag
+                color={match.sport === SportType.BADMINTON ? 'blue' : 'orange'}
+                className="font-bold text-xs rounded-lg px-2.5 py-0.5 border-none uppercase tracking-wider m-0"
+              >
+                {match.sport === SportType.BADMINTON ? ' Cầu Lông Phong Trào' : ' Pickleball'}
+              </Tag>
+
+              <Tag
+                color="gold"
+                className="font-mono font-bold text-xs rounded-full px-2.5 py-0.5 border-none text-slate-950 m-0"
+              >
+                Mã kèo: {match.shareCode || 'CM-OPEN'}
+              </Tag>
+            </div>
+
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight mb-3 text-white">
+              {match.title}
+            </h1>
+
+            <div className="flex flex-wrap items-center gap-y-2 gap-x-6 text-xs sm:text-sm text-slate-100">
               <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-sky-300 shrink-0" />
+                <EnvironmentOutlined className="text-sky-300 shrink-0" />
                 <span>
                   {match.venueName} {match.courtNumber ? `(${match.courtNumber})` : ''} - Q. {match.district}
                 </span>
               </div>
 
               <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-amber-300 shrink-0" />
+                <ClockCircleOutlined className="text-amber-300 shrink-0" />
                 <span>{formatDateTime(match.startTime)}</span>
               </div>
             </div>
           </div>
 
           <div className="p-6 sm:p-8 space-y-6">
-            {/* VIRAL SHARE STRIP (Compact) */}
+            {/* VIRAL SHARE STRIP */}
             <div className="p-4 rounded-2xl bg-gradient-to-r from-sky-50/80 via-indigo-50/60 to-white border border-sky-100/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-[#1E5AA8]/10 text-[#1E5AA8] flex items-center justify-center shrink-0">
-                  <Share2 className="w-4 h-4" />
+                  <ShareAltOutlined className="text-base" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-slate-900">
-                    Chia sẻ kèo đấu với nhóm bạn
-                  </h4>
+                  <h4 className="text-xs font-bold text-slate-900">Chia sẻ trận giao lưu với bạn bè</h4>
                   <p className="text-[11px] text-slate-500">
                     Gửi link nhanh qua Zalo / Facebook để rủ thêm bạn cùng vào slot
                   </p>
@@ -266,39 +409,40 @@ export default function MatchDetailPage() {
               </div>
 
               <div className="flex items-center gap-2 w-full sm:w-auto">
-                <button
+                <Button
+                  icon={copied ? <CheckOutlined className="text-emerald-600" /> : <CopyOutlined />}
                   onClick={handleCopyLink}
-                  className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 shadow-xs transition-colors cursor-pointer"
+                  className="flex-1 sm:flex-none font-bold text-xs rounded-xl border-slate-200"
                 >
-                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
-                  <span>{copied ? 'Đã sao chép!' : 'Copy Link'}</span>
-                </button>
+                  {copied ? 'Đã sao chép!' : 'Copy Link'}
+                </Button>
 
-                <button
+                <Button
+                  type="primary"
+                  icon={<ShareAltOutlined />}
                   onClick={handleShareZalo}
-                  className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#0068FF] text-white text-xs font-bold hover:bg-[#0052cc] shadow-xs transition-colors cursor-pointer"
+                  className="flex-1 sm:flex-none font-bold text-xs rounded-xl bg-[#0068FF] hover:bg-[#0052cc] border-none shadow-xs"
                 >
-                  <Share2 className="w-3.5 h-3.5" />
-                  <span>Gửi Zalo</span>
-                </button>
+                  Gửi Zalo
+                </Button>
               </div>
             </div>
 
             {/* DETAILS GRID */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-100">
-                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-[#1E5AA8]" />
+                <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <ThunderboltFilled className="text-[#1E5AA8]" />
                   <span>Trình độ yêu cầu</span>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className={`text-xs font-bold px-2.5 py-1 rounded-md border ${minMeta?.color}`}>
-                    {minMeta?.label}
-                  </span>
+                  <Tag color="cyan" className="font-bold text-xs rounded-md px-2 py-0.5 m-0">
+                    {minMeta.label}
+                  </Tag>
                   <span className="text-slate-400 text-xs font-medium">đến</span>
-                  <span className={`text-xs font-bold px-2.5 py-1 rounded-md border ${maxMeta?.color}`}>
-                    {maxMeta?.label}
-                  </span>
+                  <Tag color="blue" className="font-bold text-xs rounded-md px-2 py-0.5 m-0">
+                    {maxMeta.label}
+                  </Tag>
                 </div>
                 <p className="text-[11px] text-slate-500 mt-2">
                   * Yêu cầu người tham gia trung thực về trình độ để trận đấu cân sức & vui vẻ.
@@ -306,8 +450,8 @@ export default function MatchDetailPage() {
               </div>
 
               <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-100">
-                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                  <span>💰</span>
+                <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <DollarCircleOutlined className="text-emerald-600" />
                   <span>Hình thức chi phí</span>
                 </div>
                 <div className="text-sm font-bold text-slate-900">
@@ -321,10 +465,12 @@ export default function MatchDetailPage() {
 
             {/* VENUE FULL ADDRESS */}
             <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-100 text-xs text-slate-700 flex items-start gap-2.5">
-              <MapPin className="w-4 h-4 text-[#1E5AA8] shrink-0 mt-0.5" />
+              <EnvironmentOutlined className="text-[#1E5AA8] shrink-0 mt-0.5 text-sm" />
               <div>
                 <span className="font-bold text-slate-900">Địa chỉ cụ thể: </span>
-                <span>{match.venueAddress}</span>
+                <span>
+                  {match.venueAddress} · Q. {match.district}, Đà Nẵng
+                </span>
               </div>
             </div>
 
@@ -332,31 +478,42 @@ export default function MatchDetailPage() {
             <div className="pt-4 border-t border-slate-100">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <Users className="w-4 h-4 text-[#1E5AA8]" />
+                  <TeamOutlined className="text-[#1E5AA8]" />
                   Danh sách vận động viên ({match.joinedCount}/{match.totalSlots})
                 </h3>
 
-                <span
-                  className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                    isFull
-                      ? 'bg-slate-100 text-slate-600'
-                      : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                  }`}
-                >
-                  {isFull ? 'Đã đủ số người' : `Còn ${availableSlots} vị trí`}
-                </span>
+                <Badge
+                  status={isFull ? 'default' : 'success'}
+                  text={
+                    <span
+                      className={`text-xs font-bold ${isFull ? 'text-slate-500' : 'text-emerald-700'
+                        }`}
+                    >
+                      {isFull ? 'Đã đủ số người' : `Còn ${availableSlots} vị trí`}
+                    </span>
+                  }
+                  className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${isFull ? 'bg-slate-100' : 'bg-emerald-50 border border-emerald-200'
+                    }`}
+                />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* Confirmed players */}
                 {match.players.map((p, idx) => {
-                  const pMeta = BADMINTON_SKILL_LABELS[p.skillLevel as BadmintonSkillLevel];
+                  const pMeta =
+                    BADMINTON_SKILL_LABELS[p.skillLevel as BadmintonSkillLevel] || {
+                      label: p.skillLevel || 'Chưa cập nhật',
+                    };
                   const isThisHost = p.userId === match.hostId;
+                  const isThisMe = currentUserId && p.userId === currentUserId;
 
                   return (
                     <div
                       key={p.userId || idx}
-                      className="p-3.5 rounded-2xl border border-slate-200 bg-white flex items-center justify-between shadow-2xs hover:border-slate-300 transition-colors"
+                      className={`p-3.5 rounded-2xl border bg-white flex items-center justify-between shadow-2xs transition-colors ${isThisMe
+                          ? 'border-emerald-500/70 ring-2 ring-emerald-500/15 bg-emerald-50/20'
+                          : 'border-slate-200'
+                        }`}
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-[#1E5AA8]/10 text-[#1E5AA8] flex items-center justify-center font-black text-sm">
@@ -366,21 +523,25 @@ export default function MatchDetailPage() {
                           <div className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
                             <span>{p.name}</span>
                             {isThisHost && (
-                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">
+                              <Tag color="gold" className="text-[10px] font-bold rounded px-1.5 py-0 border-none m-0">
                                 Chủ kèo
-                              </span>
+                              </Tag>
+                            )}
+                            {isThisMe && (
+                              <Tag color="green" className="text-[10px] font-bold rounded px-1.5 py-0 border-none m-0">
+                                Bạn
+                              </Tag>
                             )}
                           </div>
                           <div className="text-[11px] text-slate-500">
-                            Trình độ: <span className="font-semibold text-slate-700">{pMeta?.label || 'Chưa cập nhật'}</span>
+                            Trình độ: <span className="font-semibold text-slate-700">{pMeta.label}</span>
                           </div>
                         </div>
                       </div>
 
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-100">
-                        <UserCheck className="w-3.5 h-3.5" />
+                      <Tag color="green" className="font-bold text-[11px] rounded-lg px-2 py-0.5 border-none m-0">
                         Đã giữ slot
-                      </span>
+                      </Tag>
                     </div>
                   );
                 })}
@@ -390,34 +551,59 @@ export default function MatchDetailPage() {
                   <button
                     key={`empty-${i}`}
                     onClick={() => {
+                      if (hasOtherActiveMatch) {
+                        setStatusMsg({
+                          text: `Bạn đang có slot ở trận "${otherActiveMatch?.title}". Không thể vào thêm slot trận khác!`,
+                          type: 'warning',
+                        });
+                        return;
+                      }
                       if (!isJoined && !isFull && !isHost) {
                         handleJoin();
                       }
                     }}
                     disabled={isJoined || isFull || isHost || joining}
-                    className={`p-3.5 rounded-2xl border border-dashed transition-all flex items-center justify-between text-left group ${
-                      isJoined || isHost
+                    className={`p-3.5 rounded-2xl border border-dashed transition-all flex items-center justify-between text-left group ${isJoined || isHost
                         ? 'border-slate-200 bg-slate-50/50 text-slate-400 cursor-default'
-                        : 'border-[#1E5AA8]/30 bg-sky-50/30 hover:bg-sky-50/80 hover:border-[#1E5AA8] text-slate-700 cursor-pointer shadow-2xs'
-                    }`}
+                        : hasOtherActiveMatch
+                          ? 'border-amber-300 bg-amber-50/40 text-slate-500 cursor-not-allowed'
+                          : 'border-[#1E5AA8]/40 bg-sky-50/30 hover:bg-sky-50/80 hover:border-[#1E5AA8] text-slate-700 cursor-pointer shadow-2xs'
+                      }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full border border-dashed border-slate-300 group-hover:border-[#1E5AA8] flex items-center justify-center text-slate-400 group-hover:text-[#1E5AA8] transition-colors">
-                        <UserPlus className="w-4 h-4" />
+                      <div
+                        className={`w-10 h-10 rounded-full border border-dashed flex items-center justify-center transition-colors ${hasOtherActiveMatch
+                            ? 'border-amber-400 text-amber-600'
+                            : 'border-slate-300 group-hover:border-[#1E5AA8] text-slate-400 group-hover:text-[#1E5AA8]'
+                          }`}
+                      >
+                        <UserAddOutlined className="text-sm" />
                       </div>
                       <div>
-                        <div className="text-sm font-bold text-slate-700 group-hover:text-[#1E5AA8] transition-colors">
+                        <div
+                          className={`text-sm font-bold transition-colors ${hasOtherActiveMatch
+                              ? 'text-amber-900'
+                              : 'text-slate-700 group-hover:text-[#1E5AA8]'
+                            }`}
+                        >
                           Slot trống #{match.joinedCount + i + 1}
                         </div>
                         <div className="text-[11px] text-slate-400">
-                          {isJoined ? 'Vị trí còn trống' : 'Bấm vào đây để giữ slot này'}
+                          {isJoined
+                            ? 'Vị trí còn trống'
+                            : hasOtherActiveMatch
+                              ? 'Bạn đã có lịch ở trận khác'
+                              : 'Bấm vào đây để giữ slot này'}
                         </div>
                       </div>
                     </div>
 
                     {!isJoined && !isHost && (
-                      <span className="text-xs font-bold text-[#1E5AA8] group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
-                        Vào ngay →
+                      <span
+                        className={`text-xs font-bold transition-transform flex items-center gap-1 ${hasOtherActiveMatch ? 'text-amber-600' : 'text-[#1E5AA8]'
+                          }`}
+                      >
+                        {hasOtherActiveMatch ? 'Đã có lịch' : 'Vào ngay →'}
                       </span>
                     )}
                   </button>
@@ -430,33 +616,100 @@ export default function MatchDetailPage() {
               {isHost ? (
                 <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-medium flex items-center gap-3">
                   <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700 shrink-0 font-bold">
-                    👑
+
                   </div>
                   <div>
-                    <div className="font-bold text-amber-950">Bạn là người đăng kèo thi đấu này</div>
+                    <div className="font-bold text-amber-950">Bạn là người tạo trận giao lưu này</div>
                     <p className="text-amber-800 text-[11px] mt-0.5">
-                      Sao chép mã kèo <span className="font-mono font-bold">{match.shareCode}</span> hoặc gửi link Zalo cho bạn bè để nhanh chóng lấp đầy các vị trí trống!
+                      Sao chép mã trận <span className="font-mono font-bold">{match.shareCode}</span> hoặc gửi link Zalo cho bạn bè để nhanh chóng lấp đầy các vị trí trống!
                     </p>
                   </div>
                 </div>
               ) : isJoined ? (
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 rounded-2xl bg-emerald-50 border border-emerald-200">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
-                      <CheckCircle className="w-5 h-5" />
+                    <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0 text-xl">
+                      <CheckCircleFilled />
                     </div>
                     <div>
-                      <div className="font-bold text-emerald-950 text-sm">Bạn đã giữ slot thành công cho trận đấu này!</div>
-                      <p className="text-emerald-700 text-xs mt-0.5">Vui lòng có mặt đúng giờ trước 15 phút tại sân thi đấu.</p>
+                      <div className="font-bold text-emerald-950 text-sm">
+                        Bạn đã giữ slot thành công cho trận đấu này!
+                      </div>
+                      <p className="text-emerald-700 text-xs mt-0.5">
+                        Vui lòng có mặt đúng giờ trước 15 phút tại sân thi đấu.
+                      </p>
                     </div>
                   </div>
-                  <button
-                    onClick={handleLeave}
-                    disabled={joining}
-                    className="px-4 py-2.5 rounded-xl text-xs font-bold text-rose-600 bg-white border border-rose-200 hover:bg-rose-50 transition-colors cursor-pointer shrink-0"
-                  >
-                    Hủy slot (Rút lui)
-                  </button>
+
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <a
+                      href={getGoogleCalendarUrl(match)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 sm:flex-none"
+                    >
+                      <Button
+                        type="primary"
+                        icon={<CalendarOutlined />}
+                        className="w-full font-bold text-xs rounded-xl bg-emerald-600 hover:bg-emerald-700 border-none shadow-xs"
+                      >
+                        Lưu vào Google Calendar
+                      </Button>
+                    </a>
+
+                    <Button
+                      danger
+                      onClick={handleLeave}
+                      loading={joining}
+                      className="flex-1 sm:flex-none font-bold text-xs rounded-xl border-rose-200 text-rose-600 hover:bg-rose-50"
+                    >
+                      Hủy slot (Rút lui)
+                    </Button>
+                  </div>
+                </div>
+              ) : hasOtherActiveMatch ? (
+                <div className="p-5 rounded-2xl bg-amber-50 border border-amber-300 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center text-xl shrink-0">
+                      <ExclamationCircleFilled />
+                    </div>
+                    <div>
+                      <div className="font-bold text-slate-900 text-sm">
+                        Bạn đang có 1 lịch thi đấu chưa hoàn thành!
+                      </div>
+                      <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                        Theo quy định của CourtMate, mỗi người chơi chỉ được đăng ký <strong>1 slot tại một thời điểm</strong> để đảm bảo trách nhiệm và thời gian thi đấu. Bạn đang giữ slot tại trận: <strong>{otherActiveMatch?.title}</strong> ({otherActiveMatch?.venueName}).
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 pt-2 border-t border-amber-200/80">
+                    <a
+                      href={otherActiveMatch ? getGoogleCalendarUrl(otherActiveMatch) : '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 sm:flex-none"
+                    >
+                      <Button
+                        type="primary"
+                        icon={<CalendarOutlined />}
+                        className="w-full font-bold text-xs rounded-xl bg-amber-600 hover:bg-amber-700 border-none shadow-md"
+                      >
+                        Lưu vào Google Calendar
+                      </Button>
+                    </a>
+
+                    <Button
+                      onClick={() => {
+                        if (otherActiveMatch) {
+                          router.push(`/matches/${otherActiveMatch.id || otherActiveMatch._id}`);
+                        }
+                      }}
+                      className="font-bold text-xs rounded-xl text-slate-700"
+                    >
+                      Chuyển đến trận đã đặt →
+                    </Button>
+                  </div>
                 </div>
               ) : isFull ? (
                 <div className="p-4 rounded-2xl bg-slate-100 text-slate-600 text-center font-bold text-sm">
@@ -467,31 +720,35 @@ export default function MatchDetailPage() {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                       <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">
-                        Chọn trình độ thực tế của bạn trước khi vào kèo:
+                        Chọn trình độ thực tế của bạn trước khi tham gia:
                       </label>
-                      <p className="text-[11px] text-slate-500">Giúp các thành viên trong nhóm nắm được thể lực và khả năng thi đấu</p>
+                      <p className="text-[11px] text-slate-500">
+                        Giúp các thành viên trong nhóm nắm được thể lực và khả năng thi đấu
+                      </p>
                     </div>
-                    <select
+
+                    <Select
                       value={selectedSkill}
-                      onChange={(e) => setSelectedSkill(e.target.value as any)}
-                      className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-[#1E5AA8]/20 focus:border-[#1E5AA8] cursor-pointer"
-                    >
-                      {Object.values(BadmintonSkillLevel).map((lvl) => (
-                        <option key={lvl} value={lvl}>
-                          {BADMINTON_SKILL_LABELS[lvl]?.label}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(val) => setSelectedSkill(val)}
+                      size="large"
+                      className="w-full sm:w-56"
+                      options={Object.values(BadmintonSkillLevel).map((lvl) => ({
+                        value: lvl,
+                        label: BADMINTON_SKILL_LABELS[lvl]?.label,
+                      }))}
+                    />
                   </div>
 
-                  <button
+                  <Button
+                    type="primary"
+                    size="large"
+                    icon={<UserAddOutlined />}
                     onClick={handleJoin}
-                    disabled={joining}
-                    className="w-full py-3.5 px-8 rounded-xl bg-gradient-to-r from-[#1E5AA8] to-[#123E75] hover:from-[#154689] hover:to-[#0A2540] text-white font-bold text-sm sm:text-base shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+                    loading={joining}
+                    className="w-full font-bold text-sm sm:text-base rounded-xl shadow-lg shadow-blue-500/25 h-12 cursor-pointer flex items-center justify-center gap-2"
                   >
-                    <UserPlus className="w-5 h-5" />
-                    <span>{joining ? 'Đang xác nhận...' : 'Tham Gia Giữ Slot Ngay (1-Chạm)'}</span>
-                  </button>
+                    {joining ? 'Đang xác nhận...' : 'Tham Gia Giữ Slot Ngay (1-Chạm)'}
+                  </Button>
                 </div>
               )}
             </div>
@@ -499,53 +756,49 @@ export default function MatchDetailPage() {
         </div>
       </div>
 
-      {/* ─── POPUP CHÍNH GIỮA MÀN HÌNH: YÊU CẦU ĐĂNG NHẬP ─── */}
-      {showLoginModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-100 text-center animate-in zoom-in-95 duration-200">
-            {/* Close button */}
-            <button
-              onClick={() => setShowLoginModal(false)}
-              className="absolute top-4 right-4 p-2 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+      {/* POPUP YÊU CẦU ĐĂNG NHẬP */}
+      <Modal
+        open={showLoginModal}
+        onCancel={() => setShowLoginModal(false)}
+        footer={null}
+        width={440}
+        centered
+        className="rounded-2xl"
+        destroyOnHidden
+      >
+        <div className="text-center p-2 pt-4">
+          <div className="w-16 h-16 rounded-2xl bg-[#1E5AA8]/10 text-[#1E5AA8] flex items-center justify-center mx-auto mb-4 text-2xl">
+            <LoginOutlined />
+          </div>
+
+          <h3 className="text-xl font-black text-slate-900 mb-2">Yêu Cầu Đăng Nhập</h3>
+          <p className="text-slate-600 text-xs sm:text-sm leading-relaxed mb-6">
+            Bạn cần đăng nhập tài khoản CourtMate để giữ slot thi đấu này, giúp chủ sân và các người chơi khác có thể liên hệ giao lưu cùng bạn.
+          </p>
+
+          <div className="space-y-2.5">
+            <Button
+              type="primary"
+              size="large"
+              icon={<LoginOutlined />}
+              onClick={() => {
+                router.push(`/login?redirect=/matches/${idOrCode}`);
+              }}
+              className="w-full font-bold rounded-xl shadow-md shadow-blue-500/20"
             >
-              <X className="w-5 h-5" />
-            </button>
+              Đăng nhập ngay
+            </Button>
 
-            {/* Icon */}
-            <div className="w-16 h-16 rounded-2xl bg-[#1E5AA8]/10 text-[#1E5AA8] flex items-center justify-center mx-auto mb-4">
-              <LogIn className="w-8 h-8" />
-            </div>
-
-            {/* Content */}
-            <h3 className="text-xl font-black text-slate-900 mb-2">
-              Yêu Cầu Đăng Nhập
-            </h3>
-            <p className="text-slate-600 text-sm leading-relaxed mb-6">
-              Bạn cần đăng nhập tài khoản CourtMate để giữ slot thi đấu này, giúp chủ sân và các người chơi khác có thể liên hệ giao lưu cùng bạn.
-            </p>
-
-            {/* Actions */}
-            <div className="space-y-3">
-              <button
-                onClick={() => {
-                  router.push(`/login?redirect=/matches/${idOrCode}`);
-                }}
-                className="w-full py-3 px-5 rounded-xl bg-[#1E5AA8] hover:bg-[#154687] text-white font-bold text-sm shadow-lg shadow-blue-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <LogIn className="w-4 h-4" />
-                <span>Đăng nhập ngay</span>
-              </button>
-
-              <button
-                onClick={() => setShowLoginModal(false)}
-                className="w-full py-2.5 px-5 rounded-xl text-slate-500 hover:text-slate-800 text-xs font-semibold hover:bg-slate-50 transition-colors cursor-pointer"
-              >
-                Để sau, tôi muốn xem thông tin sân
-              </button>
-            </div>
+            <Button
+              type="text"
+              onClick={() => setShowLoginModal(false)}
+              className="w-full font-semibold text-xs text-slate-500 hover:text-slate-800"
+            >
+              Để sau, tôi muốn xem thông tin sân
+            </Button>
           </div>
         </div>
-      )}
+      </Modal>
     </div>
   );
 }

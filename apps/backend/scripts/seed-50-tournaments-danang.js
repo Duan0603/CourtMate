@@ -945,7 +945,7 @@ async function runSeed() {
   const tournamentsInDaNang = await db.collection('tournaments').countDocuments({ city: 'Da Nang' });
 
   console.log('\n========================================');
-  console.log('🎉 SEEDING COMPLETED SUCCESSFULLY!');
+  console.log(' SEEDING COMPLETED SUCCESSFULLY!');
   console.log('========================================');
   console.log(`Total Tournaments in DB:       ${totalTournaments} (Da Nang: ${tournamentsInDaNang})`);
   console.log(`Total Users in DB:             ${totalUsersInDb}`);

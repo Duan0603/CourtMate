@@ -1,7 +1,7 @@
 "use strict";
 // Shared types and constants for CourtMate
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.MatchStatus = exports.BADMINTON_SKILL_LABELS = exports.BadmintonSkillLevel = exports.RegistrationStatus = exports.SkillLevel = exports.REGION_CONFIGS = exports.SUPPORTED_CITIES = exports.ModerationAction = exports.ProfileType = exports.TournamentStatus = exports.UserRole = exports.ActivityType = exports.SportType = void 0;
+exports.CoachBookingStatus = exports.CoachBookingType = exports.CoachVerificationStatus = exports.MatchStatus = exports.BADMINTON_SKILL_LABELS = exports.BadmintonSkillLevel = exports.RegistrationStatus = exports.SkillLevel = exports.REGION_CONFIGS = exports.SUPPORTED_CITIES = exports.ModerationAction = exports.ProfileType = exports.TournamentStatus = exports.UserRole = exports.ActivityType = exports.SportType = void 0;
 var SportType;
 (function (SportType) {
     SportType["BADMINTON"] = "BADMINTON";
@@ -19,6 +19,7 @@ var UserRole;
 (function (UserRole) {
     UserRole["USER"] = "USER";
     UserRole["PLAYER"] = "PLAYER";
+    UserRole["COACH"] = "COACH";
     UserRole["ORGANIZER"] = "ORGANIZER";
     UserRole["REGIONAL_ADMIN"] = "REGIONAL_ADMIN";
     UserRole["SUPER_ADMIN"] = "SUPER_ADMIN";
@@ -114,3 +115,25 @@ var MatchStatus;
     MatchStatus["COMPLETED"] = "COMPLETED";
     MatchStatus["CANCELLED"] = "CANCELLED";
 })(MatchStatus || (exports.MatchStatus = MatchStatus = {}));
+// ==========================================
+// COACH PLATFORM INTERFACES & ENUMS
+// ==========================================
+var CoachVerificationStatus;
+(function (CoachVerificationStatus) {
+    CoachVerificationStatus["PENDING"] = "PENDING";
+    CoachVerificationStatus["APPROVED"] = "APPROVED";
+    CoachVerificationStatus["REJECTED"] = "REJECTED";
+})(CoachVerificationStatus || (exports.CoachVerificationStatus = CoachVerificationStatus = {}));
+var CoachBookingType;
+(function (CoachBookingType) {
+    CoachBookingType["HOURLY"] = "HOURLY";
+    CoachBookingType["COURSE"] = "COURSE";
+})(CoachBookingType || (exports.CoachBookingType = CoachBookingType = {}));
+var CoachBookingStatus;
+(function (CoachBookingStatus) {
+    CoachBookingStatus["PENDING"] = "PENDING";
+    CoachBookingStatus["CONFIRMED"] = "CONFIRMED";
+    CoachBookingStatus["CANCELLED"] = "CANCELLED";
+    CoachBookingStatus["COMPLETED"] = "COMPLETED";
+    CoachBookingStatus["REJECTED"] = "REJECTED";
+})(CoachBookingStatus || (exports.CoachBookingStatus = CoachBookingStatus = {}));

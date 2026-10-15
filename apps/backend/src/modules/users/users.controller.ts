@@ -62,4 +62,20 @@ export class UsersController {
     if (!user) throw new NotFoundException('User profile not found');
     return user;
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('coach-bookmarks/:id')
+  async addCoachBookmark(@Req() req: any, @Param('id') coachId: string) {
+    const user = await this.usersService.addCoachBookmark(req.user.email, coachId);
+    if (!user) throw new NotFoundException('User profile not found');
+    return user;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('coach-bookmarks/:id')
+  async removeCoachBookmark(@Req() req: any, @Param('id') coachId: string) {
+    const user = await this.usersService.removeCoachBookmark(req.user.email, coachId);
+    if (!user) throw new NotFoundException('User profile not found');
+    return user;
+  }
 }

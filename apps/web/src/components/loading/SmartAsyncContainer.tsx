@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { ContentSkeleton } from './ContentSkeleton';
 import { RefreshCw, AlertCircle } from 'lucide-react';
 
 interface SmartAsyncContainerProps {
@@ -66,25 +67,12 @@ export function SmartAsyncContainer({
   if (loading && isThresholdElapsed) {
     return (
       <div className={className} aria-busy="true">
-        {skeleton || (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div
-                key={i}
-                className="h-64 rounded-3xl bg-slate-100/90 border border-slate-200/60 p-5 flex flex-col justify-between animate-pulse"
-              >
-                <div className="h-32 bg-slate-200/80 rounded-2xl w-full" />
-                <div className="space-y-2.5 mt-4">
-                  <div className="h-4 bg-slate-200/90 rounded-md w-3/4" />
-                  <div className="h-3.5 bg-slate-200/60 rounded-md w-1/2" />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        {skeleton || <ContentSkeleton />}
       </div>
     );
   }
+
+  if (loading) return <div className={`min-h-64 ${className}`} aria-busy="true" aria-label="Đang tải nội dung" />;
 
   // Fast resolution or ready state
   return <div className={className}>{children}</div>;

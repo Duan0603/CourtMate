@@ -223,7 +223,8 @@ export const Navbar: React.FC = () => {
 
   const navLinks = [
     { href: '/tournaments', label: 'Giải đấu' },
-    { href: '/matches', label: 'Giao lưu / Ghép kèo' },
+    { href: '/matches', label: 'Giao lưu' },
+    { href: '/coaches', label: 'Huấn luyện viên' },
     { href: '/about', label: 'Về chúng tôi' },
   ];
 
@@ -233,7 +234,7 @@ export const Navbar: React.FC = () => {
   return (
     <>
       {/* ─── LEFT LOGO (Fixed, Independent) ─── */}
-      <div className="fixed top-0 left-0 z-50 h-[72px] flex items-center px-6 md:px-10 pointer-events-auto">
+      <div className="site-logo pointer-events-auto">
         <Link
           href="/"
           className="text-2xl font-black tracking-tight flex items-center gap-1 text-[#101828]"
@@ -278,7 +279,7 @@ export const Navbar: React.FC = () => {
 
       {/* ─── MOBILE NAV TRIGGER ─── */}
       <button
-        className="fixed top-5 right-5 z-50 lg:hidden pointer-events-auto bg-white p-2.5 rounded-xl shadow-sm border border-slate-200"
+        className="site-menu-toggle fixed top-4 z-50 lg:hidden pointer-events-auto bg-white p-2.5 rounded-xl shadow-sm border border-slate-200"
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         aria-label="Menu"
       >
@@ -287,7 +288,7 @@ export const Navbar: React.FC = () => {
 
       {/* ─── MOBILE DRAWER ─── */}
       {mobileMenuOpen && (
-        <div className="fixed top-[72px] left-3 right-3 bg-white/95 backdrop-blur-xl rounded-2xl p-5 z-40 flex flex-col gap-4 font-medium shadow-2xl border border-slate-200/80 lg:hidden animate-fadeIn">
+        <div className="site-mobile-menu fixed bg-white/95 backdrop-blur-xl rounded-2xl p-5 z-40 flex flex-col gap-4 font-medium shadow-2xl border border-slate-200/80 lg:hidden animate-fadeIn">
           {navLinks.map((link) => (
             <Link
               key={link.href}

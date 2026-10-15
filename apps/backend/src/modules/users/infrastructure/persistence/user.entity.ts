@@ -48,6 +48,9 @@ export class User extends Document {
   @Prop({ type: [String], default: [] })
   bookmarkedTournaments!: string[];
 
+  @Prop({ type: [String], default: [] })
+  bookmarkedCoaches!: string[];
+
   @Prop({ required: false })
   password?: string;
 

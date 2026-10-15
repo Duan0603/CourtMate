@@ -16,6 +16,7 @@ export enum ActivityType {
 export enum UserRole {
   USER = 'USER',
   PLAYER = 'PLAYER',
+  COACH = 'COACH',
   ORGANIZER = 'ORGANIZER',
   REGIONAL_ADMIN = 'REGIONAL_ADMIN',
   SUPER_ADMIN = 'SUPER_ADMIN',
@@ -44,6 +45,7 @@ export interface User {
   preferences: UserPreferences;
   avatarUrl?: string;
   bookmarkedTournaments?: string[];
+  bookmarkedCoaches?: string[];
   isVerified: boolean;
   createdAt: Date;
 }
@@ -379,5 +381,126 @@ export interface MatchFilterDto {
   date?: string; // YYYY-MM-DD
   keyword?: string;
 }
+
+// ==========================================
+// COACH PLATFORM INTERFACES & ENUMS
+// ==========================================
+
+export enum CoachVerificationStatus {
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+}
+
+export enum CoachBookingType {
+  HOURLY = 'HOURLY',
+  COURSE = 'COURSE',
+}
+
+export enum CoachBookingStatus {
+  PENDING = 'PENDING',
+  CONFIRMED = 'CONFIRMED',
+  CANCELLED = 'CANCELLED',
+  COMPLETED = 'COMPLETED',
+  REJECTED = 'REJECTED',
+}
+
+export interface CoachCertificate {
+  id?: string;
+  title: string;
+  issuedBy: string;
+  year: number;
+  imageUrl?: string;
+}
+
+export interface CoachReview {
+  id: string;
+  coachId: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  rating: number; // 1 to 5
+  comment: string;
+  bookingType: CoachBookingType;
+  createdAt: Date | string;
+}
+
+export interface CoachCourse {
+  id: string;
+  coachId: string;
+  title: string;
+  sport: SportType;
+  level: string; // e.g. "Cơ bản cho người mới", "Nâng cao"
+  price: number; // VND
+  totalSessions: number;
+  durationPerSession: number; // Phút
+  scheduleDescription: string; // e.g. "T3-T5 18:00 - 19:30"
+  maxStudents: number;
+  enrolledCount: number;
+  location: string;
+  description: string;
+  syllabus?: string[];
+  status: 'OPEN' | 'FULL' | 'COMPLETED';
+  createdAt?: Date | string;
+}
+
+export interface CoachProfile {
+  id: string;
+  _id?: string;
+  userId: string;
+  fullName: string;
+  headline: string; // e.g. "HLV Cầu Lông Cấp 1 Quốc Gia - 8 năm kinh nghiệm"
+  avatarUrl?: string;
+  coverUrl?: string;
+  phone?: string;
+  email?: string;
+  sports: SportType[];
+  bio: string;
+  experienceYears: number;
+  certificates: CoachCertificate[];
+  hourlyRate: number; // VND per hour
+  city: string;
+  districts: string[];
+  preferredCourts: string[];
+  rating: number; // e.g. 4.9
+  reviewCount: number;
+  verificationStatus: CoachVerificationStatus;
+  reviews?: CoachReview[];
+  courses?: CoachCourse[];
+  availableSlots?: {
+    dayOfWeek: number; // 0 = Sun, 1 = Mon...
+    startTime: string; // "17:00"
+    endTime: string;   // "21:00"
+  }[];
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+}
+
+export interface CoachBooking {
+  id: string;
+  _id?: string;
+  coachId: string;
+  coachName?: string;
+  coachAvatar?: string;
+  userId: string;
+  userName: string;
+  userPhone?: string;
+  userEmail?: string;
+  bookingType: CoachBookingType;
+  courseId?: string;
+  courseTitle?: string;
+  sport: SportType;
+  bookingDate: string; // YYYY-MM-DD
+  startTime?: string;
+  endTime?: string;
+  durationHours?: number;
+  courtLocation: string;
+  totalPrice: number;
+  notes?: string;
+  status: CoachBookingStatus;
+  paymentStatus: 'UNPAID' | 'PAID' | 'REFUNDED';
+  createdAt: Date | string;
+}
+
 
 

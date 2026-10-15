@@ -7,6 +7,17 @@ import { NotificationsService } from '../../../notifications/notifications.servi
 
 @Injectable()
 export class TournamentsService {
+  private async refreshStatuses(): Promise<void> {
+    const now = new Date();
+    await this.tournamentModel.updateMany(
+      { status: { $in: ['OPEN', 'UPCOMING', 'FULL', 'IN_PROGRESS'] }, endDate: { $lte: now } },
+      { $set: { status: TournamentStatus.COMPLETED } },
+    ).exec();
+    await this.tournamentModel.updateMany(
+      { status: { $in: ['OPEN', 'UPCOMING', 'FULL'] }, startDate: { $lte: now }, endDate: { $gt: now } },
+      { $set: { status: TournamentStatus.IN_PROGRESS } },
+    ).exec();
+  }
   constructor(
     @InjectModel(Tournament.name) private readonly tournamentModel: Model<Tournament>,
     private readonly notificationsService: NotificationsService,
@@ -59,6 +70,7 @@ export class TournamentsService {
   }
 
   async findByOrganizerId(organizerId: string): Promise<Tournament[]> {
+    await this.refreshStatuses();
     return this.tournamentModel
       .find({ 'organizer.id': organizerId })
       .sort({ createdAt: -1 })
@@ -66,6 +78,7 @@ export class TournamentsService {
   }
 
   async findByIds(ids: string[]): Promise<Tournament[]> {
+    await this.refreshStatuses();
     return this.tournamentModel
       .find({ _id: { $in: ids }, isHidden: { $ne: true } })
       .exec();
@@ -80,6 +93,7 @@ export class TournamentsService {
     maxFee?: number;
     includeHidden?: boolean;
   }): Promise<Tournament[]> {
+    await this.refreshStatuses();
     let filterObj: any = {};
     
     if (!filters?.includeHidden) {
@@ -132,6 +146,7 @@ export class TournamentsService {
   }
 
   async findById(id: string): Promise<Tournament> {
+    await this.refreshStatuses();
     const tournament = await this.tournamentModel.findById(id).exec();
     if (!tournament) {
       throw new NotFoundException(`Tournament with ID ${id} not found`);
@@ -140,6 +155,7 @@ export class TournamentsService {
   }
 
   async findByCity(city: string): Promise<Tournament[]> {
+    await this.refreshStatuses();
     return this.tournamentModel
       .find({ city, isHidden: { $ne: true } })
       .sort({ createdAt: -1 })

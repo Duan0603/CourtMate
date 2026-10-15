@@ -1,5 +1,8 @@
 'use client';
 
+import { PageContainer } from '../../components/layout/PageContainer';
+
+import { ContentSkeleton } from '../../components/loading/ContentSkeleton';
 import React, { useState, useEffect, Suspense, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { 
@@ -16,7 +19,6 @@ import {
   Sparkles,
   Bell,
   RefreshCw,
-  Layers,
   LayoutGrid,
   List as ListIcon
 } from 'lucide-react';
@@ -24,6 +26,8 @@ import { Tournament, TournamentFilterDto } from '@courtmate/shared';
 import { tournamentsApi } from '../../lib/tournaments.api';
 import { TournamentCard } from '../../components/tournaments/TournamentCard';
 import { TournamentFilters } from '../../components/tournaments/TournamentFilters';
+import { notification } from 'antd';
+import { GuestActionModal } from '../../components/shared/GuestActionModal';
 import { useAuth } from '../../context/AuthContext';
 import { useSmartAsync } from '../../context/useSmartAsync';
 import { SmartAsyncContainer } from '../../components/loading/SmartAsyncContainer';
@@ -38,9 +42,11 @@ const POPULAR_CITIES = [
 ];
 
 function TournamentsContent() {
+  const [notificationApi, notificationHolder] = notification.useNotification();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { user, toggleBookmark } = useAuth();
+  const { user, isAuthenticated, toggleBookmark } = useAuth();
+  const [loginOpen, setLoginOpen] = useState(false);
 
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const {
@@ -85,13 +91,7 @@ function TournamentsContent() {
   const [maxFee, setMaxFee] = useState<number | undefined>(initialMaxFee ? Number(initialMaxFee) : undefined);
   const [isFreeOnly, setIsFreeOnly] = useState(searchParams.get('isFree') === 'true');
   
-  const [bookmarkedIds, setBookmarkedIds] = useState<string[]>(user?.bookmarkedTournaments || []);
-
-  useEffect(() => {
-    if (user) {
-      setBookmarkedIds(user.bookmarkedTournaments || []);
-    }
-  }, [user]);
+  const bookmarkedIds = isAuthenticated ? user?.bookmarkedTournaments || [] : [];
 
   // Fetch data
   const fetchTournaments = async () => {
@@ -138,16 +138,16 @@ function TournamentsContent() {
   };
 
   const handleBookmarkToggle = async (id: string) => {
-    const isBookmarked = bookmarkedIds.includes(id);
-    const newBookmarks = isBookmarked
-      ? bookmarkedIds.filter((item) => item !== id)
-      : [...bookmarkedIds, id];
-      
-    setBookmarkedIds(newBookmarks);
-    
-    if (toggleBookmark) {
-      await toggleBookmark(id);
-    }
+    if (!isAuthenticated) { setLoginOpen(true); return; }
+    const wasSaved = bookmarkedIds.includes(id);
+    const saved = await toggleBookmark(id);
+    if (saved === wasSaved) return;
+    notificationApi.success({
+      message: saved ? 'Đã thêm vào yêu thích' : 'Đã bỏ yêu thích',
+      description: saved ? 'Giải đấu đã được lưu trong Hồ sơ → Yêu thích → Giải đấu.' : 'Giải đấu đã được xóa khỏi mục Yêu thích của bạn.',
+      placement: 'topRight',
+      duration: 4,
+    });
   };
 
   const handlePageChange = (newPage: number) => {
@@ -173,20 +173,17 @@ function TournamentsContent() {
   const currentTournaments = tournaments.slice(startIndex, endIndex);
 
   return (
-    <div className="bg-[#F8FAFC] min-h-screen py-8 sm:py-12 relative overflow-hidden">
+    <div className="bg-[#F8FAFC] min-h-screen page-section relative overflow-hidden">
+      {notificationHolder}
       
       {/* Background Decorative Blur Orbs */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#1E5AA8]/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute top-1/3 right-10 w-80 h-80 bg-sky-400/5 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <PageContainer className="relative z-10">
         
         {/* Hero Section Header */}
         <div className="mb-8 text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#1E5AA8]/10 text-[#1E5AA8] text-xs font-bold uppercase tracking-wider mb-3 backdrop-blur-sm border border-[#1E5AA8]/20">
-            <Trophy className="w-3.5 h-3.5 text-[#1E5AA8]" />
-            <span>Khám phá & Đăng ký giải đấu</span>
-          </div>
           <h1 className="text-3xl sm:text-4xl font-black text-navy tracking-tight">
             Danh Sách Giải Đấu Thể Thao
           </h1>
@@ -331,21 +328,9 @@ function TournamentsContent() {
         {/* Top Anchor for Scroll */}
         <div ref={listTopRef} className="scroll-mt-6" />
 
-        {/* Results Info Bar */}
-        <div className="flex items-center justify-between text-xs sm:text-sm text-slate-500 mb-6 px-1 font-medium">
-          <div className="flex items-center gap-2">
-            <Layers className="w-4 h-4 text-[#1E5AA8]" />
-            <span>
-              Tìm thấy <strong className="text-navy font-bold">{totalTournaments}</strong> giải đấu 
-              {city !== 'Tất cả' && (
-                <span className="text-[#1E5AA8] font-semibold"> tại {city}</span>
-              )}
-            </span>
-          </div>
-        </div>
-
         {/* Tournaments Grid / Loading / Empty State */}
         <SmartAsyncContainer
+          skeleton={<ContentSkeleton layout="tournaments" count={10} />}
           loading={loading}
           isThresholdElapsed={isThresholdElapsed}
           error={error}
@@ -500,7 +485,7 @@ function TournamentsContent() {
 
               </div>
             )}
-      </div>
+      </PageContainer>
 
       {/* ─── FILTER DRAWER ─── */}
       <div 
@@ -530,13 +515,14 @@ function TournamentsContent() {
           onClose={() => setIsFilterOpen(false)}
         />
       </div>
+      <GuestActionModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} redirectUrl="/tournaments" />
     </div>
   );
 }
 
 export default function TournamentsPage() {
   return (
-    <Suspense fallback={<div className="p-12 text-center text-slate-400 font-semibold">Đang tải danh sách giải đấu...</div>}>
+    <Suspense fallback={<div className="page-container page-section"><ContentSkeleton layout="tournaments" count={10} /></div>}>
       <TournamentsContent />
     </Suspense>
   );

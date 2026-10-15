@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import { AntdRegistry } from '@ant-design/nextjs-registry';
+import { AntdProvider } from '../lib/antd-theme';
 import { AuthProvider } from '../context/AuthContext';
 import { LoadingProvider } from '../context/LoadingContext';
 import { LayoutShell } from '../components/layout/LayoutShell';
-import { InitialPreloader } from '../components/loading';
+import { InitialPreloader, RouteTransitionLoader } from '../components/loading';
 
 const inter = Inter({
   subsets: ['latin', 'vietnamese'],
@@ -33,12 +35,17 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col font-sans bg-[#F8FAFC] text-navy">
-        <LoadingProvider>
-          <InitialPreloader />
-          <AuthProvider>
-            <LayoutShell>{children}</LayoutShell>
-          </AuthProvider>
-        </LoadingProvider>
+        <AntdRegistry>
+          <AntdProvider>
+            <LoadingProvider>
+              <InitialPreloader />
+              <RouteTransitionLoader />
+              <AuthProvider>
+                <LayoutShell>{children}</LayoutShell>
+              </AuthProvider>
+            </LoadingProvider>
+          </AntdProvider>
+        </AntdRegistry>
       </body>
     </html>
   );

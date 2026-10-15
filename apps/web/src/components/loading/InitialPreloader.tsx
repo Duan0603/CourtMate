@@ -182,26 +182,30 @@ export function InitialPreloader() {
     return () => ctx.revert();
   }, [initialPreloaderFailed]);
 
-  const isBusy = isInitialLoading || (isNavigating && isNavLoaderVisible);
+  // InitialPreloader only handles initial application load. Route navigation is handled non-intrusively by RouteTransitionLoader.
+  const isBusy = isInitialLoading;
 
   // Sync render state and animations
   useEffect(() => {
     if (isBusy) {
       setShouldRender(true);
       if (containerRef.current) {
+        containerRef.current.style.pointerEvents = 'auto';
         gsap.to(containerRef.current, {
           opacity: 1,
           scale: 1,
-          duration: 0.25,
+          duration: 0.2,
           ease: 'power2.out',
         });
       }
     } else if (!initialPreloaderFailed) {
       if (containerRef.current) {
+        // Release pointer events immediately so user can interact with the rendered page right away
+        containerRef.current.style.pointerEvents = 'none';
         gsap.to(containerRef.current, {
           opacity: 0,
           scale: 0.98,
-          duration: 0.35,
+          duration: 0.25,
           ease: 'power2.inOut',
           onComplete: () => {
             setShouldRender(false);
@@ -299,7 +303,6 @@ export function InitialPreloader() {
         {/* Brand Name & Typography */}
         <div ref={brandTextRef} className="flex flex-col items-center">
           <div className="flex items-center gap-2 mb-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#1E5AA8] animate-ping" />
             <span className="text-xs font-black tracking-[0.25em] text-[#1E5AA8] uppercase">
               CourtMate Sports
             </span>
