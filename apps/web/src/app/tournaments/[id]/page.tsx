@@ -308,7 +308,7 @@ export default function TournamentDetailPage() {
                     </div>
 
                     <button
-                      onClick={() => router.push(`/chat?userId=${tournament.organizer?.id}&userName=${encodeURIComponent(tournament.organizer?.name || 'Ban tổ chức')}&avatar=${encodeURIComponent(tournament.organizer?.avatar || '')}`)}
+                      onClick={() => router.push(`/chat?userId=${tournament.organizer?.id}&userName=${encodeURIComponent(tournament.organizer?.name || 'Ban tổ chức')}&avatar=${encodeURIComponent(tournament.organizer?.avatar || '')}&role=ORGANIZER`)}
                       className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-[#1E5AA8] hover:bg-sky-50 text-xs sm:text-sm font-bold transition-colors shadow-sm"
                     >
                       <MessageCircle className="w-4 h-4" />

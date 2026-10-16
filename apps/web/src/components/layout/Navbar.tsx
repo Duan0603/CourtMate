@@ -26,33 +26,47 @@ import { getSocket } from '../../lib/socket';
 export { NotificationBell };
 
 export function ChatIcon() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, token, isAuthenticated } = useAuth();
   const [unreadChatCount, setUnreadChatCount] = useState(0);
+  const pathname = usePathname();
+  const userId = user?.id;
 
   useEffect(() => {
-    if (!isAuthenticated || !user) return;
-    
+    if (!isAuthenticated || !userId) {
+      setUnreadChatCount(0);
+      return;
+    }
+
     const socket = getSocket();
-    
-    const handleNewMessage = (msg: any) => {
-      // Ignore if it's from me
-      if (msg.senderId === user.id || (msg as any)._id === user.id) return;
-      
-      // If we are currently on the chat page, assume we read it
-      // In a real app we'd check if we are in the exact chat room, but this is a good approximation for UI
-      if (window.location.pathname.startsWith('/chat')) {
-        return;
-      }
-      
+    // The chat page shows its own per-conversation badges
+    const onChatPage = () => window.location.pathname.startsWith('/chat');
+    if (onChatPage()) setUnreadChatCount(0);
+
+    // Ask the server for conversations (with unread counts) on every (re)connect / navigation
+    const refresh = () => socket.emit('register_user', {});
+
+    const handleRecentChats = (chats: { unreadCount?: number }[]) => {
+      if (onChatPage()) return;
+      setUnreadChatCount(chats.reduce((sum, chat) => sum + (chat.unreadCount || 0), 0));
+    };
+
+    const handleNewMessage = (msg: { senderId: string }) => {
+      if (msg.senderId === userId || onChatPage()) return;
       setUnreadChatCount(prev => prev + 1);
     };
-    
+
+    socket.on('connect', refresh);
+    socket.on('recent_chats', handleRecentChats);
     socket.on('new_message_notification', handleNewMessage);
-    
+    if (socket.connected) refresh();
+
     return () => {
+      socket.off('connect', refresh);
+      socket.off('recent_chats', handleRecentChats);
       socket.off('new_message_notification', handleNewMessage);
     };
-  }, [isAuthenticated, user]);
+    // `token`: a new token means getSocket() builds a new socket, so listeners must move to it
+  }, [isAuthenticated, userId, token, pathname]);
 
   return (
     <Link

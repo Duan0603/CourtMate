@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { User, UserRole } from '@courtmate/shared';
 import { authApi } from '../lib/auth.api';
+import { disconnectSocket } from '../lib/socket';
 import toast from 'react-hot-toast';
 
 interface AuthContextType {
@@ -54,6 +55,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (active && error.status === 401 && localStorage.getItem('courtmate_token') === sessionToken) {
           setToken(null); setUser(null);
           localStorage.removeItem('courtmate_token'); localStorage.removeItem('courtmate_user');
+          // The socket was authenticated at handshake and would keep receiving the old account's messages
+          disconnectSocket();
         }
       } finally { refreshing = false; }
     };
@@ -126,6 +129,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setToken(null);
     localStorage.removeItem('courtmate_token');
     localStorage.removeItem('courtmate_user');
+    disconnectSocket();
   };
 
   const updateProfile = async (data: Partial<User>) => {
