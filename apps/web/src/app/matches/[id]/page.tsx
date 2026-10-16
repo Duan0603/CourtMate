@@ -38,6 +38,7 @@ import {
   LoginOutlined,
   CalendarOutlined,
   ThunderboltFilled,
+  MessageOutlined,
 } from '@ant-design/icons';
 
 export default function MatchDetailPage() {
@@ -539,9 +540,23 @@ export default function MatchDetailPage() {
                         </div>
                       </div>
 
-                      <Tag color="green" className="font-bold text-[11px] rounded-lg px-2 py-0.5 border-none m-0">
-                        Đã giữ slot
-                      </Tag>
+                      <div className="flex items-center gap-1.5">
+                        <Tag color="green" className="font-bold text-[11px] rounded-lg px-2 py-0.5 border-none m-0">
+                          Đã giữ slot
+                        </Tag>
+                        {!isThisMe && /^[0-9a-f]{24}$/i.test(p.userId || '') && (
+                          <Button
+                            size="small"
+                            shape="circle"
+                            icon={<MessageOutlined />}
+                            title={`Nhắn tin với ${p.name}`}
+                            aria-label={`Nhắn tin với ${p.name}`}
+                            onClick={() =>
+                              router.push(`/chat?userId=${p.userId}&userName=${encodeURIComponent(p.name)}`)
+                            }
+                          />
+                        )}
+                      </div>
                     </div>
                   );
                 })}

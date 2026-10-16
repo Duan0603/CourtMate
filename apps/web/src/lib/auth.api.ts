@@ -43,6 +43,11 @@ export const authApi = {
     return apiClient.delete<User>(`/users/coach-bookmarks/${encodeURIComponent(coachId)}`);
   },
 
+  async searchUsers(query: string): Promise<User[]> {
+    const users = await apiClient.get<User[]>(`/users/search?q=${encodeURIComponent(query)}`);
+    return users || [];
+  },
+
   async getFriends(): Promise<User[]> {
     try {
       const friends = await apiClient.get<User[]>('/users/friends');
