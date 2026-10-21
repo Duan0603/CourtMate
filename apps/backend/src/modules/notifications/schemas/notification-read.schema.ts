@@ -11,6 +11,9 @@ export class NotificationRead extends Document {
 
   @Prop({ type: Date, default: () => new Date() })
   readAt!: Date;
+
+  @Prop({ type: Boolean, default: false })
+  isDeleted?: boolean;
 }
 
 export const NotificationReadSchema = SchemaFactory.createForClass(NotificationRead);

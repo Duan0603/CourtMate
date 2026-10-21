@@ -2,15 +2,15 @@
 
 import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { 
-  MessageSquare, 
-  Search, 
-  Send, 
-  CheckCheck, 
-  ShieldCheck, 
-  User as UserIcon, 
-  Smile, 
-  Paperclip, 
+import {
+  MessageSquare,
+  Search,
+  Send,
+  CheckCheck,
+  ShieldCheck,
+  User as UserIcon,
+  Smile,
+  Paperclip,
   Award,
   Circle,
   Bell,
@@ -163,7 +163,7 @@ function ChatContent() {
 
       const currentFriend = activeFriendRef.current;
       const currentFriendId = currentFriend?.id || (currentFriend as any)?._id;
-      
+
       // If we are currently chatting with this person
       if (currentFriend && (incoming.senderId === currentFriendId || (incoming as any).roomId?.includes(currentFriendId))) {
         appendMessageSafely(incoming);
@@ -204,7 +204,7 @@ function ChatContent() {
             newFriends.push(rc);
           }
         });
-        
+
         setLastMessagesMap(prevMap => {
           const map = { ...prevMap };
           recentChats.forEach(rc => {
@@ -215,7 +215,7 @@ function ChatContent() {
           });
           return map;
         });
-        
+
         return newFriends;
       });
     });
@@ -223,10 +223,10 @@ function ChatContent() {
     // Global notification when a new message arrives from any user
     socket.on('new_message_notification', (incoming: any) => {
       const senderId = incoming.senderId;
-      
+
       // Ignore notifications from yourself
       if (senderId === myId) return;
-      
+
       const currentFriend = activeFriendRef.current;
       const currentFriendId = currentFriend?.id || (currentFriend as any)?._id;
 
@@ -287,17 +287,17 @@ function ChatContent() {
               });
               toast.dismiss(t.id);
             }}
-            className={`${t.visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} transition-all duration-300 max-w-sm w-full bg-white shadow-2xl rounded-2xl border border-primary/30 p-3.5 flex items-center gap-3 cursor-pointer hover:border-primary hover:shadow-lg`}
+            className={`${t.visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} transition-all duration-300 max-w-sm w-full bg-surface shadow-card  rounded-2xl border border-primary/30 p-3.5 flex items-center gap-3 cursor-pointer hover:border-primary hover:`}
           >
             <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
               <MessageSquare className="w-5 h-5 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-bold text-navy truncate">{incoming.senderName || 'Tin nhắn mới'}</p>
+                <p className="text-sm font-bold text-navy truncate">{incoming.senderName || 'Tin nhắn mới'}</p>
                 <span className="text-[10px] text-primary font-bold ml-2 shrink-0">Xem ngay</span>
               </div>
-              <p className="text-xs text-slate-600 truncate mt-0.5">{incoming.content}</p>
+              <p className="text-sm text-slate-600 truncate mt-0.5">{incoming.content}</p>
             </div>
           </div>
         ), { duration: 5000 });
@@ -321,13 +321,13 @@ function ChatContent() {
   useEffect(() => {
     if (!activeFriend || !myId) return;
     const friendId = activeFriend.id || (activeFriend as any)._id;
-    
+
     // NEVER join a room with yourself
     if (friendId === myId) {
       setActiveFriend(null);
       return;
     }
-    
+
     const roomId = [myId, friendId].sort().join('_');
     const socket = getSocket();
 
@@ -407,14 +407,14 @@ function ChatContent() {
 
   if (!isAuthenticated && !user) {
     return (
-      <div className="bg-[#F8FAFC] flex-1 flex items-center justify-center p-4 min-h-[calc(100vh-65px)]">
-        <div className="max-w-md w-full bg-white rounded-3xl border border-slate-200 p-8 text-center shadow-lg space-y-4">
+      <div className="bg-canvas flex-1 flex items-center justify-center p-4 min-h-[calc(100vh-65px)]">
+        <div className="max-w-md w-full bg-surface shadow-card rounded-3xl border border-slate-200 p-8 text-center  space-y-4">
           <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
             <MessageSquare className="w-8 h-8" />
           </div>
-          <h2 className="text-xl font-bold text-navy">Đăng Nhập Để Trò Chuyện</h2>
-          <p className="text-xs text-slate-500">
-            Bạn cần đăng nhập để kết nối và gửi tin nhắn trực tiếp đến bạn chơi và ban tổ chức giải đấu.
+          <h2 className="text-xl font-bold text-navy">Đăng nhập để nhắn tin</h2>
+          <p className="text-sm text-slate-500">
+            Đăng nhập để nhắn tin với bạn chơi và ban tổ chức.
           </p>
           <a
             href="/login"
@@ -430,19 +430,19 @@ function ChatContent() {
   const activeFriendId = activeFriend?.id || (activeFriend as any)?._id;
 
   return (
-    <div className="bg-[#F8FAFC] flex-1 flex flex-col h-[calc(100vh-65px)]">
+    <div className="bg-canvas flex-1 flex flex-col h-[calc(100vh-65px)]">
       <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4 flex-1 flex flex-col">
-        
+
         {/* Chat Desktop Split-view container */}
-        <div className="flex-1 bg-white rounded-3xl border border-slate-200/80 shadow-md flex overflow-hidden">
-          
+        <div className="flex-1 bg-surface shadow-card rounded-3xl border border-slate-200/80  flex overflow-hidden">
+
           {/* Left Pane: Contacts & Search (350px width) */}
           <div className="w-80 sm:w-96 border-r border-slate-200 flex flex-col bg-slate-50/50">
-            
+
             {/* Header & Search */}
             <div className="p-4 border-b border-slate-200 bg-white space-y-3">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold text-navy">Tin nhắn & Hội thoại</h2>
+                <h2 className="text-lg font-bold text-navy">Tin nhắn</h2>
                 <div className="flex items-center gap-1.5 text-xs text-slate-500">
                   <span className={`w-2 h-2 rounded-full ${connected ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'}`} />
                   <span>{connected ? 'Trực tuyến' : 'Sẵn sàng'}</span>
@@ -450,13 +450,13 @@ function ChatContent() {
               </div>
 
               <div className="relative">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Search className="w-4 h-4 text-muted absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
-                  placeholder="Tìm BTC hoặc bạn bè..."
+                  placeholder="Tìm người hoặc ban tổ chức..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-100 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-navy"
+                  className="cm-control w-full pl-9 pr-3 py-1.5 text-xs bg-slate-100 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-navy"
                 />
               </div>
             </div>
@@ -464,11 +464,11 @@ function ChatContent() {
             {/* Contacts List */}
             <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
               {filteredFriends.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center p-6 text-slate-400">
+                <div className="h-full flex flex-col items-center justify-center p-6 text-muted">
                   <div className="w-full h-full border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center bg-slate-50/50 p-6">
                     <MessageSquare className="w-10 h-10 mb-3 text-slate-300" />
                     <p className="text-sm font-medium text-slate-500 text-center">Chưa có cuộc trò chuyện nào</p>
-                    <p className="text-xs text-center mt-1">Hãy bắt đầu nhắn tin để khởi động cuộc trò chuyện nhé!</p>
+
                   </div>
                 </div>
               ) : (
@@ -476,11 +476,11 @@ function ChatContent() {
                 const friendId = friend.id || (friend as any)._id;
                 const isActive = activeFriendId === friendId;
                 const unreadCount = unreadCountsMap[friendId] || 0;
-                
+
                 // Get display last message from map or fallback
                 let displayLastMsg = `Tin nhắn mới đến ${friend.name}`;
                 let displayTime = '';
-                
+
                 const friendLastMsg = lastMessagesMap[friendId];
                 if (friendLastMsg) {
                   const sender = friendLastMsg.senderId === myId ? 'Bạn' : friend.name.split(' ')[0];
@@ -492,7 +492,7 @@ function ChatContent() {
                   <button
                     key={`${friendId}-${index}`}
                     onClick={() => handleSelectFriend(friend)}
-                    className={`w-full p-3.5 flex items-center gap-3 text-left transition relative ${
+                    className={`cm-button w-full p-3.5 flex items-center gap-3 text-left transition relative ${
                       isActive ? 'bg-[#EFF4FF]' : 'hover:bg-slate-100/80'
                     }`}
                   >
@@ -511,7 +511,7 @@ function ChatContent() {
                           {friend.name}
                         </strong>
                         {displayTime && (
-                          <span className="text-[10px] text-slate-400 shrink-0 whitespace-nowrap">
+                          <span className="text-[10px] text-muted shrink-0 whitespace-nowrap">
                             {displayTime}
                           </span>
                         )}
@@ -538,7 +538,7 @@ function ChatContent() {
           {/* Right Pane: Active Chat Room */}
           {activeFriend ? (
             <div className="flex-1 flex flex-col bg-white">
-              
+
               {/* Chat Room Top Bar */}
               <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-white/80 backdrop-blur-sm">
                 <div className="flex items-center gap-3">
@@ -579,13 +579,13 @@ function ChatContent() {
                           handleSelectFriend(target);
                         }
                       }}
-                      className="px-3 py-1 bg-primary text-white text-xs font-semibold rounded-xl hover:bg-primary-dark transition shadow-xs"
+                      className="cm-action cm-button px-3 py-1 bg-primary text-white text-xs font-semibold rounded-xl hover:bg-primary-dark transition shadow-xs"
                     >
                       Trả lời ngay
                     </button>
                     <button
                       onClick={() => setNewMessageBanner(null)}
-                      className="p-1 text-slate-400 hover:text-slate-600 rounded-lg"
+                      className="cm-button p-1 text-muted hover:text-slate-600 rounded-lg"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -654,12 +654,12 @@ function ChatContent() {
                     placeholder="Nhập tin nhắn..."
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
-                    className="flex-1 px-4 py-2.5 text-sm bg-slate-100 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white text-navy transition"
+                    className="cm-control flex-1 px-4 py-2.5 text-sm bg-slate-100 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface shadow-card text-navy transition"
                   />
                   <button
-                    type="submit"
+                    type="submit" aria-label="Gửi tin nhắn"
                     disabled={!inputText.trim()}
-                    className="w-10 h-10 rounded-2xl bg-primary hover:bg-primary-dark text-white flex items-center justify-center transition disabled:opacity-40 shadow-sm"
+                    className="cm-action cm-button w-10 h-10 rounded-2xl bg-primary hover:bg-primary-dark text-white flex items-center justify-center transition disabled:opacity-40 shadow-sm"
                   >
                     <Send className="w-4 h-4" />
                   </button>
@@ -669,12 +669,12 @@ function ChatContent() {
             </div>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center bg-slate-50 p-8">
-              <div className="w-full max-w-md border-2 border-dashed border-slate-200 rounded-3xl p-10 flex flex-col items-center justify-center bg-white shadow-sm">
+              <div className="w-full max-w-md border-2 border-dashed border-slate-200 rounded-3xl p-10 flex flex-col items-center justify-center bg-surface shadow-card ">
                 <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                   <MessageSquare className="w-8 h-8 text-primary" />
                 </div>
-                <h3 className="text-lg font-bold text-navy mb-1 text-center">Chào mừng đến với Trò chuyện</h3>
-                <p className="text-sm text-slate-500 text-center">Hãy bắt đầu nhắn tin với Ban tổ chức để khởi động cuộc trò chuyện nhé!</p>
+                <h3 className="text-lg font-bold text-navy mb-1 text-center">Chọn cuộc trò chuyện</h3>
+                <p className="text-sm text-slate-500 text-center">Chọn người ở danh sách bên trái để nhắn tin.</p>
               </div>
             </div>
           )}

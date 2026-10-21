@@ -156,7 +156,7 @@ export function FeedbackCarousel() {
       `}} />
 
       {/* Decorative background glows */}
-      <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-[#1E5AA8]/5 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-amber-400/5 rounded-full blur-[140px] pointer-events-none" />
 
       {/* Section Header (Redesigned like Image 5) */}
@@ -165,18 +165,18 @@ export function FeedbackCarousel() {
           
           {/* Left Column */}
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#1E5AA8] text-white text-xs font-bold uppercase tracking-widest mb-6 shadow-sm">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-bold uppercase tracking-widest mb-6 shadow-sm">
               <MessageSquarePlus size={14} />
               100+ Đánh Giá Từ Người Dùng
             </div>
-            <h2 className="text-4xl sm:text-5xl lg:text-7xl font-black text-[#101828] uppercase tracking-tighter leading-[0.95]">
+            <h2 className="text-4xl sm:text-5xl lg:text-7xl font-black text-ink uppercase tracking-tighter leading-[0.95]">
               Cộng Đồng Người Chơi Nói Gì Về <br className="hidden lg:block"/> CourtMate?
             </h2>
           </div>
 
           {/* Right Column */}
           <div className="space-y-8">
-            <p className="text-[#475467] text-lg lg:text-xl font-medium leading-relaxed">
+            <p className="text-muted text-lg lg:text-xl font-medium leading-relaxed">
               Tổng hợp 100 trải nghiệm thực tế từ các vận động viên, người chơi phong trào và ban tổ chức giải đấu trên khắp Đà Nẵng.
             </p>
             
@@ -189,7 +189,7 @@ export function FeedbackCarousel() {
                   ))}
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-3xl font-bold text-[#101828]">{(stats.averageRating || 5.0).toFixed(1)}/5</span>
+                  <span className="text-3xl font-bold text-ink">{(stats.averageRating || 5.0).toFixed(1)}/5</span>
                   <span className="text-[#667085] text-sm font-medium whitespace-nowrap">Hơn +100 khách hàng</span>
                 </div>
               </div>
@@ -203,7 +203,7 @@ export function FeedbackCarousel() {
                   <img className="w-10 h-10 shrink-0 rounded-full border-2 border-white object-cover shadow-sm" src="https://i.pravatar.cc/100?img=1" alt="Avatar" />
                   <img className="w-10 h-10 shrink-0 rounded-full border-2 border-white object-cover shadow-sm" src="https://i.pravatar.cc/100?img=2" alt="Avatar" />
                   <img className="w-10 h-10 shrink-0 rounded-full border-2 border-white object-cover shadow-sm" src="https://i.pravatar.cc/100?img=3" alt="Avatar" />
-                  <div className="w-10 h-10 shrink-0 rounded-full border-2 border-white bg-[#1E5AA8] text-white flex items-center justify-center text-xs font-bold shadow-sm z-10 relative">
+                  <div className="w-10 h-10 shrink-0 rounded-full border-2 border-white bg-primary text-white flex items-center justify-center text-xs font-bold shadow-sm z-10 relative">
                     +99
                   </div>
                 </div>

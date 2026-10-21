@@ -78,14 +78,19 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
     return (
       <Link
         href={`/tournaments/${tournament.id}`}
-        className="group bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-lg hover:border-[#1E5AA8]/40 transition-all duration-300 flex cursor-pointer"
+        className="group bg-surface shadow-card rounded-2xl border border-slate-200/80 overflow-hidden  hover:shadow-interactive hover:border-primary/40 transition-all duration-300 flex cursor-pointer"
       >
         {/* Horizontal Layout Cover Image */}
         <div className="relative w-48 sm:w-56 shrink-0 overflow-hidden bg-slate-900">
           <img
-            src={tournament.coverImage || 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=800&q=80'}
+            src={
+              tournament.coverImage ||
+              (tournament.sport === SportType.PICKLEBALL
+                ? '/tournaments/pickleball-1.jpg'
+                : '/tournaments/badminton-1.jpg')
+            }
             alt={tournament.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
+            className="w-full h-full object-cover group- transition-transform duration-500 opacity-90"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/40" />
           <div className="absolute top-2.5 left-2.5">
@@ -103,7 +108,7 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
         {/* Content */}
         <div className="p-4 flex-1 flex flex-col justify-between">
           <div className="flex justify-between items-start gap-2">
-            <h3 className="font-bold text-base leading-6 h-12 text-[#101828] line-clamp-2 group-hover:text-[#1E5AA8] transition">
+            <h3 className="font-bold text-base leading-6 h-12 text-ink line-clamp-2 group-hover:text-primary transition">
               {tournament.title}
             </h3>
             {onBookmarkToggle && (
@@ -112,14 +117,14 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
           </div>
 
           <div className="mt-2 grid grid-cols-2 gap-y-1.5 text-xs text-slate-500">
-            <div className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-[#1E5AA8]"/> <span className="font-medium text-slate-700">{startDateFormatted}</span></div>
+            <div className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-primary"/> <span className="font-medium text-slate-700">{startDateFormatted}</span></div>
             <div className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-rose-500"/> <span className="truncate">{tournament.location}</span></div>
             <div className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-amber-500"/> <span>{tournament.slotsLimit || 32} VĐV</span></div>
           </div>
 
           <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
-            <span className="text-sm font-black text-[#101828]">{formattedFee}</span>
-            <span className="text-[#1E5AA8] text-xs font-bold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+            <span className="text-sm font-black text-ink">{formattedFee}</span>
+            <span className="text-primary text-xs font-bold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
               Xem chi tiết <ChevronRight className="w-3.5 h-3.5" />
             </span>
           </div>
@@ -132,17 +137,19 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
   return (
     <Link
       href={`/tournaments/${tournament.id}`}
-      className="group bg-white rounded-2xl border border-slate-200/90 overflow-hidden shadow-xs hover:shadow-lg hover:border-[#1E5AA8]/50 transition-all duration-300 flex flex-col cursor-pointer h-full relative"
+      className="group bg-surface shadow-card rounded-2xl border border-slate-200/90 overflow-hidden  hover:shadow-interactive hover:border-primary/50 transition-all duration-300 flex flex-col cursor-pointer h-full relative"
     >
       {/* Cover Image & Badges */}
       <div className="relative h-44 w-full overflow-hidden bg-slate-900">
         <img
           src={
             tournament.coverImage ||
-            'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=800&q=80'
+            (tournament.sport === SportType.PICKLEBALL
+              ? '/tournaments/pickleball-1.jpg'
+              : '/tournaments/badminton-1.jpg')
           }
           alt={tournament.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
+          className="w-full h-full object-cover group- transition-transform duration-500 opacity-90"
         />
         {/* Dark contrast gradient protection */}
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-slate-950/40" />
@@ -173,14 +180,14 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
       {/* Content - Compact for Grid */}
       <div className="p-4 flex-1 flex flex-col justify-between gap-3">
         <div className="space-y-2.5">
-          <h3 className="font-extrabold text-sm sm:text-base text-slate-900 line-clamp-2 leading-6 h-12 group-hover:text-[#1E5AA8] transition-colors" title={tournament.title}>
+          <h3 className="font-extrabold text-sm sm:text-base text-slate-900 line-clamp-2 leading-6 h-12 group-hover:text-primary transition-colors" title={tournament.title}>
             {tournament.title}
           </h3>
 
           {/* Key Details using Icons with overflow safety */}
           <div className="space-y-1.5 text-xs text-slate-700 font-medium">
             <div className="flex items-center gap-2 min-w-0">
-              <Calendar className="w-4 h-4 text-[#1E5AA8] shrink-0" />
+              <Calendar className="w-4 h-4 text-primary shrink-0" />
               <span className="truncate">{startDateFormatted}</span>
             </div>
             <div className="flex items-center gap-2 min-w-0">
@@ -201,7 +208,7 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
           <span className="text-sm font-black text-slate-900 tracking-tight shrink-0 whitespace-nowrap">
             {formattedFee}
           </span>
-          <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 group-hover:bg-[#1E5AA8] text-slate-700 group-hover:text-white transition-all duration-200 shrink-0">
+          <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 group-hover:bg-primary text-slate-700 group-hover:text-white transition-all duration-200 shrink-0">
             <span className="text-xs font-bold">
               Chi tiết
             </span>

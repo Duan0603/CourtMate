@@ -34,7 +34,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col font-sans bg-[#F8FAFC] text-navy">
+      <body className="min-h-full flex flex-col font-sans bg-canvas text-navy">
         <AntdRegistry>
           <AntdProvider>
             <LoadingProvider>

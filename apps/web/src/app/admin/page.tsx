@@ -5,24 +5,24 @@ import { PageContainer } from '../../components/layout/PageContainer';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { 
-  ShieldCheck, 
-  Users, 
-  Trophy, 
-  Clock, 
-  Check, 
-  X, 
-  MapPin, 
-  Activity, 
+import {
+  ShieldCheck,
+  Users,
+  Trophy,
+  Clock,
+  Check,
+  X,
+  MapPin,
+  Activity,
   AlertTriangle,
   UserX,
   UserCheck
 } from 'lucide-react';
-import { 
-  initialAdminDashboardData, 
-  getAdminMetrics, 
-  TournamentApproval, 
-  UserRecord 
+import {
+  initialAdminDashboardData,
+  getAdminMetrics,
+  TournamentApproval,
+  UserRecord
 } from './adminData';
 import { tournamentsApi } from '../../lib/tournaments.api';
 import { authApi } from '../../lib/auth.api';
@@ -160,22 +160,17 @@ export default function AdminDashboardPage() {
   };
 
   return (
-    <div className="bg-[#F8FAFC] min-h-screen page-section">
+    <div className="bg-canvas min-h-screen page-section">
       <PageContainer>
-        
+
         {/* Header & Region Selector */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <div className="flex items-center gap-2 text-xs font-semibold text-primary uppercase tracking-wider mb-1">
-              <ShieldCheck className="w-4 h-4" />
-              <span>Cổng Quản Trị Hệ Thống CourtMate</span>
-            </div>
+
             <h1 className="text-2xl sm:text-3xl font-extrabold text-navy">
-              Tổng Quan & Duyệt Nội Dung
+              Quản trị
             </h1>
-            <p className="text-xs text-slate-500 mt-1">
-              Kiểm duyệt giải đấu thực tế, quản lý tài khoản và giám sát vận hành toàn hệ thống
-            </p>
+
           </div>
 
           <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-xs">
@@ -183,7 +178,7 @@ export default function AdminDashboardPage() {
             <select
               value={selectedRegion}
               onChange={(e) => setSelectedRegion(e.target.value)}
-              className="text-xs font-semibold text-navy bg-transparent focus:outline-none cursor-pointer"
+              className="cm-control text-xs font-semibold text-navy bg-transparent focus:outline-none cursor-pointer"
             >
               <option value="ALL">Toàn quốc (Tất cả khu vực)</option>
               <option value="Đà Nẵng">Khu vực Đà Nẵng</option>
@@ -195,21 +190,21 @@ export default function AdminDashboardPage() {
 
         {/* 4 Metric Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+          <div className="bg-surface shadow-card p-5 rounded-2xl border border-slate-200  flex items-center justify-between">
             <div>
-              <span className="text-xs text-slate-400 font-medium block">Giải đấu chờ duyệt</span>
-              <strong className="text-2xl font-extrabold text-court-orange mt-1 block">
+              <span className="text-xs text-muted font-medium block">Giải đấu chờ duyệt</span>
+              <strong className="text-2xl font-extrabold text-amber-700 mt-1 block">
                 {metrics.pendingApprovals}
               </strong>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-court-orange flex items-center justify-center">
+            <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-700 flex items-center justify-center">
               <Clock className="w-6 h-6" />
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+          <div className="bg-surface shadow-card p-5 rounded-2xl border border-slate-200  flex items-center justify-between">
             <div>
-              <span className="text-xs text-slate-400 font-medium block">Giải đã phê duyệt</span>
+              <span className="text-xs text-muted font-medium block">Giải đã phê duyệt</span>
               <strong className="text-2xl font-extrabold text-navy mt-1 block">
                 {metrics.approvedApprovals}
               </strong>
@@ -219,9 +214,9 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+          <div className="bg-surface shadow-card p-5 rounded-2xl border border-slate-200  flex items-center justify-between">
             <div>
-              <span className="text-xs text-slate-400 font-medium block">Tổng người dùng</span>
+              <span className="text-xs text-muted font-medium block">Tổng người dùng</span>
               <strong className="text-2xl font-extrabold text-navy mt-1 block">
                 {metrics.totalUsers}
               </strong>
@@ -231,9 +226,9 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+          <div className="bg-surface shadow-card p-5 rounded-2xl border border-slate-200  flex items-center justify-between">
             <div>
-              <span className="text-xs text-slate-400 font-medium block">Tài khoản hoạt động</span>
+              <span className="text-xs text-muted font-medium block">Tài khoản hoạt động</span>
               <strong className="text-2xl font-extrabold text-navy mt-1 block">
                 {metrics.activeUsers}
               </strong>
@@ -245,7 +240,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Tab Controls */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-1.5 flex gap-1 shadow-xs mb-6 overflow-x-auto">
+        <div className="bg-surface shadow-card rounded-2xl border border-slate-200 p-1.5 flex gap-1  mb-6 overflow-x-auto">
           {[
             { id: 'approvals', label: `Duyệt giải đấu (${data.tournamentApprovals.length})` },
             { id: 'users', label: `Quản lý người dùng (${data.users.length})` },
@@ -254,7 +249,7 @@ export default function AdminDashboardPage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap ${
+              className={`cm-button px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap ${
                 activeTab === tab.id
                   ? 'bg-primary text-white shadow-xs'
                   : 'text-slate-600 hover:text-navy hover:bg-slate-50'
@@ -267,18 +262,18 @@ export default function AdminDashboardPage() {
 
         {/* TAB 1: Tournament Approvals Table */}
         {activeTab === 'approvals' && (
-          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+          <div className="bg-surface shadow-card rounded-2xl border border-slate-200 overflow-hidden ">
             <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="font-bold text-navy text-sm">Hồ sơ giải đấu từ hệ thống</h3>
+              <h3 className="font-bold text-navy text-sm">Giải đấu chờ duyệt</h3>
             </div>
 
             {loading ? (
-              <div className="p-12 text-center text-slate-400 text-sm">Đang tải danh sách giải đấu...</div>
+              <div className="p-12 text-center text-muted text-sm">Đang tải danh sách giải đấu...</div>
             ) : data.tournamentApprovals.length === 0 ? (
               <div className="p-12 text-center">
                 <Trophy className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                 <h4 className="font-bold text-navy text-sm">Không có giải đấu nào cần duyệt</h4>
-                <p className="text-xs text-slate-500 mt-1">Khi ban tổ chức tạo giải mới, danh sách sẽ hiển thị ở đây.</p>
+                <p className="text-sm text-slate-500 mt-1">Khi ban tổ chức tạo giải mới, danh sách sẽ hiển thị ở đây.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -303,7 +298,7 @@ export default function AdminDashboardPage() {
                         </td>
                         <td className="p-4 text-slate-600">{t.organization}</td>
                         <td className="p-4 text-slate-600">{t.sport}</td>
-                        <td className="p-4 text-slate-400">{t.submitted}</td>
+                        <td className="p-4 text-muted">{t.submitted}</td>
                         <td className="p-4">
                           <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${
                             t.status === 'approved'
@@ -320,19 +315,19 @@ export default function AdminDashboardPage() {
                             <div className="flex items-center justify-end gap-1.5">
                               <button
                                 onClick={() => handleApproveTournament(t.id)}
-                                className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition"
+                                className="cm-button px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition"
                               >
                                 Phê duyệt
                               </button>
                               <button
                                 onClick={() => handleRejectTournament(t.id)}
-                                className="px-3 py-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 font-semibold transition"
+                                className="cm-button px-3 py-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 font-semibold transition"
                               >
                                 Từ chối
                               </button>
                             </div>
                           ) : (
-                            <span className="text-slate-400">Đã xử lý</span>
+                            <span className="text-muted">Đã xử lý</span>
                           )}
                         </td>
                       </tr>
@@ -346,16 +341,16 @@ export default function AdminDashboardPage() {
 
         {/* TAB 2: Users Management Table */}
         {activeTab === 'users' && (
-          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+          <div className="bg-surface shadow-card rounded-2xl border border-slate-200 overflow-hidden ">
             <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="font-bold text-navy text-sm">Danh sách tài khoản trên nền tảng</h3>
+              <h3 className="font-bold text-navy text-sm">Tài khoản</h3>
             </div>
 
             {data.users.length === 0 ? (
               <div className="p-12 text-center">
                 <Users className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                 <h4 className="font-bold text-navy text-sm">Chưa có người dùng nào</h4>
-                <p className="text-xs text-slate-500 mt-1">Người dùng đăng ký tài khoản sẽ xuất hiện tại đây.</p>
+                <p className="text-sm text-slate-500 mt-1">Người dùng đăng ký tài khoản sẽ xuất hiện tại đây.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -382,7 +377,7 @@ export default function AdminDashboardPage() {
                           </span>
                         </td>
                         <td className="p-4 text-slate-600">{u.region}</td>
-                        <td className="p-4 text-slate-400">{u.lastActive}</td>
+                        <td className="p-4 text-muted">{u.lastActive}</td>
                         <td className="p-4">
                           <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${
                             u.status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
@@ -393,7 +388,7 @@ export default function AdminDashboardPage() {
                         <td className="p-4 text-right">
                           <button
                             onClick={() => handleToggleUserStatus(u.id)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                            className={`cm-button px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
                               u.status === 'active'
                                 ? 'bg-rose-50 text-rose-600 hover:bg-rose-100'
                                 : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
@@ -413,13 +408,13 @@ export default function AdminDashboardPage() {
 
         {/* TAB 3: Audit Activity Log */}
         {activeTab === 'activity' && (
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4">
+          <div className="bg-surface shadow-card rounded-2xl border border-slate-200 p-6  space-y-4">
             <h3 className="font-bold text-navy text-sm pb-2 border-b border-slate-100">
-              Nhật ký thao tác quản trị gần đây
+              Nhật ký quản trị
             </h3>
 
             {data.adminActivity.length === 0 ? (
-              <div className="py-12 text-center text-slate-400 text-xs">
+              <div className="py-12 text-center text-muted text-xs">
                 Chưa có thao tác quản trị nào trong phiên làm việc hiện tại.
               </div>
             ) : (
@@ -427,7 +422,7 @@ export default function AdminDashboardPage() {
                 {data.adminActivity.map((log) => (
                   <div key={log.id} className="p-4 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs">
                     <div className="flex items-center gap-3">
-                      <span className="font-mono text-slate-400">{log.time}</span>
+                      <span className="font-mono text-muted">{log.time}</span>
                       <div>
                         <strong className="text-navy">{log.admin}</strong> - {log.action}: <span className="font-semibold text-primary">{log.target}</span>
                       </div>

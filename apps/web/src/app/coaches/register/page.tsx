@@ -42,6 +42,7 @@ export default function RegisterCoachPage() {
 
   useGSAP(
     () => {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       gsap.fromTo(
         '.gsap-form-card',
         { opacity: 0, y: 20 },
@@ -115,11 +116,11 @@ export default function RegisterCoachPage() {
   };
 
   return (
-    <div ref={formRef} className="min-h-screen bg-[#F8FAFC] page-section">
+    <div ref={formRef} className="min-h-screen bg-canvas page-section">
       <FormContainer>
         <Link
           href="/coaches"
-          className="inline-block text-xs font-bold text-slate-500 hover:text-[#1E5AA8] mb-4 transition-colors"
+          className="cm-link inline-block text-xs font-bold text-slate-500 hover:text-primary mb-4 transition-colors"
         >
           ← Quay lại danh bạ Huấn luyện viên
         </Link>
@@ -133,7 +134,7 @@ export default function RegisterCoachPage() {
             <button
               type="button"
               onClick={() => router.push('/login?redirect=%2Fcoaches%2Fregister')}
-              className="px-4 py-2 rounded-lg bg-[#1E5AA8] text-white font-bold text-xs hover:bg-[#154687] transition-colors shrink-0 text-center cursor-pointer"
+              className="cm-action cm-button px-4 py-2 rounded-lg bg-primary text-white font-bold text-xs hover:bg-primary-dark transition-colors shrink-0 text-center cursor-pointer"
             >
               Đăng nhập ngay
             </button>
@@ -141,40 +142,37 @@ export default function RegisterCoachPage() {
         )}
 
         {submittedSuccess ? (
-          <div className="bg-white rounded-2xl p-8 sm:p-10 shadow-sm border border-slate-200 text-center">
+          <div className="bg-surface shadow-card rounded-2xl p-8 sm:p-10  border border-slate-200 text-center">
             <h2 className="text-xl sm:text-2xl font-black text-slate-900">
-              Hồ sơ đăng ký đã được tiếp nhận
+              Đã nhận hồ sơ
             </h2>
-            <p className="text-xs sm:text-sm text-slate-600 mt-2 max-w-md mx-auto leading-relaxed">
-              Quản trị viên CourtMate sẽ xác thực bằng cấp và thông tin của bạn trong vòng 24 giờ. Bạn sẽ nhận thông báo khi hồ sơ được phê duyệt.
+            <p className="text-sm sm:text-sm text-slate-600 mt-2 max-w-md mx-auto leading-relaxed">
+              Bạn sẽ nhận thông báo khi hồ sơ được phê duyệt.
             </p>
             <div className="mt-6 flex justify-center">
               <Link
                 href="/coaches"
-                className="px-5 py-2.5 bg-[#1E5AA8] text-white rounded-xl text-xs font-bold hover:bg-[#154687] transition-colors"
+                className="cm-action px-5 py-2.5 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary-dark transition-colors"
               >
                 Về danh bạ Huấn luyện viên
               </Link>
             </div>
           </div>
         ) : (
-          <div className="gsap-form-card bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
-            <span className="text-xs font-bold text-[#1E5AA8] uppercase tracking-wider block mb-1">
-              Đối tác Huấn Luyện Viên
-            </span>
+          <div className="gsap-form-card bg-surface shadow-card rounded-2xl p-6 sm:p-8  border border-slate-200">
 
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-              Đăng ký trở thành Huấn luyện viên
+              Đăng ký huấn luyện viên
             </h1>
-            <p className="text-xs text-slate-500 mt-1 mb-6">
-              Điền thông tin chuyên môn, kinh nghiệm giảng dạy môn Cầu lông / Pickleball và mức học phí để kết nối cùng học viên thể thao.
+            <p className="text-sm text-slate-500 mt-1 mb-6">
+              Điền thông tin và gửi hồ sơ để xét duyệt.
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Họ tên & SĐT */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-sm font-bold text-slate-700 mb-1">
                     Họ và tên *
                   </label>
                   <input
@@ -183,12 +181,12 @@ export default function RegisterCoachPage() {
                     disabled={!isAuthenticated}
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#1E5AA8] disabled:bg-slate-100 disabled:cursor-not-allowed"
+                    className="cm-control w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-slate-100 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Số điện thoại liên hệ *
+                  <label className="block text-sm font-bold text-slate-700 mb-1">
+                    Số điện thoại *
                   </label>
                   <input
                     type="tel"
@@ -197,14 +195,14 @@ export default function RegisterCoachPage() {
                     placeholder="VD: 0905123456"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#1E5AA8] disabled:bg-slate-100 disabled:cursor-not-allowed"
+                    className="cm-control w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-slate-100 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Tiêu đề chuyên môn *
+                <label className="block text-sm font-bold text-slate-700 mb-1">
+                  Chuyên môn *
                 </label>
                 <input
                   type="text"
@@ -213,13 +211,13 @@ export default function RegisterCoachPage() {
                   placeholder="VD: HLV Cầu lông Cấp 1 Quốc Gia - Chuyên chỉnh bộ di chuyển & smash"
                   value={headline}
                   onChange={(e) => setHeadline(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#1E5AA8] disabled:bg-slate-100 disabled:cursor-not-allowed"
+                  className="cm-control w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-slate-100 disabled:cursor-not-allowed"
                 />
               </div>
 
               {/* Môn giảng dạy: CHỈ CẦU LÔNG VÀ PICKLEBALL */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                <label className="block text-sm font-bold text-slate-700 mb-1.5">
                   Môn thể thao nhận dạy *
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -232,9 +230,9 @@ export default function RegisterCoachPage() {
                       key={s.id}
                       disabled={!isAuthenticated}
                       onClick={() => toggleSport(s.id)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                      className={`cm-button px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
                         sports.includes(s.id)
-                          ? 'bg-[#1E5AA8] text-white border-[#1E5AA8]'
+                          ? 'bg-primary text-white border-primary'
                           : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
                       } disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer`}
                     >
@@ -247,7 +245,7 @@ export default function RegisterCoachPage() {
               {/* Kinh nghiệm & Học phí */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-sm font-bold text-slate-700 mb-1">
                     Số năm kinh nghiệm *
                   </label>
                   <input
@@ -257,11 +255,11 @@ export default function RegisterCoachPage() {
                     disabled={!isAuthenticated}
                     value={experienceYears}
                     onChange={(e) => setExperienceYears(Number(e.target.value))}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#1E5AA8] disabled:bg-slate-100 disabled:cursor-not-allowed"
+                    className="cm-control w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-slate-100 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-sm font-bold text-slate-700 mb-1">
                     Mức học phí theo giờ (VND) *
                   </label>
                   <input
@@ -270,7 +268,7 @@ export default function RegisterCoachPage() {
                     disabled={!isAuthenticated}
                     value={hourlyRate}
                     onChange={(e) => setHourlyRate(Number(e.target.value))}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#1E5AA8] disabled:bg-slate-100 disabled:cursor-not-allowed"
+                    className="cm-control w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-slate-100 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -278,14 +276,14 @@ export default function RegisterCoachPage() {
               {/* Khu vực */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-sm font-bold text-slate-700 mb-1">
                     Thành phố hoạt động *
                   </label>
                   <select
                     value={city}
                     disabled={!isAuthenticated}
                     onChange={(e) => setCity(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#1E5AA8] disabled:bg-slate-100 disabled:cursor-not-allowed"
+                    className="cm-control w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-slate-100 disabled:cursor-not-allowed"
                   >
                     <option value="Đà Nẵng">Đà Nẵng</option>
                     <option value="Hà Nội">Hà Nội</option>
@@ -293,7 +291,7 @@ export default function RegisterCoachPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-sm font-bold text-slate-700 mb-1">
                     Các quận nhận dạy
                   </label>
                   <input
@@ -302,7 +300,7 @@ export default function RegisterCoachPage() {
                     value={districts}
                     onChange={(e) => setDistricts(e.target.value)}
                     placeholder="VD: Hải Châu, Sơn Trà"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#1E5AA8] disabled:bg-slate-100 disabled:cursor-not-allowed"
+                    className="cm-control w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-slate-100 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -317,7 +315,7 @@ export default function RegisterCoachPage() {
                     type="button"
                     disabled={!isAuthenticated}
                     onClick={addCertificate}
-                    className="text-xs font-bold text-[#1E5AA8] hover:underline disabled:opacity-50 cursor-pointer"
+                    className="cm-button text-xs font-bold text-primary hover:underline disabled:opacity-50 cursor-pointer"
                   >
                     + Thêm chứng chỉ
                   </button>
@@ -325,14 +323,14 @@ export default function RegisterCoachPage() {
 
                 <div className="space-y-2.5">
                   {certificates.map((cert, idx) => (
-                    <div key={idx} className="flex gap-2 items-center">
+                    <div key={idx} className="grid grid-cols-1 sm:flex gap-2 items-center">
                       <input
                         type="text"
                         disabled={!isAuthenticated}
                         placeholder="Tên chứng chỉ (VD: Bằng HLV Quốc Tế IPTPA)"
                         value={cert.title}
                         onChange={(e) => updateCertificate(idx, 'title', e.target.value)}
-                        className="flex-1 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#1E5AA8] disabled:bg-slate-100"
+                        className="cm-control min-w-0 w-full flex-1 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-slate-100"
                       />
                       <input
                         type="text"
@@ -340,7 +338,7 @@ export default function RegisterCoachPage() {
                         placeholder="Nơi cấp"
                         value={cert.issuedBy}
                         onChange={(e) => updateCertificate(idx, 'issuedBy', e.target.value)}
-                        className="w-32 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#1E5AA8] disabled:bg-slate-100"
+                        className="cm-control min-w-0 w-full sm:w-32 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-slate-100"
                       />
                       <input
                         type="number"
@@ -348,14 +346,14 @@ export default function RegisterCoachPage() {
                         placeholder="Năm"
                         value={cert.year}
                         onChange={(e) => updateCertificate(idx, 'year', Number(e.target.value))}
-                        className="w-20 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#1E5AA8]"
+                        className="cm-control min-w-0 w-full sm:w-20 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-primary"
                       />
                       {certificates.length > 1 && (
                         <button
                           type="button"
                           disabled={!isAuthenticated}
                           onClick={() => removeCertificate(idx)}
-                          className="px-2 py-1 text-rose-600 text-xs font-bold hover:bg-rose-50 rounded cursor-pointer"
+                          className="cm-button px-2 py-1 text-rose-600 text-xs font-bold hover:bg-rose-50 rounded cursor-pointer"
                         >
                           Xoá
                         </button>
@@ -367,7 +365,7 @@ export default function RegisterCoachPage() {
 
               {/* Bio */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-sm font-bold text-slate-700 mb-1">
                   Giới thiệu bản thân & Triết lý huấn luyện *
                 </label>
                 <textarea
@@ -377,7 +375,7 @@ export default function RegisterCoachPage() {
                   placeholder="Mô tả phong cách giảng dạy, thành tích học viên đã đạt được..."
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#1E5AA8] disabled:bg-slate-100 disabled:cursor-not-allowed"
+                  className="cm-control w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-slate-100 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -386,7 +384,7 @@ export default function RegisterCoachPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full py-3 bg-[#1E5AA8] text-white rounded-xl font-bold text-xs sm:text-sm hover:bg-[#154687] transition-all disabled:opacity-50 cursor-pointer"
+                  className="cm-action cm-button w-full py-3 bg-primary text-white rounded-xl font-bold text-xs sm:text-sm hover:bg-primary-dark transition-all disabled:opacity-50 cursor-pointer"
                 >
                   {submitting ? 'Đang gửi hồ sơ...' : 'Nộp hồ sơ đăng ký Huấn luyện viên'}
                 </button>
@@ -394,7 +392,7 @@ export default function RegisterCoachPage() {
                 <button
                   type="button"
                   onClick={() => router.push('/login?redirect=%2Fcoaches%2Fregister')}
-                  className="w-full py-3 bg-slate-200 text-slate-600 rounded-xl font-bold text-xs sm:text-sm hover:bg-slate-300 transition-all cursor-pointer"
+                  className="cm-button w-full py-3 bg-slate-200 text-slate-600 rounded-xl font-bold text-xs sm:text-sm hover:bg-slate-300 transition-all cursor-pointer"
                 >
                   Đăng nhập để gửi hồ sơ
                 </button>

@@ -145,7 +145,7 @@ export default function MatchDetailPage() {
     // Ngăn chặn nếu người chơi đã có slot ở kèo đấu khác
     if (otherActiveMatch) {
       setStatusMsg({
-        text: `Bạn đã tham gia slot tại "${otherActiveMatch.title}". Mỗi người chơi chỉ được giữ 1 slot tại một thời điểm!`,
+        text: `Bạn đã tham gia slot tại "${otherActiveMatch.title}". Mỗi người chơi chỉ được giữ một trận tại một thời điểm!`,
         type: 'warning',
       });
       return;
@@ -220,8 +220,8 @@ export default function MatchDetailPage() {
 
   if (loading && isThresholdElapsed) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] pt-32 pb-20 flex flex-col justify-center items-center">
-        <div className="w-10 h-10 border-4 border-[#1E5AA8] border-t-transparent rounded-full animate-spin mb-3" />
+      <div className="min-h-screen bg-canvas pt-32 pb-20 flex flex-col justify-center items-center">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-3" />
         <p className="text-slate-500 text-sm font-semibold">Đang tải thông tin kèo đấu...</p>
       </div>
     );
@@ -229,7 +229,7 @@ export default function MatchDetailPage() {
 
   if (error || (!loading && !match)) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] pt-32 pb-20 text-center px-4">
+      <div className="min-h-screen bg-canvas pt-32 pb-20 text-center px-4">
         <div className="w-16 h-16 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center mx-auto mb-4 text-2xl">
           <ExclamationCircleFilled />
         </div>
@@ -277,13 +277,13 @@ export default function MatchDetailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] page-section">
+    <div className="min-h-screen bg-canvas page-section">
       <div className="page-container">
         {/* TOP COMMAND & BREADCRUMB BAR */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-slate-200">
           <Link
             href="/matches"
-            className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-[#1E5AA8] transition-colors"
+            className="cm-link inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-primary transition-colors"
           >
             <ArrowLeftOutlined />
             <span>Quay lại danh sách giao lưu</span>
@@ -314,16 +314,16 @@ export default function MatchDetailPage() {
               <div>
                 <div className="flex items-center gap-2 flex-wrap mb-1">
                   <Tag color="orange" className="font-bold text-xs rounded-full px-2.5 py-0.5 border-none uppercase">
-                    Đang có 1 slot thi đấu khác
+                    Đang tham gia trận khác
                   </Tag>
                   <span className="text-xs text-amber-800 font-medium">
-                    (Mỗi VĐV chỉ tham gia 1 slot/lần)
+                    Mỗi người chỉ tham gia một trận tại một thời điểm.
                   </span>
                 </div>
                 <h4 className="text-sm font-bold text-slate-900 leading-snug">
-                  Bạn đang giữ slot tại: <u>{otherActiveMatch.title}</u>
+                  Trận bạn đã tham gia: <u>{otherActiveMatch.title}</u>
                 </h4>
-                <p className="text-xs text-slate-600 mt-0.5">
+                <p className="text-sm text-slate-600 mt-0.5">
                   {otherActiveMatch.venueName} · {formatDateTime(otherActiveMatch.startTime)}
                 </p>
               </div>
@@ -355,9 +355,9 @@ export default function MatchDetailPage() {
         )}
 
         {/* MAIN MATCH CARD */}
-        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden mb-8">
+        <div className="bg-surface shadow-card rounded-2xl border border-slate-200/90  overflow-hidden mb-8">
           {/* Header Banner */}
-          <div className="bg-gradient-to-r from-[#1E5AA8] via-[#164E8E] to-[#123E75] text-white p-6 sm:p-8">
+          <div className="bg-gradient-to-r from-primary via-[#164E8E] to-[#123E75] text-white p-6 sm:p-8">
             <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
               <Tag
                 color={match.sport === SportType.BADMINTON ? 'blue' : 'orange'}
@@ -370,7 +370,7 @@ export default function MatchDetailPage() {
                 color="gold"
                 className="font-mono font-bold text-xs rounded-full px-2.5 py-0.5 border-none text-slate-950 m-0"
               >
-                Mã kèo: {match.shareCode || 'CM-OPEN'}
+                Mã trận: {match.shareCode || 'CM-OPEN'}
               </Tag>
             </div>
 
@@ -397,14 +397,12 @@ export default function MatchDetailPage() {
             {/* VIRAL SHARE STRIP */}
             <div className="p-4 rounded-2xl bg-gradient-to-r from-sky-50/80 via-indigo-50/60 to-white border border-sky-100/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-[#1E5AA8]/10 text-[#1E5AA8] flex items-center justify-center shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
                   <ShareAltOutlined className="text-base" />
                 </div>
                 <div>
                   <h4 className="text-xs font-bold text-slate-900">Chia sẻ trận giao lưu với bạn bè</h4>
-                  <p className="text-[11px] text-slate-500">
-                    Gửi link nhanh qua Zalo / Facebook để rủ thêm bạn cùng vào slot
-                  </p>
+
                 </div>
               </div>
 
@@ -432,14 +430,14 @@ export default function MatchDetailPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-100">
                 <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                  <ThunderboltFilled className="text-[#1E5AA8]" />
+                  <ThunderboltFilled className="text-primary" />
                   <span>Trình độ yêu cầu</span>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <Tag color="cyan" className="font-bold text-xs rounded-md px-2 py-0.5 m-0">
                     {minMeta.label}
                   </Tag>
-                  <span className="text-slate-400 text-xs font-medium">đến</span>
+                  <span className="text-muted text-xs font-medium">đến</span>
                   <Tag color="blue" className="font-bold text-xs rounded-md px-2 py-0.5 m-0">
                     {maxMeta.label}
                   </Tag>
@@ -452,7 +450,7 @@ export default function MatchDetailPage() {
               <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-100">
                 <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                   <DollarCircleOutlined className="text-emerald-600" />
-                  <span>Hình thức chi phí</span>
+                  <span>Chi phí</span>
                 </div>
                 <div className="text-sm font-bold text-slate-900">
                   {match.estimatedCostText || 'Chia đều tiền sân tại chỗ'}
@@ -465,7 +463,7 @@ export default function MatchDetailPage() {
 
             {/* VENUE FULL ADDRESS */}
             <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-100 text-xs text-slate-700 flex items-start gap-2.5">
-              <EnvironmentOutlined className="text-[#1E5AA8] shrink-0 mt-0.5 text-sm" />
+              <EnvironmentOutlined className="text-primary shrink-0 mt-0.5 text-sm" />
               <div>
                 <span className="font-bold text-slate-900">Địa chỉ cụ thể: </span>
                 <span>
@@ -478,8 +476,8 @@ export default function MatchDetailPage() {
             <div className="pt-4 border-t border-slate-100">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <TeamOutlined className="text-[#1E5AA8]" />
-                  Danh sách vận động viên ({match.joinedCount}/{match.totalSlots})
+                  <TeamOutlined className="text-primary" />
+                  Người tham gia ({match.joinedCount}/{match.totalSlots})
                 </h3>
 
                 <Badge
@@ -510,13 +508,13 @@ export default function MatchDetailPage() {
                   return (
                     <div
                       key={p.userId || idx}
-                      className={`p-3.5 rounded-2xl border bg-white flex items-center justify-between shadow-2xs transition-colors ${isThisMe
+                      className={`p-3.5 rounded-2xl border bg-surface shadow-card flex items-center justify-between shadow-2xs transition-colors ${isThisMe
                           ? 'border-emerald-500/70 ring-2 ring-emerald-500/15 bg-emerald-50/20'
                           : 'border-slate-200'
                         }`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-[#1E5AA8]/10 text-[#1E5AA8] flex items-center justify-center font-black text-sm">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black text-sm">
                           {p.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
@@ -524,7 +522,7 @@ export default function MatchDetailPage() {
                             <span>{p.name}</span>
                             {isThisHost && (
                               <Tag color="gold" className="text-[10px] font-bold rounded px-1.5 py-0 border-none m-0">
-                                Chủ kèo
+                                Người tạo trận
                               </Tag>
                             )}
                             {isThisMe && (
@@ -540,7 +538,7 @@ export default function MatchDetailPage() {
                       </div>
 
                       <Tag color="green" className="font-bold text-[11px] rounded-lg px-2 py-0.5 border-none m-0">
-                        Đã giữ slot
+                        Đã tham gia
                       </Tag>
                     </div>
                   );
@@ -563,18 +561,18 @@ export default function MatchDetailPage() {
                       }
                     }}
                     disabled={isJoined || isFull || isHost || joining}
-                    className={`p-3.5 rounded-2xl border border-dashed transition-all flex items-center justify-between text-left group ${isJoined || isHost
-                        ? 'border-slate-200 bg-slate-50/50 text-slate-400 cursor-default'
+                    className={`cm-button p-3.5 rounded-2xl border border-dashed transition-all flex items-center justify-between text-left group ${isJoined || isHost
+                        ? 'border-slate-200 bg-slate-50/50 text-muted cursor-default'
                         : hasOtherActiveMatch
                           ? 'border-amber-300 bg-amber-50/40 text-slate-500 cursor-not-allowed'
-                          : 'border-[#1E5AA8]/40 bg-sky-50/30 hover:bg-sky-50/80 hover:border-[#1E5AA8] text-slate-700 cursor-pointer shadow-2xs'
+                          : 'border-primary/40 bg-sky-50/30 hover:bg-sky-50/80 hover:border-primary text-slate-700 cursor-pointer shadow-2xs'
                       }`}
                   >
                     <div className="flex items-center gap-3">
                       <div
                         className={`w-10 h-10 rounded-full border border-dashed flex items-center justify-center transition-colors ${hasOtherActiveMatch
                             ? 'border-amber-400 text-amber-600'
-                            : 'border-slate-300 group-hover:border-[#1E5AA8] text-slate-400 group-hover:text-[#1E5AA8]'
+                            : 'border-slate-300 group-hover:border-primary text-muted group-hover:text-primary'
                           }`}
                       >
                         <UserAddOutlined className="text-sm" />
@@ -583,12 +581,12 @@ export default function MatchDetailPage() {
                         <div
                           className={`text-sm font-bold transition-colors ${hasOtherActiveMatch
                               ? 'text-amber-900'
-                              : 'text-slate-700 group-hover:text-[#1E5AA8]'
+                              : 'text-slate-700 group-hover:text-primary'
                             }`}
                         >
-                          Slot trống #{match.joinedCount + i + 1}
+                          Chỗ trống #{match.joinedCount + i + 1}
                         </div>
-                        <div className="text-[11px] text-slate-400">
+                        <div className="text-[11px] text-muted">
                           {isJoined
                             ? 'Vị trí còn trống'
                             : hasOtherActiveMatch
@@ -600,7 +598,7 @@ export default function MatchDetailPage() {
 
                     {!isJoined && !isHost && (
                       <span
-                        className={`text-xs font-bold transition-transform flex items-center gap-1 ${hasOtherActiveMatch ? 'text-amber-600' : 'text-[#1E5AA8]'
+                        className={`text-xs font-bold transition-transform flex items-center gap-1 ${hasOtherActiveMatch ? 'text-amber-600' : 'text-primary'
                           }`}
                       >
                         {hasOtherActiveMatch ? 'Đã có lịch' : 'Vào ngay →'}
@@ -619,9 +617,9 @@ export default function MatchDetailPage() {
 
                   </div>
                   <div>
-                    <div className="font-bold text-amber-950">Bạn là người tạo trận giao lưu này</div>
+                    <div className="font-bold text-amber-950">Bạn đã tạo trận này</div>
                     <p className="text-amber-800 text-[11px] mt-0.5">
-                      Sao chép mã trận <span className="font-mono font-bold">{match.shareCode}</span> hoặc gửi link Zalo cho bạn bè để nhanh chóng lấp đầy các vị trí trống!
+                      Chia sẻ mã trận <span className="font-mono font-bold">{match.shareCode}</span> hoặc gửi liên kết cho bạn bè.
                     </p>
                   </div>
                 </div>
@@ -633,9 +631,9 @@ export default function MatchDetailPage() {
                     </div>
                     <div>
                       <div className="font-bold text-emerald-950 text-sm">
-                        Bạn đã giữ slot thành công cho trận đấu này!
+                        Bạn đã tham gia trận này.
                       </div>
-                      <p className="text-emerald-700 text-xs mt-0.5">
+                      <p className="text-emerald-700 text-sm mt-0.5">
                         Vui lòng có mặt đúng giờ trước 15 phút tại sân thi đấu.
                       </p>
                     </div>
@@ -663,7 +661,7 @@ export default function MatchDetailPage() {
                       loading={joining}
                       className="flex-1 sm:flex-none font-bold text-xs rounded-xl border-rose-200 text-rose-600 hover:bg-rose-50"
                     >
-                      Hủy slot (Rút lui)
+                      Rút khỏi trận
                     </Button>
                   </div>
                 </div>
@@ -675,10 +673,10 @@ export default function MatchDetailPage() {
                     </div>
                     <div>
                       <div className="font-bold text-slate-900 text-sm">
-                        Bạn đang có 1 lịch thi đấu chưa hoàn thành!
+                        Bạn đang tham gia trận khác.
                       </div>
-                      <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                        Theo quy định của CourtMate, mỗi người chơi chỉ được đăng ký <strong>1 slot tại một thời điểm</strong> để đảm bảo trách nhiệm và thời gian thi đấu. Bạn đang giữ slot tại trận: <strong>{otherActiveMatch?.title}</strong> ({otherActiveMatch?.venueName}).
+                      <p className="text-sm text-slate-600 mt-1 leading-relaxed">
+                        Theo quy định của CourtMate, mỗi người chơi chỉ được đăng ký <strong>một trận tại một thời điểm</strong> để đảm bảo trách nhiệm và thời gian thi đấu. Trận đã tham gia: <strong>{otherActiveMatch?.title}</strong> ({otherActiveMatch?.venueName}).
                       </p>
                     </div>
                   </div>
@@ -719,12 +717,10 @@ export default function MatchDetailPage() {
                 <div className="bg-slate-50/80 p-5 rounded-2xl border border-slate-200/80 space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                      <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">
-                        Chọn trình độ thực tế của bạn trước khi tham gia:
+                      <label className="block text-sm font-bold text-slate-800   mb-1">
+                        Chọn trình độ của bạn:
                       </label>
-                      <p className="text-[11px] text-slate-500">
-                        Giúp các thành viên trong nhóm nắm được thể lực và khả năng thi đấu
-                      </p>
+
                     </div>
 
                     <Select
@@ -747,7 +743,7 @@ export default function MatchDetailPage() {
                     loading={joining}
                     className="w-full font-bold text-sm sm:text-base rounded-xl shadow-lg shadow-blue-500/25 h-12 cursor-pointer flex items-center justify-center gap-2"
                   >
-                    {joining ? 'Đang xác nhận...' : 'Tham Gia Giữ Slot Ngay (1-Chạm)'}
+                    {joining ? 'Đang xác nhận...' : 'Tham gia trận'}
                   </Button>
                 </div>
               )}
@@ -767,13 +763,13 @@ export default function MatchDetailPage() {
         destroyOnHidden
       >
         <div className="text-center p-2 pt-4">
-          <div className="w-16 h-16 rounded-2xl bg-[#1E5AA8]/10 text-[#1E5AA8] flex items-center justify-center mx-auto mb-4 text-2xl">
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4 text-2xl">
             <LoginOutlined />
           </div>
 
-          <h3 className="text-xl font-black text-slate-900 mb-2">Yêu Cầu Đăng Nhập</h3>
-          <p className="text-slate-600 text-xs sm:text-sm leading-relaxed mb-6">
-            Bạn cần đăng nhập tài khoản CourtMate để giữ slot thi đấu này, giúp chủ sân và các người chơi khác có thể liên hệ giao lưu cùng bạn.
+          <h3 className="text-xl font-black text-slate-900 mb-2">Đăng nhập để tham gia</h3>
+          <p className="text-slate-600 text-sm sm:text-sm leading-relaxed mb-6">
+            Đăng nhập để tham gia và liên hệ với người chơi.
           </p>
 
           <div className="space-y-2.5">
@@ -794,7 +790,7 @@ export default function MatchDetailPage() {
               onClick={() => setShowLoginModal(false)}
               className="w-full font-semibold text-xs text-slate-500 hover:text-slate-800"
             >
-              Để sau, tôi muốn xem thông tin sân
+              Tiếp tục xem trận
             </Button>
           </div>
         </div>

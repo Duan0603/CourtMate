@@ -6,17 +6,17 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { GuestActionModal } from '../../../../components/shared/GuestActionModal';
 import { useParams, useRouter } from 'next/navigation';
-import { 
-  Trophy, 
-  ArrowLeft, 
-  Check, 
-  ShieldCheck, 
-  CreditCard, 
-  QrCode, 
-  User, 
-  Phone, 
-  Mail, 
-  Users, 
+import {
+  Trophy,
+  ArrowLeft,
+  Check,
+  ShieldCheck,
+  CreditCard,
+  QrCode,
+  User,
+  Phone,
+  Mail,
+  Users,
   Award,
   ChevronRight,
 } from 'lucide-react';
@@ -146,13 +146,13 @@ export default function TournamentRegisterPage() {
   }
 
   return (
-    <div className="bg-[#F8FAFC] min-h-screen page-section">
+    <div className="bg-canvas min-h-screen page-section">
       <FormContainer>
-        
+
         {/* Back Link */}
         <Link
           href={`/tournaments/${tournamentId}`}
-          className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-navy transition mb-6"
+          className="cm-link inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-navy transition mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Quay lại chi tiết giải</span>
@@ -161,7 +161,7 @@ export default function TournamentRegisterPage() {
         {/* Header Title */}
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-extrabold text-navy">
-            Đăng Ký Tham Gia Giải Đấu
+            Đăng ký giải đấu
           </h1>
           <p className="text-sm text-slate-500 mt-1">
             {tournament?.title}
@@ -170,12 +170,12 @@ export default function TournamentRegisterPage() {
 
         {/* 2-Column Form & Summary */}
         <form onSubmit={handleRegister} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
+
           {/* Left Column (2/3): Form Inputs */}
           <div className="lg:col-span-2 space-y-6">
-            
+
             {/* 1. Athlete Information */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-7 shadow-xs space-y-4">
+            <div className="bg-surface shadow-card rounded-2xl border border-slate-200 p-6 sm:p-7  space-y-4">
               <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
                 <User className="w-4 h-4 text-primary" />
                 <h3 className="font-bold text-navy text-sm">Thông tin vận động viên</h3>
@@ -183,20 +183,20 @@ export default function TournamentRegisterPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1.5">
-                    Họ và tên VĐV chính <span className="text-rose-500">*</span>
+                  <label className="block text-sm font-bold text-slate-600 mb-1.5">
+                    Họ và tên người thi đấu <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="text"
                     required
                     value={playerName}
                     onChange={(e) => setPlayerName(e.target.value)}
-                    className="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-navy"
+                    className="cm-control w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-navy"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1.5">
+                  <label className="block text-sm font-bold text-slate-600 mb-1.5">
                     Số điện thoại liên hệ (Zalo) <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -204,35 +204,35 @@ export default function TournamentRegisterPage() {
                     required
                     value={contactPhone}
                     onChange={(e) => setContactPhone(e.target.value)}
-                    className="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-navy"
+                    className="cm-control w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-navy"
                   />
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-bold text-slate-600 mb-1.5">
-                    Địa chỉ Email nhận vé QR <span className="text-rose-500">*</span>
+                  <label className="block text-sm font-bold text-slate-600 mb-1.5">
+                    Email nhận vé <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-navy"
+                    className="cm-control w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-navy"
                   />
                 </div>
               </div>
             </div>
 
             {/* 2. Category & Skill Level */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-7 shadow-xs space-y-4">
+            <div className="bg-surface shadow-card rounded-2xl border border-slate-200 p-6 sm:p-7  space-y-4">
               <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
-                <Trophy className="w-4 h-4 text-court-orange" />
+                <Trophy className="w-4 h-4 text-amber-700" />
                 <h3 className="font-bold text-navy text-sm">Hạng mục & Trình độ</h3>
               </div>
 
               {/* Categories list radio */}
               <div className="space-y-2">
-                <label className="block text-xs font-bold text-slate-600 mb-1">
+                <label className="block text-sm font-bold text-slate-600 mb-1">
                   Chọn nội dung thi đấu <span className="text-rose-500">*</span>
                 </label>
                 <div className="grid grid-cols-1 gap-2">
@@ -251,7 +251,7 @@ export default function TournamentRegisterPage() {
                           name="category"
                           checked={selectedCategoryIndex === idx}
                           onChange={() => setSelectedCategoryIndex(idx)}
-                          className="text-primary focus:ring-primary"
+                          className="cm-control text-primary focus:ring-primary"
                         />
                         <span className="text-sm font-semibold text-navy">{cat.name}</span>
                       </div>
@@ -265,13 +265,13 @@ export default function TournamentRegisterPage() {
 
               {/* Skill level */}
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1.5">
+                <label className="block text-sm font-bold text-slate-600 mb-1.5">
                   Trình độ thi đấu tự khai
                 </label>
                 <select
                   value={skillLevel}
                   onChange={(e) => setSkillLevel(e.target.value as SkillLevel)}
-                  className="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-navy"
+                  className="cm-control w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-navy"
                 >
                   <option value={SkillLevel.BEGINNER}>Mới chơi / Phong trào (Beginner)</option>
                   <option value={SkillLevel.INTERMEDIATE}>Trung bình khá (Intermediate 3.0 - 4.0)</option>
@@ -281,7 +281,7 @@ export default function TournamentRegisterPage() {
 
               {/* Partner Name if double */}
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1.5">
+                <label className="block text-sm font-bold text-slate-600 mb-1.5">
                   Họ tên vận động viên cùng cặp (Nếu thi đấu nội dung Đôi)
                 </label>
                 <input
@@ -289,13 +289,13 @@ export default function TournamentRegisterPage() {
                   placeholder="Ví dụ: Lê Hoàng Nam"
                   value={partnerName}
                   onChange={(e) => setPartnerName(e.target.value)}
-                  className="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-navy"
+                  className="cm-control w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-navy"
                 />
               </div>
             </div>
 
             {/* 3. Payment Gateway Choice */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-7 shadow-xs space-y-4">
+            <div className="bg-surface shadow-card rounded-2xl border border-slate-200 p-6 sm:p-7  space-y-4">
               <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
                 <CreditCard className="w-4 h-4 text-emerald-600" />
                 <h3 className="font-bold text-navy text-sm">Phương thức thanh toán</h3>
@@ -321,7 +321,7 @@ export default function TournamentRegisterPage() {
                         name="paymentMethod"
                         checked={paymentProvider === item.id}
                         onChange={() => setPaymentProvider(item.id as PaymentProvider)}
-                        className="text-primary focus:ring-primary mb-2"
+                        className="cm-control text-primary focus:ring-primary mb-2"
                       />
                       <strong className="block text-sm text-navy">{item.name}</strong>
                     </div>
@@ -338,9 +338,9 @@ export default function TournamentRegisterPage() {
                 id="terms"
                 checked={agreeTerms}
                 onChange={(e) => setAgreeTerms(e.target.checked)}
-                className="mt-1 rounded text-primary focus:ring-primary"
+                className="cm-control mt-1 rounded text-primary focus:ring-primary"
               />
-              <label htmlFor="terms" className="text-xs text-slate-600 leading-relaxed cursor-pointer">
+              <label htmlFor="terms" className="text-sm text-slate-600 leading-relaxed cursor-pointer">
                 Tôi cam kết thông tin khai báo là hoàn toàn chính xác, cam kết tuân thủ Điều lệ giải đấu và chịu trách nhiệm về tình trạng sức khỏe khi tham gia thi đấu.
               </label>
             </div>
@@ -349,8 +349,8 @@ export default function TournamentRegisterPage() {
 
           {/* Right Column (1/3): Order Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm sticky top-24 space-y-6">
-              
+            <div className="bg-surface shadow-card rounded-2xl border border-slate-200 p-6  sticky top-24 space-y-6">
+
               <h3 className="font-bold text-navy text-sm pb-3 border-b border-slate-100">
                 Tóm tắt đăng ký
               </h3>
@@ -385,22 +385,19 @@ export default function TournamentRegisterPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full py-3.5 rounded-xl bg-primary hover:bg-primary-dark text-white font-bold text-center flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition disabled:opacity-50"
+                className="cm-action cm-button w-full py-3.5 rounded-xl bg-primary hover:bg-primary-dark text-white font-bold text-center flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition disabled:opacity-50"
               >
                 {submitting ? (
                   <span>Đang xử lý giao dịch...</span>
                 ) : (
                   <>
-                    <span>Tiến hành thanh toán</span>
+                    <span>Thanh toán</span>
                     <ChevronRight className="w-4 h-4" />
                   </>
                 )}
               </button>
 
-              <div className="flex items-center justify-center gap-2 text-[11px] text-slate-400">
-                <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                <span>Giao dịch mã hóa SSL 256-bit an toàn</span>
-              </div>
+
 
             </div>
           </div>

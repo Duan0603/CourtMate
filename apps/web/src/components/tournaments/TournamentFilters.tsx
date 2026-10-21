@@ -89,8 +89,8 @@ export const TournamentFilters: React.FC<TournamentFiltersProps> = ({
     { value: '5.5+', label: '5.5+' },
   ];
 
-  const currentLevels = 
-    filters.sport === SportType.PICKLEBALL ? pickleballLevels : 
+  const currentLevels =
+    filters.sport === SportType.PICKLEBALL ? pickleballLevels :
     filters.sport === SportType.BADMINTON ? badmintonLevels : [];
 
   return (
@@ -100,7 +100,7 @@ export const TournamentFilters: React.FC<TournamentFiltersProps> = ({
         <h3 className="font-extrabold text-navy text-lg">Bộ lọc</h3>
         <button
           onClick={onClose}
-          className="p-2 -mr-2 rounded-full hover:bg-slate-100 transition-colors text-slate-500"
+          className="cm-button p-2 -mr-2 rounded-full hover:bg-slate-100 transition-colors text-slate-500"
         >
           <X className="w-5 h-5" />
         </button>
@@ -108,7 +108,7 @@ export const TournamentFilters: React.FC<TournamentFiltersProps> = ({
 
       {/* Filter Content */}
       <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8 scrollbar-thin scrollbar-thumb-slate-200">
-        
+
         {/* Sport Selector */}
         <div className="space-y-4">
           <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
@@ -121,10 +121,10 @@ export const TournamentFilters: React.FC<TournamentFiltersProps> = ({
                 <button
                   key={sport.value}
                   onClick={() => updateFilter('sport', sport.value)}
-                  className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border ${
+                  className={`cm-button px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border ${
                     isSelected
-                      ? 'bg-[#1E5AA8]/10 text-[#1E5AA8] border-[#1E5AA8]/30'
-                      : 'bg-white text-slate-600 border-slate-200 hover:border-[#1E5AA8]/30 hover:bg-slate-50'
+                      ? 'bg-primary/10 text-primary border-primary/30'
+                      : 'bg-white text-slate-600 border-slate-200 hover:border-primary/30 hover:bg-slate-50'
                   }`}
                 >
                   {sport.label}
@@ -147,10 +147,10 @@ export const TournamentFilters: React.FC<TournamentFiltersProps> = ({
                   <button
                     key={level.value}
                     onClick={() => updateFilter('level', level.value)}
-                    className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border ${
+                    className={`cm-button px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border ${
                       isSelected
-                        ? 'bg-[#1E5AA8]/10 text-[#1E5AA8] border-[#1E5AA8]/30'
-                        : 'bg-white text-slate-600 border-slate-200 hover:border-[#1E5AA8]/30 hover:bg-slate-50'
+                        ? 'bg-primary/10 text-primary border-primary/30'
+                        : 'bg-white text-slate-600 border-slate-200 hover:border-primary/30 hover:bg-slate-50'
                     }`}
                   >
                     {level.label}
@@ -169,20 +169,20 @@ export const TournamentFilters: React.FC<TournamentFiltersProps> = ({
           <div className="space-y-4 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
             <div className="text-sm font-bold text-navy flex items-center justify-between">
               <span>Chi phí tối đa</span>
-              <span className="text-[#1E5AA8]">
-                {filters.isFreeOnly 
-                  ? 'Miễn phí' 
-                  : (filters.maxFee === undefined || filters.maxFee >= 1000) 
-                    ? 'Mọi giá' 
+              <span className="text-primary">
+                {filters.isFreeOnly
+                  ? 'Miễn phí'
+                  : (filters.maxFee === undefined || filters.maxFee >= 1000)
+                    ? 'Mọi giá'
                     : `≤ ${filters.maxFee}k`}
               </span>
             </div>
-            
+
             <label className="flex items-center gap-3 cursor-pointer w-max">
               <div className="relative flex items-center">
-                <input 
-                  type="checkbox" 
-                  className="peer w-5 h-5 rounded-md border-2 border-slate-300 text-[#1E5AA8] focus:ring-[#1E5AA8] transition-all cursor-pointer"
+                <input
+                  type="checkbox"
+                  className="cm-control peer w-5 h-5 rounded-md border-2 border-slate-300 text-primary focus:ring-primary transition-all cursor-pointer"
                   checked={filters.isFreeOnly || false}
                   onChange={(e) => {
                      const checked = e.target.checked;
@@ -212,9 +212,9 @@ export const TournamentFilters: React.FC<TournamentFiltersProps> = ({
                     updateFilter('isFreeOnly', false);
                   }
                 }}
-                className="w-full h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#1E5AA8]"
+                className="cm-control w-full h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#1E5AA8]"
               />
-              <div className="flex justify-between text-xs font-semibold text-slate-400 mt-3">
+              <div className="flex justify-between text-xs font-semibold text-muted mt-3">
                 <span>0k</span>
                 <span>500k</span>
                 <span>1000k+</span>
@@ -235,10 +235,10 @@ export const TournamentFilters: React.FC<TournamentFiltersProps> = ({
                 <button
                   key={status.value}
                   onClick={() => updateFilter('status', status.value)}
-                  className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border ${
+                  className={`cm-button px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border ${
                     isSelected
-                      ? 'bg-[#1E5AA8]/10 text-[#1E5AA8] border-[#1E5AA8]/30'
-                      : 'bg-white text-slate-600 border-slate-200 hover:border-[#1E5AA8]/30 hover:bg-slate-50'
+                      ? 'bg-primary/10 text-primary border-primary/30'
+                      : 'bg-white text-slate-600 border-slate-200 hover:border-primary/30 hover:bg-slate-50'
                   }`}
                 >
                   {status.label}
@@ -254,13 +254,13 @@ export const TournamentFilters: React.FC<TournamentFiltersProps> = ({
       <div className="shrink-0 p-4 border-t border-slate-100 bg-white grid grid-cols-3 gap-3">
         <button
           onClick={handleReset}
-          className="col-span-1 py-3 px-4 rounded-full text-sm font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors text-center"
+          className="cm-button col-span-1 py-3 px-4 rounded-full text-sm font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors text-center"
         >
           Đặt lại
         </button>
         <button
           onClick={handleApply}
-          className="col-span-2 py-3 px-4 rounded-full text-sm font-bold text-white bg-[#1E5AA8] hover:bg-[#154687] transition-colors shadow-sm text-center"
+          className="cm-action cm-button col-span-2 py-3 px-4 rounded-full text-sm font-bold text-white bg-primary hover:bg-primary-dark transition-colors shadow-sm text-center"
         >
           Áp dụng
         </button>

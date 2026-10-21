@@ -42,13 +42,13 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
       if (destination.origin === window.location.origin) setRedirectTo(destination.pathname + destination.search + destination.hash);
     } catch { /* Keep the default destination for invalid URLs. */ }
   }, []);
-  
+
   const [mode, setMode] = useState<'login' | 'register'>(initialMode);
-  
+
   // Login State
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
-  
+
   // Register State
   const [regName, setRegName] = useState('');
   const [regEmail, setRegEmail] = useState('');
@@ -56,7 +56,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
   const [regPassword, setRegPassword] = useState('');
   const [regConfirmPassword, setRegConfirmPassword] = useState('');
   const [role, setRole] = useState<UserRole>(UserRole.PLAYER);
-  
+
   // UI State
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -114,27 +114,24 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
 
   return (
     <div className="w-full max-w-[480px] mx-auto">
-      
+
       {/* Header Logo */}
       <div className="text-center mb-6">
         <Link href="/" className="inline-flex items-center gap-3 mb-3 group">
-          <div className="w-12 h-12 rounded-2xl bg-[#1E5AA8] flex items-center justify-center text-white shadow-lg shadow-[#1E5AA8]/25 group-hover:scale-105 transition-transform">
+          <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-white shadow-lg  group- transition-transform">
             <Trophy className="w-6 h-6" />
           </div>
-          <span className="font-black text-3xl tracking-tight text-[#101828]">
-            Court<span className="text-[#1E5AA8]">Mate</span>
+          <span className="font-black text-3xl tracking-tight text-ink">
+            Court<span className="text-primary">Mate</span>
           </span>
         </Link>
-        <p className="text-sm font-medium text-[#475467]">
-          Nền tảng kết nối đối thủ & giải đấu thể thao số 1
-        </p>
       </div>
 
       {/* Main Card */}
-      <div className="bg-white rounded-[32px] p-6 sm:p-8 border border-slate-200/80 shadow-[0_32px_80px_rgba(0,0,0,0.08)] relative overflow-hidden">
-        
+      <div className="bg-white rounded-feature p-6 sm:p-8 border border-slate-200/80 shadow-card relative overflow-hidden">
+
         {/* Sliding Tab Indicator */}
-        <div className="relative bg-[#F2F4F7] p-1 rounded-full flex items-center mb-6">
+        <div className="relative bg-surface-dim p-1 rounded-full flex items-center mb-6">
           <div
             className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-white rounded-full shadow-sm transition-all duration-300 ease-out ${
               mode === 'register' ? 'left-[calc(50%+2px)]' : 'left-1'
@@ -143,8 +140,8 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
           <button
             type="button"
             onClick={() => handleToggleMode('login')}
-            className={`relative z-10 w-1/2 py-2 rounded-full text-sm font-bold transition-colors text-center ${
-              mode === 'login' ? 'text-[#101828]' : 'text-[#475467] hover:text-[#101828]'
+            className={`cm-button relative z-10 w-1/2 py-2 rounded-full text-sm font-bold transition-colors text-center ${
+              mode === 'login' ? 'text-ink' : 'text-muted hover:text-ink'
             }`}
           >
             Đăng nhập
@@ -152,17 +149,17 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
           <button
             type="button"
             onClick={() => handleToggleMode('register')}
-            className={`relative z-10 w-1/2 py-2 rounded-full text-sm font-bold transition-colors text-center ${
-              mode === 'register' ? 'text-[#101828]' : 'text-[#475467] hover:text-[#101828]'
+            className={`cm-button relative z-10 w-1/2 py-2 rounded-full text-sm font-bold transition-colors text-center ${
+              mode === 'register' ? 'text-ink' : 'text-muted hover:text-ink'
             }`}
           >
-            Đăng ký mới
+            Tạo tài khoản
           </button>
         </div>
 
         {/* Error Alert */}
         {error && (
-          <div className="mb-5 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2.5 animate-fadeIn">
+          <div role="alert" className="mb-5 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2.5 animate-fadeIn">
             <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
             <span>{error}</span>
           </div>
@@ -170,55 +167,53 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
 
         {/* Animated Container */}
         <div className="relative overflow-hidden">
-          
+
           {/* LOGIN FORM */}
           {mode === 'login' && (
-            <form 
-              className="space-y-4 animate-fadeIn" 
+            <form
+              className="space-y-4 animate-fadeIn"
               onSubmit={(e) => { e.preventDefault(); handleLoginSubmit(e); }}
             >
               <div>
-                <label className="block text-xs font-bold text-[#101828] mb-1.5 uppercase tracking-wider">
+                <label className="block text-sm font-bold text-ink mb-1.5  ">
                   Địa chỉ Email <span className="text-rose-500 font-bold">*</span>
                 </label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <Mail className="w-4 h-4 text-muted absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     type="email"
                     required
-                    value={loginEmail}
+                    id="loginEmail" aria-label="Email đăng nhập" autoComplete="email" value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 text-sm bg-[#F8FAFC] border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#1E5AA8]/20 focus:border-[#1E5AA8] text-[#101828] font-medium transition-all"
-                    placeholder="your.email@example.com"
+                    className="cm-control w-full pl-11 pr-4 py-3 text-sm bg-canvas border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-ink font-medium transition-all"
+                    placeholder="email@example.com"
                   />
                 </div>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-xs font-bold text-[#101828] uppercase tracking-wider">
+                  <label className="block text-sm font-bold text-ink  ">
                     Mật khẩu <span className="text-rose-500 font-bold">*</span>
                   </label>
-                  <Link href="#" className="text-xs text-[#1E5AA8] hover:underline font-semibold">
-                    Quên mật khẩu?
-                  </Link>
+
                 </div>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <Lock className="w-4 h-4 text-muted absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
-                    value={loginPassword}
+                    id="loginPassword" aria-label="Mật khẩu" autoComplete="current-password" value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
-                    className="w-full pl-11 pr-11 py-3 text-sm bg-[#F8FAFC] border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#1E5AA8]/20 focus:border-[#1E5AA8] text-[#101828] font-medium transition-all"
+                    className="cm-control w-full pl-11 pr-16 py-3 text-sm bg-canvas border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-ink font-medium transition-all"
                     placeholder="********"
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} aria-pressed={showPassword} onClick={() => setShowPassword(!showPassword)}
+                    className="cm-button absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-slate-600"
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showPassword ? <EyeOff aria-hidden="true" className="w-4 h-4" /> : <Eye aria-hidden="true" className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
@@ -227,9 +222,9 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
                 type="button"
                 onClick={handleLoginSubmit}
                 disabled={loading}
-                className="w-full py-3.5 px-6 rounded-2xl bg-[#1E5AA8] hover:bg-[#154687] text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 mt-2 disabled:opacity-60"
+                className="cm-action cm-button w-full py-3.5 px-6 rounded-2xl bg-primary hover:bg-primary-dark text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 mt-2 disabled:opacity-60"
               >
-                <span>{loading ? 'Đang xác thực...' : 'Đăng Nhập Ngay'}</span>
+                <span>{loading ? 'Đang xác thực...' : 'Đăng nhập'}</span>
                 {!loading && <ArrowRight className="w-4 h-4" />}
               </button>
             </form>
@@ -237,59 +232,59 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
 
           {/* REGISTER FORM */}
           {mode === 'register' && (
-            <form 
+            <form
               className="space-y-4 animate-fadeIn"
               onSubmit={(e) => { e.preventDefault(); handleRegisterSubmit(e); }}
             >
-              
+
               {/* Role Toggle (Moved to Top) */}
               <div>
-                <label className="block text-xs font-bold text-[#101828] mb-1.5 uppercase tracking-wider">
-                  Bạn tham gia CourtMate với vai trò gì? <span className="text-rose-500 font-bold">*</span>
+                <label className="block text-sm font-bold text-ink mb-1.5  ">
+                  Bạn muốn làm gì? <span className="text-rose-500 font-bold">*</span>
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setRole(UserRole.PLAYER)}
-                    className={`py-3 px-3 rounded-2xl text-xs font-bold border transition-all flex flex-col items-center justify-center gap-1 ${
+                    className={`cm-button py-3 px-3 rounded-2xl text-xs font-bold border transition-all flex flex-col items-center justify-center gap-1 ${
                       role === UserRole.PLAYER
-                        ? 'border-[#1E5AA8] bg-[#1E5AA8]/5 text-[#1E5AA8] shadow-xs'
-                        : 'border-slate-200 bg-[#F8FAFC] text-slate-500 hover:bg-slate-100 hover:border-slate-300'
+                        ? 'border-primary bg-primary/5 text-primary shadow-xs'
+                        : 'border-slate-200 bg-canvas text-slate-500 hover:bg-slate-100 hover:border-slate-300'
                     }`}
                   >
                     <User className="w-5 h-5 mb-0.5" />
-                    <span>Vận Động Viên</span>
-                    <span className="text-[10px] font-normal text-slate-400">Giao lưu & thi đấu</span>
+                    <span>Người chơi</span>
+                    <span className="text-[10px] font-normal text-muted">Giao lưu & thi đấu</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setRole(UserRole.ORGANIZER)}
-                    className={`py-3 px-3 rounded-2xl text-xs font-bold border transition-all flex flex-col items-center justify-center gap-1 ${
+                    className={`cm-button py-3 px-3 rounded-2xl text-xs font-bold border transition-all flex flex-col items-center justify-center gap-1 ${
                       role === UserRole.ORGANIZER
-                        ? 'border-[#1E5AA8] bg-[#1E5AA8]/5 text-[#1E5AA8] shadow-xs'
-                        : 'border-slate-200 bg-[#F8FAFC] text-slate-500 hover:bg-slate-100 hover:border-slate-300'
+                        ? 'border-primary bg-primary/5 text-primary shadow-xs'
+                        : 'border-slate-200 bg-canvas text-slate-500 hover:bg-slate-100 hover:border-slate-300'
                     }`}
                   >
                     <Trophy className="w-5 h-5 mb-0.5" />
-                    <span>Ban Tổ Chức</span>
-                    <span className="text-[10px] font-normal text-slate-400">Tạo & quản lý giải</span>
+                    <span>Ban tổ chức</span>
+                    <span className="text-[10px] font-normal text-muted">Tạo & quản lý giải</span>
                   </button>
                 </div>
               </div>
 
               {/* Full Name */}
               <div>
-                <label className="block text-xs font-bold text-[#101828] mb-1.5 uppercase tracking-wider">
-                  Họ và Tên <span className="text-rose-500 font-bold">*</span>
+                <label className="block text-sm font-bold text-ink mb-1.5  ">
+                  Họ và tên <span className="text-rose-500 font-bold">*</span>
                 </label>
                 <div className="relative">
-                  <User className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <User className="w-4 h-4 text-muted absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     type="text"
                     required
-                    value={regName}
+                    id="regName" aria-label="Họ và tên" autoComplete="name" value={regName}
                     onChange={(e) => setRegName(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 text-sm bg-[#F8FAFC] border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#1E5AA8]/20 focus:border-[#1E5AA8] text-[#101828] font-medium transition-all"
+                    className="cm-control w-full pl-11 pr-4 py-3 text-sm bg-canvas border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-ink font-medium transition-all"
                     placeholder="Nguyễn Văn A"
                   />
                 </div>
@@ -298,33 +293,33 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
               {/* Email & Phone grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-[#101828] mb-1.5 uppercase tracking-wider">
+                  <label className="block text-sm font-bold text-ink mb-1.5  ">
                     Email <span className="text-rose-500 font-bold">*</span>
                   </label>
                   <div className="relative">
-                    <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Mail className="w-4 h-4 text-muted absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="email"
                       required
-                      value={regEmail}
+                      id="regEmail" aria-label="Email đăng ký" autoComplete="email" value={regEmail}
                       onChange={(e) => setRegEmail(e.target.value)}
-                      className="w-full pl-10 pr-3 py-2.5 text-xs bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1E5AA8]/20 focus:border-[#1E5AA8] text-[#101828] font-medium"
+                      className="cm-control w-full pl-10 pr-3 py-2.5 text-xs bg-canvas border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-ink font-medium"
                       placeholder="name@email.com"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-[#101828] mb-1.5 uppercase tracking-wider">
-                    Số Điện Thoại <span className="text-slate-400 font-normal lowercase text-[10px]">(không bắt buộc)</span>
+                  <label className="block text-sm font-bold text-ink mb-1.5  ">
+                    Số Điện Thoại <span className="text-muted font-normal lowercase text-[10px]">(không bắt buộc)</span>
                   </label>
                   <div className="relative">
-                    <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Phone className="w-4 h-4 text-muted absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="tel"
-                      value={regPhone}
+                      id="regPhone" aria-label="Số điện thoại" autoComplete="tel" value={regPhone}
                       onChange={(e) => setRegPhone(e.target.value)}
-                      className="w-full pl-10 pr-3 py-2.5 text-xs bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1E5AA8]/20 focus:border-[#1E5AA8] text-[#101828] font-medium"
+                      className="cm-control w-full pl-10 pr-3 py-2.5 text-xs bg-canvas border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-ink font-medium"
                       placeholder="0905 123 456"
                     />
                   </div>
@@ -334,35 +329,35 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
               {/* Passwords */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-[#101828] mb-1.5 uppercase tracking-wider">
-                    Mật Khẩu <span className="text-rose-500 font-bold">*</span> <span className="text-slate-400 font-normal lowercase text-[10px]">(≥ 6 ký tự)</span>
+                  <label className="block text-sm font-bold text-ink mb-1.5  ">
+                    Mật khẩu <span className="text-rose-500 font-bold">*</span> <span className="text-muted font-normal lowercase text-[10px]">(≥ 6 ký tự)</span>
                   </label>
                   <div className="relative">
-                    <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Lock className="w-4 h-4 text-muted absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type={showPassword ? 'text' : 'password'}
                       required
                       minLength={6}
-                      value={regPassword}
+                      id="regPassword" aria-label="Mật khẩu mới" autoComplete="new-password" value={regPassword}
                       onChange={(e) => setRegPassword(e.target.value)}
-                      className="w-full pl-10 pr-3 py-2.5 text-xs bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1E5AA8]/20 focus:border-[#1E5AA8] text-[#101828] font-medium"
+                      className="cm-control w-full pl-10 pr-3 py-2.5 text-xs bg-canvas border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-ink font-medium"
                       placeholder="••••••••"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-[#101828] mb-1.5 uppercase tracking-wider">
-                    Nhập Lại Mật Khẩu <span className="text-rose-500 font-bold">*</span>
+                  <label className="block text-sm font-bold text-ink mb-1.5  ">
+                    Nhập lại mật khẩu <span className="text-rose-500 font-bold">*</span>
                   </label>
                   <div className="relative">
-                    <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Lock className="w-4 h-4 text-muted absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type={showPassword ? 'text' : 'password'}
                       required
-                      value={regConfirmPassword}
+                      id="regConfirmPassword" aria-label="Nhập lại mật khẩu" autoComplete="new-password" value={regConfirmPassword}
                       onChange={(e) => setRegConfirmPassword(e.target.value)}
-                      className="w-full pl-10 pr-3 py-2.5 text-xs bg-[#F8FAFC] border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1E5AA8]/20 focus:border-[#1E5AA8] text-[#101828] font-medium"
+                      className="cm-control w-full pl-10 pr-3 py-2.5 text-xs bg-canvas border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-ink font-medium"
                       placeholder="••••••••"
                     />
                   </div>
@@ -375,9 +370,9 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
                 type="button"
                 onClick={handleRegisterSubmit}
                 disabled={loading}
-                className="w-full py-3.5 px-6 rounded-2xl bg-[#1E5AA8] hover:bg-[#154687] text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 mt-2 disabled:opacity-60"
+                className="cm-action cm-button w-full py-3.5 px-6 rounded-2xl bg-primary hover:bg-primary-dark text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 mt-2 disabled:opacity-60"
               >
-                <span>{loading ? 'Đang tạo tài khoản...' : 'Hoàn Tất Đăng Ký'}</span>
+                <span>{loading ? 'Đang tạo tài khoản...' : 'Tạo tài khoản'}</span>
                 {!loading && <ArrowRight className="w-4 h-4" />}
               </button>
             </form>
@@ -390,7 +385,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-slate-200" />
           </div>
-          <span className="relative bg-white px-3 text-[11px] font-bold text-[#475467] uppercase tracking-wider">
+          <span className="relative bg-white px-3 text-[11px] font-bold text-muted uppercase tracking-wider">
             {mode === 'login' ? 'Hoặc đăng nhập với' : 'Hoặc đăng ký nhanh với'}
           </span>
         </div>

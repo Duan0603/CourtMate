@@ -10,9 +10,9 @@
   cursor: pointer;
   transition: color .2s ease, background .2s ease;
 }
-.button:hover { color: #1e5aa8; background: #e8f1fa; }
-.button[aria-pressed=true] { color: #1e5aa8; }
-.button:focus-visible { outline: 2px solid #1e5aa8; outline-offset: 3px; }
+.button:hover { color: rgb(var(--cm-primary)); background: rgb(var(--cm-primary-light)); }
+.button[aria-pressed=true] { color: rgb(var(--cm-primary)); }
+.button:focus-visible { outline: 2px solid rgb(var(--cm-primary)); outline-offset: 3px; }
 .button:disabled { cursor: wait; opacity: .55; }
 .icon, .icon:hover, .onImage, .onImage:hover { background: transparent; border: 0; box-shadow: none; }
 .onImage { color: white; }

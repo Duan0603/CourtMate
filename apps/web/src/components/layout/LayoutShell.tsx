@@ -21,7 +21,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
   if (isNoLayout) {
     return (
       <>
-        <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
+        <Toaster position="top-right" toastOptions={{ duration: 4000, className: 'cm-toast', style: { borderRadius: 'var(--cm-radius-control)', boxShadow: 'var(--cm-shadow-elevated)' } }} />
         {children}
       </>
     );
@@ -29,7 +29,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
+      <Toaster position="top-right" toastOptions={{ duration: 4000, className: 'cm-toast', style: { borderRadius: 'var(--cm-radius-control)', boxShadow: 'var(--cm-shadow-elevated)' } }} />
       <Navbar />
       <main className="site-main flex-1 flex flex-col">{children}</main>
       <Footer />

@@ -22,7 +22,7 @@ export const LoadingDots: React.FC<LoadingDotsProps> = ({
   }[size];
 
   const dotColors = {
-    brand: ['bg-[#1E5AA8]', 'bg-[#0077FF]', 'bg-[#FFC400]'],
+    brand: ['bg-primary', 'bg-primary', 'bg-[#FFC400]'],
     white: ['bg-white/80', 'bg-white', 'bg-white/90'],
     slate: ['bg-slate-400', 'bg-slate-500', 'bg-slate-600'],
   }[colorScheme];

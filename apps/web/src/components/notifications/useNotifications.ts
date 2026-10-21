@@ -14,7 +14,25 @@ export function useNotifications() {
 
   const loadNotifications = useCallback(async () => {
     try {
-      const data = await notificationsApi.list();
+      let data: NotificationItem[] = [];
+      try {
+        data = await notificationsApi.list();
+      } catch {
+        // Unauthenticated or offline
+      }
+
+      if (typeof window !== 'undefined') {
+        try {
+          const guestRaw = localStorage.getItem('courtmate_guest_notifications');
+          if (guestRaw) {
+            const guestList: NotificationItem[] = JSON.parse(guestRaw);
+            const existingIds = new Set(data.map((d) => d.id));
+            const extra = guestList.filter((g) => !existingIds.has(g.id));
+            data = [...extra, ...data];
+          }
+        } catch {}
+      }
+
       if (!mountedRef.current) return;
       setNotifications(data);
       setUnreadCount(computeUnreadCount(data));
@@ -110,12 +128,63 @@ export function useNotifications() {
     }
   }, [loadNotifications]);
 
+  const deleteOne = useCallback(
+    async (notificationId: string) => {
+      // Optimistic update
+      setNotifications((prev) => {
+        const next = prev.filter((n) => n.id !== notificationId);
+        setUnreadCount(computeUnreadCount(next));
+        return next;
+      });
+
+      // Remove from guest local storage if present
+      if (typeof window !== 'undefined') {
+        try {
+          const guestRaw = localStorage.getItem('courtmate_guest_notifications');
+          if (guestRaw) {
+            const list: NotificationItem[] = JSON.parse(guestRaw);
+            const filtered = list.filter((n) => n.id !== notificationId);
+            localStorage.setItem('courtmate_guest_notifications', JSON.stringify(filtered));
+          }
+        } catch {}
+      }
+
+      try {
+        await notificationsApi.deleteOne(notificationId);
+      } catch (error) {
+        console.error('[useNotifications] Failed to delete notification:', error);
+      }
+    },
+    [computeUnreadCount],
+  );
+
+  const deleteAll = useCallback(async () => {
+    // Optimistic update
+    setNotifications([]);
+    setUnreadCount(0);
+
+    // Remove from guest local storage
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('courtmate_guest_notifications');
+      } catch {}
+    }
+
+    try {
+      await notificationsApi.deleteAll();
+    } catch (error) {
+      console.error('[useNotifications] Failed to delete all notifications:', error);
+    }
+  }, []);
+
   return {
     notifications,
     unreadCount,
     loading,
     markRead,
     markAllRead,
+    deleteOne,
+    deleteAll,
     disconnectNotificationSocket,
   };
 }

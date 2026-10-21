@@ -14,6 +14,7 @@ export const CursorBackground = () => {
   const pos3 = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     // Initial center position
     mouse.current.x = window.innerWidth / 2;
     mouse.current.y = window.innerHeight / 2;
@@ -71,18 +72,18 @@ export const CursorBackground = () => {
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 bg-[white]">
       {/* Tiny dots grid pattern (chấm li ti đằng sau) */}
-      <div 
-        className="absolute inset-0 opacity-[0.3]" 
+      <div
+        className="absolute inset-0 opacity-[0.3]"
         style={{
           backgroundImage: 'radial-gradient(#1E5AA8 1px, transparent 1px)',
           backgroundSize: '24px 24px'
         }}
       />
-      
+
       {/* Interactive Cursor Tracking Blobs */}
       <div
         ref={blob1Ref}
-        className="absolute top-0 left-0 w-[300px] h-[300px] rounded-full bg-[#1E5AA8]/30 blur-[100px] mix-blend-multiply will-change-transform"
+        className="absolute top-0 left-0 w-[300px] h-[300px] rounded-full bg-primary/30 blur-[100px] mix-blend-multiply will-change-transform"
       />
       <div
         ref={blob2Ref}

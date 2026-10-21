@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { Modal } from 'antd';
 import { X, Star, Sparkles, Send, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { feedbacksApi } from '../../lib/feedbacks.api';
@@ -97,17 +98,19 @@ export function FeedbackModal({ isOpen, onClose, onSuccess }: FeedbackModalProps
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <Modal open={isOpen} onCancel={onClose} footer={null} closable={false} centered width={512}
+      aria-label="Đánh giá trải nghiệm" styles={{ content: { padding: 0, borderRadius: 'var(--cm-radius-feature)', overflow: 'hidden' } }}>
       <div
-        className="relative w-full max-w-lg max-h-[90vh] flex flex-col bg-white rounded-[32px] shadow-2xl border border-slate-100 overflow-hidden"
+        className="relative w-full max-h-[85svh] flex flex-col bg-surface rounded-feature overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top header bar */}
-        <div className="shrink-0 bg-gradient-to-r from-[#1E5AA8] to-[#154687] text-white p-6 sm:p-7 relative">
+        <div className="shrink-0 bg-gradient-to-r from-primary to-primary-dark text-white p-6 sm:p-7 relative">
           <button
             onClick={onClose}
             type="button"
-            className="absolute top-5 right-5 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+            aria-label="Đóng đánh giá"
+            className="cm-button absolute top-5 right-5 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
           >
             <X size={18} />
           </button>
@@ -132,13 +135,13 @@ export function FeedbackModal({ isOpen, onClose, onSuccess }: FeedbackModalProps
         <div className="overflow-y-auto">
           {isSubmitted ? (
             <div className="p-10 flex flex-col items-center justify-center text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center animate-bounce">
+              <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
                 <CheckCircle2 size={36} />
               </div>
-              <h4 className="text-xl font-bold text-[#101828]">
+              <h4 className="text-xl font-bold text-ink">
                 Gửi Đánh Giá Thành Công!
               </h4>
-              <p className="text-[#475467] text-sm max-w-xs">
+              <p className="text-muted text-sm max-w-xs">
                 Cảm ơn đóng góp của bạn. Đánh giá của bạn đã được cập nhật trực tiếp vào hệ thống.
               </p>
             </div>
@@ -166,13 +169,13 @@ export function FeedbackModal({ isOpen, onClose, onSuccess }: FeedbackModalProps
                         onMouseEnter={() => setHoverRating(star)}
                         onMouseLeave={() => setHoverRating(0)}
                         onClick={() => setRating(star)}
-                        className="p-1 transition-transform hover:scale-125 focus:outline-none"
+                        className="cm-button p-1 transition-transform hover:scale-125 focus:outline-none"
                       >
                         <Star
                           size={28}
                           className={`${
                             active
-                              ? 'fill-amber-400 text-amber-400 drop-shadow-[0_2px_8px_rgba(251,191,36,0.5)]'
+                              ? 'fill-amber-400 text-amber-400 drop-shadow-card'
                               : 'text-slate-300'
                           } transition-colors`}
                         />
@@ -196,10 +199,10 @@ export function FeedbackModal({ isOpen, onClose, onSuccess }: FeedbackModalProps
                       key={cat}
                       type="button"
                       onClick={() => setCategory(cat)}
-                      className={`text-xs px-3 py-1.5 rounded-full font-medium transition-all ${
+                      className={`cm-button text-xs px-3 py-1.5 rounded-full font-medium transition-all ${
                         category === cat
-                          ? 'bg-[#1E5AA8] text-white shadow-sm'
-                          : 'bg-slate-100 text-[#475467] hover:bg-slate-200'
+                          ? 'bg-primary text-white shadow-sm'
+                          : 'bg-slate-100 text-muted hover:bg-slate-200'
                       }`}
                     >
                       {cat}
@@ -219,7 +222,7 @@ export function FeedbackModal({ isOpen, onClose, onSuccess }: FeedbackModalProps
                     value={userName}
                     onChange={(e) => setUserName(e.target.value)}
                     placeholder="Ví dụ: Nguyễn Văn An"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E5AA8]/30 focus:border-[#1E5AA8] transition-all"
+                    className="cm-control w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                     required
                   />
                 </div>
@@ -233,7 +236,7 @@ export function FeedbackModal({ isOpen, onClose, onSuccess }: FeedbackModalProps
                     value={userRole}
                     onChange={(e) => setUserRole(e.target.value)}
                     placeholder="Ví dụ: Pickleball Sơn Trà"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E5AA8]/30 focus:border-[#1E5AA8] transition-all"
+                    className="cm-control w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   />
                 </div>
               </div>
@@ -248,7 +251,7 @@ export function FeedbackModal({ isOpen, onClose, onSuccess }: FeedbackModalProps
                   onChange={(e) => setComment(e.target.value)}
                   rows={3}
                   placeholder="Chia sẻ trải nghiệm của bạn khi ghép trận, tìm đối thủ, đặt sân hoặc tham gia giải đấu trên CourtMate..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E5AA8]/30 focus:border-[#1E5AA8] transition-all resize-none"
+                  className="cm-control w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none"
                   required
                 />
               </div>
@@ -258,14 +261,14 @@ export function FeedbackModal({ isOpen, onClose, onSuccess }: FeedbackModalProps
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-5 py-2.5 rounded-full border border-slate-200 text-sm font-semibold text-[#475467] hover:bg-slate-50 transition-colors"
+                  className="cm-button px-5 py-2.5 rounded-full border border-slate-200 text-sm font-semibold text-muted hover:bg-slate-50 transition-colors"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#1E5AA8] hover:bg-[#154687] text-white text-sm font-bold shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+                  className="cm-button inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-primary hover:bg-primary-dark text-white text-sm font-bold shadow-md hover:shadow-lg transition-all disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <span>Đang gửi...</span>
@@ -281,6 +284,6 @@ export function FeedbackModal({ isOpen, onClose, onSuccess }: FeedbackModalProps
           )}
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

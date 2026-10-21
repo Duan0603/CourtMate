@@ -1,19 +1,18 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import gsap from 'gsap';
+import styles from './SportsOverlays.module.css';
 import { useLoading } from '../../context/LoadingContext';
 
 export interface SportsOverlaysProps {
   isAuthenticated: boolean;
+  staticLayout?: boolean;
 }
 
 interface FeatureCardConfig {
   id: string;
-  num: string;
   containerClass: string;
-  numClass: string;
   title: string[];
   description: string;
 }
@@ -21,63 +20,30 @@ interface FeatureCardConfig {
 const FEATURE_CARDS: FeatureCardConfig[] = [
   {
     id: 'feature-01',
-    num: '01',
-    containerClass: 'left-[48%] md:left-[52%] top-1/2 -translate-y-1/2 max-w-[460px]',
-    numClass: '-top-16 -left-8',
+    containerClass: styles.featureRight,
     title: ['Mọi Giải Đấu,', 'Một Nền Tảng'],
     description:
       'Khám phá hàng trăm giải đấu cầu lông & pickleball tại Đà Nẵng. Theo dõi bảng đấu, tỉ số và bảng xếp hạng tức thì theo thời gian thực.',
   },
   {
     id: 'feature-02',
-    num: '02',
-    containerClass: 'left-[8%] md:left-[15%] top-1/2 -translate-y-1/2 max-w-[460px]',
-    numClass: '-top-16 -left-8',
+    containerClass: styles.featureLeft,
     title: ['Tìm Kiếm Nhanh Chóng,', 'Chính Xác'],
     description:
       'Bộ lọc nâng cao cho phép bạn tìm kiếm theo khu vực, thời gian và trình độ. Tiết kiệm thời gian, tập trung thi đấu hết mình.',
   },
   {
     id: 'feature-03',
-    num: '03',
-    containerClass:
-      'left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 max-w-[480px] text-center',
-    numClass: '-top-16 left-1/2 -translate-x-1/2',
+    containerClass: styles.featureCenter,
     title: ['Không Bỏ Lỡ', 'Bất Kỳ Cơ Hội Nào'],
     description:
       'Nhận thông báo ngay lập tức khi có giải đấu mới phù hợp với hồ sơ của bạn. Cập nhật lịch thi đấu tự động và ghép cặp on-demand.',
   },
 ];
 
-export function SportsOverlays({ isAuthenticated }: SportsOverlaysProps) {
+export function SportsOverlays({ isAuthenticated, staticLayout = false }: SportsOverlaysProps) {
   const router = useRouter();
-  const ctaBtnRef = useRef<HTMLButtonElement>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
-
-  // 3D Tilt button effect
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!ctaBtnRef.current) return;
-    const rect = ctaBtnRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left - rect.width / 2;
-    const y = e.clientY - rect.top - rect.height / 2;
-
-    gsap.to(ctaBtnRef.current, {
-      rotationY: x / 6,
-      rotationX: -y / 6,
-      ease: 'power2.out',
-      duration: 0.4,
-    });
-  };
-
-  const handleMouseLeave = () => {
-    if (!ctaBtnRef.current) return;
-    gsap.to(ctaBtnRef.current, {
-      rotationY: 0,
-      rotationX: 0,
-      ease: 'power2.out',
-      duration: 0.4,
-    });
-  };
 
   const { startNavigation } = useLoading();
 
@@ -90,6 +56,25 @@ export function SportsOverlays({ isAuthenticated }: SportsOverlaysProps) {
     startNavigation(targetUrl);
     router.push(targetUrl);
   };
+
+  if (staticLayout) {
+    return (
+      <div className="grid gap-8 md:grid-cols-2">
+        {FEATURE_CARDS.map(card => (
+          <article key={card.id} className="py-6">
+            <h2 className="text-2xl font-bold text-primary mb-3">{card.title.join(' ')}</h2>
+            <p className="text-muted leading-relaxed">{card.description}</p>
+          </article>
+        ))}
+        <div className="rounded-feature bg-primary p-8 text-white shadow-card">
+          <h2 className="text-2xl font-bold mb-4">Sẵn sàng ra sân?</h2>
+          <button onClick={handleCtaClick} disabled={isTransitioning} className="cm-button bg-white text-primary px-6 py-3 font-bold">
+            {isAuthenticated ? 'Xem giải đấu' : 'Tạo tài khoản'}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -113,24 +98,12 @@ export function SportsOverlays({ isAuthenticated }: SportsOverlaysProps) {
       {FEATURE_CARDS.map((card) => (
         <div
           key={card.id}
-          id={card.id}
-          className={`absolute w-[90%] md:w-full opacity-0 pointer-events-auto z-30 ${card.containerClass}`}
+          className={`${styles.featureAnchor} ${card.containerClass}`}
         >
-          <div className="relative bg-white/75 backdrop-blur-md p-8 md:p-10 rounded-3xl border border-white/80 shadow-xl shadow-slate-200/50">
-            <div
-              className={`absolute text-[140px] font-black text-transparent pointer-events-none select-none ${card.numClass}`}
-              style={{ WebkitTextStroke: '4px rgba(16, 24, 40, 0.06)' }}
-            >
-              {card.num}
-            </div>
+          <div id={card.id} className="relative bg-surface p-6 md:p-8 rounded-feature shadow-card opacity-0">
 
-            <h2 className="feature-heading text-3xl md:text-5xl font-black leading-[1.15] text-[#1E5AA8] relative z-10 mb-4">
-              {card.title.map((line, idx) => (
-                <React.Fragment key={idx}>
-                  {line}
-                  {idx < card.title.length - 1 && <br />}
-                </React.Fragment>
-              ))}
+            <h2 className="feature-heading text-[clamp(1.75rem,3vw,2.5rem)] font-black leading-[1.2] text-[#1E5AA8] relative z-10 mb-4">
+              {card.title.join(' ')}
             </h2>
             <p className="feature-para text-base md:text-lg text-[#475467] font-medium relative z-10 leading-relaxed">
               {card.description}
@@ -139,48 +112,14 @@ export function SportsOverlays({ isAuthenticated }: SportsOverlaysProps) {
         </div>
       ))}
 
-      {/* ─── CTA SECTION: "Sẵn Sàng Để Bắt Đầu?" ─── */}
-      <div className="story-cta absolute left-[5%] md:left-[48%] top-1/2 -translate-y-1/2 w-[90%] md:w-full max-w-[480px] opacity-0 pointer-events-none z-40">
-        <div className="w-full rounded-[2.5rem] bg-gradient-to-br from-[#1E5AA8] to-[#12396e] text-white p-8 md:p-10 text-center shadow-2xl relative overflow-hidden group border border-white/20">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.15),transparent_60%)]" />
-
-          <div className="inline-block px-3.5 py-1 rounded-full bg-white/15 text-white text-xs font-semibold tracking-wider uppercase mb-4 backdrop-blur-sm">
-             Cùng CourtMate Tỏa Sáng
-          </div>
-
-          <h2 className="text-3xl md:text-5xl font-black mb-4 relative z-10 tracking-tight leading-tight">
-            Sẵn Sàng Để Bắt Đầu?
-          </h2>
-          <p className="text-base md:text-lg font-medium mb-8 relative z-10 text-white/90 leading-relaxed">
-            Tham gia mạng lưới kết nối thể thao phát triển nhanh nhất Đà Nẵng ngay hôm nay.
-          </p>
-
-          <div style={{ perspective: '1000px' }} className="inline-block relative z-10 w-full">
-            <button
-              ref={ctaBtnRef}
-              onClick={handleCtaClick}
-              onMouseMove={handleMouseMove}
-              onMouseLeave={handleMouseLeave}
-              className="w-full bg-white text-[#1E5AA8] px-8 py-4 rounded-full font-black text-base shadow-2xl flex items-center justify-center gap-3 transition-transform hover:shadow-cyan-500/20 active:scale-95 cursor-pointer"
-              style={{ transformStyle: 'preserve-3d', willChange: 'transform' }}
-            >
-              <span>
-                {isAuthenticated ? 'Khám Phá Giải Đấu Ngay' : 'Tạo Tài Khoản Miễn Phí'}
-              </span>
-              <svg
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
+      {/* Position belongs to the anchor; GSAP animates only the card inside. */}
+      <div className={styles.ctaAnchor} data-story-cta-anchor>
+        <div className={`story-cta ${styles.ctaCard}`}>
+          <h2>Sẵn sàng ra sân?</h2>
+          <button onClick={handleCtaClick} disabled={isTransitioning} className={styles.ctaButton}>
+            {isAuthenticated ? 'Xem giải đấu' : 'Tạo tài khoản'}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+          </button>
         </div>
       </div>
 

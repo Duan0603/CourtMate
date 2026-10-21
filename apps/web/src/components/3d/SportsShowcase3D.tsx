@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Environment } from '@react-three/drei';
 import { useAuth } from '../../context/AuthContext';
@@ -14,6 +14,18 @@ import { SportsOverlays } from './SportsOverlays';
  */
 export function SportsShowcase3D() {
   const { isAuthenticated } = useAuth();
+  const [reducedMotion, setReducedMotion] = useState(false);
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const sync = () => setReducedMotion(media.matches);
+    sync();
+    media.addEventListener('change', sync);
+    return () => media.removeEventListener('change', sync);
+  }, []);
+
+  if (reducedMotion) {
+    return <section className="page-container page-section"><SportsOverlays isAuthenticated={isAuthenticated} staticLayout /></section>;
+  }
 
   return (
     <div

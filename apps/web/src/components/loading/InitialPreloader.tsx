@@ -30,6 +30,7 @@ export function InitialPreloader() {
   const [shouldRender, setShouldRender] = useState(true);
 
   useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     if (initialPreloaderFailed) {
       if (timelineRef.current) {
         timelineRef.current.pause();
@@ -187,6 +188,10 @@ export function InitialPreloader() {
 
   // Sync render state and animations
   useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setShouldRender(isBusy || initialPreloaderFailed);
+      return;
+    }
     if (isBusy) {
       setShouldRender(true);
       if (containerRef.current) {
@@ -222,12 +227,12 @@ export function InitialPreloader() {
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#F8FAFC] selection:bg-none"
+      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-canvas selection:bg-none"
       aria-label="CourtMate Loading Screen"
       role="status"
     >
       {/* Background Sport Aura */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-tr from-[#1E5AA8]/10 via-[#0077FF]/5 to-amber-200/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-tr from-primary/10 via-primary/5 to-amber-200/20 rounded-full blur-3xl pointer-events-none" />
 
       {/* Main Preloader Content Card */}
       <div className="relative z-10 flex flex-col items-center max-w-sm px-6 text-center">
@@ -303,12 +308,12 @@ export function InitialPreloader() {
         {/* Brand Name & Typography */}
         <div ref={brandTextRef} className="flex flex-col items-center">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-black tracking-[0.25em] text-[#1E5AA8] uppercase">
+            <span className="text-xs font-black tracking-[0.25em] text-primary uppercase">
               CourtMate Sports
             </span>
           </div>
 
-          <h2 className="text-2xl font-black text-[#101828] tracking-tight">
+          <h2 className="text-2xl font-black text-ink tracking-tight">
             Kết nối sân & Giải đấu
           </h2>
         </div>
@@ -317,7 +322,7 @@ export function InitialPreloader() {
         {!initialPreloaderFailed ? (
           <div className="mt-4 flex flex-col items-center gap-2.5">
             <LoadingDots size="md" colorScheme="brand" />
-            <p ref={statusRef} className="text-xs font-semibold text-[#475467] animate-pulse">
+            <p ref={statusRef} className="text-xs font-semibold text-muted animate-pulse">
               Đang chuẩn bị dữ liệu sân đấu...
             </p>
           </div>
@@ -331,7 +336,7 @@ export function InitialPreloader() {
             </p>
             <button
               onClick={retryInitialPreloader}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#1E5AA8] text-white text-xs font-bold hover:bg-[#154687] shadow-sm transition-all"
+              className="cm-button inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-white text-xs font-bold hover:bg-primary-dark shadow-sm transition-all"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Thử lại</span>

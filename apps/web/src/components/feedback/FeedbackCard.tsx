@@ -36,12 +36,12 @@ export function FeedbackCard({ feedback }: FeedbackCardProps) {
     .toUpperCase();
 
   return (
-    <div className="feedback-card group w-[340px] md:w-[400px] shrink-0 p-6 rounded-[24px] bg-white border border-[#1E5AA8]/10 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_16px_45px_rgba(30,90,168,0.12)] hover:border-[#1E5AA8]/35 transition-all duration-300 flex flex-col justify-between relative overflow-hidden select-none cursor-pointer">
+    <div className="feedback-card group w-[340px] md:w-[400px] shrink-0 p-6 rounded-feature bg-white border border-primary/10 shadow-card hover:shadow-card hover:border-primary/35 transition-all duration-300 flex flex-col justify-between relative overflow-hidden">
       {/* Soft gradient accent highlight on top */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#1E5AA8]/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
       {/* Decorative quote icon background */}
-      <div className="absolute top-4 right-4 text-[#1E5AA8]/5 group-hover:text-[#1E5AA8]/10 transition-colors pointer-events-none">
+      <div className="absolute top-4 right-4 text-primary/5 group-hover:text-primary/10 transition-colors pointer-events-none">
         <Quote size={40} />
       </div>
 
@@ -57,7 +57,7 @@ export function FeedbackCard({ feedback }: FeedbackCardProps) {
                   key={i}
                   className={`w-4 h-4 transition-colors ${
                     isFilled
-                      ? 'fill-amber-400 text-amber-400 drop-shadow-[0_1px_3px_rgba(251,191,36,0.4)]'
+                      ? 'fill-amber-400 text-amber-400 drop-shadow-card'
                       : 'fill-slate-100 text-slate-300'
                   }`}
                 />
@@ -69,14 +69,14 @@ export function FeedbackCard({ feedback }: FeedbackCardProps) {
           </div>
 
           {feedback.category && (
-            <span className="text-[11px] font-semibold text-[#1E5AA8] bg-[#E8F1FA] px-2.5 py-0.5 rounded-full">
+            <span className="text-[11px] font-semibold text-primary bg-primary-soft px-2.5 py-0.5 rounded-full">
               {feedback.category}
             </span>
           )}
         </div>
 
         {/* Comment text */}
-        <p className="text-[#344054] text-sm md:text-[15px] leading-relaxed font-normal mb-5 line-clamp-4 group-hover:text-[#101828] transition-colors">
+        <p className="text-[#344054] text-sm md:text-[15px] leading-relaxed font-normal mb-5 line-clamp-4 group-hover:text-ink transition-colors">
           &ldquo;{feedback.comment}&rdquo;
         </p>
       </div>
@@ -96,14 +96,14 @@ export function FeedbackCard({ feedback }: FeedbackCardProps) {
               />
             </div>
           ) : (
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#1E5AA8] to-[#3B82F6] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-sm">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-[#3B82F6] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-sm">
               {initials}
             </div>
           )}
 
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <h4 className="text-sm font-bold text-[#101828] truncate">
+              <h4 className="text-sm font-bold text-ink truncate">
                 {feedback.userName}
               </h4>
               {feedback.isVerified !== false && (

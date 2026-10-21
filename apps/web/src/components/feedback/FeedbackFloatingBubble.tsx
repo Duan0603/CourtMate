@@ -34,14 +34,8 @@ export function FeedbackFloatingBubble({ onFeedbackAdded }: FeedbackFloatingBubb
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           aria-label="Mở bảng đánh giá và phản hồi hệ thống"
-          className="relative flex items-center justify-center h-14 px-4 md:px-5 rounded-full bg-gradient-to-r from-[#1E5AA8] to-[#154687] text-white shadow-[0_10px_25px_rgba(30,90,168,0.4)] hover:shadow-[0_16px_35px_rgba(30,90,168,0.6)] border-2 border-white/30 transition-all duration-300 hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-[#1E5AA8]/30"
+          className="cm-button relative flex items-center justify-center h-14 px-4 md:px-5 rounded-full bg-gradient-to-r from-primary to-primary-dark text-white shadow-card hover:shadow-card border-2 border-white/30 transition-all duration-300  active:scale-95 focus:outline-none focus:ring-4 focus:ring-primary/30"
         >
-          {/* Subtle radar / ping wave effect */}
-          <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-            <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-amber-500 border border-white" />
-          </span>
-
           <div className="flex items-center gap-2">
             <MessageSquareHeart className="w-6 h-6 text-white group-hover:rotate-12 transition-transform duration-300" />
             <span className="hidden sm:inline-block font-bold text-sm tracking-wide">

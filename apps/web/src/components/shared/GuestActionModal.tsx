@@ -37,7 +37,7 @@ export const GuestActionModal: React.FC<GuestActionModalProps> = ({
       width={400}
       aria-labelledby={titleId}
       aria-describedby={descriptionId}
-      styles={{ content: { padding: 32, borderRadius: 24 } }}
+      styles={{ content: { padding: 32, borderRadius: 'var(--cm-radius-feature)' } }}
     >
       <div className="text-center">
         <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-50 text-amber-500">
@@ -51,7 +51,7 @@ export const GuestActionModal: React.FC<GuestActionModalProps> = ({
             onClose();
             router.push(`/login?redirect=${encodeURIComponent(redirectUrl)}`);
           }}
-          className="mt-6 w-full cursor-pointer rounded-xl bg-[#1E5AA8] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#154687] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+          className="cm-action cm-button mt-6 w-full cursor-pointer rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
         >
           Đăng nhập ngay
         </button>

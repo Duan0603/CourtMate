@@ -5,28 +5,28 @@ import { PageContainer } from '../../components/layout/PageContainer';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { 
-  LayoutDashboard, 
-  Trophy, 
-  Users, 
-  Calendar, 
-  DollarSign, 
-  Check, 
-  X, 
-  Plus, 
-  TrendingUp, 
-  ShieldCheck, 
+import {
+  LayoutDashboard,
+  Trophy,
+  Users,
+  Calendar,
+  DollarSign,
+  Check,
+  X,
+  Plus,
+  TrendingUp,
+  ShieldCheck,
   Clock,
   MapPin,
   FileSpreadsheet,
   AlertCircle
 } from 'lucide-react';
-import { 
-  initialOrganizerDashboardData, 
-  getOrganizerMetrics, 
-  TournamentItem, 
-  RegistrationItem, 
-  CourtItem 
+import {
+  initialOrganizerDashboardData,
+  getOrganizerMetrics,
+  TournamentItem,
+  RegistrationItem,
+  CourtItem
 } from './organizerData';
 import { useAuth } from '../../context/AuthContext';
 import { tournamentsApi } from '../../lib/tournaments.api';
@@ -144,38 +144,35 @@ export default function OrganizerDashboardPage() {
   };
 
   return (
-    <div className="bg-[#F8FAFC] min-h-screen page-section">
+    <div className="bg-canvas min-h-screen page-section">
       <PageContainer>
-        
+
         {/* Header Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <div className="flex items-center gap-2 text-xs font-semibold text-primary uppercase tracking-wider mb-1">
-              <LayoutDashboard className="w-4 h-4" />
-              <span>Bảng điều khiển ban tổ chức</span>
-            </div>
+
             <h1 className="text-2xl sm:text-3xl font-extrabold text-navy">
               {data.profile.name}
             </h1>
-            <p className="text-xs text-slate-500 mt-1">
-              {data.profile.location} • Quản lý các giải đấu, vận động viên và lịch thi đấu thực tế trên hệ thống
+            <p className="text-sm text-slate-500 mt-1">
+              {data.profile.location}
             </p>
           </div>
 
           <Link
             href="/tournaments/create"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-dark text-white font-bold text-xs shadow-sm hover:shadow transition w-fit"
+            className="cm-action inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-dark text-white font-bold text-xs shadow-sm hover:shadow transition w-fit"
           >
             <Plus className="w-4 h-4" />
-            <span>Tạo giải đấu mới</span>
+            <span>Tạo giải đấu</span>
           </Link>
         </div>
 
         {/* 4 KPI Metric Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+          <div className="bg-surface shadow-card p-5 rounded-2xl border border-slate-200  flex items-center justify-between">
             <div>
-              <span className="text-xs text-slate-400 font-medium block">Giải đấu đang mở</span>
+              <span className="text-xs text-muted font-medium block">Giải đấu đang mở</span>
               <strong className="text-2xl font-extrabold text-navy mt-1 block">
                 {metrics.activeTournaments}
               </strong>
@@ -185,21 +182,21 @@ export default function OrganizerDashboardPage() {
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+          <div className="bg-surface shadow-card p-5 rounded-2xl border border-slate-200  flex items-center justify-between">
             <div>
-              <span className="text-xs text-slate-400 font-medium block">Đăng ký chờ duyệt</span>
-              <strong className="text-2xl font-extrabold text-court-orange mt-1 block">
+              <span className="text-xs text-muted font-medium block">Đăng ký chờ duyệt</span>
+              <strong className="text-2xl font-extrabold text-amber-700 mt-1 block">
                 {metrics.pendingRegistrations}
               </strong>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-court-orange flex items-center justify-center">
+            <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-700 flex items-center justify-center">
               <Clock className="w-6 h-6" />
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+          <div className="bg-surface shadow-card p-5 rounded-2xl border border-slate-200  flex items-center justify-between">
             <div>
-              <span className="text-xs text-slate-400 font-medium block">Tổng vận động viên</span>
+              <span className="text-xs text-muted font-medium block">Tổng vận động viên</span>
               <strong className="text-2xl font-extrabold text-navy mt-1 block">
                 {metrics.totalParticipants}
               </strong>
@@ -209,31 +206,21 @@ export default function OrganizerDashboardPage() {
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
-            <div>
-              <span className="text-xs text-slate-400 font-medium block">Trạng thái hệ thống</span>
-              <strong className="text-2xl font-extrabold text-emerald-600 mt-1 block">
-                Trực tuyến
-              </strong>
-            </div>
-            <div className="w-12 h-12 rounded-xl bg-blue-500/10 text-primary flex items-center justify-center">
-              <ShieldCheck className="w-6 h-6" />
-            </div>
-          </div>
+
         </div>
 
         {/* Tab Controls */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-1.5 flex gap-1 shadow-xs mb-6 overflow-x-auto">
+        <div className="bg-surface shadow-card rounded-2xl border border-slate-200 p-1.5 flex gap-1  mb-6 overflow-x-auto">
           {[
             { id: 'tournaments', label: `Giải đấu (${data.tournaments.length})` },
             { id: 'registrations', label: `Duyệt đăng ký (${data.registrations.length})` },
-            { id: 'courts', label: `Lịch & Trạng thái sân (${data.courts.length})` },
-            { id: 'reports', label: 'Báo cáo & Xuất dữ liệu' },
+            { id: 'courts', label: `Sân thi đấu (${data.courts.length})` },
+            { id: 'reports', label: 'Báo cáo' },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap ${
+              className={`cm-button px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap ${
                 activeTab === tab.id
                   ? 'bg-primary text-white shadow-xs'
                   : 'text-slate-600 hover:text-navy hover:bg-slate-50'
@@ -246,30 +233,20 @@ export default function OrganizerDashboardPage() {
 
         {/* TAB 1: Tournaments List Table */}
         {activeTab === 'tournaments' && (
-          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+          <div className="bg-surface shadow-card rounded-2xl border border-slate-200 overflow-hidden ">
             <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="font-bold text-navy text-sm">Danh sách giải đấu thực tế</h3>
-              <Link
-                href="/tournaments/create"
-                className="text-xs text-primary font-semibold hover:underline"
-              >
-                + Thêm giải đấu mới
-              </Link>
+              <h3 className="font-bold text-navy text-sm">Giải đấu của bạn</h3>
+
             </div>
 
             {loading ? (
-              <div className="p-12 text-center text-slate-400 text-sm">Đang tải dữ liệu giải đấu từ hệ thống...</div>
+              <div className="p-12 text-center text-muted text-sm">Đang tải dữ liệu giải đấu từ hệ thống...</div>
             ) : data.tournaments.length === 0 ? (
               <div className="p-12 text-center">
                 <Trophy className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                 <h4 className="font-bold text-navy text-sm">Chưa có giải đấu nào</h4>
-                <p className="text-xs text-slate-500 mt-1 mb-4">Hãy tạo giải đấu đầu tiên để kết nối vận động viên.</p>
-                <Link
-                  href="/tournaments/create"
-                  className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-semibold hover:bg-primary-dark transition"
-                >
-                  Tạo giải đấu ngay
-                </Link>
+                <p className="text-sm text-slate-500 mt-1 mb-4">Chọn “Tạo giải đấu” để bắt đầu.</p>
+
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -327,18 +304,18 @@ export default function OrganizerDashboardPage() {
 
         {/* TAB 2: Registrations Approval */}
         {activeTab === 'registrations' && (
-          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+          <div className="bg-surface shadow-card rounded-2xl border border-slate-200 overflow-hidden ">
             <div className="p-5 border-b border-slate-100 flex items-center justify-between">
               <h3 className="font-bold text-navy text-sm">Danh sách đăng ký chờ duyệt</h3>
             </div>
 
             {loading ? (
-              <div className="p-12 text-center text-slate-400 text-sm">Đang tải hồ sơ đăng ký...</div>
+              <div className="p-12 text-center text-muted text-sm">Đang tải hồ sơ đăng ký...</div>
             ) : data.registrations.length === 0 ? (
               <div className="p-12 text-center">
                 <Users className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                 <h4 className="font-bold text-navy text-sm">Chưa có hồ sơ đăng ký nào</h4>
-                <p className="text-xs text-slate-500 mt-1">Khi vận động viên đăng ký thi đấu, danh sách sẽ hiển thị tại đây để bạn phê duyệt.</p>
+                <p className="text-sm text-slate-500 mt-1">Khi vận động viên đăng ký thi đấu, danh sách sẽ hiển thị tại đây để bạn phê duyệt.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -385,19 +362,19 @@ export default function OrganizerDashboardPage() {
                             <div className="flex items-center justify-end gap-1.5">
                               <button
                                 onClick={() => handleApproveRegistration(reg.id)}
-                                className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition"
+                                className="cm-button px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition"
                               >
                                 Duyệt
                               </button>
                               <button
                                 onClick={() => handleRejectRegistration(reg.id)}
-                                className="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 font-semibold transition"
+                                className="cm-button px-2.5 py-1 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 font-semibold transition"
                               >
                                 Từ chối
                               </button>
                             </div>
                           ) : (
-                            <span className="text-slate-400">Đã xử lý</span>
+                            <span className="text-muted">Đã xử lý</span>
                           )}
                         </td>
                       </tr>
@@ -411,38 +388,30 @@ export default function OrganizerDashboardPage() {
 
         {/* TAB 3: Courts & Slots Management */}
         {activeTab === 'courts' && (
-          <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-xs text-center">
+          <div className="bg-surface shadow-card rounded-2xl border border-slate-200 p-8  text-center">
             <Calendar className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <h3 className="font-bold text-navy text-sm">Chưa liên kết cụm sân thi đấu trực tiếp</h3>
-            <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
-              Hệ thống đặt ca sân tự động sẽ được kích hoạt khi bạn kết nối cụm sân thi đấu với giải đấu của mình.
-            </p>
+            <h3 className="font-bold text-navy text-sm">Chưa có sân liên kết</h3>
+
           </div>
         )}
 
         {/* TAB 4: Financial Reports */}
         {activeTab === 'reports' && (
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 space-y-6 shadow-xs">
+          <div className="bg-surface shadow-card rounded-2xl border border-slate-200 p-6 sm:p-8 space-y-6 ">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-navy text-base">Báo cáo tài chính & Tăng trưởng</h3>
-                <p className="text-xs text-slate-500 mt-0.5">Dữ liệu doanh thu thực tế từ lệ phí đăng ký giải đấu</p>
+                <h3 className="font-bold text-navy text-base">Báo cáo doanh thu</h3>
+                <p className="text-sm text-slate-500 mt-0.5">Lệ phí đăng ký giải đấu</p>
               </div>
 
-              <button
-                onClick={() => alert('Đang xuất tệp Excel báo cáo doanh thu từ hệ thống...')}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-navy font-semibold text-xs transition"
-              >
-                <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-                <span>Xuất file Excel</span>
-              </button>
+
             </div>
 
             <div className="p-8 rounded-xl bg-slate-50 border border-slate-100 text-center">
               <DollarSign className="w-10 h-10 text-primary mx-auto mb-2" />
-              <strong className="text-xl font-bold text-navy block">Báo cáo tự động theo thời gian thực</strong>
-              <p className="text-xs text-slate-500 mt-1">
-                Doanh thu và phí giải đấu được đối soát tự động qua cổng thanh toán PayOS / VietQR.
+              <strong className="text-xl font-bold text-navy block">Chưa có báo cáo doanh thu</strong>
+              <p className="text-sm text-slate-500 mt-1">
+                Báo cáo doanh thu chưa được hỗ trợ.
               </p>
             </div>
           </div>
