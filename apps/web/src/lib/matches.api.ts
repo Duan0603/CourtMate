@@ -24,7 +24,7 @@ export const matchesApi = {
       };
     } catch (error) {
       console.error('Error fetching matches:', error);
-      return { data: [], meta: { total: 0 } };
+      throw error;
     }
   },
 

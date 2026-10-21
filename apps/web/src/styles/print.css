@@ -1,0 +1,123 @@
+/* CourtMate print system. Internal rows and data remain flat. */
+:root :is(h1, h2, h3, .font-display) {
+  font-family: var(--font-display), var(--font-inter), sans-serif;
+  font-weight: 900;
+  letter-spacing: -.03em;
+  text-wrap: balance;
+}
+:root .font-black { font-family: var(--font-display), var(--font-inter), sans-serif; }
+::selection { background: rgb(var(--cm-baby)); color: #111; }
+
+:root :is(.shadow-card, .shadow-md, .shadow-lg, .shadow-xl, .shadow-2xl, .shadow-elevated, .shadow-interactive, .shadow-soft) {
+  border: var(--cm-stroke) solid rgb(var(--cm-border));
+}
+:root :is(.border-ink, .border-ink\/80, .border-ink\/90, .border-ink, .border-surface-border) { border-color: rgb(var(--cm-border)); }
+:root :is(.shadow-inner, .drop-shadow-sm, .drop-shadow-md, .drop-shadow-lg) { box-shadow: none; filter: none; }
+:root [class*="backdrop-blur"] { backdrop-filter: none; -webkit-backdrop-filter: none; }
+:root .rounded-full:not(img):not([role="progressbar"]) { border-radius: 8px; }
+:root img.rounded-full { border-radius: 50%; }
+
+/* Physical presses use translate so they do not replace animation transforms. */
+:root :is(.cm-button, .cm-action, .ant-btn:not(.ant-btn-text):not(.ant-btn-link)) {
+  border: 2px solid #111;
+  border-radius: var(--cm-radius-control);
+  font-weight: 800;
+  box-shadow: var(--cm-shadow-interactive);
+  transition: translate var(--cm-duration) var(--cm-ease), box-shadow var(--cm-duration) var(--cm-ease), background-color var(--cm-duration) var(--cm-ease), color var(--cm-duration) var(--cm-ease);
+}
+:root .cm-button:not([class*="bg-"]) { background-color: rgb(var(--cm-surface)); }
+:root :is(.cm-button.bg-primary, .cm-action.bg-primary, .ant-btn-primary) { background-color: rgb(var(--cm-primary)); color: white; }
+:root :is(.cm-button, .cm-action, .ant-btn:not(.ant-btn-text):not(.ant-btn-link)):active:not(:disabled):not([aria-disabled="true"]) { translate: 4px 4px; box-shadow: var(--cm-shadow-pressed); }
+:root :is(.cm-button, .cm-action, .ant-btn):disabled { translate: none; box-shadow: none; }
+:root :is(.cm-button, .cm-action, .cm-control, .ant-btn, .ant-input, .ant-select):focus-visible { outline: 3px solid rgb(var(--cm-primary)); outline-offset: 4px; }
+:root :is(.cm-control, .ant-input, .ant-input-affix-wrapper, .ant-select-selector, .ant-picker) { border: 2px solid #111; box-shadow: none; background-color: white; }
+:root .ant-input-affix-wrapper .ant-input { border: 0; }
+:root :is(.ant-modal-content, .ant-popover-inner, .ant-dropdown-menu, .ant-select-dropdown, .ant-notification-notice, .ant-card) { border: var(--cm-stroke) solid #111; box-shadow: var(--cm-shadow-elevated); }
+:root :is(.ant-modal-title, .ant-drawer-title, .ant-card-head-title) { font-family: var(--font-display), sans-serif; font-weight: 900; }
+:root .ant-drawer-content { border-left: 3px solid #111; }
+:root .ant-table { border: 2px solid #111; border-radius: var(--cm-radius-card); overflow: hidden; }
+:root .ant-table-thead > tr > th { background: rgb(var(--cm-baby)); color: #111; font-weight: 800; border-bottom: 2px solid #111; }
+:root .ant-tag { border: 2px solid #111; font-weight: 700; border-radius: 4px; }
+:root .ant-pagination-item-active { background: rgb(var(--cm-baby)); border: 2px solid #111; box-shadow: 2px 2px 0 #111; }
+:root .cm-toast { border: 2px solid #111; }
+
+/* Navigation is paper and ink; a baby-blue sticker marks the current route. */
+:root .site-header { background: rgb(var(--cm-background)); border: 0; border-bottom: 3px solid #111; box-shadow: none; }
+:root .site-footer { background: white; border-top: 3px solid #111; }
+:root .cm-nav-link { color: #111; border: 2px solid transparent; border-radius: 5px; font-weight: 800; }
+:root .cm-nav-link[aria-current="page"] { color: #111; background: rgb(var(--cm-baby)); border-color: #111; box-shadow: 3px 3px 0 #111; }
+:root .cm-nav-link:hover { background: rgb(var(--cm-baby)); color: #111; }
+:root .site-header .cm-button { box-shadow: 2px 2px 0 #111; }
+:root .site-header .cm-button:active { translate: 2px 2px; box-shadow: none; }
+:root .site-header .cm-button.w-full { border: 0; box-shadow: none; background: transparent; }
+
+:root #hero { background: white; border-bottom: 3px solid #111; }
+:root #hero h1 { font-size: clamp(2.6rem, 7.2vw, 7rem); }
+:root #hero a { border: 3px solid #111; box-shadow: var(--cm-shadow-interactive); border-radius: 6px; }
+:root #hero a:active { translate: 4px 4px; box-shadow: none; }
+:root #hero a:not(.bg-primary) { background: white; color: #111; }
+:root .cm-founders > div:nth-child(3n + 1) { background: rgb(var(--cm-baby)); }
+:root .cm-founders > div:nth-child(3n + 2) { background: rgb(var(--cm-baby)); }
+:root .cm-founders > div:nth-child(3n) { background: rgb(var(--cm-tan)); }
+
+::-webkit-scrollbar-track { background: rgb(var(--cm-background)); }
+::-webkit-scrollbar-thumb { background: #111; border: 2px solid rgb(var(--cm-background)); border-radius: 0; }
+::-webkit-scrollbar-thumb:hover { background: rgb(var(--cm-primary)); }
+@media (max-width: 639px) { :root { --cm-shadow-card: 4px 4px 0 #111; --cm-shadow-elevated: 5px 5px 0 #111; } }
+@media (prefers-reduced-motion: reduce) { :root :is(.cm-button, .cm-action, .ant-btn, #hero a):active { translate: none; } }
+
+:root input::placeholder, :root textarea::placeholder { color: #3f3f3f; opacity: 1; }
+
+:root .cm-founders :is(p, h3), :root .cm-stat .text-primary { color: #111; }
+
+/* One outlined search group, not separate raised controls inside a raised panel. */
+:root .cm-searchbar { min-width: 0; border-radius: 8px; box-shadow: var(--cm-shadow-interactive); }
+:root .cm-searchbar > .flex-1 { min-width: 0; }
+:root .cm-searchbar .cm-control { border: 0; background: transparent; box-shadow: none; }
+:root .cm-searchbar > div:first-child > .cm-button { border: 0; border-radius: 0; box-shadow: none; background: transparent; }
+:root .cm-searchbar > div:first-child { border-right: 2px solid #111; }
+:root .cm-searchbar > .w-\[1px\] { display: none; }
+:root .cm-searchbar .cm-button.w-full { border: 0; border-radius: 0; box-shadow: none; }
+
+/* Keep the 44px header controls separate from the wordmark on small phones. */
+@media (max-width: 380px) {
+  :root .site-header a[aria-label="CourtMate Trang chủ"] > span { display: none; }
+  :root .site-header > .page-container { gap: 8px; }
+}
+
+:root :is(.shadow-card, .shadow-md, .shadow-lg, .shadow-xl, .shadow-2xl, .shadow-elevated, .shadow-interactive):hover { border-color: #111; }
+:root :is(.cm-button.bg-primary, .cm-action.bg-primary, .ant-btn-primary):hover:not(:disabled) { background-color: rgb(var(--cm-primary-hover)); color: white; }
+
+/* Three accents only. Colored blocks use ink; dark blue actions use white. */
+:root :is(.bg-accent-baby, .bg-accent-tan, .bg-primary-soft) { color: #111; }
+:root :is(.bg-accent-baby, .bg-accent-tan, .bg-primary-soft) :is(.text-primary, .text-muted) { color: #111; }
+:root :is(.bg-accent-baby, .bg-accent-tan, .bg-primary-soft).text-primary { color: #111; }
+:root :is(.ant-alert, .ant-alert-success, .ant-alert-error, .ant-alert-info) { background: rgb(var(--cm-baby)); border: 2px solid #111; color: #111; }
+:root .ant-alert-warning { background: rgb(var(--cm-tan)); }
+:root .ant-alert :is(.ant-alert-icon, .ant-alert-message, .ant-alert-description) { color: #111; }
+:root :is(.ant-message-notice-content, .ant-picker-panel-container) { border: 2px solid #111; box-shadow: var(--cm-shadow-elevated); }
+:root .ant-modal { max-width: calc(100vw - 32px); }
+:root .ant-modal-body { max-height: calc(100dvh - 128px); overflow-y: auto; overscroll-behavior: contain; }
+:root .ant-select-focused .ant-select-selector { outline: 3px solid rgb(var(--cm-primary)); outline-offset: 3px; }
+:root :is(.ant-select-item-option-selected, .ant-dropdown-menu-item-selected) { background: rgb(var(--cm-baby)); color: #111; }
+:root .cm-chat { height: calc(100vh - var(--header-height)); height: calc(100dvh - var(--header-height)); min-height: 0; }
+:root .cm-chat input { font-size: 16px; min-width: 0; }
+:root .cm-chat .cm-chat-stream { overscroll-behavior: contain; }
+
+:root :is(.ant-input-number, .ant-input-number-affix-wrapper, .ant-mentions, .ant-cascader-picker) { border: 2px solid #111; background: white; box-shadow: none; }
+:root :is(.ant-input-number-focused, .ant-picker-focused, .ant-input-affix-wrapper-focused) { border-color: #111; box-shadow: none; outline: 3px solid rgb(var(--cm-primary)); outline-offset: 3px; }
+:root .ant-drawer-content-wrapper { box-shadow: var(--cm-shadow-elevated); }
+:root :is(.ant-tag-success, .ant-tag-error, .ant-tag-processing) { background: rgb(var(--cm-baby)); color: #111; border-color: #111; }
+:root .ant-tag-warning { background: rgb(var(--cm-tan)); color: #111; border-color: #111; }
+/* Auth overlay: the form owns the single print outline and shadow. */
+:root .cm-auth-modal .ant-modal-content{padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important}
+:root .cm-auth-modal .ant-modal-body{padding:0!important;max-height:none!important;overflow:hidden!important;border-radius:14px}
+:root .cm-auth-modal .ant-modal-close{top:8px;right:8px;width:36px;height:36px;background:white!important;border:2px solid #111;border-radius:6px;color:#111;box-shadow:2px 2px 0 #111}
+:root .cm-auth-modal .ant-modal-close:focus-visible{outline:3px solid #1848ff;outline-offset:3px}
+@media(max-width:700px){:root .cm-auth-modal .ant-modal-close{top:12px;right:12px}}
+:root .cm-auth-modal .ant-modal-header{height:0;margin:0;padding:0;overflow:hidden}
+:root .cm-auth-modal .ant-modal-content{box-shadow:7px 7px 0 #111!important;border-radius:14px}
+@media(max-width:700px){:root .cm-auth-modal .ant-modal-content{box-shadow:4px 4px 0 #111!important}}
+:root .cm-auth-wrap{display:flex;align-items:center;justify-content:center;overflow:hidden!important;padding:24px 0}
+:root .cm-auth-wrap::before{display:none}
+:root .cm-auth-wrap .ant-modal{top:0;margin:0;padding-bottom:0;flex-shrink:0;max-height:calc(100dvh - 64px)}

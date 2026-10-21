@@ -1,3 +1,5 @@
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { ActivityNotificationsInterceptor } from './activity-notifications.interceptor';
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Notification, NotificationSchema } from './schemas/notification.schema';
@@ -14,7 +16,7 @@ import { NotificationsController } from './notifications.controller';
     ]),
   ],
   controllers: [NotificationsController],
-  providers: [NotificationsGateway, NotificationsService],
-  exports: [NotificationsService],
+  providers: [NotificationsGateway, NotificationsService, { provide: APP_INTERCEPTOR, useClass: ActivityNotificationsInterceptor }],
+  exports: [NotificationsService, NotificationsGateway],
 })
 export class NotificationsModule {}

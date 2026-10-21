@@ -8,6 +8,8 @@
     "start": "next start -p 3001",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "test:notifications": "node --test test/notification-delivery.test.cjs",
+    "test:styles": "node --test test/style-contract.test.cjs",
     "clean": "node -e \"require('fs').rmSync('.next', { recursive: true, force: true })\""
   },
   "dependencies": {

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, UseGuards } from '@nestjs/common';
 import { AdminService } from '../../domains/services/admin.service';
 import { RegionService } from '../../domains/services/region.service';
 import { ModerateTournamentDto } from '../../dtos/moderate-tournament.dto';
@@ -14,6 +14,86 @@ export class AdminController {
     private readonly adminService: AdminService,
     private readonly regionService: RegionService,
   ) {}
+
+  /**
+   * GET /admin/dashboard-overview
+   * Nationwide overview stats: total users, online users, tournaments, matches.
+   */
+  @Get('dashboard-overview')
+  @Roles('REGIONAL_ADMIN', 'SUPER_ADMIN')
+  async getDashboardOverview() {
+    return this.adminService.getDashboardOverview();
+  }
+
+  /**
+   * GET /admin/users
+   * Full user management list with role & online status.
+   */
+  @Get('users')
+  @Roles('REGIONAL_ADMIN', 'SUPER_ADMIN')
+  async getUsers() {
+    return this.adminService.getAllUsers();
+  }
+
+  /**
+   * PUT /admin/users/:id/role
+   * Role management / assignment.
+   */
+  @Put('users/:id/role')
+  @Roles('SUPER_ADMIN')
+  async updateUserRole(@Param('id') userId: string, @Body('role') role: string) {
+    return this.adminService.updateUserRole(userId, role);
+  }
+
+  /**
+   * PUT /admin/users/:id/status
+   * Lock / unlock account.
+   */
+  @Put('users/:id/status')
+  @Roles('SUPER_ADMIN')
+  async updateUserStatus(@Param('id') userId: string, @Body('status') status: string) {
+    return this.adminService.updateUserStatus(userId, status);
+  }
+
+  /**
+   * GET /admin/tournaments
+   * All tournaments nationwide for moderation.
+   */
+  @Get('tournaments')
+  @Roles('REGIONAL_ADMIN', 'SUPER_ADMIN')
+  async getAllTournaments() {
+    return this.adminService.getAllTournamentsForAdmin();
+  }
+
+  /**
+   * GET /admin/organizer-requests
+   * All organizer applications.
+   */
+  @Get('organizer-requests')
+  @Roles('REGIONAL_ADMIN', 'SUPER_ADMIN')
+  async getOrganizerRequests() {
+    return this.adminService.getOrganizerRequests();
+  }
+
+  /**
+   * PUT /admin/organizers/:id/approve
+   * Approve organizer application.
+   */
+  @Put('organizers/:id/approve')
+  @Roles('SUPER_ADMIN')
+  async approveOrganizer(@Param('id') userId: string) {
+    return this.adminService.approveOrganizer(userId);
+  }
+
+  /**
+   * PUT /admin/organizers/:id/reject
+   * Reject organizer application.
+   */
+  @Put('organizers/:id/reject')
+  @Roles('SUPER_ADMIN')
+  async rejectOrganizer(@Param('id') userId: string, @Body('reason') reason?: string) {
+    return this.adminService.rejectOrganizer(userId, reason);
+  }
 
   /**
    * GET /admin/regions

@@ -41,20 +41,20 @@ export function SmartAsyncContainer({
   className = '',
 }: SmartAsyncContainerProps) {
   if (error) {
-    const errorText = typeof error === 'string' ? error : error?.message || errorMessage || 'Không thể tải dữ liệu.';
+    const errorText = errorMessage || (typeof error === 'string' ? error : error?.message) || 'Không thể tải dữ liệu.';
     return (
-      <div className={`p-8 my-4 rounded-3xl bg-white border border-rose-100 shadow-sm flex flex-col items-center justify-center text-center ${className}`}>
-        <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center mb-3">
+      <div role="alert" className={`p-8 my-4 rounded-3xl bg-surface shadow-card border border-ink  flex flex-col items-center justify-center text-center ${className}`}>
+        <div className="w-12 h-12 rounded-2xl bg-accent-baby text-ink flex items-center justify-center mb-3">
           <AlertCircle className="w-6 h-6" />
         </div>
-        <h4 className="text-base font-bold text-slate-900 mb-1">Đã xảy ra sự cố</h4>
-        <p className="text-xs text-slate-500 max-w-sm mb-4 leading-relaxed">
+        <h4 className="text-base font-bold text-ink mb-1">Chưa tải được dữ liệu</h4>
+        <p className="text-xs text-muted max-w-sm mb-4 leading-relaxed">
           {errorText}
         </p>
         {onRetry && (
           <button
             onClick={onRetry}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#1E5AA8] text-white text-xs font-bold hover:bg-[#154687] shadow-sm transition-all"
+            className="cm-button inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-white text-xs font-bold hover:bg-primary-dark shadow-sm transition-all"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Thử lại ngay</span>

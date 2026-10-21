@@ -1,3 +1,4 @@
+import { NotificationsService } from '../notifications/notifications.service';
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException, ServiceUnavailableException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
@@ -23,6 +24,7 @@ export class PaymentsService {
     @InjectModel(Registration.name) private readonly registrations: Model<Registration>,
     @InjectModel(TournamentStub.name) private readonly tournaments: Model<TournamentStub>,
     private readonly config: ConfigService,
+    private readonly notifications: NotificationsService,
   ) {
     this.payos = new PayOS({
       clientId: this.config.get<string>('PAYOS_CLIENT_ID') || 'client-id',
@@ -203,6 +205,7 @@ export class PaymentsService {
   }
 
   private async completeTransaction(transaction: PaymentTransaction, success: boolean, gatewayId: string, response: Query) {
+    const previousStatus = transaction.status;
     transaction.status = success ? 'PAID' : 'FAILED';
     transaction.gatewayTransactionId = gatewayId;
     transaction.gatewayResponse = response;
@@ -230,6 +233,14 @@ export class PaymentsService {
         { $set: { status: RegistrationStatus.REJECTED } },
         { new: true }
       ).exec();
+    }
+    if (previousStatus !== transaction.status) {
+      const registration = await this.registrations.findById(transaction.registrationId).exec();
+      if (registration) {
+        try {
+          await this.notifications.send({ userId: registration.playerId, type: 'PAYMENT_UPDATED', title: success ? 'Thanh toán thành công' : 'Thanh toán chưa hoàn tất', body: success ? 'Thanh toán đăng ký giải đấu của bạn đã được xác nhận.' : 'Thanh toán đã thất bại hoặc bị hủy. Bạn có thể kiểm tra lại đăng ký.', link: '/tournaments/' + registration.tournamentId });
+        } catch (error) { this.logger.error('Could not persist payment notification', error); }
+      }
     }
   }
 

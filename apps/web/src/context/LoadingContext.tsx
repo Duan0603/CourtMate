@@ -71,7 +71,7 @@ export function LoadingProvider({
   // ──────────────────────────────────────────────────────────────────────────
   // 1. Initial Cinematic Preloader State
   // ──────────────────────────────────────────────────────────────────────────
-  const [isInitialLoading, setIsInitialLoading] = useState<boolean>(true);
+  const [isInitialLoading, setIsInitialLoading] = useState<boolean>(false);
   const [initialPreloaderFailed, setInitialPreloaderFailed] = useState<boolean>(false);
   const [initialPreloaderError, setInitialPreloaderError] = useState<string | null>(null);
 
@@ -268,6 +268,7 @@ export function LoadingProvider({
         return;
       }
 
+      if (['/login', '/register'].includes(href.split('?')[0])) return;
       startNavigation(href);
     };
 

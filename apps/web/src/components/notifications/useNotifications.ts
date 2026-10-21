@@ -1,121 +1,82 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { notificationsApi, NotificationItem } from '../../lib/notifications-api';
+import { useAuth } from '../../context/AuthContext';
+import { notificationsApi, NotificationItem, notificationCacheKey } from '../../lib/notifications-api';
 import { getNotificationSocket, disconnectNotificationSocket } from '../../lib/notification-socket';
 
 export function useNotifications() {
+  const { user, token } = useAuth();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const mountedRef = useRef(true);
-
-  const computeUnreadCount = useCallback((items: NotificationItem[]) => {
-    return items.filter((n) => !n.read).length;
-  }, []);
-
-  const loadNotifications = useCallback(async () => {
-    try {
-      const data = await notificationsApi.list();
-      if (!mountedRef.current) return;
-      setNotifications(data);
-      setUnreadCount(computeUnreadCount(data));
-    } catch (error) {
-      console.error('[useNotifications] Failed to load notifications:', error);
-    } finally {
-      if (mountedRef.current) setLoading(false);
-    }
-  }, [computeUnreadCount]);
-
+  const revision = useRef(0);
+  const cacheKey = notificationCacheKey(user?.id);
+  const readCache = useCallback((): NotificationItem[] => {
+    try { return JSON.parse(localStorage.getItem(cacheKey) || '[]'); } catch { return []; }
+  }, [cacheKey]);
+  const saveCache = useCallback((items: NotificationItem[]) => {
+    try { localStorage.setItem(cacheKey, JSON.stringify(items.slice(0, 100)));
+      queueMicrotask(() => window.dispatchEvent(new StorageEvent('storage', { key: cacheKey }))); } catch {}
+  }, [cacheKey]);
   useEffect(() => {
-    mountedRef.current = true;
-    loadNotifications();
-
-    const socket = getNotificationSocket();
-    if (!socket) {
-      setLoading(false);
-      return;
-    }
-
-    const handleNewNotification = (payload: any) => {
-      if (!mountedRef.current) return;
-      const newItem: NotificationItem = {
-        id: payload.id,
-        type: payload.type,
-        title: payload.title,
-        body: payload.body,
-        link: payload.link,
-        userId: payload.userId,
-        createdAt: payload.createdAt,
-        read: false,
-      };
-
-      setNotifications((prev) => {
-        // Deduplicate by id (prevents doubles on reconnect)
-        if (prev.some((n) => n.id === newItem.id)) return prev;
-        return [newItem, ...prev];
+    let active = true;
+    setNotifications(readCache());
+    setLoading(true);
+    const load = async () => {
+      try {
+        if (!token) return;
+        const version = revision.current;
+        const data = await notificationsApi.list();
+        if (!active || version !== revision.current) return;
+        setNotifications(previous => {
+          const ids = new Set(data.map(item => item.id));
+          const merged = [...previous.filter(item => item.id.startsWith('local-') && !ids.has(item.id)), ...data];
+          saveCache(merged);
+          return merged;
+        });
+      } catch { /* Keep this account's cached history while offline. */ }
+      finally { if (active) setLoading(false); }
+    };
+    const receive = (item: NotificationItem) => {
+      if (!active || (item.userId && item.userId !== user?.id)) return;
+      revision.current++;
+      setNotifications(previous => {
+        if (previous.some(existing => existing.id === item.id)) return previous;
+        const next = [{ ...item, read: false }, ...previous];
+        saveCache(next);
+        return next;
       });
-      setUnreadCount((prev) => prev + 1);
     };
-
-    socket.on('notification:new', handleNewNotification);
-
-    // On reconnect, reload history to catch missed notifications
-    const handleReconnect = () => {
-      loadNotifications();
-    };
-    socket.io.on('reconnect', handleReconnect);
-
-    // Listen to local window events for immediate client-side notifications
-    const handleLocalEvent = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      if (customEvent.detail) {
-        handleNewNotification(customEvent.detail);
-      }
-    };
-    window.addEventListener('local-notification:new', handleLocalEvent);
-
+    const local = (event: Event) => receive((event as CustomEvent<NotificationItem>).detail);
+    const storage = (event: StorageEvent) => { if (event.key === cacheKey) { revision.current++; setNotifications(readCache()); } };
+    const focus = () => { void load(); };
+    const socket = token ? getNotificationSocket() : null;
+    socket?.on('notification:new', receive);
+    socket?.on('connect', focus);
+    window.addEventListener('local-notification:new', local);
+    window.addEventListener('storage', storage);
+    window.addEventListener('focus', focus);
+    void load();
+    const interval = window.setInterval(focus, 30000);
     return () => {
-      mountedRef.current = false;
-      socket.off('notification:new', handleNewNotification);
-      socket.io.off('reconnect', handleReconnect);
-      window.removeEventListener('local-notification:new', handleLocalEvent);
+      active = false;
+      clearInterval(interval);
+      socket?.off('notification:new', receive);
+      socket?.off('connect', focus);
+      window.removeEventListener('local-notification:new', local);
+      window.removeEventListener('storage', storage);
+      window.removeEventListener('focus', focus);
     };
-  }, [loadNotifications]);
-
-  const markRead = useCallback(async (notificationId: string) => {
-    // Optimistic update
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n)),
-    );
-    setUnreadCount((prev) => Math.max(0, prev - 1));
-
-    try {
-      await notificationsApi.markRead(notificationId);
-    } catch (error) {
-      console.error('[useNotifications] Failed to mark read:', error);
-      // Reload to restore correct state
-      loadNotifications();
-    }
-  }, [loadNotifications]);
-
-  const markAllRead = useCallback(async () => {
-    // Optimistic update
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    setUnreadCount(0);
-
-    try {
-      await notificationsApi.markAllRead();
-    } catch (error) {
-      console.error('[useNotifications] Failed to mark all read:', error);
-      loadNotifications();
-    }
-  }, [loadNotifications]);
-
-  return {
-    notifications,
-    unreadCount,
-    loading,
-    markRead,
-    markAllRead,
-    disconnectNotificationSocket,
-  };
+  }, [token, user?.id, cacheKey, readCache, saveCache]);
+  const mutate = useCallback(async (transform: (items: NotificationItem[]) => NotificationItem[], persist: () => Promise<void>) => {
+    // Persist first: a failed server write must not look successfully saved.
+    const sessionToken = localStorage.getItem('courtmate_token');
+    await persist();
+    if (localStorage.getItem('courtmate_token') !== sessionToken) return;
+    revision.current++;
+    setNotifications(previous => { const next = transform(previous); saveCache(next); return next; });
+  }, [cacheKey, saveCache]);
+  const markRead = (id: string) => mutate(items => items.map(item => item.id === id ? { ...item, read: true } : item), () => id.startsWith('local-') ? Promise.resolve() : notificationsApi.markRead(id));
+  const markAllRead = () => mutate(items => items.map(item => ({ ...item, read: true })), () => token ? notificationsApi.markAllRead() : Promise.resolve());
+  const deleteOne = (id: string) => mutate(items => items.filter(item => item.id !== id), () => id.startsWith('local-') ? Promise.resolve() : notificationsApi.deleteOne(id));
+  const deleteAll = () => mutate(() => [], () => token ? notificationsApi.deleteAll() : Promise.resolve());
+  return { notifications, unreadCount: notifications.filter(item => !item.read).length, loading, markRead, markAllRead, deleteOne, deleteAll, disconnectNotificationSocket };
 }

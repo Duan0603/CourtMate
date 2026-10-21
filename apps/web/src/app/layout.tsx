@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Be_Vietnam_Pro } from 'next/font/google';
 import './globals.css';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 import { AntdProvider } from '../lib/antd-theme';
@@ -11,6 +11,13 @@ import { InitialPreloader, RouteTransitionLoader } from '../components/loading';
 const inter = Inter({
   subsets: ['latin', 'vietnamese'],
   variable: '--font-inter',
+  display: 'swap',
+});
+
+const display = Be_Vietnam_Pro({
+  weight: ['800', '900'],
+  subsets: ['latin', 'vietnamese'],
+  variable: '--font-display',
   display: 'swap',
 });
 
@@ -26,7 +33,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="vi" className={`${inter.variable} h-full antialiased`}>
+    <html lang="vi" className={`${inter.variable} ${display.variable} h-full antialiased`}>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -34,7 +41,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col font-sans bg-[#F8FAFC] text-navy">
+      <body className="min-h-full flex flex-col font-sans bg-canvas text-navy">
         <AntdRegistry>
           <AntdProvider>
             <LoadingProvider>

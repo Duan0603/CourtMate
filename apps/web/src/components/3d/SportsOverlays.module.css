@@ -1,0 +1,54 @@
+.featureAnchor { position: absolute; top: 50%; width: min(44%, 460px); transform: translateY(-50%); z-index: 30; pointer-events: none; }
+.featureRight { right: var(--page-edge); }
+.featureLeft { left: var(--page-edge); }
+.featureCenter { left: 50%; width: min(70%, 480px); transform: translate(-50%, -50%); text-align: center; }
+.ctaAnchor {
+  position: absolute;
+  top: 50%;
+  right: var(--page-edge);
+  width: min(44%, 480px);
+  transform: translateY(-50%);
+  z-index: 40;
+  pointer-events: none;
+}
+.ctaCard {
+  padding: clamp(24px, 3vw, 40px);
+  border-radius: var(--cm-radius-feature);
+  border: 3px solid #111;
+  background: rgb(var(--cm-primary));
+  color: white;
+  box-shadow: var(--cm-shadow-interactive);
+  text-align: center;
+  opacity: 0;
+  visibility: hidden;
+}
+.ctaCard h2 { font-size: clamp(26px, 3vw, 40px); line-height: 1.2; letter-spacing: -.025em; font-weight: 800; margin-bottom: 28px; }
+.ctaButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 14px 20px;
+  border-radius: var(--cm-radius-control);
+  border: 2px solid #111;
+  background: rgb(var(--cm-baby));
+  color: #111;
+  font-size: 16px;
+  font-weight: 700;
+  box-shadow: var(--cm-shadow-subtle);
+}
+.ctaButton:hover { background: rgb(var(--cm-primary-light)); }
+@media (max-width: 767px) {
+  .featureAnchor { left: 5%; right: 5%; width: 90%; top: 58%; transform: translateY(-50%); }
+  .ctaAnchor { top: 70%; right: 5%; width: 90%; }
+  .ctaCard { padding: 24px; }
+  .ctaCard h2 { font-size: 26px; margin-bottom: 20px; }
+}
+@media (max-height: 550px) and (min-width: 768px) { .ctaCard { padding: 20px; } .ctaCard h2 { font-size: 26px; margin-bottom: 18px; } }
+
+.ctaButton { transition: translate var(--cm-duration) var(--cm-ease), box-shadow var(--cm-duration) var(--cm-ease); }
+.ctaButton:active:not(:disabled) { translate: 2px 2px; box-shadow: none; }
+.ctaButton:disabled { translate: none; box-shadow: none; opacity: .55; }
+@media (prefers-reduced-motion: reduce) { .ctaButton:active:not(:disabled) { translate: none; } }

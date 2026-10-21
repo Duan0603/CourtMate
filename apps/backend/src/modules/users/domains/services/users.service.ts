@@ -76,15 +76,20 @@ export class UsersService implements OnModuleInit {
     return newUser.save();
   }
 
-  async createWithPassword(email: string, passwordHash: string, name: string = '', role: UserRole = UserRole.USER): Promise<User> {
+  async createWithPassword(email: string, passwordHash: string, name: string = '', role: UserRole = UserRole.USER, organizer?: { certificateUrl?: string; sports: string[] }): Promise<User> {
+    const isOrg = role === UserRole.ORGANIZER;
     const newUser = new this.userModel({
       email: email.toLowerCase(),
       identifier: email.toLowerCase(),
+      organizerCertificateUrl: organizer?.certificateUrl,
+      organizerSports: organizer?.sports || [],
+      organizerApprovalStatus: isOrg ? 'PENDING' : undefined,
+      organizerSubmittedAt: isOrg ? new Date() : undefined,
       password: passwordHash,
       name,
       role,
-      preferences: { sports: [] },
-      isVerified: true,
+      preferences: { sports: organizer?.sports || [] },
+      isVerified: !isOrg, // Organizer requires admin approval before verified
     });
     return newUser.save();
   }
@@ -122,6 +127,11 @@ export class UsersService implements OnModuleInit {
           throw new BadRequestException('Chỉ được chọn vai trò Vận động viên (PLAYER) hoặc Ban tổ chức (ORGANIZER)');
         }
       }
+    }
+
+    const avatar = (updateDto as any).avatarUrl || updateDto.preferences?.avatarUrl;
+    if (avatar !== undefined) {
+      (user as any).avatarUrl = avatar;
     }
 
     if (updateDto.preferences) {
@@ -205,5 +215,82 @@ export class UsersService implements OnModuleInit {
     const user = await this.findByEmail(email);
     if (!user || !user.friends) return [];
     return this.userModel.find({ _id: { $in: user.friends } }).exec();
+  }
+
+  async findAllUsers(): Promise<User[]> {
+    return this.userModel.find().sort({ createdAt: -1 }).exec();
+  }
+
+  async countAllUsers(): Promise<number> {
+    return this.userModel.countDocuments().exec();
+  }
+
+  async updateRoleByAdmin(userId: string, role: string): Promise<User | null> {
+    return this.userModel.findByIdAndUpdate(userId, { role }, { new: true }).exec();
+  }
+
+  async updateStatusByAdmin(userId: string, status: string): Promise<User | null> {
+    return this.userModel.findByIdAndUpdate(userId, { status }, { new: true }).exec();
+  }
+
+  async getOrganizerRequests(): Promise<User[]> {
+    return this.userModel
+      .find({
+        $or: [
+          { role: 'ORGANIZER' },
+          { organizerApprovalStatus: { $exists: true } },
+        ],
+      })
+      .sort({ organizerSubmittedAt: -1, createdAt: -1 })
+      .exec();
+  }
+
+  async approveOrganizer(userId: string): Promise<User | null> {
+    return this.userModel
+      .findByIdAndUpdate(
+        userId,
+        {
+          role: 'ORGANIZER',
+          organizerApprovalStatus: 'APPROVED',
+          isVerified: true,
+          organizerRejectionReason: null,
+        },
+        { new: true },
+      )
+      .exec();
+  }
+
+  async rejectOrganizer(userId: string, reason?: string): Promise<User | null> {
+    return this.userModel
+      .findByIdAndUpdate(
+        userId,
+        {
+          organizerApprovalStatus: 'REJECTED',
+          isVerified: false,
+          organizerRejectionReason: reason || 'Hồ sơ chưa đạt yêu cầu xác thực đơn vị tổ chức giải.',
+        },
+        { new: true },
+      )
+      .exec();
+  }
+
+  async reApplyOrganizer(
+    email: string,
+    data: { name?: string; certificateUrl?: string; sports?: string[] },
+  ): Promise<User | null> {
+    const update: any = {
+      organizerApprovalStatus: 'PENDING',
+      organizerSubmittedAt: new Date(),
+      organizerRejectionReason: null,
+      isVerified: false,
+    };
+    if (data.name) update.name = data.name;
+    if (data.certificateUrl) update.organizerCertificateUrl = data.certificateUrl;
+    if (data.sports) {
+      update.organizerSports = data.sports;
+      update['preferences.sports'] = data.sports;
+    }
+
+    return this.userModel.findOneAndUpdate({ email: email.toLowerCase().trim() }, update, { new: true }).exec();
   }
 }

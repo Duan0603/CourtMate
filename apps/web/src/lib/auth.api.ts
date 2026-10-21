@@ -11,8 +11,8 @@ export const authApi = {
     return apiClient.post<AuthResponse>('/auth/login', { email, password });
   },
 
-  async register(email: string, password: string, name: string, role: UserRole = UserRole.PLAYER): Promise<AuthResponse> {
-    return apiClient.post<AuthResponse>('/auth/register', { email, password, name, role });
+  async register(email: string, password: string, name: string, role: UserRole = UserRole.PLAYER, organizer?: { certificateUrl?: string; sports: string[] }): Promise<AuthResponse> {
+    return apiClient.post<AuthResponse>('/auth/register', { email, password, name, role, organizer });
   },
 
   async googleLogin(idToken: string): Promise<AuthResponse> {

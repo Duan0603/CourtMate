@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Optional isolated output for production verification alongside next dev.
+  distDir: process.env.COURTMATE_BUILD_DIR || '.next',
   transpilePackages: ['@courtmate/shared'],
   experimental: {
     optimizePackageImports: [

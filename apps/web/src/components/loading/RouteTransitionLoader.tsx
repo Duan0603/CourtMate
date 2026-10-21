@@ -19,6 +19,10 @@ export function RouteTransitionLoader() {
   const [shouldRender, setShouldRender] = useState(false);
 
   useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setShouldRender(isNavLoaderVisible && isNavigating);
+      return;
+    }
     if (isNavLoaderVisible && isNavigating) {
       setShouldRender(true);
 
@@ -94,7 +98,7 @@ export function RouteTransitionLoader() {
       <div className="w-full h-[3px] bg-transparent overflow-hidden">
         <div
           ref={progressBarRef}
-          className="h-full bg-gradient-to-r from-[#1E5AA8] via-[#0077FF] to-[#FFC400] shadow-[0_0_12px_rgba(0,119,255,0.8)]"
+          className="h-full bg-primary shadow-card"
           style={{ width: '0%' }}
         />
       </div>
@@ -102,13 +106,13 @@ export function RouteTransitionLoader() {
       {/* Sporty Floating Pill (Subtle feedback for noticeable delays) */}
       <div
         ref={pillRef}
-        className="mt-3 px-3.5 py-1.5 rounded-full bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-lg flex items-center gap-2 pointer-events-auto"
+        className="mt-3 px-3.5 py-1.5 rounded-full bg-white border border-ink shadow-lg flex items-center gap-2 pointer-events-auto"
       >
         <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#1E5AA8] opacity-75" />
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#1E5AA8]" />
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
         </span>
-        <span className="text-[11px] font-bold tracking-wide text-slate-800">
+        <span className="text-[11px] font-bold tracking-wide text-ink">
           Đang tải trang...
         </span>
       </div>

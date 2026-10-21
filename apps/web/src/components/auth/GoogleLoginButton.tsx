@@ -13,20 +13,41 @@ declare global {
 interface GoogleLoginButtonProps {
   text?: string;
   redirectTo?: string;
+  onSuccess?: () => void;
 }
 
 export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
   text = 'Tiếp tục với Google',
   redirectTo = '/tournaments',
+  onSuccess,
 }) => {
   const router = useRouter();
   const { loginWithGoogle } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [gisReady, setGisReady] = useState(false);
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const initAttempted = useRef(false);
 
   const clientId =process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+
+  const renderGoogleButton = useCallback(() => {
+    if (!googleBtnRef.current || !window.google?.accounts?.id) return;
+    const width = Math.min(360, googleBtnRef.current.parentElement?.clientWidth || 360);
+    googleBtnRef.current.innerHTML = '';
+    window.google.accounts.id.renderButton(googleBtnRef.current, {
+      theme: 'outline', size: 'large', width,
+      text: 'continue_with', shape: 'rectangular', logo_alignment: 'left',
+    });
+  }, []);
+
+  useEffect(() => {
+    const frame = googleBtnRef.current?.parentElement;
+    if (!gisReady || !frame) return;
+    const observer = new ResizeObserver(renderGoogleButton);
+    observer.observe(frame);
+    return () => observer.disconnect();
+  }, [gisReady, renderGoogleButton]);
 
   const parseJwt = useCallback((token: string) => {
     try {
@@ -50,29 +71,15 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
       setLoading(true);
       try {
         await loginWithGoogle(response.credential);
-        router.push(redirectTo);
+        onSuccess?.();
+        if (!onSuccess) router.push(redirectTo);
       } catch (err: any) {
-        console.error('Google Auth Error:', err);
-        const payload = parseJwt(response.credential);
-        if (payload?.email) {
-          localStorage.setItem('courtmate_token', 'google_real_token_' + Date.now());
-          localStorage.setItem(
-            'courtmate_user',
-            JSON.stringify({
-              id: 'google_' + payload.sub,
-              email: payload.email,
-              name: payload.name || payload.email.split('@')[0],
-              avatar: payload.picture,
-              role: 'PLAYER',
-            })
-          );
-          window.location.href = redirectTo;
-        }
+        setError(err.message || 'Đăng nhập Google chưa thành công. Vui lòng thử lại.');
       } finally {
         setLoading(false);
       }
     },
-    [loginWithGoogle, router, redirectTo, parseJwt]
+    [loginWithGoogle, router, redirectTo, parseJwt, onSuccess]
   );
 
   // Init GIS SDK once
@@ -99,15 +106,7 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
           auto_select: false,
           cancel_on_tap_outside: true,
         });
-        googleBtnRef.current.innerHTML = '';
-        window.google.accounts.id.renderButton(googleBtnRef.current, {
-          theme: 'outline',
-          size: 'large',
-          width: 360,
-          text: 'continue_with',
-          shape: 'pill',
-          logo_alignment: 'left',
-        });
+        renderGoogleButton();
         setGisReady(true);
         return true;
       } catch (e) {
@@ -139,7 +138,7 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
     }, 500);
 
     return () => clearInterval(interval);
-  }, [clientId, handleCredentialResponse]);
+  }, [clientId, handleCredentialResponse, renderGoogleButton]);
 
   const handleFallbackClick = () => {
     setLoading(true);
@@ -180,6 +179,7 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
 
   return (
     <div className="w-full flex flex-col items-center">
+      {error && <p role="alert" className="mb-2 text-sm">{error}</p>}
       {/* Official GIS Button container */}
       <div
         ref={googleBtnRef}
@@ -192,7 +192,7 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
           type="button"
           disabled={loading}
           onClick={handleFallbackClick}
-          className="w-full py-3.5 px-5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-[#101828] font-bold text-sm transition-all shadow-xs flex items-center justify-center gap-3 hover:border-slate-300 disabled:opacity-60"
+          className="cm-button w-full py-3.5 px-5 rounded-2xl border border-ink bg-surface shadow-card hover:bg-white text-ink font-bold text-sm transition-all  flex items-center justify-center gap-3 hover:border-ink disabled:opacity-60"
         >
           <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
             <path
@@ -217,7 +217,7 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
       )}
 
       {loading && (
-        <span className="text-xs text-[#1E5AA8] font-semibold mt-2 animate-pulse">
+        <span className="text-xs text-primary font-semibold mt-2 animate-pulse">
           Đang kết nối tới Google Auth...
         </span>
       )}

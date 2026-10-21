@@ -13,10 +13,10 @@ export default function ErrorPage({ reset }: { error: Error & { digest?: string 
   if (retrying) return <PagePreloader label="Đang tải lại trang..." />;
   return (
     <div role="alert" className="mx-auto flex min-h-[50vh] max-w-lg flex-col items-center justify-center px-5 py-12 text-center">
-      <AlertTriangle size={32} className="mb-5 text-amber-500" />
-      <h1 className="text-xl font-bold text-slate-900">Trang chưa thể hiển thị</h1>
-      <p className="mt-3 text-sm leading-6 text-slate-600">Đã có lỗi khi tải nội dung. Bạn có thể thử tải lại trang.</p>
-      <button type="button" onClick={() => startTransition(reset)} className="mt-6 rounded-xl bg-[#1E5AA8] px-6 py-3 text-sm font-semibold text-white hover:bg-[#154687]">Thử tải lại</button>
+      <AlertTriangle size={32} className="mb-5 text-primary" />
+      <h1 className="text-xl font-bold text-ink">Trang chưa thể hiển thị</h1>
+      <p className="mt-3 text-sm leading-6 text-muted">Đã có lỗi khi tải nội dung. Bạn có thể thử tải lại trang.</p>
+      <button type="button" onClick={() => startTransition(reset)} className="cm-action cm-button mt-6 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white hover:bg-primary-dark">Thử tải lại</button>
     </div>
   );
 }

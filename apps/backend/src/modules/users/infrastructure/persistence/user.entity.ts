@@ -37,12 +37,18 @@ export class User extends Document {
   @Prop({ required: false, default: '' })
   name!: string;
 
+  @Prop({ type: String, default: null })
+  avatarUrl?: string;
+
   // normalizeName(name), kept in sync by the hooks below; used for accent-insensitive search
   @Prop({ type: String, default: '' })
   nameNormalized!: string;
 
-  @Prop({ required: true, enum: ['USER', 'PLAYER', 'ORGANIZER', 'REGIONAL_ADMIN', 'SUPER_ADMIN'], default: 'USER' })
+  @Prop({ required: true, enum: ['USER', 'PLAYER', 'COACH', 'ORGANIZER', 'REGIONAL_ADMIN', 'SUPER_ADMIN'], default: 'USER' })
   role!: string;
+
+  @Prop({ default: 'active', enum: ['active', 'disabled'] })
+  status!: string;
 
   @Prop({ type: UserPreferencesSchemaFactory, default: {} })
   preferences!: UserPreferencesSchema;
@@ -58,6 +64,21 @@ export class User extends Document {
 
   @Prop({ required: false })
   password?: string;
+
+  @Prop({ type: String })
+  organizerCertificateUrl?: string;
+
+  @Prop({ type: String, enum: ['PENDING', 'APPROVED', 'REJECTED'], default: 'PENDING' })
+  organizerApprovalStatus?: string;
+
+  @Prop({ type: [String], default: [] })
+  organizerSports?: string[];
+
+  @Prop({ type: String })
+  organizerRejectionReason?: string;
+
+  @Prop({ type: Date })
+  organizerSubmittedAt?: Date;
 
   @Prop({ type: [String], default: [] })
   friends!: string[];

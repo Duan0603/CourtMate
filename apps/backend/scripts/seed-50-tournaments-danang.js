@@ -36,19 +36,16 @@ const DISTRICTS = [
 ];
 
 const BADMINTON_COVERS = [
+  '/tournaments/badminton-1.jpg',
+  '/tournaments/badminton-2.jpg',
   'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=1200&q=80',
   'https://images.unsplash.com/photo-1613918108466-292b78a8ef95?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1521537634581-0dced2fed2a8?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1599474924187-334a4ae5bd3c?auto=format&fit=crop&w=1200&q=80'
+  'https://images.unsplash.com/photo-1521537634581-0dced2fed2a8?auto=format&fit=crop&w=1200&q=80'
 ];
 
 const PICKLEBALL_COVERS = [
-  'https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1592709823125-a191f07a2a5e?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1587280501635-68a0e82cd5ff?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?auto=format&fit=crop&w=1200&q=80'
+  '/tournaments/pickleball-1.jpg',
+  '/tournaments/pickleball-2.jpg'
 ];
 
 const TENNIS_COVERS = [

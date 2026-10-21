@@ -27,6 +27,3 @@ export const NotificationSchema = SchemaFactory.createForClass(Notification);
 
 // Composite index for listing: user-specific + broadcast, newest first
 NotificationSchema.index({ userId: 1, createdAt: -1 });
-
-// TTL index: auto-delete notifications older than 30 days
-NotificationSchema.index({ createdAt: 1 }, { expireAfterSeconds: 30 * 24 * 60 * 60 });
