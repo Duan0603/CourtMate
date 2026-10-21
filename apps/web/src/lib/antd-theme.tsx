@@ -7,21 +7,33 @@ import { StyleProvider } from '@ant-design/cssinjs';
 
 export const antdTheme: ThemeConfig = {
   token: {
-    colorPrimary: '#1E5AA8',
-    colorLink: '#1E5AA8',
-    colorPrimaryHover: '#154687',
-    colorText: '#101828',
-    colorTextSecondary: '#475467',
-    colorBgLayout: '#f3f7fb',
+    colorPrimary: '#1848FF',
+    colorLink: '#1848FF',
+    colorPrimaryHover: '#1848ff',
+    colorText: '#111111',
+    colorTextSecondary: '#111111',
+    colorBgLayout: '#ffffff',
     colorBgContainer: '#ffffff',
-    colorBorder: '#d6e1ed',
-    colorSuccess: '#15803d',
-    colorWarning: '#a16207',
-    colorError: '#be123c',
-    colorInfo: '#1e5aa8',
-    borderRadius: 12,
-    borderRadiusSM: 8,
-    borderRadiusLG: 28,
+    colorBorder: '#111111',
+    colorSuccess: '#1848ff',
+    colorWarning: '#1848ff',
+    colorError: '#1848ff',
+    colorInfo: '#1848ff',
+    colorBgElevated: '#ffffff',
+    colorFillAlter: '#ffffff',
+    colorFillSecondary: '#8fd9fb',
+    colorPrimaryBg: '#8fd9fb',
+    colorPrimaryBgHover: '#8fd9fb',
+    colorPrimaryText: '#1848ff',
+    colorPrimaryBorder: '#111111',
+    colorSuccessBg: '#8fd9fb', colorSuccessBorder: '#111111', colorSuccessText: '#111111',
+    colorWarningBg: '#d2b48c', colorWarningBorder: '#111111', colorWarningText: '#111111',
+    colorErrorBg: '#8fd9fb', colorErrorBorder: '#111111', colorErrorText: '#111111',
+    colorInfoBg: '#8fd9fb', colorInfoBorder: '#111111', colorInfoText: '#111111',
+    lineWidth: 2,
+    borderRadius: 6,
+    borderRadiusSM: 4,
+    borderRadiusLG: 10,
     controlHeight: 44,
     controlHeightLG: 48,
     fontSize: 14,
@@ -36,7 +48,7 @@ export const antdTheme: ThemeConfig = {
   components: {
     Button: {
       controlHeight: 44,
-      fontWeight: 600,
+      fontWeight: 800,
       primaryShadow: 'var(--cm-shadow-interactive)',
       defaultShadow: 'var(--cm-shadow-subtle)',
       dangerShadow: 'var(--cm-shadow-subtle)',
@@ -44,26 +56,27 @@ export const antdTheme: ThemeConfig = {
     Input: {
       controlHeight: 48,
       inputFontSize: 16,
+      activeShadow: 'none', activeBorderColor: '#111111', hoverBorderColor: '#111111',
     },
     Select: {
       controlHeight: 48,
     },
-    Card: { borderRadiusLG: 28, boxShadowTertiary: 'var(--cm-shadow-card)' },
-    Modal: { borderRadiusLG: 36, titleFontSize: 20 },
-    Dropdown: { borderRadiusLG: 12 },
-    Popover: { borderRadiusLG: 12 },
-    Table: { headerBg: '#edf3f9', headerColor: '#475467', rowHoverBg: '#f3f7fb', borderColor: '#d6e1ed' },
-    Tabs: { itemColor: '#475467', itemSelectedColor: '#1e5aa8', inkBarColor: '#1e5aa8' },
+    Card: { borderRadiusLG: 10, boxShadowTertiary: 'var(--cm-shadow-card)' },
+    Modal: { borderRadiusLG: 14, titleFontSize: 20 },
+    Dropdown: { borderRadiusLG: 6 },
+    Popover: { borderRadiusLG: 6 },
+    Table: { headerBg: '#d2b48c', headerColor: '#111111', rowHoverBg: '#ffffff', borderColor: '#111111' },
+    Tabs: { itemColor: '#111111', itemSelectedColor: '#1848ff', inkBarColor: '#1848ff' },
     Pagination: { borderRadius: 8 },
-    Alert: { borderRadiusLG: 12 },
-    Notification: { borderRadiusLG: 28 },
+    Alert: { borderRadiusLG: 6 },
+    Notification: { borderRadiusLG: 10 },
   },
 };
 
 export function AntdProvider({ children }: { children: React.ReactNode }) {
   return (
     <StyleProvider layer>
-      <ConfigProvider theme={antdTheme}>
+      <ConfigProvider theme={antdTheme} wave={{ disabled: true }}>
         {children}
       </ConfigProvider>
     </StyleProvider>

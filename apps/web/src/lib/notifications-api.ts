@@ -42,50 +42,28 @@ export const notificationsApi = {
   },
 };
 
-/**
- * Dispatch and persist a notification when an item is added to favorites.
- */
-export async function emitFavoriteNotification(item: {
-  type: 'FAVORITE_COACH' | 'FAVORITE_COURSE' | 'FAVORITE_TOURNAMENT';
-  title: string;
-  body: string;
-  link?: string;
-}) {
-  const payload: NotificationItem = {
-    id: `fav-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-    type: item.type,
-    title: item.title,
-    body: item.body,
-    link: item.link,
-    userId: null,
-    createdAt: new Date().toISOString(),
-    read: false,
-  };
-
-  // Immediate local dispatch for instantaneous UI update across tabs/components
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('local-notification:new', { detail: payload }));
-  }
-
-  // Persist to backend if logged in
-  try {
-    const res = await notificationsApi.create({
-      type: item.type,
-      title: item.title,
-      body: item.body,
-      link: item.link,
-    });
-    return res;
-  } catch {
-    // If guest or network issue, fallback to localStorage cache
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem('courtmate_guest_notifications') || '[]';
-        const list = JSON.parse(stored);
-        list.unshift(payload);
-        localStorage.setItem('courtmate_guest_notifications', JSON.stringify(list.slice(0, 50)));
-      } catch {}
-    }
-    return payload;
-  }
+export function notificationCacheKey(userId?: string) {
+  return 'courtmate_notifications_' + (userId || 'guest');
 }
+
+export async function emitUserNotification(item: { type: string; title: string; body: string; link?: string }) {
+  if (typeof window === 'undefined') return;
+  let userId: string | null = null;
+  try { const user = JSON.parse(localStorage.getItem('courtmate_user') || 'null'); userId = user?.id || user?._id || null; } catch {}
+  const token = localStorage.getItem('courtmate_token');
+  const payload: NotificationItem = { ...item, id: 'local-' + crypto.randomUUID(), userId, createdAt: new Date().toISOString(), read: false };
+  let result = payload;
+  if (token) {
+    try { result = await notificationsApi.create(item); } catch { /* Preserve in this account's cache during an outage. */ }
+    if (localStorage.getItem('courtmate_token') !== token) return;
+  }
+  try {
+    const key = notificationCacheKey(userId || undefined);
+    const list: NotificationItem[] = JSON.parse(localStorage.getItem(key) || '[]');
+    localStorage.setItem(key, JSON.stringify([result, ...list.filter(existing => existing.id !== result.id)].slice(0, 100)));
+  } catch {}
+  window.dispatchEvent(new CustomEvent('local-notification:new', { detail: result }));
+  return result;
+}
+
+export const emitFavoriteNotification = emitUserNotification;

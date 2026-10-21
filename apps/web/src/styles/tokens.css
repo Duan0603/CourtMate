@@ -1,28 +1,31 @@
 :root {
-  --cm-primary: 30 90 168;
-  --cm-primary-hover: 21 70 135;
-  --cm-primary-light: 232 241 250;
-  --cm-background: 243 247 251;
+  --cm-primary: 24 72 255;
+  --cm-primary-hover: 24 72 255;
+  --cm-primary-light: 143 217 251;
+  --cm-background: 255 255 255;
   --cm-surface: 255 255 255;
-  --cm-surface-muted: 237 243 249;
-  --cm-border: 214 225 237;
-  --cm-text: 16 24 40;
-  --cm-muted: 71 84 103;
-  --cm-success: #15803d;
-  --cm-warning: #a16207;
-  --cm-error: #be123c;
-  --cm-info: #1e5aa8;
-  --cm-radius-sm: 8px;
-  --cm-radius-control: 12px;
-  --cm-radius-card: 28px;
-  --cm-radius-feature: 36px;
-  /* Molded clay: bright inner top edge, shaded inner bottom, soft outer lift. */
-  --cm-shadow-subtle: inset 2px 3px 5px rgb(255 255 255 / .85), inset -2px -3px 5px rgb(32 65 105 / .09), 0 4px 8px -4px rgb(32 65 105 / .16);
-  --cm-shadow-card: inset 5px 6px 10px rgb(255 255 255 / .9), inset -5px -6px 12px rgb(32 65 105 / .11), 0 14px 28px -12px rgb(32 65 105 / .23);
-  --cm-shadow-elevated: inset 4px 5px 9px rgb(255 255 255 / .85), inset -4px -5px 10px rgb(32 65 105 / .1), 0 22px 44px -14px rgb(32 65 105 / .26);
-  --cm-shadow-interactive: inset 3px 4px 7px rgb(255 255 255 / .3), inset -3px -4px 8px rgb(16 40 80 / .22), 0 9px 18px -8px rgb(30 90 168 / .35);
-  --cm-shadow-pressed: inset 0 2px 4px rgb(16 24 40 / .12);
-  --cm-duration: 160ms;
+  --cm-surface-muted: 255 255 255;
+  --cm-border: 17 17 17;
+  --cm-text: 17 17 17;
+  --cm-muted: 63 63 63;
+  --cm-baby: 143 217 251;
+  --cm-tan: 210 180 140;
+  --cm-success: #1848ff;
+  --cm-warning: #1848ff;
+  --cm-error: #1848ff;
+  --cm-info: #1848ff;
+  --cm-stroke: 3px;
+  --cm-radius-sm: 4px;
+  --cm-radius-control: 6px;
+  --cm-radius-card: 10px;
+  --cm-radius-feature: 14px;
+  /* Printed shapes: opaque ink, displaced rectangles, no blur or inset light. */
+  --cm-shadow-subtle: 2px 2px 0 #111;
+  --cm-shadow-card: 6px 6px 0 #111;
+  --cm-shadow-elevated: 8px 8px 0 #111;
+  --cm-shadow-interactive: 4px 4px 0 #111;
+  --cm-shadow-pressed: 0 0 0 #111;
+  --cm-duration: 140ms;
   --cm-ease: cubic-bezier(.2, .7, .2, 1);
   --cm-space-unit: 4px;
 }

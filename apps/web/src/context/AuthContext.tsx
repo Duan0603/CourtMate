@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useRef, useState } from 'r
 import { User, UserRole } from '@courtmate/shared';
 import { authApi } from '../lib/auth.api';
 import { disconnectSocket } from '../lib/socket';
+import { disconnectNotificationSocket } from '../lib/notification-socket';
 import toast from 'react-hot-toast';
 
 interface AuthContextType {
@@ -13,7 +14,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   loginWithGoogle: (idToken: string) => Promise<void>;
-  register: (email: string, password: string, name: string, role?: UserRole) => Promise<void>;
+  register: (email: string, password: string, name: string, role?: UserRole, organizer?: { certificateUrl?: string; sports: string[] }) => Promise<void>;
   logout: () => void;
   updateProfile: (data: Partial<User>) => Promise<void>;
   toggleBookmark: (tournamentId: string) => Promise<boolean>;
@@ -62,6 +63,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           localStorage.removeItem('courtmate_token'); localStorage.removeItem('courtmate_user');
           // The socket was authenticated at handshake and would keep receiving the old account's messages
           disconnectSocket();
+          disconnectNotificationSocket();
         }
       } finally { refreshing = false; }
     };
@@ -115,10 +117,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (email: string, password: string, name: string, role: UserRole = UserRole.PLAYER) => {
+  const register = async (email: string, password: string, name: string, role: UserRole = UserRole.PLAYER, organizer?: { certificateUrl?: string; sports: string[] }) => {
     setIsLoading(true);
     try {
-      const res = await authApi.register(email, password, name, role);
+      const res = await authApi.register(email, password, name, role, organizer);
       const normalized = normalizeUser(res.user);
       setUser(normalized);
       setToken(res.token);
@@ -135,6 +137,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('courtmate_token');
     localStorage.removeItem('courtmate_user');
     disconnectSocket();
+    disconnectNotificationSocket();
   };
 
   const updateProfile = async (data: Partial<User>) => {

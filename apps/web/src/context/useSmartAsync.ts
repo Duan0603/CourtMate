@@ -18,6 +18,7 @@ export function useSmartAsync(options: UseSmartAsyncOptions = {}) {
   const [isThresholdElapsed, setIsThresholdElapsed] = useState<boolean>(false);
   const [error, setError] = useState<Error | string | null>(null);
 
+  const executionRef = useRef(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const startLoading = useCallback(() => {
@@ -56,13 +57,14 @@ export function useSmartAsync(options: UseSmartAsyncOptions = {}) {
    */
   const execute = useCallback(
     async <T,>(asyncFn: () => Promise<T>): Promise<T> => {
+      const execution = ++executionRef.current;
       startLoading();
       try {
         const result = await asyncFn();
-        stopLoading();
+        if (execution === executionRef.current) stopLoading();
         return result;
       } catch (err: any) {
-        failLoading(err);
+        if (execution === executionRef.current) failLoading(err);
         throw err;
       }
     },
@@ -71,6 +73,7 @@ export function useSmartAsync(options: UseSmartAsyncOptions = {}) {
 
   useEffect(() => {
     return () => {
+      executionRef.current++;
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, []);

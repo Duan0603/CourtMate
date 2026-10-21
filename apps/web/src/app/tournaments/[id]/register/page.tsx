@@ -140,7 +140,7 @@ export default function TournamentRegisterPage() {
     return (
       <div className="max-w-4xl mx-auto px-4 py-20 text-center">
         <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-        <p className="text-slate-500 text-sm">Đang chuẩn bị hồ sơ đăng ký...</p>
+        <p className="text-muted text-sm">Đang chuẩn bị hồ sơ đăng ký...</p>
       </div>
     );
   }
@@ -152,7 +152,7 @@ export default function TournamentRegisterPage() {
         {/* Back Link */}
         <Link
           href={`/tournaments/${tournamentId}`}
-          className="cm-link inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-navy transition mb-6"
+          className="cm-link inline-flex items-center gap-2 text-xs font-semibold text-muted hover:text-navy transition mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Quay lại chi tiết giải</span>
@@ -163,7 +163,7 @@ export default function TournamentRegisterPage() {
           <h1 className="text-2xl sm:text-3xl font-extrabold text-navy">
             Đăng ký giải đấu
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-muted mt-1">
             {tournament?.title}
           </p>
         </div>
@@ -175,65 +175,65 @@ export default function TournamentRegisterPage() {
           <div className="lg:col-span-2 space-y-6">
 
             {/* 1. Athlete Information */}
-            <div className="bg-surface shadow-card rounded-2xl border border-slate-200 p-6 sm:p-7  space-y-4">
-              <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
+            <div className="bg-surface shadow-card rounded-2xl border border-ink p-6 sm:p-7  space-y-4">
+              <div className="flex items-center gap-2 pb-3 border-b border-ink">
                 <User className="w-4 h-4 text-primary" />
                 <h3 className="font-bold text-navy text-sm">Thông tin vận động viên</h3>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-bold text-slate-600 mb-1.5">
-                    Họ và tên người thi đấu <span className="text-rose-500">*</span>
+                  <label className="block text-sm font-bold text-muted mb-1.5">
+                    Họ và tên người thi đấu <span className="text-primary">*</span>
                   </label>
                   <input
                     type="text"
                     required
                     value={playerName}
                     onChange={(e) => setPlayerName(e.target.value)}
-                    className="cm-control w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-navy"
+                    className="cm-control w-full px-3.5 py-2 text-sm bg-white border border-ink rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-navy"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-slate-600 mb-1.5">
-                    Số điện thoại liên hệ (Zalo) <span className="text-rose-500">*</span>
+                  <label className="block text-sm font-bold text-muted mb-1.5">
+                    Số điện thoại liên hệ (Zalo) <span className="text-primary">*</span>
                   </label>
                   <input
                     type="tel"
                     required
                     value={contactPhone}
                     onChange={(e) => setContactPhone(e.target.value)}
-                    className="cm-control w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-navy"
+                    className="cm-control w-full px-3.5 py-2 text-sm bg-white border border-ink rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-navy"
                   />
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="block text-sm font-bold text-slate-600 mb-1.5">
-                    Email nhận vé <span className="text-rose-500">*</span>
+                  <label className="block text-sm font-bold text-muted mb-1.5">
+                    Email nhận vé <span className="text-primary">*</span>
                   </label>
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="cm-control w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-navy"
+                    className="cm-control w-full px-3.5 py-2 text-sm bg-white border border-ink rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-navy"
                   />
                 </div>
               </div>
             </div>
 
             {/* 2. Category & Skill Level */}
-            <div className="bg-surface shadow-card rounded-2xl border border-slate-200 p-6 sm:p-7  space-y-4">
-              <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
-                <Trophy className="w-4 h-4 text-amber-700" />
+            <div className="bg-surface shadow-card rounded-2xl border border-ink p-6 sm:p-7  space-y-4">
+              <div className="flex items-center gap-2 pb-3 border-b border-ink">
+                <Trophy className="w-4 h-4 text-primary" />
                 <h3 className="font-bold text-navy text-sm">Hạng mục & Trình độ</h3>
               </div>
 
               {/* Categories list radio */}
               <div className="space-y-2">
-                <label className="block text-sm font-bold text-slate-600 mb-1">
-                  Chọn nội dung thi đấu <span className="text-rose-500">*</span>
+                <label className="block text-sm font-bold text-muted mb-1">
+                  Chọn nội dung thi đấu <span className="text-primary">*</span>
                 </label>
                 <div className="grid grid-cols-1 gap-2">
                   {tournament?.categories?.map((cat, idx) => (
@@ -241,8 +241,8 @@ export default function TournamentRegisterPage() {
                       key={cat.id || idx}
                       className={`flex items-center justify-between p-3.5 rounded-xl border cursor-pointer transition ${
                         selectedCategoryIndex === idx
-                          ? 'border-primary bg-primary/5 ring-1 ring-primary'
-                          : 'border-slate-200 hover:bg-slate-50'
+                          ? 'border-primary bg-accent-baby ring-1 ring-primary'
+                          : 'border-ink hover:bg-white'
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -265,13 +265,13 @@ export default function TournamentRegisterPage() {
 
               {/* Skill level */}
               <div>
-                <label className="block text-sm font-bold text-slate-600 mb-1.5">
+                <label className="block text-sm font-bold text-muted mb-1.5">
                   Trình độ thi đấu tự khai
                 </label>
                 <select
                   value={skillLevel}
                   onChange={(e) => setSkillLevel(e.target.value as SkillLevel)}
-                  className="cm-control w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-navy"
+                  className="cm-control w-full px-3.5 py-2 text-sm bg-white border border-ink rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-navy"
                 >
                   <option value={SkillLevel.BEGINNER}>Mới chơi / Phong trào (Beginner)</option>
                   <option value={SkillLevel.INTERMEDIATE}>Trung bình khá (Intermediate 3.0 - 4.0)</option>
@@ -281,7 +281,7 @@ export default function TournamentRegisterPage() {
 
               {/* Partner Name if double */}
               <div>
-                <label className="block text-sm font-bold text-slate-600 mb-1.5">
+                <label className="block text-sm font-bold text-muted mb-1.5">
                   Họ tên vận động viên cùng cặp (Nếu thi đấu nội dung Đôi)
                 </label>
                 <input
@@ -289,15 +289,15 @@ export default function TournamentRegisterPage() {
                   placeholder="Ví dụ: Lê Hoàng Nam"
                   value={partnerName}
                   onChange={(e) => setPartnerName(e.target.value)}
-                  className="cm-control w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-navy"
+                  className="cm-control w-full px-3.5 py-2 text-sm bg-white border border-ink rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-navy"
                 />
               </div>
             </div>
 
             {/* 3. Payment Gateway Choice */}
-            <div className="bg-surface shadow-card rounded-2xl border border-slate-200 p-6 sm:p-7  space-y-4">
-              <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
-                <CreditCard className="w-4 h-4 text-emerald-600" />
+            <div className="bg-surface shadow-card rounded-2xl border border-ink p-6 sm:p-7  space-y-4">
+              <div className="flex items-center gap-2 pb-3 border-b border-ink">
+                <CreditCard className="w-4 h-4 text-primary" />
                 <h3 className="font-bold text-navy text-sm">Phương thức thanh toán</h3>
               </div>
 
@@ -311,8 +311,8 @@ export default function TournamentRegisterPage() {
                     key={item.id}
                     className={`p-4 rounded-xl border cursor-pointer flex flex-col justify-between transition ${
                       paymentProvider === item.id
-                        ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
-                        : 'border-slate-200 hover:bg-slate-50'
+                        ? 'border-primary bg-accent-baby ring-2 ring-primary/20'
+                        : 'border-ink hover:bg-white'
                     }`}
                   >
                     <div>
@@ -325,14 +325,14 @@ export default function TournamentRegisterPage() {
                       />
                       <strong className="block text-sm text-navy">{item.name}</strong>
                     </div>
-                    <span className="text-[11px] text-slate-500 mt-2 block">{item.desc}</span>
+                    <span className="text-[11px] text-muted mt-2 block">{item.desc}</span>
                   </label>
                 ))}
               </div>
             </div>
 
             {/* Terms Checkbox */}
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-start gap-3">
+            <div className="p-4 rounded-xl bg-white border border-ink flex items-start gap-3">
               <input
                 type="checkbox"
                 id="terms"
@@ -340,7 +340,7 @@ export default function TournamentRegisterPage() {
                 onChange={(e) => setAgreeTerms(e.target.checked)}
                 className="cm-control mt-1 rounded text-primary focus:ring-primary"
               />
-              <label htmlFor="terms" className="text-sm text-slate-600 leading-relaxed cursor-pointer">
+              <label htmlFor="terms" className="text-sm text-muted leading-relaxed cursor-pointer">
                 Tôi cam kết thông tin khai báo là hoàn toàn chính xác, cam kết tuân thủ Điều lệ giải đấu và chịu trách nhiệm về tình trạng sức khỏe khi tham gia thi đấu.
               </label>
             </div>
@@ -349,13 +349,13 @@ export default function TournamentRegisterPage() {
 
           {/* Right Column (1/3): Order Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-surface shadow-card rounded-2xl border border-slate-200 p-6  sticky top-24 space-y-6">
+            <div className="bg-surface shadow-card rounded-2xl border border-ink p-6  sticky top-24 space-y-6">
 
-              <h3 className="font-bold text-navy text-sm pb-3 border-b border-slate-100">
+              <h3 className="font-bold text-navy text-sm pb-3 border-b border-ink">
                 Tóm tắt đăng ký
               </h3>
 
-              <div className="space-y-3 text-xs text-slate-600">
+              <div className="space-y-3 text-xs text-muted">
                 <div className="flex justify-between">
                   <span>Hạng mục:</span>
                   <strong className="text-navy font-semibold">{selectedCategory.name}</strong>
@@ -368,13 +368,13 @@ export default function TournamentRegisterPage() {
                 </div>
                 <div className="flex justify-between">
                   <span>Phí tiện ích CourtMate:</span>
-                  <span className="text-emerald-600 font-semibold">Miễn phí 0đ</span>
+                  <span className="text-primary font-semibold">Miễn phí 0đ</span>
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-100">
+              <div className="pt-4 border-t border-ink">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-500 font-medium">Tổng tiền thanh toán:</span>
+                  <span className="text-xs text-muted font-medium">Tổng tiền thanh toán:</span>
                   <span className="text-xl font-extrabold text-navy">
                     {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(selectedCategory.fee)}
                   </span>

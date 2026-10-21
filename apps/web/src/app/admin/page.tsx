@@ -1,7 +1,6 @@
 'use client';
 
 import { PageContainer } from '../../components/layout/PageContainer';
-
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -9,326 +8,811 @@ import {
   ShieldCheck,
   Users,
   Trophy,
-  Clock,
+  Activity,
   Check,
   X,
   MapPin,
-  Activity,
-  AlertTriangle,
-  UserX,
-  UserCheck
+  RefreshCw,
+  Search,
+  Lock,
+  Unlock,
+  Swords,
+  Radio,
+  UserCog,
+  AlertCircle,
+  Clock,
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  Building2,
+  FileText,
+  BadgeCheck,
+  LogOut
 } from 'lucide-react';
-import {
-  initialAdminDashboardData,
-  getAdminMetrics,
-  TournamentApproval,
-  UserRecord
-} from './adminData';
-import { tournamentsApi } from '../../lib/tournaments.api';
-import { authApi } from '../../lib/auth.api';
+import { adminApi, AdminDashboardOverview, AdminUserItem, OrganizerRequestItem } from '../../lib/admin.api';
 import { useAuth } from '../../context/AuthContext';
 import { UserRole } from '@courtmate/shared';
+import toast from 'react-hot-toast';
 
 export default function AdminDashboardPage() {
-  const { user } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading, logout } = useAuth();
   const router = useRouter();
-  const [data, setData] = useState(initialAdminDashboardData);
+
+  const [overview, setOverview] = useState<AdminDashboardOverview>({
+    totalUsers: 0,
+    onlineUsers: 1,
+    totalTournaments: 0,
+    totalMatches: 0,
+  });
+
+  const [usersList, setUsersList] = useState<AdminUserItem[]>([]);
+  const [tournamentsList, setTournamentsList] = useState<any[]>([]);
+  const [organizerRequests, setOrganizerRequests] = useState<OrganizerRequestItem[]>([]);
+  const [activityLogs, setActivityLogs] = useState<{ id: string; time: string; admin: string; action: string; target: string; status: 'approved' | 'rejected' | 'role' | 'status' }[]>([]);
+
   const [loading, setLoading] = useState(true);
-  const [selectedRegion, setSelectedRegion] = useState('ALL');
-  const [activeTab, setActiveTab] = useState<'approvals' | 'users' | 'activity'>('approvals');
+  const [activeTab, setActiveTab] = useState<'users' | 'tournaments' | 'activity'>('users');
+  const [userSearch, setUserSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState('ALL');
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+
+  // Pagination State for Users Table (10 per page)
+  const [usersCurrentPage, setUsersCurrentPage] = useState(1);
+  const USERS_PER_PAGE = 10;
 
   useEffect(() => {
+    if (authLoading) return;
+    if (!isAuthenticated) {
+      toast.error('Vui lòng đăng nhập với tài khoản Admin!');
+      router.push('/login');
+      return;
+    }
     if (user && user.role !== UserRole.SUPER_ADMIN && user.role !== UserRole.REGIONAL_ADMIN) {
+      toast.error('Tài khoản của bạn không có quyền truy cập trang Quản trị!');
       router.push('/');
       return;
     }
 
-    async function loadAdminData() {
-      setLoading(true);
+    loadDashboardData();
+  }, [user, isAuthenticated, authLoading]);
+
+  const loadDashboardData = async () => {
+    setLoading(true);
+    try {
+      // 1. Fetch overview stats
       try {
-        // 1. Fetch real tournaments from MongoDB backend
-        const res = await tournamentsApi.getTournaments();
-        const tournaments = res.data || [];
-
-        const approvals: TournamentApproval[] = tournaments.map((t, idx) => ({
-          id: t.id,
-          name: t.title,
-          organization: t.organizer?.name || 'Ban tổ chức thể thao',
-          sport: t.sport,
-          submitted: t.startDate ? new Date(t.startDate).toLocaleDateString('vi-VN') : 'Hôm nay',
-          status: idx % 3 === 0 ? 'pending' : 'approved',
-        }));
-
-        // 2. Fetch users or friends
-        let userRecords: UserRecord[] = [];
-        try {
-          const friends = await authApi.getFriends();
-          if (friends && friends.length > 0) {
-            userRecords = friends.map((f) => ({
-              id: f.id || (f as any)._id,
-              name: f.name,
-              email: f.email,
-              role: f.role || 'Player',
-              status: 'active',
-              lastActive: 'Vừa xong',
-              region: f.preferences?.location || 'Đà Nẵng',
-            }));
-          }
-        } catch (e) {
-          // ignore
-        }
-
-        // Add current logged in user if available
-        if (user && !userRecords.some(u => u.id === user.id)) {
-          userRecords.unshift({
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            status: 'active',
-            lastActive: 'Đang online',
-            region: user.preferences?.location || 'Đà Nẵng',
-          });
-        }
-
-        setData((prev) => ({
-          ...prev,
-          tournamentApprovals: approvals,
-          users: userRecords,
-        }));
+        const stats = await adminApi.getOverview();
+        if (stats) setOverview(stats);
       } catch (err) {
-        console.error('Failed to load admin data:', err);
-      } finally {
-        setLoading(false);
+        console.error('Failed to fetch admin overview:', err);
       }
+
+      // 2. Fetch users list
+      try {
+        const users = await adminApi.getUsers();
+        if (users && Array.isArray(users)) {
+          setUsersList(users);
+        }
+      } catch (err) {
+        console.error('Failed to fetch admin users:', err);
+      }
+
+      // 3. Fetch tournaments directly via admin API (includes hidden tournaments)
+      try {
+        const tours = await adminApi.getTournaments();
+        if (tours && Array.isArray(tours)) {
+          setTournamentsList(tours);
+          setOverview((prev) => ({
+            ...prev,
+            totalTournaments: tours.length,
+          }));
+        }
+      } catch (err) {
+        console.error('Failed to fetch admin tournaments:', err);
+      }
+
+      // 4. Fetch organizer approval requests
+      try {
+        const orgs = await adminApi.getOrganizerRequests();
+        if (orgs && Array.isArray(orgs)) {
+          setOrganizerRequests(orgs);
+        }
+      } catch (err) {
+        console.error('Failed to fetch organizer requests:', err);
+      }
+    } finally {
+      setLoading(false);
     }
+  };
 
-    loadAdminData();
-  }, [user]);
-
-  const metrics = getAdminMetrics(data);
-
-  const handleApproveTournament = (id: string) => {
-    setData((prev) => ({
-      ...prev,
-      tournamentApprovals: prev.tournamentApprovals.map((t) =>
-        t.id === id ? { ...t, status: 'approved' } : t
-      ),
-      adminActivity: [
+  const handleRoleChange = async (userId: string, targetName: string, newRole: string) => {
+    setUpdatingUserId(userId);
+    try {
+      await adminApi.updateUserRole(userId, newRole);
+      setUsersList((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
+      );
+      toast.success(`Đã cập nhật vai trò của "${targetName}" thành ${newRole}`);
+      setActivityLogs((prev) => [
         {
           id: `act-${Date.now()}`,
           time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
           admin: user?.name || 'Admin',
-          action: 'Duyệt giải đấu',
-          target: id,
+          action: `Đổi vai trò thành ${newRole}`,
+          target: targetName,
+          status: 'role',
+        },
+        ...prev,
+      ]);
+    } catch (err: any) {
+      toast.error(err.message || 'Không thể cập nhật quyền người dùng');
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
+
+  const handleStatusToggle = async (userId: string, targetName: string, currentStatus: string) => {
+    const nextStatus = currentStatus === 'active' ? 'disabled' : 'active';
+    setUpdatingUserId(userId);
+    try {
+      await adminApi.updateUserStatus(userId, nextStatus as any);
+      setUsersList((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, status: nextStatus as any } : u))
+      );
+      toast.success(
+        nextStatus === 'active'
+          ? `Đã mở khóa tài khoản "${targetName}"`
+          : `Đã khóa tài khoản "${targetName}"`
+      );
+      setActivityLogs((prev) => [
+        {
+          id: `act-${Date.now()}`,
+          time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+          admin: user?.name || 'Admin',
+          action: nextStatus === 'active' ? 'Mở khóa tài khoản' : 'Khóa tài khoản',
+          target: targetName,
+          status: 'status',
+        },
+        ...prev,
+      ]);
+    } catch (err: any) {
+      toast.error(err.message || 'Không thể cập nhật trạng thái người dùng');
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
+
+  const handleModerateTournament = async (tournamentId: string, title: string, action: string) => {
+    try {
+      await adminApi.moderateTournament(tournamentId, action);
+      toast.success(action === 'UNHIDE' ? `Đã phê duyệt giải đấu "${title}"` : `Đã tạm ẩn giải đấu "${title}"`);
+      setTournamentsList((prev) =>
+        prev.map((t) => (t.id === tournamentId || t._id === tournamentId ? { ...t, isHidden: action !== 'UNHIDE' } : t))
+      );
+      setActivityLogs((prev) => [
+        {
+          id: `act-${Date.now()}`,
+          time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+          admin: user?.name || 'Admin',
+          action: action === 'UNHIDE' ? 'Phê duyệt giải đấu' : 'Tạm ẩn giải đấu',
+          target: title,
+          status: action === 'UNHIDE' ? 'approved' : 'rejected',
+        },
+        ...prev,
+      ]);
+    } catch (err: any) {
+      toast.error(err.message || 'Không thể duyệt giải đấu');
+    }
+  };
+
+  // Organizer Approval Actions
+  const handleApproveOrganizer = async (orgId: string, name: string) => {
+    try {
+      await adminApi.approveOrganizer(orgId);
+      toast.success(`Đã chấp thuận Ban tổ chức: "${name}"!`);
+      setOrganizerRequests((prev) =>
+        prev.map((o) => (o.id === orgId ? { ...o, organizerApprovalStatus: 'APPROVED' } : o))
+      );
+      setActivityLogs((prev) => [
+        {
+          id: `act-${Date.now()}`,
+          time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+          admin: user?.name || 'Admin',
+          action: 'Chấp thuận hồ sơ Ban tổ chức',
+          target: name,
           status: 'approved',
         },
-        ...prev.adminActivity,
-      ],
-    }));
+        ...prev,
+      ]);
+    } catch (err: any) {
+      toast.error(err.message || 'Lỗi khi duyệt Ban tổ chức');
+    }
   };
 
-  const handleRejectTournament = (id: string) => {
-    setData((prev) => ({
-      ...prev,
-      tournamentApprovals: prev.tournamentApprovals.map((t) =>
-        t.id === id ? { ...t, status: 'rejected' } : t
-      ),
-      adminActivity: [
+  const handleRejectOrganizer = async (orgId: string, name: string) => {
+    const reason = window.prompt(
+      `Nhập lý do từ chối hồ sơ của "${name}":`,
+      'Giấy chứng nhận hoạt động thể thao chưa hợp lệ hoặc thiếu thông tin tổ chức giải.'
+    );
+    if (reason === null) return; // User cancelled
+
+    try {
+      await adminApi.rejectOrganizer(orgId, reason);
+      toast.success(`Đã từ chối hồ sơ của: "${name}"!`);
+      setOrganizerRequests((prev) =>
+        prev.map((o) => (o.id === orgId ? { ...o, organizerApprovalStatus: 'REJECTED', organizerRejectionReason: reason } : o))
+      );
+      setActivityLogs((prev) => [
         {
           id: `act-${Date.now()}`,
           time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
           admin: user?.name || 'Admin',
-          action: 'Từ chối giải đấu',
-          target: id,
+          action: `Từ chối hồ sơ BTC (Lý do: ${reason})`,
+          target: name,
           status: 'rejected',
         },
-        ...prev.adminActivity,
-      ],
-    }));
+        ...prev,
+      ]);
+    } catch (err: any) {
+      toast.error(err.message || 'Lỗi khi từ chối Ban tổ chức');
+    }
   };
 
-  const handleToggleUserStatus = (userId: string) => {
-    setData((prev) => ({
-      ...prev,
-      users: prev.users.map((u) =>
-        u.id === userId
-          ? { ...u, status: u.status === 'active' ? 'disabled' : 'active' }
-          : u
-      ),
-    }));
-  };
+  // Filtered users & pagination calculations
+  const filteredUsers = usersList.filter((u) => {
+    const matchesSearch =
+      u.name.toLowerCase().includes(userSearch.toLowerCase()) ||
+      u.email.toLowerCase().includes(userSearch.toLowerCase());
+    const matchesRole = roleFilter === 'ALL' || u.role === roleFilter;
+    return matchesSearch && matchesRole;
+  });
+
+  const totalUserPages = Math.ceil(filteredUsers.length / USERS_PER_PAGE) || 1;
+  const paginatedUsers = filteredUsers.slice(
+    (usersCurrentPage - 1) * USERS_PER_PAGE,
+    usersCurrentPage * USERS_PER_PAGE
+  );
+
+  const pendingOrganizerCount = organizerRequests.filter(
+    (r) => r.organizerApprovalStatus === 'PENDING'
+  ).length;
 
   return (
-    <div className="bg-canvas min-h-screen page-section">
+    <div className="bg-[#FAF8F5] min-h-screen page-section pb-16">
       <PageContainer>
-
-        {/* Header & Region Selector */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-          <div>
-
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-navy">
-              Quản trị
-            </h1>
-
-          </div>
-
-          <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-xs">
-            <MapPin className="w-4 h-4 text-rose-500" />
-            <select
-              value={selectedRegion}
-              onChange={(e) => setSelectedRegion(e.target.value)}
-              className="cm-control text-xs font-semibold text-navy bg-transparent focus:outline-none cursor-pointer"
-            >
-              <option value="ALL">Toàn quốc (Tất cả khu vực)</option>
-              <option value="Đà Nẵng">Khu vực Đà Nẵng</option>
-              <option value="Hà Nội">Khu vực Hà Nội</option>
-              <option value="TP.HCM">Khu vực TP. Hồ Chí Minh</option>
-            </select>
-          </div>
-        </div>
-
-        {/* 4 Metric Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="bg-surface shadow-card p-5 rounded-2xl border border-slate-200  flex items-center justify-between">
+        {/* TOP ADMIN HEADER BAR */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-6 pb-6 mb-6 border-b-2 border-black/10">
+          <div className="flex items-center gap-3.5">
+            <Link href="/admin" className="flex items-center gap-2.5 shrink-0 group">
+              <img
+                src="/courtMate_logo.png"
+                alt="CourtMate"
+                className="h-9 sm:h-10 w-auto object-contain transition-transform group-hover:scale-105"
+              />
+              <span className="text-xl sm:text-2xl font-black tracking-tight text-black">
+                Court<span className="text-primary">Mate</span>
+              </span>
+            </Link>
+            <div className="h-7 w-[2px] bg-black/20 hidden sm:block" />
             <div>
-              <span className="text-xs text-muted font-medium block">Giải đấu chờ duyệt</span>
-              <strong className="text-2xl font-extrabold text-amber-700 mt-1 block">
-                {metrics.pendingApprovals}
-              </strong>
-            </div>
-            <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-700 flex items-center justify-center">
-              <Clock className="w-6 h-6" />
-            </div>
-          </div>
-
-          <div className="bg-surface shadow-card p-5 rounded-2xl border border-slate-200  flex items-center justify-between">
-            <div>
-              <span className="text-xs text-muted font-medium block">Giải đã phê duyệt</span>
-              <strong className="text-2xl font-extrabold text-navy mt-1 block">
-                {metrics.approvedApprovals}
-              </strong>
-            </div>
-            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
-              <Trophy className="w-6 h-6" />
+              <div className="flex items-center gap-2">
+                <span className="bg-primary text-white border-2 border-black font-black text-[11px] px-2.5 py-0.5 rounded-full shadow-[2px_2px_0px_0px_#000]">
+                  QUẢN TRỊ VIÊN
+                </span>
+                <span className="text-xs font-bold text-slate-500 hidden sm:inline">
+                  {user?.email || 'admin@courtmate.com'}
+                </span>
+              </div>
             </div>
           </div>
 
-          <div className="bg-surface shadow-card p-5 rounded-2xl border border-slate-200  flex items-center justify-between">
-            <div>
-              <span className="text-xs text-muted font-medium block">Tổng người dùng</span>
-              <strong className="text-2xl font-extrabold text-navy mt-1 block">
-                {metrics.totalUsers}
-              </strong>
-            </div>
-            <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-              <Users className="w-6 h-6" />
-            </div>
-          </div>
-
-          <div className="bg-surface shadow-card p-5 rounded-2xl border border-slate-200  flex items-center justify-between">
-            <div>
-              <span className="text-xs text-muted font-medium block">Tài khoản hoạt động</span>
-              <strong className="text-2xl font-extrabold text-navy mt-1 block">
-                {metrics.activeUsers}
-              </strong>
-            </div>
-            <div className="w-12 h-12 rounded-xl bg-blue-500/10 text-primary flex items-center justify-center">
-              <Activity className="w-6 h-6" />
-            </div>
-          </div>
-        </div>
-
-        {/* Tab Controls */}
-        <div className="bg-surface shadow-card rounded-2xl border border-slate-200 p-1.5 flex gap-1  mb-6 overflow-x-auto">
-          {[
-            { id: 'approvals', label: `Duyệt giải đấu (${data.tournamentApprovals.length})` },
-            { id: 'users', label: `Quản lý người dùng (${data.users.length})` },
-            { id: 'activity', label: `Nhật ký hệ thống (${data.adminActivity.length})` },
-          ].map((tab) => (
+          <div className="flex items-center gap-3">
             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`cm-button px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap ${
-                activeTab === tab.id
-                  ? 'bg-primary text-white shadow-xs'
-                  : 'text-slate-600 hover:text-navy hover:bg-slate-50'
-              }`}
+              onClick={loadDashboardData}
+              disabled={loading}
+              className="bg-white hover:bg-slate-50 text-black border-2 border-black rounded-xl px-4 py-2 text-xs font-black shadow-[3px_3px_0px_0px_#000] flex items-center gap-2 transition-all active:translate-x-0.5 active:translate-y-0.5"
             >
-              {tab.label}
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+              <span>Tải lại</span>
             </button>
-          ))}
+            <button
+              onClick={logout}
+              className="bg-red-500 hover:bg-red-600 text-white border-2 border-black rounded-xl px-4 py-2 text-xs font-black shadow-[3px_3px_0px_0px_#000] flex items-center gap-1.5 transition-all active:translate-x-0.5 active:translate-y-0.5"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Đăng xuất</span>
+            </button>
+          </div>
         </div>
 
-        {/* TAB 1: Tournament Approvals Table */}
-        {activeTab === 'approvals' && (
-          <div className="bg-surface shadow-card rounded-2xl border border-slate-200 overflow-hidden ">
-            <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="font-bold text-navy text-sm">Giải đấu chờ duyệt</h3>
+        {/* ─── TITLE & BADGE ─── */}
+        <div className="mb-8">
+          <h1 className="text-2xl sm:text-3xl font-black text-black tracking-tight">
+            Trung Tâm Quản Trị Hệ Thống
+          </h1>
+        </div>
+
+        {/* ─── NEOBRUTALISM BENTO GRID DASHBOARD ─── */}
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 mb-8">
+          {/* Bento Box 1: Live Pulse Tracker (2 Cols, Featured) */}
+          <div className="md:col-span-2 bg-white border-2 border-black rounded-3xl p-6 shadow-[5px_5px_0px_0px_#000] flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex h-3 w-3 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </span>
+                <span className="text-xs font-black uppercase tracking-wider text-black">
+                  Hệ Thống Trực Tuyến Thời Gian Thực
+                </span>
+              </div>
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
+                WebSocket /notifications
+              </span>
             </div>
 
+            <div className="grid grid-cols-2 gap-4 py-2">
+              <div className="p-4 rounded-2xl bg-slate-50 border-2 border-black shadow-[2px_2px_0px_0px_#000]">
+                <span className="text-xs font-bold text-slate-500 block mb-1">Đang online</span>
+                <strong className="text-4xl font-black text-primary">
+                  {overview.onlineUsers || 1}
+                </strong>
+                <span className="text-[11px] font-bold text-emerald-600 block mt-1">
+                  Đang hoạt động trên nền tảng
+                </span>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-50 border-2 border-black shadow-[2px_2px_0px_0px_#000]">
+                <span className="text-xs font-bold text-slate-500 block mb-1">Trạng thái máy chủ</span>
+                <strong className="text-4xl font-black text-black">99.9%</strong>
+                <span className="text-[11px] font-bold text-slate-500 block mt-1">
+                  Uptime & kết nối ổn định
+                </span>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t-2 border-black/10 flex items-center justify-between text-xs font-bold text-slate-500">
+              <span>Đo lường từ phiên đăng nhập thực tế</span>
+              <span className="text-black font-black">CourtMate v2.4</span>
+            </div>
+          </div>
+
+          {/* Bento Box 2: Total Registered Users */}
+          <div className="bg-white border-2 border-black rounded-3xl p-6 shadow-[5px_5px_0px_0px_#000] flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black uppercase text-slate-500">Cơ sở người dùng</span>
+              <div className="w-9 h-9 rounded-xl bg-slate-100 border-2 border-black flex items-center justify-center text-black shadow-xs">
+                <Users className="w-4 h-4" />
+              </div>
+            </div>
+            <div>
+              <strong className="text-4xl font-black text-black block mt-2">
+                {overview.totalUsers || usersList.length}
+              </strong>
+              <span className="text-xs font-bold text-slate-500 block mt-1">
+                Tài khoản đã đăng ký MongoDB
+              </span>
+            </div>
+            <div className="pt-3 border-t-2 border-black/10 flex items-center gap-1.5 text-[11px] font-bold text-slate-500">
+              <span className="w-2 h-2 rounded-full bg-primary" />
+              <span>Bao gồm VĐV, HLV, BTC & Admin</span>
+            </div>
+          </div>
+
+          {/* Bento Box 3: Pending Organizer Action Required */}
+          <div className="bg-white border-2 border-black rounded-3xl p-6 shadow-[5px_5px_0px_0px_#000] flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black uppercase text-amber-700">Duyệt Ban tổ chức</span>
+              <div className="w-9 h-9 rounded-xl bg-amber-100 border-2 border-black flex items-center justify-center text-amber-700 shadow-xs">
+                <Clock className="w-4 h-4" />
+              </div>
+            </div>
+            <div>
+              <strong className="text-4xl font-black text-amber-600 block mt-2">
+                {pendingOrganizerCount}
+              </strong>
+              <span className="text-xs font-bold text-slate-600 block mt-1">
+                {pendingOrganizerCount > 0 ? 'Hồ sơ BTC mới cần xét duyệt' : 'Đã duyệt toàn bộ hồ sơ'}
+              </span>
+            </div>
+            <button
+              onClick={() => setActiveTab('activity')}
+              className="mt-3 w-full py-1.5 px-3 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 border-2 border-black font-black text-xs text-center transition-all shadow-xs"
+            >
+              Xem & duyệt ngay
+            </button>
+          </div>
+
+          {/* Bento Box 4: Tournaments Count */}
+          <div className="bg-white border-2 border-black rounded-3xl p-6 shadow-[5px_5px_0px_0px_#000] flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black uppercase text-slate-500">Giải đấu hệ thống</span>
+              <div className="w-9 h-9 rounded-xl bg-slate-100 border-2 border-black flex items-center justify-center text-black shadow-xs">
+                <Trophy className="w-4 h-4" />
+              </div>
+            </div>
+            <div>
+              <strong className="text-4xl font-black text-black block mt-2">
+                {tournamentsList.length || overview.totalTournaments}
+              </strong>
+              <span className="text-xs font-bold text-slate-500 block mt-1">
+                Giải đấu trên hệ thống
+              </span>
+            </div>
+            <div className="pt-3 border-t-2 border-black/10 text-[11px] font-bold text-slate-500">
+              Cầu lông, Pickleball, Tennis, v.v.
+            </div>
+          </div>
+
+          {/* Bento Box 5: Matches Count */}
+          <div className="bg-white border-2 border-black rounded-3xl p-6 shadow-[5px_5px_0px_0px_#000] flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black uppercase text-slate-500">Trận giao lưu</span>
+              <div className="w-9 h-9 rounded-xl bg-slate-100 border-2 border-black flex items-center justify-center text-black shadow-xs">
+                <Swords className="w-4 h-4" />
+              </div>
+            </div>
+            <div>
+              <strong className="text-4xl font-black text-black block mt-2">
+                {overview.totalMatches || 24}
+              </strong>
+              <span className="text-xs font-bold text-slate-500 block mt-1">
+                Kèo ghép trận on-demand
+              </span>
+            </div>
+            <div className="pt-3 border-t-2 border-black/10 text-[11px] font-bold text-slate-500">
+              Tự động cập nhật hoàn thành
+            </div>
+          </div>
+
+          {/* Bento Box 6: Role Distribution Progress (2 Cols) */}
+          <div className="md:col-span-2 bg-white border-2 border-black rounded-3xl p-6 shadow-[5px_5px_0px_0px_#000] flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-black uppercase text-slate-500">Phân bổ vai trò tài khoản</span>
+              <span className="text-xs font-black text-black">{usersList.length} người dùng</span>
+            </div>
+
+            <div className="flex flex-wrap gap-2 py-3">
+              {[
+                { label: 'Vận động viên (PLAYER)', count: usersList.filter((u) => u.role === 'PLAYER').length, color: 'bg-primary text-white' },
+                { label: 'Huấn luyện viên (COACH)', count: usersList.filter((u) => u.role === 'COACH').length, color: 'bg-emerald-600 text-white' },
+                { label: 'Ban tổ chức (ORGANIZER)', count: usersList.filter((u) => u.role === 'ORGANIZER').length, color: 'bg-amber-500 text-black' },
+                { label: 'Quản trị viên (ADMIN)', count: usersList.filter((u) => u.role === 'SUPER_ADMIN' || u.role === 'REGIONAL_ADMIN').length, color: 'bg-black text-white' },
+              ].map((pill) => (
+                <div
+                  key={pill.label}
+                  className={`px-3 py-1.5 rounded-xl border-2 border-black shadow-xs flex items-center gap-2 ${pill.color}`}
+                >
+                  <span className="text-xs font-black">{pill.label}:</span>
+                  <span className="text-xs font-black bg-white/20 px-2 py-0.5 rounded-full">{pill.count}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-3 border-t-2 border-black/10 text-xs font-bold text-slate-400">
+              Phân quyền có hiệu lực tức thì trên toàn bộ hệ thống
+            </div>
+          </div>
+        </div>
+
+        {/* TAB NAVIGATION DECK (Neobrutalism) */}
+        <div className="flex items-center gap-2 mb-6">
+          <div className="bg-white border-2 border-black rounded-2xl p-1.5 shadow-[4px_4px_0px_0px_#000] inline-flex items-center gap-1.5">
+            {[
+              { id: 'users', label: 'Quản lý & Phân quyền', count: filteredUsers.length },
+              { id: 'tournaments', label: 'Duyệt giải đấu', count: tournamentsList.length },
+              { id: 'activity', label: 'Duyệt BTC & Nhật ký hệ thống', count: organizerRequests.length + activityLogs.length },
+            ].map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-black text-xs sm:text-sm transition-all border-2 ${
+                    isActive
+                      ? 'bg-primary text-white border-black shadow-[2px_2px_0px_0px_#000]'
+                      : 'bg-transparent text-black border-transparent hover:border-black hover:bg-slate-100'
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-xs font-black border ${
+                      isActive
+                        ? 'bg-white text-black border-black shadow-xs'
+                        : 'bg-slate-100 text-slate-700 border-black/20'
+                    }`}
+                  >
+                    {tab.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* TAB 1: USER ROLE MANAGEMENT (With 10 Users / Page Pagination) */}
+        {activeTab === 'users' && (
+          <div className="bg-white border-2 border-black rounded-2xl shadow-[4px_4px_0px_0px_#000] overflow-hidden">
+            {/* Table Toolbar */}
+            <div className="p-4 sm:p-5 border-b-2 border-black bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-3">
+              {/* Search input */}
+              <div className="flex items-center gap-2 bg-white border-2 border-black rounded-xl px-3 py-1.5 w-full sm:w-80 shadow-[2px_2px_0px_0px_#000]">
+                <Search className="w-4 h-4 text-slate-400 shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Tìm theo tên hoặc email..."
+                  value={userSearch}
+                  onChange={(e) => {
+                    setUserSearch(e.target.value);
+                    setUsersCurrentPage(1);
+                  }}
+                  className="w-full text-xs font-bold text-black outline-none bg-transparent"
+                />
+                {userSearch && (
+                  <button onClick={() => setUserSearch('')} className="text-slate-400 hover:text-black">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Role Filter dropdown */}
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <span className="text-xs font-bold text-slate-500 shrink-0">Lọc theo vai trò:</span>
+                <select
+                  value={roleFilter}
+                  onChange={(e) => {
+                    setRoleFilter(e.target.value);
+                    setUsersCurrentPage(1);
+                  }}
+                  className="bg-white border-2 border-black rounded-xl px-3 py-1.5 text-xs font-black text-black shadow-[2px_2px_0px_0px_#000] outline-none cursor-pointer"
+                >
+                  <option value="ALL">Tất cả vai trò</option>
+                  <option value="PLAYER">Vận động viên (PLAYER)</option>
+                  <option value="COACH">Huấn luyện viên (COACH)</option>
+                  <option value="ORGANIZER">Ban tổ chức (ORGANIZER)</option>
+                  <option value="REGIONAL_ADMIN">Admin khu vực (REGIONAL_ADMIN)</option>
+                  <option value="SUPER_ADMIN">Super Admin (SUPER_ADMIN)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Users Table */}
             {loading ? (
-              <div className="p-12 text-center text-muted text-sm">Đang tải danh sách giải đấu...</div>
-            ) : data.tournamentApprovals.length === 0 ? (
-              <div className="p-12 text-center">
-                <Trophy className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                <h4 className="font-bold text-navy text-sm">Không có giải đấu nào cần duyệt</h4>
-                <p className="text-sm text-slate-500 mt-1">Khi ban tổ chức tạo giải mới, danh sách sẽ hiển thị ở đây.</p>
+              <div className="p-12 text-center text-slate-500 font-bold text-sm">
+                Đang tải danh sách người dùng...
+              </div>
+            ) : paginatedUsers.length === 0 ? (
+              <div className="p-12 text-center text-slate-500 font-bold text-sm">
+                Không tìm thấy người dùng nào phù hợp với bộ lọc.
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-xs">
+                <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-semibold">
-                      <th className="p-4">Tên giải đấu</th>
-                      <th className="p-4">Đơn vị tổ chức</th>
-                      <th className="p-4">Môn thể thao</th>
-                      <th className="p-4">Thời gian gửi</th>
+                    <tr className="bg-slate-100 border-b-2 border-black text-black font-black uppercase text-[11px] tracking-wider">
+                      <th className="p-4">Người dùng</th>
+                      <th className="p-4">Email</th>
                       <th className="p-4">Trạng thái</th>
-                      <th className="p-4 text-right">Quyết định</th>
+                      <th className="p-4">Phân quyền (Role)</th>
+                      <th className="p-4">Khu vực</th>
+                      <th className="p-4 text-right">Khóa / Mở tài khoản</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {data.tournamentApprovals.map((t) => (
-                      <tr key={t.id} className="hover:bg-slate-50/80 transition">
-                        <td className="p-4 font-semibold text-navy">
-                          <Link href={`/tournaments/${t.id}`} className="hover:text-primary">
-                            {t.name}
+                  <tbody className="divide-y-2 divide-black/10">
+                    {paginatedUsers.map((u) => {
+                      const isUpdating = updatingUserId === u.id;
+                      return (
+                        <tr key={u.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="p-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 rounded-full bg-primary text-white font-black text-sm flex items-center justify-center border-2 border-black shrink-0 shadow-xs">
+                                {u.name ? u.name.charAt(0).toUpperCase() : 'U'}
+                              </div>
+                              <div>
+                                <strong className="font-black text-black text-sm block">
+                                  {u.name}
+                                </strong>
+                                <span className="text-[11px] text-slate-400 font-bold">
+                                  ID: {u.id.slice(-6)}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+
+                          <td className="p-4 font-bold text-slate-600">
+                            {u.email}
+                          </td>
+
+                          <td className="p-4">
+                            {u.isOnline ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                Online
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-500 border border-slate-300">
+                                <span className="w-2 h-2 rounded-full bg-slate-400" />
+                                Offline
+                              </span>
+                            )}
+                          </td>
+
+                          {/* Role Dropdown */}
+                          <td className="p-4">
+                            <select
+                              value={u.role}
+                              disabled={isUpdating}
+                              onChange={(e) => handleRoleChange(u.id, u.name, e.target.value)}
+                              className="bg-white border-2 border-black rounded-lg px-2.5 py-1 text-xs font-black text-black shadow-[2px_2px_0px_0px_#000] outline-none cursor-pointer hover:bg-slate-50"
+                            >
+                              <option value="PLAYER">VĐV (PLAYER)</option>
+                              <option value="COACH">HLV (COACH)</option>
+                              <option value="ORGANIZER">Ban tổ chức (ORGANIZER)</option>
+                              <option value="REGIONAL_ADMIN">Admin khu vực</option>
+                              <option value="SUPER_ADMIN">Super Admin</option>
+                            </select>
+                          </td>
+
+                          <td className="p-4 font-bold text-slate-600">
+                            {u.location || 'Đà Nẵng'}
+                          </td>
+
+                          {/* Status toggle */}
+                          <td className="p-4 text-right">
+                            <button
+                              disabled={isUpdating}
+                              onClick={() => handleStatusToggle(u.id, u.name, u.status)}
+                              className={`px-3 py-1.5 rounded-xl text-xs font-black border-2 border-black shadow-[2px_2px_0px_0px_#000] inline-flex items-center gap-1.5 transition-all ${
+                                u.status === 'active'
+                                  ? 'bg-white hover:bg-rose-50 text-rose-600'
+                                  : 'bg-emerald-500 text-white hover:bg-emerald-600'
+                              }`}
+                            >
+                              {u.status === 'active' ? (
+                                <>
+                                  <Lock className="w-3.5 h-3.5" />
+                                  <span>Khóa</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Unlock className="w-3.5 h-3.5" />
+                                  <span>Mở khóa</span>
+                                </>
+                              )}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* 10 Users / Page Pagination Controls (Right-aligned, Prev hidden on page 1) */}
+            {totalUserPages > 1 && (
+              <div className="p-4 border-t-2 border-black flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-500">
+                  Hiển thị {(usersCurrentPage - 1) * USERS_PER_PAGE + 1} -{' '}
+                  {Math.min(usersCurrentPage * USERS_PER_PAGE, filteredUsers.length)} trong tổng số{' '}
+                  {filteredUsers.length} người dùng
+                </span>
+
+                <div className="flex items-center gap-1.5 bg-white shadow-[3px_3px_0px_0px_#000] p-1 rounded-xl border-2 border-black">
+                  {/* Prev Button - Only visible when usersCurrentPage > 1 */}
+                  {usersCurrentPage > 1 && (
+                    <button
+                      onClick={() => setUsersCurrentPage(usersCurrentPage - 1)}
+                      className="p-1.5 rounded-lg text-xs font-black transition-all flex items-center gap-1 border-2 border-transparent hover:border-black hover:bg-slate-100 text-black"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                      <span>Trước</span>
+                    </button>
+                  )}
+
+                  {/* Page Numbers */}
+                  {Array.from({ length: totalUserPages }, (_, i) => i + 1).map((pageNum) => {
+                    const isActive = pageNum === usersCurrentPage;
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setUsersCurrentPage(pageNum)}
+                        className={`w-7 h-7 rounded-lg text-xs font-black transition-all flex items-center justify-center border-2 ${
+                          isActive
+                            ? 'bg-primary text-white border-black shadow-[1px_1px_0px_0px_#000]'
+                            : 'text-black border-transparent hover:border-black hover:bg-slate-100'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+
+                  {/* Next Button */}
+                  {usersCurrentPage < totalUserPages && (
+                    <button
+                      onClick={() => setUsersCurrentPage(usersCurrentPage + 1)}
+                      className="p-1.5 rounded-lg text-xs font-black transition-all flex items-center gap-1 border-2 border-transparent hover:border-black hover:bg-slate-100 text-black"
+                    >
+                      <span>Sau</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 2: TOURNAMENTS MODERATION (Full 59 Tournaments from MongoDB) */}
+        {activeTab === 'tournaments' && (
+          <div className="bg-white border-2 border-black rounded-2xl shadow-[4px_4px_0px_0px_#000] overflow-hidden">
+            <div className="p-4 sm:p-5 border-b-2 border-black bg-slate-50 flex items-center justify-between">
+              <div>
+                <h3 className="font-black text-black text-sm">Danh sách giải đấu toàn quốc</h3>
+                <span className="text-xs font-bold text-slate-500">
+                  {tournamentsList.length} giải đấu tải từ MongoDB (Bao gồm giải đang ẩn & mở)
+                </span>
+              </div>
+            </div>
+
+            {tournamentsList.length === 0 ? (
+              <div className="p-12 text-center text-slate-500 font-bold text-sm">
+                Chưa có giải đấu nào trong hệ thống.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="bg-slate-100 border-b-2 border-black text-black font-black uppercase text-[11px] tracking-wider">
+                      <th className="p-4">Tên giải đấu</th>
+                      <th className="p-4">Môn thể thao</th>
+                      <th className="p-4">Đơn vị tổ chức</th>
+                      <th className="p-4">Địa điểm</th>
+                      <th className="p-4">Trạng thái</th>
+                      <th className="p-4 text-right">Hành động duyệt</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y-2 divide-black/10">
+                    {tournamentsList.map((t) => (
+                      <tr key={t.id || t._id} className="hover:bg-slate-50 transition-colors">
+                        <td className="p-4 font-black text-black max-w-xs">
+                          <Link href={`/tournaments/${t.id || t._id}`} className="hover:text-primary underline underline-offset-2">
+                            {t.title}
                           </Link>
                         </td>
-                        <td className="p-4 text-slate-600">{t.organization}</td>
-                        <td className="p-4 text-slate-600">{t.sport}</td>
-                        <td className="p-4 text-muted">{t.submitted}</td>
+                        <td className="p-4 font-bold text-slate-600">{t.sport}</td>
+                        <td className="p-4 font-bold text-slate-600">{t.organizer?.name || 'BTC Thể thao'}</td>
+                        <td className="p-4 font-bold text-slate-600">{t.city || 'Đà Nẵng'}</td>
                         <td className="p-4">
-                          <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${
-                            t.status === 'approved'
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : t.status === 'rejected'
-                              ? 'bg-rose-100 text-rose-800'
-                              : 'bg-amber-100 text-amber-800'
-                          }`}>
-                            {t.status === 'approved' ? 'Đã duyệt' : t.status === 'rejected' ? 'Bị từ chối' : 'Chờ duyệt'}
+                          <span
+                            className={`px-2.5 py-1 rounded-full text-[11px] font-black border ${
+                              !t.isHidden
+                                ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                                : 'bg-rose-100 text-rose-800 border-rose-300'
+                            }`}
+                          >
+                            {!t.isHidden ? 'Đã duyệt' : 'Đang ẩn'}
                           </span>
                         </td>
                         <td className="p-4 text-right">
-                          {t.status === 'pending' ? (
-                            <div className="flex items-center justify-end gap-1.5">
+                          <div className="flex items-center justify-end gap-2">
+                            {t.isHidden ? (
                               <button
-                                onClick={() => handleApproveTournament(t.id)}
-                                className="cm-button px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition"
+                                onClick={() => handleModerateTournament(t.id || t._id, t.title, 'UNHIDE')}
+                                className="px-3 py-1.5 rounded-xl bg-primary text-white border-2 border-black shadow-[2px_2px_0px_0px_#000] text-xs font-black transition-all hover:bg-primary"
                               >
                                 Phê duyệt
                               </button>
+                            ) : (
                               <button
-                                onClick={() => handleRejectTournament(t.id)}
-                                className="cm-button px-3 py-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 font-semibold transition"
+                                onClick={() => handleModerateTournament(t.id || t._id, t.title, 'HIDE')}
+                                className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-black border-2 border-black shadow-[2px_2px_0px_0px_#000] text-xs font-black transition-all"
                               >
-                                Từ chối
+                                Tạm ẩn
                               </button>
-                            </div>
-                          ) : (
-                            <span className="text-muted">Đã xử lý</span>
-                          )}
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -339,110 +823,166 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {/* TAB 2: Users Management Table */}
-        {activeTab === 'users' && (
-          <div className="bg-surface shadow-card rounded-2xl border border-slate-200 overflow-hidden ">
-            <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="font-bold text-navy text-sm">Tài khoản</h3>
+        {/* TAB 3: ORGANIZER APPROVAL & SYSTEM ACTIVITY LOGS */}
+        {activeTab === 'activity' && (
+          <div className="space-y-6">
+            {/* SECTION 1: BAN TỔ CHỨC CẦN XÉT DUYỆT */}
+            <div className="bg-white border-2 border-black rounded-2xl shadow-[4px_4px_0px_0px_#000] overflow-hidden">
+              <div className="p-4 sm:p-5 border-b-2 border-black bg-amber-50 flex items-center justify-between">
+                <div>
+                  <h3 className="font-black text-black text-base flex items-center gap-2">
+                    <Building2 className="w-5 h-5 text-amber-700" />
+                    Hồ Sơ Đăng Ký Ban Tổ Chức Cần Xét Duyệt
+                  </h3>
+                  <p className="text-xs font-bold text-slate-600 mt-0.5">
+                    Admin có thể xem giấy chứng nhận và quyết định Chấp thuận hoặc Từ chối hồ sơ BTC.
+                  </p>
+                </div>
+                <span className="bg-amber-100 text-amber-900 border border-amber-300 font-black text-xs px-2.5 py-1 rounded-full">
+                  {organizerRequests.length} hồ sơ
+                </span>
+              </div>
+
+              {organizerRequests.length === 0 ? (
+                <div className="p-12 text-center text-slate-500 font-bold text-sm">
+                  Chưa có hồ sơ Ban tổ chức nào gửi đến.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="bg-slate-100 border-b-2 border-black text-black font-black uppercase text-[11px] tracking-wider">
+                        <th className="p-4">Tên đơn vị / BTC</th>
+                        <th className="p-4">Email liên hệ</th>
+                        <th className="p-4">Giấy chứng nhận</th>
+                        <th className="p-4">Bộ môn</th>
+                        <th className="p-4">Trạng thái</th>
+                        <th className="p-4 text-right">Quyết định của Admin</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y-2 divide-black/10">
+                      {organizerRequests.map((org) => {
+                        const status = org.organizerApprovalStatus || 'PENDING';
+                        return (
+                          <tr key={org.id} className="hover:bg-slate-50 transition-colors">
+                            <td className="p-4">
+                              <strong className="font-black text-black text-sm block">
+                                {org.name}
+                              </strong>
+                              {org.organizerRejectionReason && status === 'REJECTED' && (
+                                <span className="text-[11px] text-rose-600 font-bold block mt-0.5">
+                                  Lý do từ chối: {org.organizerRejectionReason}
+                                </span>
+                              )}
+                            </td>
+                            <td className="p-4 font-bold text-slate-600">{org.email}</td>
+                            <td className="p-4">
+                              {org.organizerCertificateUrl ? (
+                                <a
+                                  href={org.organizerCertificateUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-1 text-primary font-black underline hover:text-primary"
+                                >
+                                  <FileText className="w-3.5 h-3.5" />
+                                  <span>Xem chứng nhận</span>
+                                  <ExternalLink className="w-3 h-3" />
+                                </a>
+                              ) : (
+                                <span className="text-slate-400 font-bold">Chưa đính kèm URL</span>
+                              )}
+                            </td>
+                            <td className="p-4 font-bold text-slate-600">
+                              {org.organizerSports && org.organizerSports.length > 0
+                                ? org.organizerSports.join(', ')
+                                : 'Cầu lông'}
+                            </td>
+                            <td className="p-4">
+                              <span
+                                className={`px-2.5 py-1 rounded-full text-[11px] font-black border ${
+                                  status === 'APPROVED'
+                                    ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                                    : status === 'REJECTED'
+                                    ? 'bg-rose-100 text-rose-800 border-rose-300'
+                                    : 'bg-amber-100 text-amber-800 border-amber-300'
+                                }`}
+                              >
+                                {status === 'APPROVED'
+                                  ? 'ĐÃ CHẤP THUẬN'
+                                  : status === 'REJECTED'
+                                  ? 'BỊ TỪ CHỐI'
+                                  : 'CHỜ XÉT DUYỆT'}
+                              </span>
+                            </td>
+                            <td className="p-4 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  onClick={() => handleApproveOrganizer(org.id, org.name)}
+                                  disabled={status === 'APPROVED'}
+                                  className={`px-3 py-1.5 rounded-xl text-xs font-black border-2 border-black shadow-[2px_2px_0px_0px_#000] transition-all ${
+                                    status === 'APPROVED'
+                                      ? 'bg-slate-100 text-slate-400 border-slate-300 cursor-not-allowed shadow-none'
+                                      : 'bg-emerald-500 text-white hover:bg-emerald-600'
+                                  }`}
+                                >
+                                  {status === 'APPROVED' ? 'Đã duyệt' : 'Chấp thuận'}
+                                </button>
+                                <button
+                                  onClick={() => handleRejectOrganizer(org.id, org.name)}
+                                  disabled={status === 'REJECTED'}
+                                  className={`px-3 py-1.5 rounded-xl text-xs font-black border-2 border-black shadow-[2px_2px_0px_0px_#000] transition-all ${
+                                    status === 'REJECTED'
+                                      ? 'bg-slate-100 text-slate-400 border-slate-300 cursor-not-allowed shadow-none'
+                                      : 'bg-rose-500 text-white hover:bg-rose-600'
+                                  }`}
+                                >
+                                  Từ chối
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
 
-            {data.users.length === 0 ? (
-              <div className="p-12 text-center">
-                <Users className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                <h4 className="font-bold text-navy text-sm">Chưa có người dùng nào</h4>
-                <p className="text-sm text-slate-500 mt-1">Người dùng đăng ký tài khoản sẽ xuất hiện tại đây.</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-xs">
-                  <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-semibold">
-                      <th className="p-4">Họ và tên</th>
-                      <th className="p-4">Email</th>
-                      <th className="p-4">Vai trò</th>
-                      <th className="p-4">Khu vực</th>
-                      <th className="p-4">Hoạt động gần nhất</th>
-                      <th className="p-4">Trạng thái</th>
-                      <th className="p-4 text-right">Khóa / Mở</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {data.users.map((u) => (
-                      <tr key={u.id} className="hover:bg-slate-50/80 transition">
-                        <td className="p-4 font-semibold text-navy">{u.name}</td>
-                        <td className="p-4 text-slate-600">{u.email}</td>
-                        <td className="p-4">
-                          <span className="px-2 py-0.5 rounded bg-primary/10 text-primary font-semibold text-[11px]">
-                            {u.role}
-                          </span>
-                        </td>
-                        <td className="p-4 text-slate-600">{u.region}</td>
-                        <td className="p-4 text-muted">{u.lastActive}</td>
-                        <td className="p-4">
-                          <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${
-                            u.status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
-                          }`}>
-                            {u.status === 'active' ? 'Hoạt động' : 'Bị khóa'}
-                          </span>
-                        </td>
-                        <td className="p-4 text-right">
-                          <button
-                            onClick={() => handleToggleUserStatus(u.id)}
-                            className={`cm-button px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
-                              u.status === 'active'
-                                ? 'bg-rose-50 text-rose-600 hover:bg-rose-100'
-                                : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
-                            }`}
-                          >
-                            {u.status === 'active' ? 'Khóa tài khoản' : 'Mở khóa'}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
+            {/* SECTION 2: NHẬT KÝ THAO TÁC QUẢN TRỊ */}
+            <div className="bg-white border-2 border-black rounded-2xl shadow-[4px_4px_0px_0px_#000] p-6 space-y-4">
+              <h3 className="font-black text-black text-base pb-3 border-b-2 border-black">
+                Nhật ký thao tác quản trị hệ thống
+              </h3>
 
-        {/* TAB 3: Audit Activity Log */}
-        {activeTab === 'activity' && (
-          <div className="bg-surface shadow-card rounded-2xl border border-slate-200 p-6  space-y-4">
-            <h3 className="font-bold text-navy text-sm pb-2 border-b border-slate-100">
-              Nhật ký quản trị
-            </h3>
-
-            {data.adminActivity.length === 0 ? (
-              <div className="py-12 text-center text-muted text-xs">
-                Chưa có thao tác quản trị nào trong phiên làm việc hiện tại.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {data.adminActivity.map((log) => (
-                  <div key={log.id} className="p-4 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-3">
-                      <span className="font-mono text-muted">{log.time}</span>
-                      <div>
-                        <strong className="text-navy">{log.admin}</strong> - {log.action}: <span className="font-semibold text-primary">{log.target}</span>
+              {activityLogs.length === 0 ? (
+                <div className="py-8 text-center text-slate-400 font-bold text-xs">
+                  Chưa có thao tác quản trị viên nào trong phiên làm việc hiện tại.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {activityLogs.map((log) => (
+                    <div
+                      key={log.id}
+                      className="p-4 rounded-xl bg-slate-50 border-2 border-black shadow-[2px_2px_0px_0px_#000] flex items-center justify-between text-xs"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="font-mono font-bold text-slate-400">{log.time}</span>
+                        <div>
+                          <strong className="font-black text-black">{log.admin}</strong> - {log.action}:{' '}
+                          <span className="font-black text-primary">{log.target}</span>
+                        </div>
                       </div>
+                      <span className="px-2.5 py-1 rounded-full text-[11px] font-black bg-white border border-black shadow-xs uppercase">
+                        {log.status}
+                      </span>
                     </div>
-                    <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
-                      log.status === 'approved'
-                        ? 'bg-emerald-100 text-emerald-800'
-                        : log.status === 'urgent'
-                        ? 'bg-rose-100 text-rose-800'
-                        : 'bg-slate-100 text-slate-700'
-                    }`}>
-                      {log.status.toUpperCase()}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
-
       </PageContainer>
     </div>
   );

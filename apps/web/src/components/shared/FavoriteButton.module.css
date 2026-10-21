@@ -6,7 +6,7 @@
   height: 44px;
   border-radius: 50%;
   background: white;
-  color: #64748b;
+  color: #3f3f3f;
   cursor: pointer;
   transition: color .2s ease, background .2s ease;
 }
@@ -16,5 +16,5 @@
 .button:disabled { cursor: wait; opacity: .55; }
 .icon, .icon:hover, .onImage, .onImage:hover { background: transparent; border: 0; box-shadow: none; }
 .onImage { color: white; }
-.onImage:hover, .onImage[aria-pressed=true] { color: #a9d0ff; }
+.onImage:hover, .onImage[aria-pressed=true] { color: #8fd9fb; }
 @media (prefers-reduced-motion: reduce) { .button { transition: none; } }

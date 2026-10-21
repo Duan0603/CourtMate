@@ -7,13 +7,15 @@
     "start": "node dist/main.js",
     "start:dev": "concurrently \"tsc --watch\" \"nodemon dist/main.js\"",
     "typecheck": "tsc --noEmit",
+    "test:notifications": "npm run build && node --test test/notifications.test.cjs",
     "migrate:create": "migrate-mongo create",
     "migrate:up": "migrate-mongo up",
     "migrate:down": "migrate-mongo down",
     "migrate:status": "migrate-mongo status",
     "seed:danang-tournaments": "node scripts/seed-50-tournaments-danang.js",
     "seed:all-registrations": "node scripts/seed-registrations-for-all-tournaments.js",
-    "seed:feedbacks": "node scripts/seed-feedbacks.js"
+    "seed:feedbacks": "node scripts/seed-feedbacks.js",
+    "test:auth": "npm run build && node --test test/auth-registration.test.cjs"
   },
   "dependencies": {
     "@courtmate/shared": "file:../../packages/shared",

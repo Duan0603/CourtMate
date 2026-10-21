@@ -94,13 +94,13 @@ export const TournamentFilters: React.FC<TournamentFiltersProps> = ({
     filters.sport === SportType.BADMINTON ? badmintonLevels : [];
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-canvas">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
+      <div className="flex items-center justify-between px-6 py-5 border-b border-ink shrink-0 bg-white" style={{ boxShadow: 'var(--cm-shadow-subtle)' }}>
         <h3 className="font-extrabold text-navy text-lg">Bộ lọc</h3>
         <button
           onClick={onClose}
-          className="cm-button p-2 -mr-2 rounded-full hover:bg-slate-100 transition-colors text-slate-500"
+          className="cm-button p-2 -mr-2 rounded-full hover:bg-white transition-colors text-muted"
         >
           <X className="w-5 h-5" />
         </button>
@@ -111,7 +111,7 @@ export const TournamentFilters: React.FC<TournamentFiltersProps> = ({
 
         {/* Sport Selector */}
         <div className="space-y-4">
-          <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+          <label className="text-sm font-bold text-muted flex items-center gap-2">
             Môn thể thao
           </label>
           <div className="flex flex-wrap gap-2.5">
@@ -123,9 +123,10 @@ export const TournamentFilters: React.FC<TournamentFiltersProps> = ({
                   onClick={() => updateFilter('sport', sport.value)}
                   className={`cm-button px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border ${
                     isSelected
-                      ? 'bg-primary/10 text-primary border-primary/30'
-                      : 'bg-white text-slate-600 border-slate-200 hover:border-primary/30 hover:bg-slate-50'
+                      ? 'bg-accent-baby text-primary border-primary/30'
+                      : 'bg-white text-muted border-ink hover:border-primary/30 hover:bg-white'
                   }`}
+                  style={{ boxShadow: isSelected ? 'var(--cm-shadow-interactive)' : 'var(--cm-shadow-subtle)' }}
                 >
                   {sport.label}
                 </button>
@@ -137,7 +138,7 @@ export const TournamentFilters: React.FC<TournamentFiltersProps> = ({
         {/* Level Selector - Only show if a sport is selected */}
         {filters.sport && currentLevels.length > 0 && (
           <div className="space-y-4">
-            <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+            <label className="text-sm font-bold text-muted flex items-center gap-2">
               Trình độ
             </label>
             <div className="flex flex-wrap gap-2.5">
@@ -149,9 +150,10 @@ export const TournamentFilters: React.FC<TournamentFiltersProps> = ({
                     onClick={() => updateFilter('level', level.value)}
                     className={`cm-button px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border ${
                       isSelected
-                        ? 'bg-primary/10 text-primary border-primary/30'
-                        : 'bg-white text-slate-600 border-slate-200 hover:border-primary/30 hover:bg-slate-50'
+                        ? 'bg-accent-baby text-primary border-primary/30'
+                        : 'bg-white text-muted border-ink hover:border-primary/30 hover:bg-white'
                     }`}
+                    style={{ boxShadow: isSelected ? 'var(--cm-shadow-interactive)' : 'var(--cm-shadow-subtle)' }}
                   >
                     {level.label}
                   </button>
@@ -163,10 +165,10 @@ export const TournamentFilters: React.FC<TournamentFiltersProps> = ({
 
         {/* Fee Slider Selector */}
         <div className="space-y-4">
-          <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+          <label className="text-sm font-bold text-muted flex items-center gap-2">
             Lệ phí tham gia
           </label>
-          <div className="space-y-4 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+          <div className="space-y-4 bg-white p-4 rounded-2xl border border-ink" style={{ boxShadow: 'var(--cm-shadow-card)' }}>
             <div className="text-sm font-bold text-navy flex items-center justify-between">
               <span>Chi phí tối đa</span>
               <span className="text-primary">
@@ -182,7 +184,7 @@ export const TournamentFilters: React.FC<TournamentFiltersProps> = ({
               <div className="relative flex items-center">
                 <input
                   type="checkbox"
-                  className="cm-control peer w-5 h-5 rounded-md border-2 border-slate-300 text-primary focus:ring-primary transition-all cursor-pointer"
+                  className="cm-control peer w-5 h-5 rounded-md border-2 border-ink text-primary focus:ring-primary transition-all cursor-pointer"
                   checked={filters.isFreeOnly || false}
                   onChange={(e) => {
                      const checked = e.target.checked;
@@ -195,7 +197,7 @@ export const TournamentFilters: React.FC<TournamentFiltersProps> = ({
                   }}
                 />
               </div>
-              <span className="text-sm font-semibold text-slate-700">Chỉ buổi miễn phí</span>
+              <span className="text-sm font-semibold text-muted">Chỉ buổi miễn phí</span>
             </label>
 
             <div className={`pt-2 transition-opacity duration-300 ${filters.isFreeOnly ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
@@ -212,7 +214,7 @@ export const TournamentFilters: React.FC<TournamentFiltersProps> = ({
                     updateFilter('isFreeOnly', false);
                   }
                 }}
-                className="cm-control w-full h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#1E5AA8]"
+                className="cm-control w-full h-2.5 bg-white rounded-lg appearance-none cursor-pointer accent-[#1848FF]"
               />
               <div className="flex justify-between text-xs font-semibold text-muted mt-3">
                 <span>0k</span>
@@ -225,7 +227,7 @@ export const TournamentFilters: React.FC<TournamentFiltersProps> = ({
 
         {/* Status Selector */}
         <div className="space-y-4">
-          <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+          <label className="text-sm font-bold text-muted flex items-center gap-2">
             Trạng thái giải đấu
           </label>
           <div className="flex flex-wrap gap-2.5">
@@ -237,9 +239,10 @@ export const TournamentFilters: React.FC<TournamentFiltersProps> = ({
                   onClick={() => updateFilter('status', status.value)}
                   className={`cm-button px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border ${
                     isSelected
-                      ? 'bg-primary/10 text-primary border-primary/30'
-                      : 'bg-white text-slate-600 border-slate-200 hover:border-primary/30 hover:bg-slate-50'
+                      ? 'bg-accent-baby text-primary border-primary/30'
+                      : 'bg-white text-muted border-ink hover:border-primary/30 hover:bg-white'
                   }`}
+                  style={{ boxShadow: isSelected ? 'var(--cm-shadow-interactive)' : 'var(--cm-shadow-subtle)' }}
                 >
                   {status.label}
                 </button>
@@ -251,16 +254,18 @@ export const TournamentFilters: React.FC<TournamentFiltersProps> = ({
       </div>
 
       {/* Bottom Sticky Action Bar */}
-      <div className="shrink-0 p-4 border-t border-slate-100 bg-white grid grid-cols-3 gap-3">
+      <div className="shrink-0 p-5 border-t border-ink bg-white grid grid-cols-3 gap-3" style={{ boxShadow: 'none' }}>
         <button
           onClick={handleReset}
-          className="cm-button col-span-1 py-3 px-4 rounded-full text-sm font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors text-center"
+          className="cm-button col-span-1 py-3 px-4 rounded-full text-sm font-bold text-muted bg-white hover:bg-white border border-ink transition-colors text-center"
+          style={{ boxShadow: 'var(--cm-shadow-subtle)' }}
         >
           Đặt lại
         </button>
         <button
           onClick={handleApply}
-          className="cm-action cm-button col-span-2 py-3 px-4 rounded-full text-sm font-bold text-white bg-primary hover:bg-primary-dark transition-colors shadow-sm text-center"
+          className="cm-action cm-button col-span-2 py-3 px-4 rounded-full text-sm font-bold text-white bg-primary hover:bg-primary-dark transition-colors text-center"
+          style={{ boxShadow: 'var(--cm-shadow-interactive)' }}
         >
           Áp dụng
         </button>

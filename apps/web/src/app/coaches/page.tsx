@@ -5,7 +5,6 @@ import { PageContainer } from '../../components/layout/PageContainer';
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowRight, ArrowUpRight, CalendarDays, ChevronDown, MapPin, Search, SlidersHorizontal, Star, Users, X, Check } from 'lucide-react';
-import { notification } from 'antd';
 import { SportType } from '@courtmate/shared';
 import { useAuth } from '../../context/AuthContext';
 import { GuestActionModal } from '../../components/shared/GuestActionModal';
@@ -15,14 +14,25 @@ import { MOCK_COACHES, MOCK_COURSES, money, sportLabel } from '../../lib/coaches
 import { useCoachDemo } from '../../lib/coach-demo-store';
 import { emitFavoriteNotification } from '../../lib/notifications-api';
 import { CoachFilters } from '../../components/coaches/CoachFilters';
+import { SmartAsyncContainer } from '../../components/loading/SmartAsyncContainer';
+import { ContentSkeleton } from '../../components/loading/ContentSkeleton';
 import styles from './coaches.module.css';
 
 const normalize = (value: string) => value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').trim();
 const districts = Array.from(new Set(MOCK_COACHES.flatMap(coach => coach.districts)));
 
 export default function CoachesPage() {
-  const [notificationApi, notificationHolder] = notification.useNotification();
   const [tab, setTab] = useState('coaches');
+  const [loading, setLoading] = useState(false);
+
+  const handleTabChange = (nextTab: string) => {
+    if (nextTab === tab) return;
+    setLoading(true);
+    setTab(nextTab);
+    setTimeout(() => {
+      setLoading(false);
+    }, 250);
+  };
   const [keyword, setKeyword] = useState('');
   const [sport, setSport] = useState('');
   const [district, setDistrict] = useState('');
@@ -70,19 +80,7 @@ export default function CoachesPage() {
     try {
       const saved = await demo.toggleFavorite(coachId);
       if (saved === wasFavorite) return;
-      if (saved) {
-        void emitFavoriteNotification({
-          type: 'FAVORITE_COACH',
-          title: 'Yêu thích huấn luyện viên',
-          body: `Đã lưu HLV ${name} vào danh sách yêu thích.`,
-          link: `/coaches/${coachId}`,
-        });
-      }
-      notificationApi.success({
-        message: saved ? 'Đã lưu thành công' : 'Đã bỏ lưu thành công',
-        placement: 'topRight',
-        duration: 3,
-      });
+
     } finally {
       setPendingFavorites(previous => previous.filter(id => id !== coachId));
     }
@@ -104,12 +102,6 @@ export default function CoachesPage() {
         link: `/coaches/${course.coachId}?courseId=${course.id}`,
       });
     }
-
-    notificationApi.success({
-      message: !wasFav ? 'Đã lưu thành công' : 'Đã bỏ lưu thành công',
-      placement: 'topRight',
-      duration: 3,
-    });
   };
   const reset = () => { setKeyword(''); setSport(''); setDistrict(''); setBudget(''); setMinRating(''); setMinExperience(''); };
   const filterCount = [sport, district, budget, minRating, minExperience].filter(Boolean).length;
@@ -127,7 +119,6 @@ export default function CoachesPage() {
 
   return (
     <div className={`${styles.page} page-section`}>
-      {notificationHolder}
       <PageContainer>
         <header className={styles.header}>
           <div>
@@ -142,14 +133,14 @@ export default function CoachesPage() {
         {/* Main Toolbar (Search & Filter) - Synchronized with Tournaments UI */}
         <div className="flex flex-col sm:flex-row items-center gap-3 mb-6">
           {/* Main Search Bar Container */}
-          <div className="flex flex-1 items-center bg-surface shadow-card rounded-2xl sm:rounded-full border border-slate-200/90 hover:border-primary/40 transition-all p-2 w-full">
+          <div className="cm-searchbar flex flex-1 items-center bg-surface shadow-card rounded-2xl sm:rounded-full border border-ink hover:border-primary/40 transition-all p-2 w-full">
             {/* District Selector Dropdown Pill */}
             <div className="relative shrink-0" ref={districtRef}>
               <button
                 type="button"
                 onClick={() => setIsDistrictOpen(!isDistrictOpen)}
-                className={`cm-button flex items-center gap-2 bg-slate-100/80 hover:bg-slate-100 text-navy font-bold text-xs sm:text-sm pl-3.5 pr-3 py-2.5 rounded-xl sm:rounded-full outline-none transition-all border ${
-                  isDistrictOpen ? 'border-primary bg-slate-100' : 'border-slate-200/60'
+                className={`cm-button flex items-center gap-2 bg-white hover:bg-white text-navy font-bold text-xs sm:text-sm pl-3.5 pr-3 py-2.5 rounded-xl sm:rounded-full outline-none transition-all border ${
+                  isDistrictOpen ? 'border-primary bg-white' : 'border-ink'
                 }`}
               >
                 <MapPin className="w-4 h-4 text-primary" />
@@ -160,7 +151,7 @@ export default function CoachesPage() {
               </button>
 
               {isDistrictOpen && (
-                <div className="absolute top-full left-0 mt-2 w-52 bg-surface shadow-card rounded-2xl border border-slate-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
+                <div className="absolute top-full left-0 mt-2 w-52 bg-surface shadow-card rounded-2xl border border-ink py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
                   <button
                     type="button"
                     onClick={() => {
@@ -169,8 +160,8 @@ export default function CoachesPage() {
                     }}
                     className={`cm-button w-full flex items-center justify-between px-4 py-2.5 text-xs sm:text-sm transition-colors ${
                       !district
-                        ? 'bg-primary/10 text-primary font-bold'
-                        : 'text-muted hover:bg-slate-50 font-semibold'
+                        ? 'bg-accent-baby text-primary font-bold'
+                        : 'text-muted hover:bg-white font-semibold'
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
@@ -191,8 +182,8 @@ export default function CoachesPage() {
                         }}
                         className={`cm-button w-full flex items-center justify-between px-4 py-2.5 text-xs sm:text-sm transition-colors ${
                           isSelected
-                            ? 'bg-primary/10 text-primary font-bold'
-                            : 'text-muted hover:bg-slate-50 font-semibold'
+                            ? 'bg-accent-baby text-primary font-bold'
+                            : 'text-muted hover:bg-white font-semibold'
                         }`}
                       >
                         <div className="flex items-center gap-2.5">
@@ -208,7 +199,7 @@ export default function CoachesPage() {
             </div>
 
             {/* Vertical Divider */}
-            <div className="w-[1px] h-6 bg-slate-200 mx-2 shrink-0 hidden sm:block" />
+            <div className="w-[1px] h-6 bg-white mx-2 shrink-0 hidden sm:block" />
 
             {/* Keyword Input */}
             <div className="relative flex-1 flex items-center">
@@ -224,7 +215,7 @@ export default function CoachesPage() {
                 <button
                   type="button"
                   onClick={() => setKeyword('')}
-                  className="cm-button mr-2 text-muted hover:text-slate-600"
+                  className="cm-button mr-2 text-muted hover:text-muted"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -239,7 +230,7 @@ export default function CoachesPage() {
             className={`cm-button shrink-0 flex items-center gap-2 px-5 py-3 rounded-2xl sm:rounded-full text-xs sm:text-sm font-bold transition-all ${
               filterCount > 0
                 ? 'bg-primary text-white hover:bg-primary-dark border border-primary'
-                : 'bg-surface shadow-card text-navy border border-slate-200 hover:bg-slate-50 hover:border-slate-300'
+                : 'bg-surface shadow-card text-navy border border-ink hover:bg-white hover:border-ink'
             }`}
           >
             <SlidersHorizontal className="w-4 h-4" />
@@ -265,7 +256,7 @@ export default function CoachesPage() {
               <button
                 type="button"
                 onClick={() => setSport('')}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-accent-baby text-primary border border-primary/20 hover:bg-accent-baby transition-colors"
               >
                 <span>Môn: {sportLabel(sport as SportType)}</span>
                 <X className="w-3.5 h-3.5" />
@@ -275,7 +266,7 @@ export default function CoachesPage() {
               <button
                 type="button"
                 onClick={() => setDistrict('')}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-accent-baby text-primary border border-primary/20 hover:bg-accent-baby transition-colors"
               >
                 <span>Khu vực: Q. {district}</span>
                 <X className="w-3.5 h-3.5" />
@@ -285,7 +276,7 @@ export default function CoachesPage() {
               <button
                 type="button"
                 onClick={() => setBudget('')}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-accent-baby text-primary border border-primary/20 hover:bg-accent-baby transition-colors"
               >
                 <span>Học phí: Đến {money(Number(budget))}</span>
                 <X className="w-3.5 h-3.5" />
@@ -295,7 +286,7 @@ export default function CoachesPage() {
               <button
                 type="button"
                 onClick={() => setMinRating('')}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-accent-baby text-primary border border-primary/20 hover:bg-accent-baby transition-colors"
               >
                 <span>Đánh giá: Từ {minRating} sao</span>
                 <X className="w-3.5 h-3.5" />
@@ -305,7 +296,7 @@ export default function CoachesPage() {
               <button
                 type="button"
                 onClick={() => setMinExperience('')}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-accent-baby text-primary border border-primary/20 hover:bg-accent-baby transition-colors"
               >
                 <span>Kinh nghiệm: Từ {minExperience} năm</span>
                 <X className="w-3.5 h-3.5" />
@@ -315,7 +306,7 @@ export default function CoachesPage() {
               <button
                 type="button"
                 onClick={() => setKeyword('')}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-accent-baby text-primary border border-primary/20 hover:bg-accent-baby transition-colors"
               >
                 <span>Từ khóa: “{keyword}”</span>
                 <X className="w-3.5 h-3.5" />
@@ -324,7 +315,7 @@ export default function CoachesPage() {
             <button
               type="button"
               onClick={reset}
-              className="text-xs font-semibold text-slate-500 hover:text-primary transition-colors ml-1 underline underline-offset-2"
+              className="text-xs font-semibold text-muted hover:text-primary transition-colors ml-1 underline underline-offset-2"
             >
               Xóa tất cả
             </button>
@@ -334,74 +325,105 @@ export default function CoachesPage() {
         {/* Tabs and Results Section */}
         <div className={styles.layout}>
           <section className={styles.results} aria-label="Danh sách huấn luyện và khóa học">
-            <div className={styles.tabs} role="tablist" aria-label="Nội dung huấn luyện">
-              {[['coaches', 'Huấn luyện viên'], ['courses', 'Khóa học']].map(([value, label]) => (
-                <button
-                  key={value}
-                  id={`tab-${value}`}
-                  role="tab"
-                  aria-selected={tab === value}
-                  aria-controls="coach-results"
-                  tabIndex={tab === value ? 0 : -1}
-                  onClick={() => setTab(value)}
-                  onKeyDown={(event) => {
-                    if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
-                      event.preventDefault();
-                      const next = event.key === 'Home' ? 'coaches' : event.key === 'End' ? 'courses' : tab === 'coaches' ? 'courses' : 'coaches';
-                      setTab(next);
-                      document.getElementById(`tab-${next}`)?.focus();
-                    }
-                  }}
-                  className={tab === value ? styles.activeTab : ''}
-                >
-                  {label}
-                  <span>{value === 'coaches' ? MOCK_COACHES.length : MOCK_COURSES.length}</span>
-                </button>
-              ))}
+            {/* Neobrutalism Segmented Tab Switcher (White - Blue - Black) */}
+            <div className="flex items-center gap-2 mb-6">
+              <div
+                className="bg-white border-2 border-black rounded-2xl p-1.5 shadow-[4px_4px_0px_0px_#000] inline-flex items-center gap-1.5"
+                role="tablist"
+                aria-label="Nội dung huấn luyện"
+              >
+                {[
+                  ['coaches', 'Huấn luyện viên', MOCK_COACHES.length],
+                  ['courses', 'Khóa học', MOCK_COURSES.length],
+                ].map(([value, label, count]) => {
+                  const isActive = tab === value;
+                  return (
+                    <button
+                      key={value as string}
+                      id={`tab-${value}`}
+                      role="tab"
+                      aria-selected={isActive}
+                      aria-controls="coach-results"
+                      tabIndex={isActive ? 0 : -1}
+                      onClick={() => handleTabChange(value as string)}
+                      onKeyDown={(event) => {
+                        if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
+                          event.preventDefault();
+                          const next = event.key === 'Home' ? 'coaches' : event.key === 'End' ? 'courses' : tab === 'coaches' ? 'courses' : 'coaches';
+                          handleTabChange(next);
+                          document.getElementById(`tab-${next}`)?.focus();
+                        }
+                      }}
+                      className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-black text-sm transition-all border-2 ${
+                        isActive
+                          ? 'bg-primary text-white border-black shadow-[2px_2px_0px_0px_#000]'
+                          : 'bg-transparent text-black border-transparent hover:border-black hover:bg-slate-100'
+                      }`}
+                    >
+                      <span>{label}</span>
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-xs font-black border ${
+                          isActive
+                            ? 'bg-white text-black border-black shadow-xs'
+                            : 'bg-slate-100 text-slate-700 border-black/20'
+                        }`}
+                      >
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            <div id="coach-results" role="tabpanel" aria-labelledby={`tab-${tab}`}>
-              {tab === 'coaches' ? <div className={styles.grid}>{coaches.map(coach => <article key={coach.id} className={styles.card}>
-                <div className={styles.cardTop}>
-                  <CoachAvatar className={styles.avatar} src={coach.avatarUrl} name={coach.fullName} />
-                  <div className={styles.identity}><h2><Link href={`/coaches/${coach.id}`}>{coach.fullName}</Link></h2><p className={styles.experience}>{coach.experienceYears} năm huấn luyện</p></div>
-                  <FavoriteButton className={styles.favorite} selected={favorites.includes(coach.id)} name={coach.fullName} pending={pendingFavorites.includes(coach.id)} onToggle={() => requireLogin(() => { void toggleFavorite(coach.id, coach.fullName); })} />
-                </div>
-                <div className={styles.cardMeta}><div className={styles.sports}>{coach.sports.map(value => <span key={value}>{sportLabel(value)}</span>)}</div><div className={styles.rating}><Star size={15} fill="currentColor" /><strong>{coach.rating.toFixed(1)}</strong><span>({coach.reviewCount})</span><span className="sr-only">đánh giá</span></div></div>
-                <p className={styles.headline}>{coach.headline}</p>
-                <details className={styles.venues}>
-                  <summary><MapPin size={17} /><span><strong>{coach.preferredCourts[0]} {coach.preferredCourts.length > 1 && <small>+{coach.preferredCourts.length - 1} sân</small>}</strong><span>Q. {coach.districts.join(' · Q. ')}</span></span><ChevronDown size={16} /></summary>
-                  <div><p className={styles.venueLabel}>Các sân huấn luyện</p>{coach.preferredCourts.map(court => <p key={court}>{court}</p>)}</div>
-                </details>
-                <div className={styles.cardFooter}><p><span>Học phí mỗi giờ</span><strong>{money(coach.hourlyRate)}</strong></p><Link href={`/coaches/${coach.id}`} aria-label={`Xem hồ sơ ${coach.fullName}`}>Xem hồ sơ <ArrowRight size={17} /></Link></div>
-              </article>)}</div> : <div className={styles.grid}>{courses.map(course => <article key={course.id} className={`${styles.card} ${styles.courseCard}`}>
-                <div className={styles.sports} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <span>{sportLabel(course.sport)}</span>
-                    <span className={styles.courseLevel}>{course.level}</span>
+            <SmartAsyncContainer
+              skeleton={<ContentSkeleton layout="coaches" count={4} />}
+              loading={loading}
+              errorMessage="Không thể tải danh sách huấn luyện viên."
+            >
+              <div id="coach-results" role="tabpanel" aria-labelledby={`tab-${tab}`}>
+                {tab === 'coaches' ? <div className={styles.grid}>{coaches.map(coach => <article key={coach.id} className={styles.card}>
+                  <div className={styles.cardTop}>
+                    <CoachAvatar className={styles.avatar} src={coach.avatarUrl} name={coach.fullName} />
+                    <div className={styles.identity}><h2><Link href={`/coaches/${coach.id}`}>{coach.fullName}</Link></h2><p className={styles.experience}>{coach.experienceYears} năm huấn luyện</p></div>
+                    <FavoriteButton className={styles.favorite} selected={favorites.includes(coach.id)} name={coach.fullName} pending={pendingFavorites.includes(coach.id)} onToggle={() => requireLogin(() => { void toggleFavorite(coach.id, coach.fullName); })} />
                   </div>
-                  <FavoriteButton
-                    className={styles.favorite}
-                    selected={favoriteCourses.includes(course.id)}
-                    name={course.title}
-                    onToggle={() => requireLogin(() => { void toggleCourseFavorite(course); })}
-                  />
-                </div>
-                <h2><Link href={`/coaches/${course.coachId}?courseId=${course.id}`}>{course.title}</Link></h2>
-                <Link className={styles.courseCoach} href={`/coaches/${course.coachId}`}>HLV {course.coachName}<ArrowUpRight size={14} /></Link>
-                <p className={styles.courseDescription}>{course.description}</p>
-                <div className={styles.facts}><p><CalendarDays size={16} /><span>{course.totalSessions} buổi × {course.durationPerSession} phút</span></p><p><MapPin size={16} /><span>{course.location}</span></p><p><Users size={16} /><span>{course.enrolledCount}/{course.maxStudents} học viên đã đăng ký</span></p></div>
-                <div className={styles.cardFooter}><p><strong>{money(course.price)}</strong><span> / khóa</span></p><Link href={`/coaches/${course.coachId}?courseId=${course.id}`}>Xem khóa học <ArrowRight size={16} /></Link></div>
-              </article>)}</div>}
-              {resultCount === 0 && <div className={styles.empty}><Search size={28} /><h2>Chưa tìm thấy kết quả phù hợp</h2><p>Thử một từ khóa khác hoặc mở rộng bộ môn, khu vực và ngân sách.</p><button onClick={reset}>Xóa bộ lọc <ArrowRight size={16} /></button></div>}
-            </div>
+                  <div className={styles.cardMeta}><div className={styles.sports}>{coach.sports.map(value => <span key={value}>{sportLabel(value)}</span>)}</div><div className={styles.rating}><Star size={15} fill="currentColor" /><strong>{coach.rating.toFixed(1)}</strong><span>({coach.reviewCount})</span><span className="sr-only">đánh giá</span></div></div>
+                  <p className={styles.headline}>{coach.headline}</p>
+                  <details className={styles.venues}>
+                    <summary><MapPin size={17} /><span><strong>{coach.preferredCourts[0]} {coach.preferredCourts.length > 1 && <small>+{coach.preferredCourts.length - 1} sân</small>}</strong><span>Q. {coach.districts.join(' · Q. ')}</span></span><ChevronDown size={16} /></summary>
+                    <div><p className={styles.venueLabel}>Các sân huấn luyện</p>{coach.preferredCourts.map(court => <p key={court}>{court}</p>)}</div>
+                  </details>
+                  <div className={styles.cardFooter}><p><span>Học phí mỗi giờ</span><strong>{money(coach.hourlyRate)}</strong></p><Link href={`/coaches/${coach.id}`} aria-label={`Xem hồ sơ ${coach.fullName}`}>Xem hồ sơ <ArrowRight size={17} /></Link></div>
+                </article>)}</div> : <div className={styles.grid}>{courses.map(course => <article key={course.id} className={`${styles.card} ${styles.courseCard}`}>
+                  <div className={styles.sports} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <span>{sportLabel(course.sport)}</span>
+                      <span className={styles.courseLevel}>{course.level}</span>
+                    </div>
+                    <FavoriteButton
+                      className={styles.favorite}
+                      selected={favoriteCourses.includes(course.id)}
+                      name={course.title}
+                      onToggle={() => requireLogin(() => { void toggleCourseFavorite(course); })}
+                    />
+                  </div>
+                  <h2><Link href={`/coaches/${course.coachId}?courseId=${course.id}`}>{course.title}</Link></h2>
+                  <Link className={styles.courseCoach} href={`/coaches/${course.coachId}`}>HLV {course.coachName}<ArrowUpRight size={14} /></Link>
+                  <p className={styles.courseDescription}>{course.description}</p>
+                  <div className={styles.facts}><p><CalendarDays size={16} /><span>{course.totalSessions} buổi × {course.durationPerSession} phút</span></p><p><MapPin size={16} /><span>{course.location}</span></p><p><Users size={16} /><span>{course.enrolledCount}/{course.maxStudents} học viên đã đăng ký</span></p></div>
+                  <div className={styles.cardFooter}><p><strong>{money(course.price)}</strong><span> / khóa</span></p><Link href={`/coaches/${course.coachId}?courseId=${course.id}`}>Xem khóa học <ArrowRight size={16} /></Link></div>
+                </article>)}</div>}
+                {resultCount === 0 && <div className={styles.empty}><Search size={28} /><h2>Chưa tìm thấy kết quả phù hợp</h2><p>Thử một từ khóa khác hoặc mở rộng bộ môn, khu vực và ngân sách.</p><button onClick={reset}>Xóa bộ lọc <ArrowRight size={16} /></button></div>}
+              </div>
+            </SmartAsyncContainer>
             <p className={styles.demoNote}>Hồ sơ và khóa học hiện là dữ liệu minh họa.</p>
           </section>
         </div>
       </PageContainer>
       {/* ─── FILTER DRAWER ─── */}
       <div
-        className={`fixed inset-0 bg-navy/40 backdrop-blur-sm z-[100] transition-opacity duration-300 ${
+        className={`fixed inset-0 bg-navy/40 z-[100] transition-opacity duration-300 ${
           filtersOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         onClick={() => setFiltersOpen(false)}

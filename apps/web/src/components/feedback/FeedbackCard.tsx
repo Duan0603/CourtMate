@@ -38,10 +38,10 @@ export function FeedbackCard({ feedback }: FeedbackCardProps) {
   return (
     <div className="feedback-card group w-[340px] md:w-[400px] shrink-0 p-6 rounded-feature bg-white border border-primary/10 shadow-card hover:shadow-card hover:border-primary/35 transition-all duration-300 flex flex-col justify-between relative overflow-hidden">
       {/* Soft gradient accent highlight on top */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      <div className="absolute top-0 left-0 right-0 h-1 bg-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
       {/* Decorative quote icon background */}
-      <div className="absolute top-4 right-4 text-primary/5 group-hover:text-primary/10 transition-colors pointer-events-none">
+      <div className="absolute top-4 right-4 text-primary group-hover:text-primary transition-colors pointer-events-none">
         <Quote size={40} />
       </div>
 
@@ -57,13 +57,13 @@ export function FeedbackCard({ feedback }: FeedbackCardProps) {
                   key={i}
                   className={`w-4 h-4 transition-colors ${
                     isFilled
-                      ? 'fill-amber-400 text-amber-400 drop-shadow-card'
-                      : 'fill-slate-100 text-slate-300'
+                      ? 'fill-primary text-primary drop-shadow-card'
+                      : 'fill-accent-baby text-primary'
                   }`}
                 />
               );
             })}
-            <span className="ml-1.5 text-xs font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-full">
+            <span className="ml-1.5 text-xs font-bold text-primary bg-accent-tan px-1.5 py-0.5 rounded-full">
               {(typeof feedback.rating === 'number' ? feedback.rating : 5).toFixed(1)}
             </span>
           </div>
@@ -76,16 +76,16 @@ export function FeedbackCard({ feedback }: FeedbackCardProps) {
         </div>
 
         {/* Comment text */}
-        <p className="text-[#344054] text-sm md:text-[15px] leading-relaxed font-normal mb-5 line-clamp-4 group-hover:text-ink transition-colors">
+        <p className="text-[#111111] text-sm md:text-[15px] leading-relaxed font-normal mb-5 line-clamp-4 group-hover:text-ink transition-colors">
           &ldquo;{feedback.comment}&rdquo;
         </p>
       </div>
 
       {/* User profile footer */}
-      <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+      <div className="pt-4 border-t border-ink flex items-center justify-between">
         <div className="flex items-center gap-3">
           {feedback.userAvatar && !imgError ? (
-            <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-sm shrink-0 bg-slate-100">
+            <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-sm shrink-0 bg-white">
               <Image
                 src={feedback.userAvatar}
                 alt={feedback.userName}
@@ -96,7 +96,7 @@ export function FeedbackCard({ feedback }: FeedbackCardProps) {
               />
             </div>
           ) : (
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-[#3B82F6] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-sm">
+            <div className="w-10 h-10 rounded-full bg-primary text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-sm">
               {initials}
             </div>
           )}
@@ -110,20 +110,20 @@ export function FeedbackCard({ feedback }: FeedbackCardProps) {
                 <span title="Đã xác thực" className="inline-flex items-center">
                   <CheckCircle2
                     size={14}
-                    className="text-emerald-500 shrink-0"
+                    className="text-primary shrink-0"
                   />
                 </span>
               )}
             </div>
             {feedback.userRole && (
-              <p className="text-xs text-[#667085] truncate font-medium max-w-[200px]">
+              <p className="text-xs text-[#3f3f3f] truncate font-medium max-w-[200px]">
                 {feedback.userRole}
               </p>
             )}
           </div>
         </div>
 
-        <span className="text-[11px] text-[#98A2B3] shrink-0 font-medium">
+        <span className="text-[11px] text-[#3f3f3f] shrink-0 font-medium">
           {timeAgo}
         </span>
       </div>

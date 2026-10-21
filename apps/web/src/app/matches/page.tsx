@@ -1,9 +1,10 @@
 'use client';
 
+import { DirectoryEmptyState } from '../../components/shared/DirectoryEmptyState';
 import { PageContainer } from '../../components/layout/PageContainer';
 
 import { ContentSkeleton } from '../../components/loading/ContentSkeleton';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import {
   Match,
@@ -17,8 +18,22 @@ import { matchesApi } from '@/lib/matches.api';
 import { useAuth } from '@/context/AuthContext';
 import { useSmartAsync } from '@/context/useSmartAsync';
 import { SmartAsyncContainer } from '@/components/loading/SmartAsyncContainer';
-import { MapPin, Search, SlidersHorizontal, ChevronDown, Check, X } from 'lucide-react';
 import { MatchFilters } from '../../components/matches/MatchFilters';
+import {
+  MapPin,
+  Search,
+  SlidersHorizontal,
+  ChevronDown,
+  Check,
+  X,
+  LayoutGrid,
+  List as ListIcon,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Calendar,
+  Users,
+} from 'lucide-react';
 
 // Ant Design Components & Icons
 import {
@@ -32,7 +47,6 @@ import {
   InputNumber,
   Segmented,
   Empty,
-  Alert,
   Tooltip,
 } from 'antd';
 import {
@@ -71,13 +85,9 @@ const SKILL_OPTIONS: { value: BadmintonSkillLevel | 'ALL'; label: string }[] = [
 export default function MatchesPage() {
   const { user, isAuthenticated } = useAuth();
   const [matches, setMatches] = useState<Match[]>([]);
-  const {
-    loading,
-    isThresholdElapsed,
-    error,
-    execute,
-    resetError,
-  } = useSmartAsync({ initialLoading: true });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<any>(null);
+  const activeRequestIdRef = useRef(0);
 
   // Filters
   const [selectedSport, setSelectedSport] = useState<SportType>(SportType.BADMINTON);
@@ -87,6 +97,25 @@ export default function MatchesPage() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isDistrictOpen, setIsDistrictOpen] = useState(false);
   const districtRef = useRef<HTMLDivElement>(null);
+
+  // View mode & Pagination (6 matches per page)
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const PAGE_SIZE = 6;
+  const listTopRef = useRef<HTMLDivElement>(null);
+
+  const totalPages = Math.ceil(matches.length / PAGE_SIZE) || 1;
+  const startIndex = (currentPage - 1) * PAGE_SIZE;
+  const paginatedMatches = matches.slice(startIndex, startIndex + PAGE_SIZE);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+      if (listTopRef.current) {
+        listTopRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  };
 
   const activeDrawerFiltersCount =
     (selectedSport !== SportType.BADMINTON ? 1 : 0) +
@@ -126,7 +155,7 @@ export default function MatchesPage() {
     notes: 'Đánh cầu Thành Công hoặc Hải Yến',
   });
 
-  const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+
 
   // Trận đấu active mà user đang tham gia
   const userActiveMatch = matches.find((m) => {
@@ -163,28 +192,42 @@ export default function MatchesPage() {
     }
   };
 
-  const fetchMatches = async () => {
+  const fetchMatches = useCallback(async () => {
+    const requestId = ++activeRequestIdRef.current;
+    setLoading(true);
+    setError(null);
     try {
-      await execute(async () => {
-        const res = await matchesApi.getMatches({
-          sport: selectedSport,
-          district: selectedDistrict !== 'Tất cả' ? selectedDistrict : undefined,
-          skillLevel: selectedSkill !== 'ALL' ? selectedSkill : undefined,
-          keyword: searchKeyword || undefined,
-        });
-        setMatches(res.data);
+      const res = await matchesApi.getMatches({
+        sport: selectedSport,
+        district: selectedDistrict !== 'Tất cả' ? selectedDistrict : undefined,
+        skillLevel: selectedSkill !== 'ALL' ? selectedSkill : undefined,
+        keyword: searchKeyword.trim() || undefined,
       });
-    } catch (err) {
-      console.error('Lỗi tải danh sách kèo đấu:', err);
+      const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+      if (requestId === activeRequestIdRef.current) {
+        setMatches(list);
+        setLoading(false);
+      }
+    } catch (err: any) {
+      if (requestId === activeRequestIdRef.current) {
+        console.error('Lỗi tải danh sách kèo đấu:', err);
+        setError(err);
+        setLoading(false);
+      }
     }
-  };
+  }, [selectedSport, selectedDistrict, selectedSkill, searchKeyword]);
 
   useEffect(() => {
-    fetchMatches();
-  }, [selectedSport, selectedDistrict, selectedSkill]);
+    setCurrentPage(1);
+    const timer = setTimeout(() => {
+      fetchMatches();
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [fetchMatches]);
 
   const handleSearchSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    setCurrentPage(1);
     fetchMatches();
   };
 
@@ -193,6 +236,7 @@ export default function MatchesPage() {
     setSelectedDistrict('Tất cả');
     setSelectedSkill('ALL');
     setSearchKeyword('');
+    setCurrentPage(1);
   };
 
   const handleCreateMatch = async (e: React.FormEvent) => {
@@ -211,7 +255,7 @@ export default function MatchesPage() {
     try {
       await matchesApi.createMatch(formData as CreateMatchDto);
       setIsCreateOpen(false);
-      setMessage({ text: 'Đã tạo trận giao lưu.', type: 'success' });
+
       fetchMatches();
     } catch (err: any) {
       alert(err.message || 'Không thể tạo trận. Vui lòng thử lại!');
@@ -237,21 +281,18 @@ export default function MatchesPage() {
     <div className="min-h-screen bg-canvas page-section">
       <PageContainer>
         {/* TOP COMMAND BAR */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-slate-200">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-ink">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-black text-ink tracking-tight">
               Tìm bạn chơi
             </h1>
-            <p className="text-sm text-slate-600 mt-1 max-w-2xl font-normal">
+            <p className="text-sm text-muted mt-1 max-w-2xl font-normal">
               Chọn trận theo trình độ, thời gian và địa điểm.
             </p>
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            <Button
-              type="primary"
-              size="large"
-              icon={<PlusOutlined />}
+            <button
               onClick={() => {
                 if (!isAuthenticated) {
                   window.location.href = '/login?redirect=/matches';
@@ -263,56 +304,40 @@ export default function MatchesPage() {
                   setIsCreateOpen(true);
                 }
               }}
-              className="font-bold shadow-md shadow-blue-500/20   transition-all cursor-pointer"
+              className="font-black bg-primary hover:bg-primary text-white border-2 border-black rounded-full px-5 py-2.5 shadow-[3px_3px_0px_0px_#000] transition-all cursor-pointer flex items-center gap-2 text-xs sm:text-sm"
             >
-              Tạo trận giao lưu
-            </Button>
+              <PlusOutlined />
+              <span>Tạo trận giao lưu</span>
+            </button>
           </div>
         </div>
 
-        {/* NOTIFICATION MESSAGE */}
-        {message && (
-          <div className="mt-4">
-            <Alert
-              message={message.text}
-              type={message.type}
-              showIcon
-              closable
-              onClose={() => setMessage(null)}
-              className="rounded-xl shadow-xs font-medium"
-            />
-          </div>
-        )}
-
         {/* BANNER NHẮC LỊCH THI ĐẤU ĐÃ THAM GIA */}
         {userActiveMatch && (
-          <div className="mt-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-blue-50/90 via-sky-50/60 to-white border border-primary/30 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="mt-6 p-4 sm:p-5 rounded-2xl bg-white border-2 border-black shadow-[4px_4px_0px_0px_#000] flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex items-start sm:items-center gap-3.5">
-              <div className="w-11 h-11 rounded-2xl bg-primary text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/25 text-lg">
+              <div className="w-11 h-11 rounded-xl bg-primary text-white border-2 border-black flex items-center justify-center shrink-0 shadow-[2px_2px_0px_0px_#000] text-lg">
                 <CalendarOutlined />
               </div>
               <div>
                 <div className="flex items-center gap-2 flex-wrap mb-1">
-                  <Tag color="green" className="font-bold text-xs rounded-full px-2.5 py-0.5 border-none uppercase">
+                  <span className="font-black text-xs rounded-full px-3 py-0.5 bg-white text-black border-2 border-black uppercase">
                     Đã tham gia
-                  </Tag>
-                  <span className="text-xs font-bold text-primary bg-blue-100/70 px-2 py-0.5 rounded-full">
-                    {userActiveMatch.sport === SportType.BADMINTON ? ' Cầu lông' : ' Pickleball'}
                   </span>
-                  <span className="text-xs text-slate-500 font-medium">
-                    (Mỗi người chơi tham gia 1 slot/lần)
+                  <span className="text-xs font-black text-white bg-primary px-3 py-0.5 rounded-full border-2 border-black">
+                    {userActiveMatch.sport === SportType.BADMINTON ? 'Cầu lông' : 'Pickleball'}
                   </span>
                 </div>
-                <h4 className="text-sm sm:text-base font-black text-slate-900 tracking-tight">
+                <h4 className="text-sm sm:text-base font-black text-black tracking-tight">
                   {userActiveMatch.title}
                 </h4>
-                <div className="flex items-center gap-3 text-xs text-slate-600 mt-1 flex-wrap font-medium">
-                  <span className="flex items-center gap-1 font-bold text-slate-800">
-                    <ClockCircleOutlined className="text-amber-500" />
+                <div className="flex items-center gap-3 text-xs text-muted mt-1 flex-wrap font-medium">
+                  <span className="flex items-center gap-1 font-black text-black">
+                    <ClockCircleOutlined className="text-primary" />
                     {formatDateTime(userActiveMatch.startTime)}
                   </span>
                   <span>·</span>
-                  <span className="flex items-center gap-1">
+                  <span className="flex items-center gap-1 font-bold text-black">
                     <EnvironmentOutlined className="text-primary" />
                     {userActiveMatch.venueName} {userActiveMatch.courtNumber ? `(${userActiveMatch.courtNumber})` : ''} - Q. {userActiveMatch.district}
                   </span>
@@ -327,45 +352,42 @@ export default function MatchesPage() {
                 rel="noopener noreferrer"
                 className="flex-1 md:flex-none"
               >
-                <Button
-                  type="primary"
-                  icon={<CalendarOutlined />}
-                  className="w-full font-bold text-xs rounded-xl shadow-md shadow-blue-500/20"
+                <button
+                  className="w-full font-black text-xs bg-primary hover:bg-primary text-white border-2 border-black rounded-xl px-4 py-2 shadow-[2px_2px_0px_0px_#000] flex items-center justify-center gap-1.5 transition-all"
                 >
-                  Lưu vào Google Calendar
-                </Button>
+                  <CalendarOutlined />
+                  <span>Lưu Calendar</span>
+                </button>
               </a>
               <Link href={`/matches/${userActiveMatch.id || userActiveMatch._id}`} className="flex-1 md:flex-none">
-                <Button className="w-full font-bold text-xs rounded-xl text-slate-700">
+                <button className="w-full font-black text-xs bg-white hover:bg-white text-black border-2 border-black rounded-xl px-4 py-2 shadow-[2px_2px_0px_0px_#000] transition-all">
                   Xem trận
-                </Button>
+                </button>
               </Link>
             </div>
           </div>
         )}
 
-        {/* MAIN TOOLBAR (Search & Filter) - Synchronized with Tournaments UI */}
+        {/* MAIN TOOLBAR (Search & Filter & View Mode) - Clean Neobrutalism (White - Blue - Black) */}
         <div className="flex flex-col sm:flex-row items-center gap-3 mt-6 mb-4">
           {/* Main Search Bar Container */}
-          <div className="flex flex-1 items-center bg-surface shadow-card rounded-2xl sm:rounded-full border border-slate-200/90 hover:border-primary/40 transition-all p-2 w-full">
+          <div className="flex flex-1 items-center bg-white shadow-[4px_4px_0px_0px_#000] rounded-full border-2 border-black p-1.5 w-full">
             {/* District Selector Dropdown Pill */}
             <div className="relative shrink-0" ref={districtRef}>
               <button
                 type="button"
                 onClick={() => setIsDistrictOpen(!isDistrictOpen)}
-                className={`cm-button flex items-center gap-2 bg-slate-100/80 hover:bg-slate-100 text-navy font-bold text-xs sm:text-sm pl-3.5 pr-3 py-2.5 rounded-xl sm:rounded-full outline-none transition-all border ${
-                  isDistrictOpen ? 'border-primary bg-slate-100' : 'border-slate-200/60'
-                }`}
+                className="flex items-center gap-2 bg-white text-black font-black text-xs sm:text-sm pl-4 pr-3 py-2 rounded-full outline-none transition-all border-2 border-black shadow-[2px_2px_0px_0px_#000] hover:bg-white"
               >
                 <MapPin className="w-4 h-4 text-primary" />
                 <span className="truncate max-w-[120px]">
-                  {selectedDistrict === 'Tất cả' ? 'Tất cả khu vực' : `Quận ${selectedDistrict}`}
+                  {selectedDistrict === 'Tất cả' ? 'Đà Nẵng' : `Quận ${selectedDistrict}`}
                 </span>
-                <ChevronDown className={`w-3.5 h-3.5 text-muted transition-transform duration-200 ${isDistrictOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-3.5 h-3.5 text-black transition-transform duration-200 ${isDistrictOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {isDistrictOpen && (
-                <div className="absolute top-full left-0 mt-2 w-52 bg-surface shadow-card rounded-2xl border border-slate-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
+                <div className="absolute top-full left-0 mt-2 w-52 bg-white shadow-[4px_4px_0px_0px_#000] rounded-2xl border-2 border-black py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
                   {DISTRICTS.map((d) => {
                     const isSelected = selectedDistrict === d;
                     return (
@@ -376,17 +398,17 @@ export default function MatchesPage() {
                           setSelectedDistrict(d);
                           setIsDistrictOpen(false);
                         }}
-                        className={`cm-button w-full flex items-center justify-between px-4 py-2.5 text-xs sm:text-sm transition-colors ${
+                        className={`w-full flex items-center justify-between px-4 py-2.5 text-xs sm:text-sm transition-colors ${
                           isSelected
-                            ? 'bg-primary/10 text-primary font-bold'
-                            : 'text-muted hover:bg-slate-50 font-semibold'
+                            ? 'bg-primary text-white font-black'
+                            : 'text-black hover:bg-white font-bold'
                         }`}
                       >
                         <div className="flex items-center gap-2.5">
-                          <MapPin className={`w-4 h-4 ${isSelected ? 'text-primary' : 'text-muted'}`} />
+                          <MapPin className={`w-4 h-4 ${isSelected ? 'text-white' : 'text-primary'}`} />
                           <span>{d === 'Tất cả' ? 'Tất cả các quận' : `Quận ${d}`}</span>
                         </div>
-                        {isSelected && <Check className="w-4 h-4 text-primary" />}
+                        {isSelected && <Check className="w-4 h-4 text-white" />}
                       </button>
                     );
                   })}
@@ -395,11 +417,11 @@ export default function MatchesPage() {
             </div>
 
             {/* Vertical Divider */}
-            <div className="w-[1px] h-6 bg-slate-200 mx-2 shrink-0 hidden sm:block" />
+            <div className="w-[2px] h-6 bg-black mx-2.5 shrink-0 hidden sm:block" />
 
             {/* Keyword Input */}
             <div className="relative flex-1 flex items-center">
-              <Search className="w-4 h-4 text-muted absolute left-3 pointer-events-none" />
+              <Search className="w-4 h-4 text-black absolute left-3 pointer-events-none" />
               <input
                 type="text"
                 placeholder="Tìm tên sân, địa chỉ, trận đấu..."
@@ -408,20 +430,22 @@ export default function MatchesPage() {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
+                    setCurrentPage(1);
                     fetchMatches();
                   }
                 }}
-                className="cm-control w-full bg-transparent pl-9 pr-4 py-2 text-xs sm:text-sm outline-none text-navy placeholder:text-muted font-medium"
+                className="w-full bg-transparent pl-9 pr-4 py-1.5 text-xs sm:text-sm outline-none text-black placeholder:text-muted font-bold"
               />
               {searchKeyword && (
                 <button
                   type="button"
                   onClick={() => {
                     setSearchKeyword('');
+                    setCurrentPage(1);
                   }}
-                  className="cm-button mr-2 text-muted hover:text-slate-600"
+                  className="mr-2 text-black hover:opacity-70"
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <X className="w-4 h-4" />
                 </button>
               )}
             </div>
@@ -431,148 +455,95 @@ export default function MatchesPage() {
           <button
             type="button"
             onClick={() => setIsFilterOpen(true)}
-            className={`cm-button shrink-0 flex items-center gap-2 px-5 py-3 rounded-2xl sm:rounded-full text-xs sm:text-sm font-bold transition-all ${
+            className={`shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-full text-xs sm:text-sm font-black transition-all border-2 border-black shadow-[3px_3px_0px_0px_#000] ${
               activeDrawerFiltersCount > 0
-                ? 'bg-primary text-white hover:bg-primary-dark border border-primary'
-                : 'bg-surface shadow-card text-navy border border-slate-200 hover:bg-slate-50 hover:border-slate-300'
+                ? 'bg-primary text-white hover:bg-primary'
+                : 'bg-white text-black hover:bg-white'
             }`}
           >
             <SlidersHorizontal className="w-4 h-4" />
             <span className="hidden sm:inline">Bộ lọc {activeDrawerFiltersCount > 0 && `· ${activeDrawerFiltersCount}`}</span>
-            {activeDrawerFiltersCount > 0 && (
-              <div
-                className="ml-1 p-0.5 rounded-full hover:bg-white/20 transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedSport(SportType.BADMINTON);
-                  setSelectedSkill('ALL');
-                }}
-              >
-                <X className="w-3.5 h-3.5" />
-              </div>
-            )}
           </button>
-        </div>
 
-        {/* ACTIVE FILTER CHIPS ROW */}
-        {hasActiveFilters && (
-          <div className="flex flex-wrap items-center gap-2 mb-6">
-            {selectedSport !== SportType.BADMINTON && (
-              <button
-                type="button"
-                onClick={() => setSelectedSport(SportType.BADMINTON)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
-              >
-                <span>Môn: {selectedSport === SportType.PICKLEBALL ? 'Pickleball' : 'Cầu lông'}</span>
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-            {selectedDistrict !== 'Tất cả' && (
-              <button
-                type="button"
-                onClick={() => setSelectedDistrict('Tất cả')}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
-              >
-                <span>Khu vực: Q. {selectedDistrict}</span>
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-            {selectedSkill !== 'ALL' && (
-              <button
-                type="button"
-                onClick={() => setSelectedSkill('ALL')}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
-              >
-                <span>Trình độ: {SKILL_OPTIONS.find((s) => s.value === selectedSkill)?.label}</span>
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-            {searchKeyword.trim() && (
-              <button
-                type="button"
-                onClick={() => setSearchKeyword('')}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
-              >
-                <span>Từ khóa: “{searchKeyword}”</span>
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
+          {/* View Mode Toggle (Grid 6 vs Thẻ ngang 6) - Synchronized with Ảnh 1 */}
+          <div className="shrink-0 flex items-center bg-white shadow-[3px_3px_0px_0px_#000] border-2 border-black rounded-xl p-1 gap-1">
             <button
-              type="button"
-              onClick={handleResetFilters}
-              className="text-xs font-semibold text-slate-500 hover:text-primary transition-colors ml-1 underline underline-offset-2"
+              onClick={() => setViewMode('grid')}
+              className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
+                viewMode === 'grid'
+                  ? 'bg-primary text-white border-2 border-black shadow-[2px_2px_0px_0px_#000]'
+                  : 'text-black hover:bg-accent-baby'
+              }`}
+              title="Xem dạng lưới (Grid 6 trận)"
             >
-              Xóa tất cả
+              <LayoutGrid className="w-4 h-4 shrink-0" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
+                viewMode === 'list'
+                  ? 'bg-primary text-white border-2 border-black shadow-[2px_2px_0px_0px_#000]'
+                  : 'text-black hover:bg-accent-baby'
+              }`}
+              title="Xem dạng thẻ ngang (Full width 6 trận)"
+            >
+              <ListIcon className="w-4 h-4 shrink-0" />
             </button>
           </div>
-        )}
+        </div>
 
         {/* LIST STATUS HEADER */}
         <div className="mt-8 mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+          <div className="flex items-center gap-2.5">
+            <h2 className="text-base sm:text-lg font-black text-black tracking-tight">
               Danh Sách Trận Giao Lưu
             </h2>
-            <Tag color="#1E5AA8" className="font-bold text-xs rounded-full px-2.5 py-0.5 border-none">
+            <span className="bg-primary text-white border-2 border-black font-black text-xs px-3 py-0.5 rounded-full shadow-[2px_2px_0px_0px_#000]">
               {loading ? 'Đang tải...' : `${matches.length} trận`}
-            </Tag>
+            </span>
           </div>
-          <span className="text-xs text-slate-500 font-medium hidden sm:inline">
+          <span className="text-xs text-muted font-bold hidden sm:inline">
             Tự do tham gia hoặc mời đồng đội chia sẻ chi phí
           </span>
         </div>
 
+        {/* Top Anchor for Smooth Scroll */}
+        <div ref={listTopRef} className="scroll-mt-6" />
+
         {/* MATCHES LIST */}
-        <SmartAsyncContainer
-          skeleton={<ContentSkeleton layout="matches" count={6} />}
-          loading={loading}
-          isThresholdElapsed={isThresholdElapsed}
-          error={error}
-          onRetry={fetchMatches}
-          errorMessage="Không thể kết nối đến máy chủ để tải danh sách kèo đấu."
-        >
-          {matches.length === 0 ? (
-            <div className="text-center py-16 bg-surface shadow-card rounded-2xl border border-slate-200/90 p-8 ">
-              <Empty
-                description={
-                  <div className="space-y-1">
-                    <p className="text-base font-bold text-slate-800">
-                      Chưa có trận giao lưu nào phù hợp tiêu chí lọc
-                    </p>
-                    <p className="text-sm sm:text-sm text-slate-500 max-w-md mx-auto">
-                      Bạn có thể chọn quận khác, hoặc là người đầu tiên tạo buổi giao lưu để các tay vợt quanh khu vực tham gia.
-                    </p>
-                  </div>
-                }
-              >
-                <Button
-                  type="primary"
-                  icon={<PlusOutlined />}
-                  onClick={() => {
-                    if (!isAuthenticated) {
-                      window.location.href = '/login?redirect=/matches';
-                    } else {
-                      setIsCreateOpen(true);
-                    }
-                  }}
-                  className="mt-3 font-bold cursor-pointer"
-                >
-                  Tạo Giao Lưu Ngay
-                </Button>
-              </Empty>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {matches.map((match) => {
+        {loading ? (
+          <ContentSkeleton layout="matches" count={6} />
+        ) : error ? (
+          <div role="alert" className="w-full max-w-xl mx-auto my-8 p-8 text-center bg-white border-2 border-black rounded-3xl shadow-[6px_6px_0px_0px_#000]">
+            <p className="text-sm font-bold text-red-600 mb-4">Không thể kết nối đến máy chủ để tải danh sách kèo đấu.</p>
+            <button
+              onClick={fetchMatches}
+              className="px-5 py-2.5 rounded-xl bg-primary text-white font-black text-xs border-2 border-black shadow-[3px_3px_0px_0px_#000]"
+            >
+              Thử lại ngay
+            </button>
+          </div>
+        ) : matches.length === 0 ? (
+          <DirectoryEmptyState
+            kind="matches"
+            filtered={hasActiveFilters}
+            onReset={handleResetFilters}
+            onRefresh={fetchMatches}
+          />
+        ) : (
+          <>
+            {viewMode === 'grid' ? (
+            /* ─── DẠNG GRID (6 trận / trang) ─── */
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+              {paginatedMatches.map((match) => {
                 const minMeta = BADMINTON_SKILL_LABELS[match.minSkillLevel] || {
                   label: match.minSkillLevel,
-                  color: 'bg-slate-100 text-slate-800 border-slate-200',
                 };
                 const maxMeta = BADMINTON_SKILL_LABELS[match.maxSkillLevel] || {
                   label: match.maxSkillLevel,
-                  color: 'bg-slate-100 text-slate-800 border-slate-200',
                 };
                 const availableSlots = match.totalSlots - match.joinedCount;
+                const isCompleted = match.status === MatchStatus.COMPLETED;
                 const isFull = match.status === MatchStatus.FULL || availableSlots <= 0;
 
                 const uid = user ? (user.id || (user as any)._id) : null;
@@ -581,91 +552,87 @@ export default function MatchesPage() {
                 );
 
                 return (
-                  <Card
+                  <div
                     key={match.id || match._id}
-                    hoverable
-                    className={`rounded-2xl border transition-all flex flex-col justify-between overflow-hidden ${isUserInThisMatch
-                        ? 'border-emerald-500/80 ring-2 ring-emerald-500/15 shadow-sm bg-gradient-to-b from-white to-emerald-50/20'
-                        : 'border-slate-200/90 shadow-xs hover:shadow-md hover:border-primary/50'
-                      }`}
-                    styles={{ body: { padding: '20px', display: 'flex', flexDirection: 'column', height: '100%' } }}
+                    className="bg-white border-2 border-black rounded-2xl shadow-[4px_4px_0px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_#000] transition-all p-5 flex flex-col justify-between"
                   >
                     <div>
                       {/* Top Badges */}
                       <div className="flex items-center justify-between gap-2 mb-3">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <Tag
-                            color={match.sport === SportType.BADMINTON ? 'blue' : 'orange'}
-                            className="font-bold text-xs rounded-lg px-2.5 py-0.5 border-none uppercase tracking-wider"
-                          >
-                            {match.sport === SportType.BADMINTON ? ' Cầu lông' : ' Pickleball'}
-                          </Tag>
+                          <span className="font-black text-xs rounded-full px-3 py-1 bg-primary text-white border-2 border-black shadow-[2px_2px_0px_0px_#000] uppercase tracking-wider">
+                            {match.sport === SportType.BADMINTON ? 'Cầu lông' : 'Pickleball'}
+                          </span>
                           {isUserInThisMatch && (
-                            <Tag color="green" className="font-bold text-[11px] rounded-md px-2 py-0.5 border-none">
+                            <span className="font-black text-[11px] rounded-full px-2.5 py-0.5 bg-white text-primary border-2 border-black">
                               Đã tham gia
-                            </Tag>
+                            </span>
                           )}
                         </div>
 
-                        <Badge
-                          status={isFull ? 'default' : 'success'}
-                          text={
-                            <span className={`text-xs font-bold ${isFull ? 'text-slate-500' : 'text-emerald-700'}`}>
-                              {isFull ? 'Đã đủ người' : `Còn trống ${availableSlots} chỗ`}
-                            </span>
-                          }
-                          className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${isFull ? 'bg-slate-100' : 'bg-emerald-50 border border-emerald-200'
-                            }`}
-                        />
+                        {/* Status Tag */}
+                        {isCompleted ? (
+                          <span className="text-xs font-black text-black bg-white border-2 border-black px-2.5 py-0.5 rounded-full">
+                            Đã hoàn thành
+                          </span>
+                        ) : isFull ? (
+                          <span className="text-xs font-black text-muted bg-white border-2 border-black px-2.5 py-0.5 rounded-full">
+                            Đã đủ người
+                          </span>
+                        ) : (
+                          <span className="text-xs font-black text-black bg-white border-2 border-black px-2.5 py-0.5 rounded-full">
+                            Còn trống {availableSlots} chỗ
+                          </span>
+                        )}
                       </div>
 
                       {/* Title */}
-                      <h3 className="font-black text-slate-900 text-base mb-2 line-clamp-2 hover:text-primary transition-colors leading-snug">
+                      <h3 className="font-black text-black text-base mb-2 line-clamp-2 hover:text-primary transition-colors leading-snug">
                         <Link href={`/matches/${match.id || match._id}`}>
                           {match.title}
                         </Link>
                       </h3>
 
                       {/* Venue & Time with Icons */}
-                      <div className="space-y-1.5 text-xs text-slate-600 mb-3.5">
-                        <div className="font-bold text-slate-900 truncate flex items-center gap-1.5">
-                          <EnvironmentOutlined className="text-primary shrink-0" />
+                      <div className="space-y-1.5 text-xs text-muted mb-3.5">
+                        <div className="font-black text-black truncate flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
                           <span>
                             {match.venueName} {match.courtNumber ? `· ${match.courtNumber}` : ''}
                           </span>
                         </div>
-                        <div className="truncate text-slate-500 pl-4">
+                        <div className="truncate text-muted pl-5 font-semibold">
                           {match.venueAddress} · Q. {match.district}
                         </div>
-                        <div className="font-mono text-slate-800 flex items-center gap-1.5 pt-0.5">
-                          <ClockCircleOutlined className="text-amber-500 shrink-0" />
+                        <div className="font-black text-black flex items-center gap-1.5 pt-0.5">
+                          <Clock className="w-3.5 h-3.5 text-primary shrink-0" />
                           <span>{formatDateTime(match.startTime)}</span>
                         </div>
                       </div>
 
                       {/* Skill requirements */}
-                      <div className="pt-3 border-t border-slate-100 text-xs flex items-center gap-1">
-                        <span className="text-slate-500 font-medium">Trình độ:</span>
-                        <Tag color="cyan" className="font-bold rounded-md text-[11px] m-0">
+                      <div className="pt-3 border-t-2 border-black text-xs flex items-center gap-1.5">
+                        <span className="text-black font-black">Trình độ:</span>
+                        <span className="font-black px-2 py-0.5 rounded-lg bg-white border-2 border-black text-black text-[11px]">
                           {minMeta.label}
-                        </Tag>
-                        <span className="text-muted">→</span>
-                        <Tag color="blue" className="font-bold rounded-md text-[11px] m-0">
+                        </span>
+                        <span className="font-black text-black">→</span>
+                        <span className="font-black px-2 py-0.5 rounded-lg bg-primary text-white border-2 border-black text-[11px]">
                           {maxMeta.label}
-                        </Tag>
+                        </span>
                       </div>
 
                       {/* Cost Note */}
-                      <div className="mt-2.5 text-xs bg-slate-50 rounded-xl p-2.5 text-slate-700 font-medium border border-slate-100 flex items-start gap-1.5">
-                        <DollarCircleOutlined className="text-emerald-600 mt-0.5 shrink-0" />
+                      <div className="mt-3 text-xs bg-white rounded-xl p-2.5 text-black font-bold border-2 border-black flex items-start gap-1.5">
+                        <DollarCircleOutlined className="text-primary mt-0.5 shrink-0" />
                         <span className="line-clamp-2">{match.estimatedCostText}</span>
                       </div>
                     </div>
 
                     {/* Card Footer */}
-                    <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
-                        <TeamOutlined className="text-muted" />
+                    <div className="pt-4 mt-4 border-t-2 border-black flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-xs font-black text-black">
+                        <TeamOutlined className="text-black" />
                         <span>
                           {match.joinedCount} / {match.totalSlots} VĐV
                         </span>
@@ -679,43 +646,228 @@ export default function MatchesPage() {
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <Button
-                              type="primary"
-                              size="small"
-                              icon={<CalendarOutlined />}
-                              className="font-bold text-xs rounded-lg bg-emerald-600 hover:bg-emerald-700 border-none shadow-xs"
+                            <button
+                              className="font-black text-xs rounded-xl bg-white hover:bg-white text-black border-2 border-black px-3 py-1.5 shadow-[2px_2px_0px_0px_#000] flex items-center gap-1 transition-all"
                             >
-                              Lưu Calendar
-                            </Button>
+                              <CalendarOutlined />
+                              <span>Lịch</span>
+                            </button>
                           </a>
                         )}
 
                         <Link href={`/matches/${match.id || match._id}`}>
-                          <Button
-                            type={isUserInThisMatch ? 'default' : 'primary'}
-                            size="small"
-                            className="font-bold text-xs rounded-lg shadow-xs  transition-all"
+                          <button
+                            className={`font-black text-xs rounded-xl px-4 py-1.5 border-2 border-black shadow-[2px_2px_0px_0px_#000] transition-all ${
+                              isCompleted
+                                ? 'bg-white hover:bg-white text-black'
+                                : 'bg-primary hover:bg-primary text-white'
+                            }`}
                           >
-                            Xem trận
-                          </Button>
+                            {isCompleted ? 'Xem chi tiết' : 'Xem trận'}
+                          </button>
                         </Link>
                       </div>
                     </div>
-                  </Card>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            /* ─── DẠNG THẺ NGANG / LIST (6 trận / trang, kéo dài hết layout) ─── */
+            <div className="flex flex-col gap-4 w-full">
+              {paginatedMatches.map((match) => {
+                const minMeta = BADMINTON_SKILL_LABELS[match.minSkillLevel] || {
+                  label: match.minSkillLevel,
+                };
+                const maxMeta = BADMINTON_SKILL_LABELS[match.maxSkillLevel] || {
+                  label: match.maxSkillLevel,
+                };
+                const availableSlots = match.totalSlots - match.joinedCount;
+                const isCompleted = match.status === MatchStatus.COMPLETED;
+                const isFull = match.status === MatchStatus.FULL || availableSlots <= 0;
+
+                const uid = user ? (user.id || (user as any)._id) : null;
+                const isUserInThisMatch = Boolean(
+                  uid && match.players?.some((p) => p.userId === uid)
+                );
+
+                return (
+                  <div
+                    key={match.id || match._id}
+                    className="w-full bg-white border-2 border-black rounded-2xl shadow-[4px_4px_0px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_#000] transition-all p-4 sm:p-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5"
+                  >
+                    {/* Left Column: Sport & Date/Time Badge Box */}
+                    <div className="flex items-center sm:flex-col justify-between sm:justify-center gap-3 shrink-0 sm:min-w-[150px] w-full sm:w-auto">
+                      <span className="font-black text-xs rounded-full px-3 py-1 bg-primary text-white border-2 border-black shadow-[2px_2px_0px_0px_#000] uppercase tracking-wider text-center">
+                        {match.sport === SportType.BADMINTON ? 'Cầu lông' : 'Pickleball'}
+                      </span>
+                      <div className="bg-white border-2 border-black rounded-xl p-2 text-center w-full shadow-[2px_2px_0px_0px_#000]">
+                        <div className="flex items-center justify-center gap-1 text-black font-black text-xs">
+                          <Clock className="w-3.5 h-3.5 text-primary" />
+                          <span>{formatDateTime(match.startTime)}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Middle Column: Title & Info */}
+                    <div className="flex-1 min-w-0 space-y-2 w-full">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {isCompleted ? (
+                          <span className="text-xs font-black text-black bg-white border-2 border-black px-2.5 py-0.5 rounded-full">
+                            Đã hoàn thành
+                          </span>
+                        ) : isFull ? (
+                          <span className="text-xs font-black text-muted bg-white border-2 border-black px-2.5 py-0.5 rounded-full">
+                            Đã đủ người
+                          </span>
+                        ) : (
+                          <span className="text-xs font-black text-black bg-white border-2 border-black px-2.5 py-0.5 rounded-full">
+                            Còn trống {availableSlots} chỗ
+                          </span>
+                        )}
+                        {isUserInThisMatch && (
+                          <span className="font-black text-[11px] rounded-full px-2.5 py-0.5 bg-white text-primary border-2 border-black">
+                            Đã tham gia
+                          </span>
+                        )}
+                      </div>
+
+                      <h3 className="font-black text-black text-base sm:text-lg hover:text-primary transition-colors leading-snug line-clamp-1">
+                        <Link href={`/matches/${match.id || match._id}`}>
+                          {match.title}
+                        </Link>
+                      </h3>
+
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
+                        <span className="font-black text-black flex items-center gap-1">
+                          <MapPin className="w-3.5 h-3.5 text-primary" />
+                          {match.venueName} {match.courtNumber ? `· ${match.courtNumber}` : ''}
+                        </span>
+                        <span>·</span>
+                        <span className="font-bold text-muted">
+                          {match.venueAddress} · Q. {match.district}
+                        </span>
+                        <span>·</span>
+                        <div className="flex items-center gap-1 font-bold text-black">
+                          <span>Trình độ:</span>
+                          <span className="px-1.5 py-0.5 bg-white border border-black rounded text-[11px] font-black">
+                            {minMeta.label}
+                          </span>
+                          <span>→</span>
+                          <span className="px-1.5 py-0.5 bg-primary text-white border border-black rounded text-[11px] font-black">
+                            {maxMeta.label}
+                          </span>
+                        </div>
+                      </div>
+
+                      {match.estimatedCostText && (
+                        <div className="text-xs text-black font-bold flex items-center gap-1 pt-0.5">
+                          <DollarCircleOutlined className="text-primary" />
+                          <span>{match.estimatedCostText}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Right Column: Player count & CTA button */}
+                    <div className="shrink-0 flex items-center justify-between lg:justify-end gap-4 w-full lg:w-auto pt-3 lg:pt-0 border-t-2 lg:border-t-0 border-black">
+                      <div className="flex items-center gap-1.5 text-xs font-black text-black">
+                        <TeamOutlined className="text-black text-sm" />
+                        <span>{match.joinedCount} / {match.totalSlots} VĐV</span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {isUserInThisMatch && (
+                          <a
+                            href={getGoogleCalendarUrl(match)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <button
+                              className="font-black text-xs rounded-xl bg-white hover:bg-white text-black border-2 border-black px-3 py-2 shadow-[2px_2px_0px_0px_#000] flex items-center gap-1 transition-all"
+                            >
+                              <CalendarOutlined />
+                              <span className="hidden sm:inline">Lịch</span>
+                            </button>
+                          </a>
+                        )}
+
+                        <Link href={`/matches/${match.id || match._id}`}>
+                          <button
+                            className={`font-black text-xs sm:text-sm rounded-xl px-5 py-2.5 border-2 border-black shadow-[2px_2px_0px_0px_#000] transition-all whitespace-nowrap ${
+                              isCompleted
+                                ? 'bg-white hover:bg-white text-black'
+                                : 'bg-primary hover:bg-primary text-white'
+                            }`}
+                          >
+                            {isCompleted ? 'Xem chi tiết' : 'Xem trận'}
+                          </button>
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
                 );
               })}
             </div>
           )}
-        </SmartAsyncContainer>
+
+          {/* ─── SHARED PAGINATION CONTROLS ─── */}
+          {totalPages > 1 && (
+            <div className="mt-12 pt-6 border-t-2 border-black flex items-center justify-end">
+              <div className="flex items-center gap-1.5 bg-white shadow-[4px_4px_0px_0px_#000] p-1.5 rounded-2xl border-2 border-black">
+                {/* Prev Button - Only visible when currentPage > 1 */}
+                {currentPage > 1 && (
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    className="p-2 rounded-xl text-xs font-black transition-all flex items-center gap-1 border-2 border-transparent hover:border-black hover:bg-accent-baby text-black"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    <span className="hidden sm:inline">Trước</span>
+                  </button>
+                )}
+
+                {/* Page Numbers */}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
+                  const isActive = pageNum === currentPage;
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      className={`w-9 h-9 rounded-xl text-xs font-black transition-all flex items-center justify-center border-2 ${
+                        isActive
+                          ? 'bg-primary text-white border-black shadow-[2px_2px_0px_0px_#000]'
+                          : 'text-black border-transparent hover:border-black hover:bg-accent-baby'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+
+                {/* Next Button */}
+                {currentPage < totalPages && (
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    className="p-2 rounded-xl text-xs font-black transition-all flex items-center gap-1 border-2 border-transparent hover:border-black hover:bg-accent-baby text-black"
+                  >
+                    <span className="hidden sm:inline">Sau</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </>
+      )}
 
         {/* MODAL: TẠO BUỔI GIAO LƯU */}
         <Modal
           title={
             <div>
-              <h3 className="text-lg font-black text-slate-900">
+              <h3 className="text-lg font-black text-ink">
                 Tạo Buổi Giao Lưu Mới
               </h3>
-              <p className="text-sm text-slate-500 font-normal mt-0.5">
+              <p className="text-sm text-muted font-normal mt-0.5">
                 Chọn địa điểm, thời gian và số người cần tìm.
               </p>
             </div>
@@ -730,7 +882,7 @@ export default function MatchesPage() {
           <form onSubmit={handleCreateMatch} className="space-y-4 pt-3">
             {/* Bộ môn */}
             <div>
-              <label className="block text-sm font-bold text-slate-700   mb-1.5">
+              <label className="block text-sm font-bold text-muted   mb-1.5">
                 Bộ môn thi đấu *
               </label>
               <Segmented
@@ -740,14 +892,14 @@ export default function MatchesPage() {
                 ]}
                 value={formData.sport}
                 onChange={(val) => setFormData({ ...formData, sport: val as SportType })}
-                className="w-full bg-slate-100 font-bold p-1 rounded-xl"
+                className="w-full bg-white font-bold p-1 rounded-xl"
                 block
               />
             </div>
 
             {/* Tiêu đề */}
             <div>
-              <label className="block text-sm font-bold text-slate-700   mb-1.5">
+              <label className="block text-sm font-bold text-muted   mb-1.5">
                 Tiêu đề buổi giao lưu *
               </label>
               <Input
@@ -763,7 +915,7 @@ export default function MatchesPage() {
             {/* Sân & Quận */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-bold text-slate-700   mb-1.5">
+                <label className="block text-sm font-bold text-muted   mb-1.5">
                   Tên sân thi đấu *
                 </label>
                 <Input
@@ -777,7 +929,7 @@ export default function MatchesPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-700   mb-1.5">
+                <label className="block text-sm font-bold text-muted   mb-1.5">
                   Quận (Đà Nẵng) *
                 </label>
                 <Select
@@ -795,7 +947,7 @@ export default function MatchesPage() {
 
             {/* Địa chỉ cụ thể */}
             <div>
-              <label className="block text-sm font-bold text-slate-700   mb-1.5">
+              <label className="block text-sm font-bold text-muted   mb-1.5">
                 Địa chỉ cụ thể *
               </label>
               <Input
@@ -811,7 +963,7 @@ export default function MatchesPage() {
             {/* Giờ bắt đầu & Giờ kết thúc */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-bold text-slate-700   mb-1.5">
+                <label className="block text-sm font-bold text-muted   mb-1.5">
                   Thời gian bắt đầu *
                 </label>
                 <input
@@ -819,12 +971,12 @@ export default function MatchesPage() {
                   required
                   value={formData.startTime}
                   onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                  className="cm-control w-full h-10 px-3.5 rounded-xl border border-slate-200 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                  className="cm-control w-full h-10 px-3.5 rounded-xl border border-ink text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-700   mb-1.5">
+                <label className="block text-sm font-bold text-muted   mb-1.5">
                   Thời gian kết thúc *
                 </label>
                 <input
@@ -832,7 +984,7 @@ export default function MatchesPage() {
                   required
                   value={formData.endTime}
                   onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                  className="cm-control w-full h-10 px-3.5 rounded-xl border border-slate-200 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                  className="cm-control w-full h-10 px-3.5 rounded-xl border border-ink text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
                 />
               </div>
             </div>
@@ -840,7 +992,7 @@ export default function MatchesPage() {
             {/* Slot & Trình độ */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block text-sm font-bold text-slate-700   mb-1.5">
+                <label className="block text-sm font-bold text-muted   mb-1.5">
                   Tổng số người
                 </label>
                 <InputNumber
@@ -854,7 +1006,7 @@ export default function MatchesPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-700   mb-1.5">
+                <label className="block text-sm font-bold text-muted   mb-1.5">
                   Trình tối thiểu
                 </label>
                 <Select
@@ -870,7 +1022,7 @@ export default function MatchesPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-700   mb-1.5">
+                <label className="block text-sm font-bold text-muted   mb-1.5">
                   Trình tối đa
                 </label>
                 <Select
@@ -888,7 +1040,7 @@ export default function MatchesPage() {
 
             {/* Chi phí */}
             <div>
-              <label className="block text-sm font-bold text-slate-700   mb-1.5">
+              <label className="block text-sm font-bold text-muted   mb-1.5">
                 Hình thức chi phí
               </label>
               <Input
@@ -898,13 +1050,13 @@ export default function MatchesPage() {
                 size="large"
                 className="rounded-xl"
               />
-              <p className="text-[11px] text-slate-500 mt-1">
+              <p className="text-[11px] text-muted mt-1">
                 * CourtMate không thu cọc trung gian. Người chơi chia đều chi phí trực tiếp tại sân.
               </p>
             </div>
 
             {/* Action Buttons */}
-            <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+            <div className="pt-4 border-t border-ink flex items-center justify-end gap-3">
               <Button
                 onClick={() => setIsCreateOpen(false)}
                 className="rounded-xl font-semibold"
@@ -927,7 +1079,7 @@ export default function MatchesPage() {
 
       {/* ─── FILTER DRAWER ─── */}
       <div
-        className={`fixed inset-0 bg-navy/40 backdrop-blur-sm z-[100] transition-opacity duration-300 ${
+        className={`fixed inset-0 bg-navy/40 z-[100] transition-opacity duration-300 ${
           isFilterOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         onClick={() => setIsFilterOpen(false)}

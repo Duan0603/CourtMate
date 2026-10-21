@@ -20,7 +20,7 @@ export const tournamentsApi = {
       };
     } catch (error) {
       console.error('Error fetching tournaments from backend:', error);
-      return { data: [], meta: { total: 0 } };
+      throw error;
     }
   },
 

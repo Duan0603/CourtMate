@@ -13,15 +13,18 @@ declare global {
 interface GoogleLoginButtonProps {
   text?: string;
   redirectTo?: string;
+  onSuccess?: () => void;
 }
 
 export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
   text = 'Tiếp tục với Google',
   redirectTo = '/tournaments',
+  onSuccess,
 }) => {
   const router = useRouter();
   const { loginWithGoogle } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [gisReady, setGisReady] = useState(false);
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const initAttempted = useRef(false);
@@ -68,29 +71,15 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
       setLoading(true);
       try {
         await loginWithGoogle(response.credential);
-        router.push(redirectTo);
+        onSuccess?.();
+        if (!onSuccess) router.push(redirectTo);
       } catch (err: any) {
-        console.error('Google Auth Error:', err);
-        const payload = parseJwt(response.credential);
-        if (payload?.email) {
-          localStorage.setItem('courtmate_token', 'google_real_token_' + Date.now());
-          localStorage.setItem(
-            'courtmate_user',
-            JSON.stringify({
-              id: 'google_' + payload.sub,
-              email: payload.email,
-              name: payload.name || payload.email.split('@')[0],
-              avatar: payload.picture,
-              role: 'PLAYER',
-            })
-          );
-          window.location.href = redirectTo;
-        }
+        setError(err.message || 'Đăng nhập Google chưa thành công. Vui lòng thử lại.');
       } finally {
         setLoading(false);
       }
     },
-    [loginWithGoogle, router, redirectTo, parseJwt]
+    [loginWithGoogle, router, redirectTo, parseJwt, onSuccess]
   );
 
   // Init GIS SDK once
@@ -190,6 +179,7 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
 
   return (
     <div className="w-full flex flex-col items-center">
+      {error && <p role="alert" className="mb-2 text-sm">{error}</p>}
       {/* Official GIS Button container */}
       <div
         ref={googleBtnRef}
@@ -202,7 +192,7 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
           type="button"
           disabled={loading}
           onClick={handleFallbackClick}
-          className="cm-button w-full py-3.5 px-5 rounded-2xl border border-slate-200 bg-surface shadow-card hover:bg-slate-50 text-ink font-bold text-sm transition-all  flex items-center justify-center gap-3 hover:border-slate-300 disabled:opacity-60"
+          className="cm-button w-full py-3.5 px-5 rounded-2xl border border-ink bg-surface shadow-card hover:bg-white text-ink font-bold text-sm transition-all  flex items-center justify-center gap-3 hover:border-ink disabled:opacity-60"
         >
           <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
             <path

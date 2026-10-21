@@ -83,14 +83,13 @@ export function SportsOverlays({ isAuthenticated, staticLayout = false }: Sports
         <h2
           className="intro-text text-5xl md:text-7xl font-black opacity-0 scale-90 text-center -translate-y-28 transition-transform"
           style={{
-            color: '#101828',
-            textShadow:
-              '0 0 50px rgba(255,255,255,1), 0 0 25px rgba(255,255,255,0.9), 0 0 10px rgba(255,255,255,0.9)',
+            color: '#111111',
+            textShadow: 'none',
           }}
         >
           Sẵn Sàng
           <br />
-          <span className="text-[#1E5AA8]">Trải Nghiệm?</span>
+          <span className="text-primary">Trải Nghiệm?</span>
         </h2>
       </div>
 
@@ -102,10 +101,10 @@ export function SportsOverlays({ isAuthenticated, staticLayout = false }: Sports
         >
           <div id={card.id} className="relative bg-surface p-6 md:p-8 rounded-feature shadow-card opacity-0">
 
-            <h2 className="feature-heading text-[clamp(1.75rem,3vw,2.5rem)] font-black leading-[1.2] text-[#1E5AA8] relative z-10 mb-4">
+            <h2 className="feature-heading text-[clamp(1.75rem,3vw,2.5rem)] font-black leading-[1.2] text-primary relative z-10 mb-4">
               {card.title.join(' ')}
             </h2>
-            <p className="feature-para text-base md:text-lg text-[#475467] font-medium relative z-10 leading-relaxed">
+            <p className="feature-para text-base md:text-lg text-[#3f3f3f] font-medium relative z-10 leading-relaxed">
               {card.description}
             </p>
           </div>
@@ -125,13 +124,13 @@ export function SportsOverlays({ isAuthenticated, staticLayout = false }: Sports
 
       {/* ─── SCROLL INDICATOR ─── */}
       <div className="story-scroll-indicator absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center justify-center z-40 opacity-0 pointer-events-none">
-        <div className="w-12 h-12 rounded-full bg-white shadow-xl flex items-center justify-center animate-bounce border border-slate-100">
+        <div className="w-12 h-12 rounded-full bg-white shadow-xl flex items-center justify-center animate-bounce border border-ink">
           <svg
             width="24"
             height="24"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="#1E5AA8"
+            stroke="#1848FF"
             strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"

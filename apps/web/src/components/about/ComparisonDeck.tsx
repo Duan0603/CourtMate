@@ -47,11 +47,10 @@ export function ComparisonDeck({ items }: { items: ComparisonItem[] }) {
       }}>
       <div className={styles.stage}>
         {index === items.length && (
-          <div className={styles.complete}>
+          <div className={styles.complete} role="status">
             <CheckCircle2 size={44} aria-hidden="true" />
-            <h3>Bạn đã xem hết các thẻ.</h3>
-            <p>Quay lại để xem thêm một lần nữa.</p>
-            <button type="button" className={styles.restart} onClick={() => setIndex(0)}><RotateCw size={17} /> Xem lại từ đầu</button>
+            <h3>Bạn đã xem hết các thẻ!</h3>
+            <p>Cảm ơn bạn đã khám phá cùng CourtMate.</p>
           </div>
         )}
         {items.slice(index, index + 3).map((item, depth) => {

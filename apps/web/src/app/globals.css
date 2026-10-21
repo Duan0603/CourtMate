@@ -1,4 +1,5 @@
 @import '../styles/tokens.css';
+@import '../styles/print.css';
 @layer tailwind-base, antd;
 
 @layer tailwind-base {
@@ -9,8 +10,8 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
+    --background: 0 0% 100%;
+    --foreground: 0 0% 7%;
     --page-max-width: 1280px;
     --page-form-width: 960px;
     --page-gutter: 16px;
@@ -26,7 +27,7 @@
   }
 
   body {
-    @apply bg-canvas text-ink antialiased min-h-screen selection:bg-primary/20 selection:text-primary;
+    @apply bg-canvas text-ink antialiased min-h-screen selection:bg-accent-baby selection:text-primary;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }
@@ -126,39 +127,28 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #ffffff;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #ffffff;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #3f3f3f;
 }
 
-/* Glassmorphism helpers */
-.glass {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-}
-
-.glass-dark {
-  background: rgba(0, 16, 47, 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
+/* Legacy utility names now use the shared opaque print surfaces. */
+.glass { background: rgb(var(--cm-surface)); border: 3px solid #111; }
+.glass-dark { background: rgb(var(--cm-primary)); border: 3px solid #111; color: white; }
 
 /* Sports Court Pattern background */
 .court-grid-pattern {
   background-size: 32px 32px;
   background-image:
-    linear-gradient(to right, rgba(0, 119, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0, 119, 255, 0.04) 1px, transparent 1px);
+    linear-gradient(to right, rgb(var(--cm-primary) / .04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(var(--cm-primary) / .04) 1px, transparent 1px);
 }
 
 @keyframes fadeIn {

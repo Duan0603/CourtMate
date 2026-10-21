@@ -21,8 +21,8 @@ export class AuthController {
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
-  async register(@Body() body: { email: string; password?: string; name?: string; role?: UserRole }) {
-    return this.authService.register(body.email, body.password || '', body.name || '', body.role);
+  async register(@Body() body: { email: string; password?: string; name?: string; role?: UserRole; organizer?: { certificateUrl?: string; sports: string[] } }) {
+    return this.authService.register(body.email, body.password || '', body.name || '', body.role, body.organizer);
   }
 
   @Post('login')

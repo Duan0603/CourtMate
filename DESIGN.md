@@ -12,47 +12,49 @@ Nguồn thực thi: `apps/web/src/app/globals.css` và `apps/web/src/components/
 - Trang đăng nhập/đăng ký tài khoản và bề mặt toàn màn hình như chat giữ bố cục chuyên biệt. Hero trang chủ có thể tràn màn hình; nội dung section thông thường vẫn theo khung chung.
 - Khi thêm trang hoặc section, dùng các component/class trên. Chỉ sửa token chung khi cần đổi hệ thống, không thêm breakpoint hoặc chiều rộng riêng cho từng trang.
 
-## Soft Claymorphism — web
+## Sports print / neo-brutalism — web
 
-The web interface uses molded clay depth on meaningful panels and interactive controls: a bright inner top edge, a darker inner bottom edge and one soft outer shadow. Keep tables, nested content, badges and text flat. Preserve CourtMate branding, existing copy, route structure and behavior.
+The user explicitly replaced claymorphism with flat saturated color blocks, thick black outlines, hard displaced black shadows, chunky display type and physical button presses. This is the visual authority for all web routes. Preserve CourtMate content, data, navigation and responsive page frames.
 
 ### Sources of truth
 
-- Material tokens: apps/web/src/styles/tokens.css, imported by globals.css.
-- Tailwind semantic colors, radii and elevation: apps/web/tailwind.config.js.
-- Ant Design: apps/web/src/lib/antd-theme.tsx. Numeric/color seed values mirror the material tokens because Ant Design derives palettes from literal colors; shadows reference CSS variables directly.
-- Native controls: cm-button and cm-control in globals.css. Existing React props and event handlers are unchanged.
+- Material and palette tokens: apps/web/src/styles/tokens.css.
+- Shared print components, typography and navigation: apps/web/src/styles/print.css, imported by globals.css.
+- Tailwind colors, radii, default border width and shadow aliases: apps/web/tailwind.config.js.
+- Ant Design seed and component tokens: apps/web/src/lib/antd-theme.tsx; print.css supplies outlined popup, table, input and button treatments.
+- Scoped comparison, favorites, coaches and 3D overlay CSS inherit the same tokens.
 
-### Palette and typography
+### Palette and type
 
-Primary #1E5AA8; hover #154687; primary tint #E8F1FA. Canvas #F3F7FB, surface white, muted surface #EDF3F9, border #D6E1ED, text #101828, secondary text #475467. Success #15803D, warning #A16207, error #BE123C, info brand blue. Semantic status colors may use Tailwind tonal steps for badges.
+Canvas, header, footer and page backgrounds are pure white #FFFFFF. Neutral ink/outline is #111111 and secondary text #3F3F3F. The only decorative accents are tan #D2B48C, baby blue #8FD9FB and dark blue #1848FF (the existing review action blue). Use white text on dark blue and ink text on tan/baby blue. Do not add yellow, green, coral, purple, red or tinted page canvases. Status meanings must remain explicit in labels/icons rather than relying on extra colors. Photography, 3D materials and official sign-in provider artwork retain their content colors.
 
-Keep Inter, including Vietnamese glyphs. Body 14–16px / 1.5–1.7; labels 12–14px; data tables retain compact legible text and tabular numerals. Page headings 28–36px; larger display type is reserved for marketing sections. Existing Tailwind spacing follows a 4px unit.
+Headings and display labels use Be Vietnam Pro 800/900, self-hosted by next/font, with Vietnamese glyphs. Body and data retain Inter; shared buttons use 14px and actions/fields use 16px. Line heights vary by component. Use balanced headings and letter spacing no tighter than -0.03em. Keep dense labels readable rather than making every line display type.
 
-### Shape and depth
+### Outlines and elevation
 
-Small 8px: badges and pagination. Control 12px: buttons, inputs, dropdowns. Card 28px: panels, cards. Feature 36px: authentication, large sections and dialogs. Circular avatars and image favorite controls stay circular.
+Controls and tags: 2px solid black. Feature panels: 3px solid black. Small/control/card/feature radii: 4/6/10/14px. Portrait images may remain round. Tables and internal rows stay flat.
 
-Subtle: quiet controls/header. Card: meaningful content groups. Elevated: overlays, dropdowns, dialogs. Interactive: primary controls and hover. Pressed: temporary inset feedback. Use shadow-subtle / shadow-card / shadow-elevated / shadow-interactive and token-backed radius classes. Do not add hard black shadows, colored glow, nested raised cards or per-page token sets.
+All shadows are opaque #111 rectangles with zero blur and zero spread: subtle 2px 2px, action 4px 4px, card 6px 6px, overlay 8px 8px. Mobile cards/overlays reduce to 4px/5px. Never reintroduce inner highlights, inset shading, blurred elevation, colored glows or frosted glass. Image readability overlays can use one flat translucent black layer; carousel edge masks are functional fades, not surface materials.
 
-### Interaction
+Shared raised buttons shift by the same offset as their shadow when pressed; their shadow collapses to zero. Header buttons and the sports-overlay CTA use a 2px press, while shared raised actions use 4px. Use CSS translate independently of transforms so existing GSAP, card flips and centering transforms remain intact. Disabled buttons have no lift and no translation. Reduced motion removes press translation and nonessential animation. Keep visible focus rings and input errors.
 
-Focus outlines remain visible with keyboard navigation. Disabled controls have reduced contrast and no raised/pressed effects. Error states use semantic error color and existing validation messages. Use short transitions; avoid scale effects and layout shift. Honor prefers-reduced-motion for CSS, entrance animation, cursor tracking and the 3D story (static content and CTA).
+### Surface application
 
-Preserve the current header behavior, including its search and home hero transparency at the top, then white background with brand text after scrolling. Header/footer/page edges use the shared page tokens above. The navigation structure changed in a parallel edit during this refactor; its functionality is preserved.
+Home: full-viewport white hero, dark-blue primary CTA, white secondary CTA and black/dark-blue display heading. Shared header and footer stay white with ink rules. The active route uses a baby-blue sticker. Header, footer and pages use the shared page tokens above. At widths up to 380px, the header hides the logo wordmark and uses an 8px container gap to preserve space for the 44px controls.
 
-### Existing component APIs
+About: stat and founder cards use baby blue, tan or white. Comparison cards have baby-blue fronts, dark-blue backs, flip transforms and hard token shadows. The completion card has a 3px dashed black border and baby-blue fill. Preserve vertical touch scrolling and reduced motion.
 
-Use Ant Design Button variants through its existing type/danger props, Input, Select, Checkbox, Modal, Drawer, Dropdown, Popover, Tooltip, Tabs, Tag, Table, Pagination, Alert and notification APIs. Their shared provider supplies the visual system. Native buttons/forms keep their existing props and cm-button/cm-control classes. Toasts use cm-toast. Keep native data tables flat inside their enclosing panel.
+Favorites: category selector sits separately at the right, with a baby-blue outlined indicator that slides between the two categories. The selector is at most 360px wide. Reduced motion removes indicator transitions and results arrival animation.
 
-Web refactoring does not alter the mobile application theme or backend.
+Directory, detail, profile, authentication, chat, organizer and admin pages inherit outlined controls and paper panels. Keep native and Ant Design APIs, loading states, validation and backend actions unchanged. This system targets the web app; it does not restyle the separate mobile application.
 
-### Home surfaces to preserve
+### Forms, overlays and chat
 
-Home hero occupies at least one full viewport (`100svh`), with a prominent heading. The user explicitly requested preserving the original two-row animated review carousel, including its original composition and content. Do not replace it with a short static grid or a new pagination interaction. Existing requested removals of the home location badge and tournament promotional paragraph still apply.
+All native and Ant Design inputs, selects, number fields, popups, modals and drawers use white surfaces, black 2–3px outlines and opaque zero-blur offset shadows. Popups use only the shared accents. Modals constrain width and scroll their body on short/mobile screens. Remove blurred decorative blobs and text halos, including on empty states and authentication backgrounds.
 
-3D story headings render as one normal text node, preserving word spacing and responsive wrapping. Animate the whole heading/paragraph, not SplitText-generated word/character DOM. Keep layout centering on wrappers separate from the elements GSAP animates.
+Chat uses a white canvas and white panels, dark-blue outgoing bubbles and baby-blue incoming bubbles. Below 768px, show either the contacts pane or the conversation pane, with a labeled back control. Preserve unread state when the conversation is hidden and scroll only the message stream, not the page. Composer controls have 44px+ targets and 16px input text.
 
-### Comparison deck on About
+`npm run test:styles --prefix apps/web` checks all web route/component source for non-palette color utilities, the exact white/three-accent tokens and legacy clay blur/inset shadows.
 
-Desktop: left explanatory copy, right overlapping deck. Mobile: copy above deck. Click/Enter/Space flips the active card; horizontal drag or the forward arrow advances; the back arrow appears after advancing and restores the previous card and its face. Arrow keys navigate. The end state supports going back or restarting. Vertical touch scrolling and reduced-motion are preserved. Existing comparison content and brand colors remain.
+### Authentication dialogs
+Login and registration open over the current page, with the same form available from direct /login and /register links. Desktop pairs a baby-blue sports panel with a white form; mobile reduces the panel to the brand row. Required marks and inline form errors use #B42318, an explicit user-requested semantic exception to the three-accent palette. Password criteria update while typing; new registrations require 8+ characters, a letter, uppercase, number and special character. Existing account passwords remain valid for login. Organizer registration requires an uploaded image certificate and at least one supported sport; these are saved with the account.

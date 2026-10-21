@@ -55,7 +55,23 @@ export default function HomePage() {
     });
 
     return () => {
-      if (smoother) smoother.kill();
+      // Kill ScrollSmoother and explicitly reset any DOM mutations it made,
+      // otherwise Next.js client-side navigation leaves body in a broken state
+      // (position:fixed, overflow:hidden) causing blank pages.
+      if (smoother) {
+        smoother.kill();
+        smoother = null;
+      }
+      ScrollTrigger.getAll().forEach((t) => t.kill());
+      // Reset body/html styles that ScrollSmoother may have set
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+      document.documentElement.style.overflow = '';
     };
   }, { scope: containerRef });
 

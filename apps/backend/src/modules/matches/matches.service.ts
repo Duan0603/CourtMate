@@ -22,6 +22,10 @@ export class MatchesService {
     @InjectModel(Match.name) private readonly matchModel: Model<MatchDocument>,
   ) {}
 
+  async countAll(): Promise<number> {
+    return this.matchModel.countDocuments().exec();
+  }
+
   /**
    * Tạo một kèo mới (Host tạo phòng)
    */
@@ -109,11 +113,20 @@ export class MatchesService {
       query.district = filters.district;
     }
 
+    // Tự động cập nhật các trận đấu đã qua thời gian thi đấu thành Đã hoàn thành
+    const now = new Date();
+    await this.matchModel
+      .updateMany(
+        { endTime: { $lt: now }, status: { $in: [MatchStatus.OPEN, MatchStatus.FULL] } },
+        { $set: { status: MatchStatus.COMPLETED } }
+      )
+      .exec();
+
     if (filters?.status) {
       query.status = filters.status;
     } else {
-      // Mặc định hiển thị các kèo OPEN hoặc FULL sắp diễn ra
-      query.status = { $in: [MatchStatus.OPEN, MatchStatus.FULL] };
+      // Mặc định hiển thị các kèo OPEN, FULL và COMPLETED
+      query.status = { $in: [MatchStatus.OPEN, MatchStatus.FULL, MatchStatus.COMPLETED] };
     }
 
     if (filters?.skillLevel) {

@@ -166,6 +166,10 @@ export class TournamentsService {
     return this.tournamentModel.countDocuments({ city }).exec();
   }
 
+  async countAll(): Promise<number> {
+    return this.tournamentModel.countDocuments().exec();
+  }
+
   async countActiveByCityAndSport(city: string): Promise<Record<string, number>> {
     const results = await this.tournamentModel.aggregate([
       { $match: { city, isHidden: { $ne: true } } },

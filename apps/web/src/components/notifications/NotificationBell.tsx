@@ -12,6 +12,8 @@ import {
   BookOpen,
   Heart,
   Sparkles,
+  MessageCircle,
+  Info,
 } from 'lucide-react';
 import { useNotifications } from './useNotifications';
 
@@ -23,6 +25,12 @@ export function NotificationBell({
   isTransparent?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [error, setError] = useState('');
+  const runAction = async (action: () => Promise<void>) => {
+    setError('');
+    try { await action(); return true; }
+    catch { setError('Không thể lưu thay đổi. Vui lòng thử lại.'); return false; }
+  };
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -48,7 +56,7 @@ export function NotificationBell({
 
   const handleItemClick = async (notification: (typeof notifications)[0]) => {
     if (!notification.read) {
-      await markRead(notification.id);
+      if (!await runAction(() => markRead(notification.id))) return;
     }
     setOpen(false);
     if (notification.link) {
@@ -58,18 +66,21 @@ export function NotificationBell({
 
   const getItemIcon = (type: string) => {
     switch (type) {
+      case 'MESSAGE_RECEIVED': return <MessageCircle className="w-4 h-4 text-primary" />;
+      case 'ACCOUNT_ACTIVITY':
+      case 'COACH_ACTIVITY': return <Info className="w-4 h-4 text-primary" />;
       case 'FAVORITE_COACH':
       case 'COACH_FAVORITE':
         return <UserCheck className="w-4 h-4 text-primary" />;
       case 'FAVORITE_COURSE':
       case 'COURSE_FAVORITE':
-        return <BookOpen className="w-4 h-4 text-emerald-600" />;
+        return <BookOpen className="w-4 h-4 text-primary" />;
       case 'FAVORITE_TOURNAMENT':
       case 'TOURNAMENT_FAVORITE':
       case 'TOURNAMENT_NEW':
-        return <Trophy className="w-4 h-4 text-amber-500" />;
+        return <Trophy className="w-4 h-4 text-primary" />;
       default:
-        return <Heart className="w-4 h-4 text-rose-500" />;
+        return <Heart className="w-4 h-4 text-primary" />;
     }
   };
 
@@ -97,34 +108,35 @@ export function NotificationBell({
         onClick={() => {
           setOpen(!open);
         }}
-        className={`cm-button relative flex items-center justify-center p-2 rounded-full transition-all duration-300 ${
+        className={`cm-button relative inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-all duration-300 ${
           isTransparent
             ? `hover:bg-white/15 ${open ? 'bg-white/20' : ''}`
-            : `hover:bg-[#1E5AA8]/10 ${open ? 'bg-[#1E5AA8]/10' : ''}`
+            : `hover:bg-accent-baby ${open ? 'bg-accent-baby' : ''}`
         }`}
+        aria-expanded={open}
         aria-label="Thông báo"
         title="Thông báo"
       >
         <Bell
           className={`w-5 h-5 transition-colors duration-300 ${
-            isTransparent ? 'text-white' : 'text-[#1E5AA8]'
+            isTransparent ? 'text-white' : 'text-primary'
           }`}
         />
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none shadow-sm animate-pulse">
+          <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none shadow-sm">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-xl border border-slate-200/90 z-50 overflow-hidden animate-fadeIn">
+        <div className="absolute right-0 top-full mt-2 w-[min(24rem,calc(100vw-2rem))] bg-white rounded-2xl shadow-xl border border-ink z-50 overflow-hidden animate-fadeIn">
           {/* Header with Title and Action Icons */}
-          <div className="flex items-center justify-between px-4 py-3 bg-slate-50/70 border-b border-slate-100">
+          <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-ink">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-black text-slate-800">Thông báo</span>
+              <span className="text-sm font-black text-ink">Thông báo</span>
               {unreadCount > 0 && (
-                <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-primary/10 text-primary">
+                <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-accent-baby text-primary">
                   {unreadCount} mới
                 </span>
               )}
@@ -134,9 +146,9 @@ export function NotificationBell({
             <div className="flex items-center gap-1">
               <button
                 type="button"
-                onClick={markAllRead}
+                onClick={() => void runAction(markAllRead)}
                 disabled={notifications.length === 0 || unreadCount === 0}
-                className="p-1.5 rounded-lg text-slate-500 hover:text-primary hover:bg-white transition-all disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed group"
+                className="p-1.5 rounded-lg text-muted hover:text-primary hover:bg-white transition-all disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed group"
                 title="Đọc tất cả"
                 aria-label="Đọc tất cả"
               >
@@ -145,9 +157,9 @@ export function NotificationBell({
 
               <button
                 type="button"
-                onClick={deleteAll}
+                onClick={() => void runAction(deleteAll)}
                 disabled={notifications.length === 0}
-                className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-all disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed group"
+                className="p-1.5 rounded-lg text-muted hover:text-primary hover:bg-accent-tan transition-all disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed group"
                 title="Xóa tất cả"
                 aria-label="Xóa tất cả"
               >
@@ -156,18 +168,19 @@ export function NotificationBell({
             </div>
           </div>
 
+          {error && <p role="alert" className="px-4 py-2 text-xs text-primary">{error}</p>}
           {/* List of Notifications */}
-          <div className="max-h-80 overflow-y-auto divide-y divide-slate-100">
+          <div className="max-h-80 overflow-y-auto divide-y divide-ink">
             {loading ? (
-              <div className="py-10 text-center text-xs text-slate-400">
+              <div className="py-10 text-center text-xs text-muted">
                 Đang tải thông báo...
               </div>
             ) : notifications.length === 0 ? (
               <div className="py-10 px-4 text-center">
-                <Sparkles className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                <p className="text-xs font-semibold text-slate-500">Chưa có thông báo nào</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">
-                  Các thông tin yêu thích khóa học, HLV, giải đấu sẽ xuất hiện tại đây.
+                <Sparkles className="w-8 h-8 text-muted mx-auto mb-2" />
+                <p className="text-xs font-semibold text-muted">Chưa có thông báo nào</p>
+                <p className="text-[11px] text-muted mt-0.5">
+                  Cập nhật tài khoản, giải đấu, lịch học và tin nhắn sẽ xuất hiện tại đây.
                 </p>
               </div>
             ) : (
@@ -175,14 +188,14 @@ export function NotificationBell({
                 <div
                   key={n.id}
                   onClick={() => handleItemClick(n)}
-                  className={`px-4 py-3 flex items-start gap-3 transition-colors hover:bg-slate-50/80 cursor-pointer group relative ${
-                    !n.read ? 'bg-primary/[0.04]' : ''
+                  className={`px-4 py-3 flex items-start gap-3 transition-colors hover:bg-white cursor-pointer group relative ${
+                    !n.read ? 'bg-accent-baby' : ''
                   }`}
                 >
                   {/* Category icon avatar */}
                   <div
                     className={`p-2 rounded-xl shrink-0 mt-0.5 ${
-                      !n.read ? 'bg-white shadow-xs border border-slate-100' : 'bg-slate-100/70'
+                      !n.read ? 'bg-white shadow-xs border border-ink' : 'bg-white'
                     }`}
                   >
                     {getItemIcon(n.type)}
@@ -193,7 +206,7 @@ export function NotificationBell({
                     {n.title && (
                       <p
                         className={`text-xs font-bold leading-snug truncate ${
-                          !n.read ? 'text-[#1E5AA8]' : 'text-slate-700'
+                          !n.read ? 'text-primary' : 'text-muted'
                         }`}
                       >
                         {n.title}
@@ -201,12 +214,12 @@ export function NotificationBell({
                     )}
                     <p
                       className={`text-xs leading-relaxed mt-0.5 ${
-                        !n.read ? 'text-slate-800 font-medium' : 'text-slate-500'
+                        !n.read ? 'text-ink font-medium' : 'text-muted'
                       }`}
                     >
                       {n.body}
                     </p>
-                    <p className="text-[10px] text-slate-400 mt-1">{formatTime(n.createdAt)}</p>
+                    <p className="text-[10px] text-muted mt-1">{formatTime(n.createdAt)}</p>
                   </div>
 
                   {/* Single Delete Icon (visible on hover) & Unread Dot */}
@@ -218,9 +231,9 @@ export function NotificationBell({
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        deleteOne(n.id);
+                        void runAction(() => deleteOne(n.id));
                       }}
-                      className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-rose-500 hover:bg-slate-200/60 rounded-md transition-all"
+                      className="opacity-0 group-hover:opacity-100 p-1 text-muted hover:text-primary hover:bg-white rounded-md transition-all"
                       title="Xóa thông báo"
                       aria-label="Xóa thông báo"
                     >

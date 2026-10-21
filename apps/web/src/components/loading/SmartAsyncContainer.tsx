@@ -41,14 +41,14 @@ export function SmartAsyncContainer({
   className = '',
 }: SmartAsyncContainerProps) {
   if (error) {
-    const errorText = typeof error === 'string' ? error : error?.message || errorMessage || 'Không thể tải dữ liệu.';
+    const errorText = errorMessage || (typeof error === 'string' ? error : error?.message) || 'Không thể tải dữ liệu.';
     return (
-      <div className={`p-8 my-4 rounded-3xl bg-surface shadow-card border border-rose-100  flex flex-col items-center justify-center text-center ${className}`}>
-        <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center mb-3">
+      <div role="alert" className={`p-8 my-4 rounded-3xl bg-surface shadow-card border border-ink  flex flex-col items-center justify-center text-center ${className}`}>
+        <div className="w-12 h-12 rounded-2xl bg-accent-baby text-ink flex items-center justify-center mb-3">
           <AlertCircle className="w-6 h-6" />
         </div>
-        <h4 className="text-base font-bold text-slate-900 mb-1">Đã xảy ra sự cố</h4>
-        <p className="text-xs text-slate-500 max-w-sm mb-4 leading-relaxed">
+        <h4 className="text-base font-bold text-ink mb-1">Chưa tải được dữ liệu</h4>
+        <p className="text-xs text-muted max-w-sm mb-4 leading-relaxed">
           {errorText}
         </p>
         {onRetry && (

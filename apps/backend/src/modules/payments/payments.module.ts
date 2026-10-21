@@ -1,3 +1,4 @@
+import { NotificationsModule } from '../notifications/notifications.module';
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Registration, RegistrationSchema } from '../registrations/infrastructure/persistence/registration.entity';
@@ -8,7 +9,7 @@ import { PaymentsService } from './payments.service';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [AuthModule, MongooseModule.forFeature([
+  imports: [NotificationsModule, AuthModule, MongooseModule.forFeature([
     { name: PaymentTransaction.name, schema: PaymentTransactionSchema },
     { name: Registration.name, schema: RegistrationSchema },
     { name: TournamentStub.name, schema: TournamentStubSchema },

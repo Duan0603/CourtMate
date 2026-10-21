@@ -7,6 +7,7 @@ import {
   OnGatewayDisconnect,
   ConnectedSocket,
 } from '@nestjs/websockets';
+import { NotificationsService } from '../notifications/notifications.service';
 import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -33,6 +34,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   constructor(
     private readonly chatService: ChatService,
+    private readonly notifications: NotificationsService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
@@ -149,6 +151,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     // Sidebar preview, unread badge and toast for the receiver wherever they are in the app
     this.server.to(personalRoom(receiverId)).emit('new_message_notification', saved);
+    try {
+      await this.notifications.send({ userId: receiverId, type: 'MESSAGE_RECEIVED', title: 'Tin nhắn mới từ ' + me.name, body: content.slice(0, 160), link: '/chat?userId=' + me.id });
+    } catch (error) { this.logger.error('Could not persist message notification', error); }
   }
 
   @SubscribeMessage('mark_seen')

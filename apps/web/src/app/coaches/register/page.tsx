@@ -9,6 +9,7 @@ import { SportType } from '@courtmate/shared';
 import { coachesApi } from '../../../lib/coaches.api';
 import { useAuth } from '../../../context/AuthContext';
 import toast from 'react-hot-toast';
+import { emitUserNotification } from '../../../lib/notifications-api';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 
@@ -107,7 +108,7 @@ export default function RegisterCoachPage() {
       });
 
       setSubmittedSuccess(true);
-      toast.success('Hồ sơ của bạn đã được gửi thành công!');
+      void emitUserNotification({ type: 'COACH_REGISTERED', title: 'Đã gửi hồ sơ huấn luyện viên', body: 'Hồ sơ của bạn đã được gửi thành công!', link: '/profile' });
     } catch (err: any) {
       toast.error(err?.message || 'Có lỗi xảy ra khi gửi hồ sơ');
     } finally {
@@ -120,14 +121,14 @@ export default function RegisterCoachPage() {
       <FormContainer>
         <Link
           href="/coaches"
-          className="cm-link inline-block text-xs font-bold text-slate-500 hover:text-primary mb-4 transition-colors"
+          className="cm-link inline-block text-xs font-bold text-muted hover:text-primary mb-4 transition-colors"
         >
           ← Quay lại danh bạ Huấn luyện viên
         </Link>
 
         {/* Guest Guard: If Guest, prompt login to register */}
         {!isAuthenticated && (
-          <div className="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs sm:text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="mb-6 p-4 rounded-xl bg-accent-tan border border-ink text-primary text-xs sm:text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <span className="font-bold">Yêu cầu đăng nhập:</span> Bạn cần đăng nhập tài khoản CourtMate trước khi nộp hồ sơ đăng ký làm Huấn luyện viên.
             </div>
@@ -142,11 +143,11 @@ export default function RegisterCoachPage() {
         )}
 
         {submittedSuccess ? (
-          <div className="bg-surface shadow-card rounded-2xl p-8 sm:p-10  border border-slate-200 text-center">
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900">
+          <div className="bg-surface shadow-card rounded-2xl p-8 sm:p-10  border border-ink text-center">
+            <h2 className="text-xl sm:text-2xl font-black text-ink">
               Đã nhận hồ sơ
             </h2>
-            <p className="text-sm sm:text-sm text-slate-600 mt-2 max-w-md mx-auto leading-relaxed">
+            <p className="text-sm sm:text-sm text-muted mt-2 max-w-md mx-auto leading-relaxed">
               Bạn sẽ nhận thông báo khi hồ sơ được phê duyệt.
             </p>
             <div className="mt-6 flex justify-center">
@@ -159,12 +160,12 @@ export default function RegisterCoachPage() {
             </div>
           </div>
         ) : (
-          <div className="gsap-form-card bg-surface shadow-card rounded-2xl p-6 sm:p-8  border border-slate-200">
+          <div className="gsap-form-card bg-surface shadow-card rounded-2xl p-6 sm:p-8  border border-ink">
 
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-black text-ink tracking-tight">
               Đăng ký huấn luyện viên
             </h1>
-            <p className="text-sm text-slate-500 mt-1 mb-6">
+            <p className="text-sm text-muted mt-1 mb-6">
               Điền thông tin và gửi hồ sơ để xét duyệt.
             </p>
 
@@ -172,7 +173,7 @@ export default function RegisterCoachPage() {
               {/* Họ tên & SĐT */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">
+                  <label className="block text-sm font-bold text-muted mb-1">
                     Họ và tên *
                   </label>
                   <input
@@ -181,11 +182,11 @@ export default function RegisterCoachPage() {
                     disabled={!isAuthenticated}
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="cm-control w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-slate-100 disabled:cursor-not-allowed"
+                    className="cm-control w-full px-3 py-2 bg-white border border-ink rounded-xl text-xs sm:text-sm text-ink focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-white disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">
+                  <label className="block text-sm font-bold text-muted mb-1">
                     Số điện thoại *
                   </label>
                   <input
@@ -195,13 +196,13 @@ export default function RegisterCoachPage() {
                     placeholder="VD: 0905123456"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="cm-control w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-slate-100 disabled:cursor-not-allowed"
+                    className="cm-control w-full px-3 py-2 bg-white border border-ink rounded-xl text-xs sm:text-sm text-ink focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-white disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">
+                <label className="block text-sm font-bold text-muted mb-1">
                   Chuyên môn *
                 </label>
                 <input
@@ -211,13 +212,13 @@ export default function RegisterCoachPage() {
                   placeholder="VD: HLV Cầu lông Cấp 1 Quốc Gia - Chuyên chỉnh bộ di chuyển & smash"
                   value={headline}
                   onChange={(e) => setHeadline(e.target.value)}
-                  className="cm-control w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-slate-100 disabled:cursor-not-allowed"
+                  className="cm-control w-full px-3 py-2 bg-white border border-ink rounded-xl text-xs sm:text-sm text-ink focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-white disabled:cursor-not-allowed"
                 />
               </div>
 
               {/* Môn giảng dạy: CHỈ CẦU LÔNG VÀ PICKLEBALL */}
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1.5">
+                <label className="block text-sm font-bold text-muted mb-1.5">
                   Môn thể thao nhận dạy *
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -233,7 +234,7 @@ export default function RegisterCoachPage() {
                       className={`cm-button px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
                         sports.includes(s.id)
                           ? 'bg-primary text-white border-primary'
-                          : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
+                          : 'bg-white text-muted border-ink hover:border-ink'
                       } disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer`}
                     >
                       {s.label}
@@ -245,7 +246,7 @@ export default function RegisterCoachPage() {
               {/* Kinh nghiệm & Học phí */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">
+                  <label className="block text-sm font-bold text-muted mb-1">
                     Số năm kinh nghiệm *
                   </label>
                   <input
@@ -255,11 +256,11 @@ export default function RegisterCoachPage() {
                     disabled={!isAuthenticated}
                     value={experienceYears}
                     onChange={(e) => setExperienceYears(Number(e.target.value))}
-                    className="cm-control w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-slate-100 disabled:cursor-not-allowed"
+                    className="cm-control w-full px-3 py-2 bg-white border border-ink rounded-xl text-xs sm:text-sm text-ink focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-white disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">
+                  <label className="block text-sm font-bold text-muted mb-1">
                     Mức học phí theo giờ (VND) *
                   </label>
                   <input
@@ -268,7 +269,7 @@ export default function RegisterCoachPage() {
                     disabled={!isAuthenticated}
                     value={hourlyRate}
                     onChange={(e) => setHourlyRate(Number(e.target.value))}
-                    className="cm-control w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-slate-100 disabled:cursor-not-allowed"
+                    className="cm-control w-full px-3 py-2 bg-white border border-ink rounded-xl text-xs sm:text-sm text-ink focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-white disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -276,14 +277,14 @@ export default function RegisterCoachPage() {
               {/* Khu vực */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">
+                  <label className="block text-sm font-bold text-muted mb-1">
                     Thành phố hoạt động *
                   </label>
                   <select
                     value={city}
                     disabled={!isAuthenticated}
                     onChange={(e) => setCity(e.target.value)}
-                    className="cm-control w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-slate-100 disabled:cursor-not-allowed"
+                    className="cm-control w-full px-3 py-2 bg-white border border-ink rounded-xl text-xs sm:text-sm font-medium text-ink focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-white disabled:cursor-not-allowed"
                   >
                     <option value="Đà Nẵng">Đà Nẵng</option>
                     <option value="Hà Nội">Hà Nội</option>
@@ -291,7 +292,7 @@ export default function RegisterCoachPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">
+                  <label className="block text-sm font-bold text-muted mb-1">
                     Các quận nhận dạy
                   </label>
                   <input
@@ -300,15 +301,15 @@ export default function RegisterCoachPage() {
                     value={districts}
                     onChange={(e) => setDistricts(e.target.value)}
                     placeholder="VD: Hải Châu, Sơn Trà"
-                    className="cm-control w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-slate-100 disabled:cursor-not-allowed"
+                    className="cm-control w-full px-3 py-2 bg-white border border-ink rounded-xl text-xs sm:text-sm text-ink focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-white disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
 
               {/* Bằng cấp */}
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+              <div className="p-4 bg-white rounded-xl border border-ink">
                 <div className="flex items-center justify-between mb-2.5">
-                  <span className="text-xs font-bold text-slate-800 uppercase tracking-wide">
+                  <span className="text-xs font-bold text-ink uppercase tracking-wide">
                     Chứng chỉ / Bằng cấp thể thao
                   </span>
                   <button
@@ -330,7 +331,7 @@ export default function RegisterCoachPage() {
                         placeholder="Tên chứng chỉ (VD: Bằng HLV Quốc Tế IPTPA)"
                         value={cert.title}
                         onChange={(e) => updateCertificate(idx, 'title', e.target.value)}
-                        className="cm-control min-w-0 w-full flex-1 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-slate-100"
+                        className="cm-control min-w-0 w-full flex-1 px-3 py-1.5 bg-white border border-ink rounded-lg text-xs text-ink focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-white"
                       />
                       <input
                         type="text"
@@ -338,7 +339,7 @@ export default function RegisterCoachPage() {
                         placeholder="Nơi cấp"
                         value={cert.issuedBy}
                         onChange={(e) => updateCertificate(idx, 'issuedBy', e.target.value)}
-                        className="cm-control min-w-0 w-full sm:w-32 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-slate-100"
+                        className="cm-control min-w-0 w-full sm:w-32 px-3 py-1.5 bg-white border border-ink rounded-lg text-xs text-ink focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-white"
                       />
                       <input
                         type="number"
@@ -346,14 +347,14 @@ export default function RegisterCoachPage() {
                         placeholder="Năm"
                         value={cert.year}
                         onChange={(e) => updateCertificate(idx, 'year', Number(e.target.value))}
-                        className="cm-control min-w-0 w-full sm:w-20 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-primary"
+                        className="cm-control min-w-0 w-full sm:w-20 px-3 py-1.5 bg-white border border-ink rounded-lg text-xs text-ink focus:outline-none focus:ring-1 focus:ring-primary"
                       />
                       {certificates.length > 1 && (
                         <button
                           type="button"
                           disabled={!isAuthenticated}
                           onClick={() => removeCertificate(idx)}
-                          className="cm-button px-2 py-1 text-rose-600 text-xs font-bold hover:bg-rose-50 rounded cursor-pointer"
+                          className="cm-button px-2 py-1 text-primary text-xs font-bold hover:bg-accent-tan rounded cursor-pointer"
                         >
                           Xoá
                         </button>
@@ -365,7 +366,7 @@ export default function RegisterCoachPage() {
 
               {/* Bio */}
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">
+                <label className="block text-sm font-bold text-muted mb-1">
                   Giới thiệu bản thân & Triết lý huấn luyện *
                 </label>
                 <textarea
@@ -375,7 +376,7 @@ export default function RegisterCoachPage() {
                   placeholder="Mô tả phong cách giảng dạy, thành tích học viên đã đạt được..."
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
-                  className="cm-control w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-slate-100 disabled:cursor-not-allowed"
+                  className="cm-control w-full px-3 py-2 bg-white border border-ink rounded-xl text-xs sm:text-sm text-ink focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-white disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -392,7 +393,7 @@ export default function RegisterCoachPage() {
                 <button
                   type="button"
                   onClick={() => router.push('/login?redirect=%2Fcoaches%2Fregister')}
-                  className="cm-button w-full py-3 bg-slate-200 text-slate-600 rounded-xl font-bold text-xs sm:text-sm hover:bg-slate-300 transition-all cursor-pointer"
+                  className="cm-button w-full py-3 bg-white text-muted rounded-xl font-bold text-xs sm:text-sm hover:bg-white transition-all cursor-pointer"
                 >
                   Đăng nhập để gửi hồ sơ
                 </button>

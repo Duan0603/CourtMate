@@ -1,404 +1,105 @@
 'use client';
-
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
+import React, { useEffect, useId, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Trophy,
-  Mail,
-  Lock,
-  User,
-  Phone,
-  ArrowRight,
-  ArrowLeft,
-  Zap,
-  Eye,
-  EyeOff,
-  CheckCircle2,
-  Medal,
-} from 'lucide-react';
+import { ArrowRight, Check, Eye, EyeOff, Upload, Users, Trophy, X } from 'lucide-react';
 import { UserRole } from '@courtmate/shared';
 import { useAuth } from '../../context/AuthContext';
+import { uploadImageToCloudinary } from '../../lib/cloudinary';
 import { GoogleLoginButton } from './GoogleLoginButton';
-
-interface AuthCardProps {
-  initialMode?: 'login' | 'register';
-}
-
-/* ────────────────────────────────────────────────────────────────────────
- * Registration form redesigned to prioritize Role selection
- * ──────────────────────────────────────────────────────────────────────── */
-
-export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => {
-  const router = useRouter();
+import styles from './AuthCard.module.css';
+const rules = [
+  { label: 'Ít nhất 8 ký tự', test: (v: string) => v.length >= 8 },
+  { label: 'Có chữ cái', test: (v: string) => /\p{L}/u.test(v) },
+  { label: 'Có chữ in hoa', test: (v: string) => /\p{Lu}/u.test(v) },
+  { label: 'Có số', test: (v: string) => /[0-9]/.test(v) },
+  { label: 'Có ký tự đặc biệt', test: (v: string) => /[^\p{L}\p{N}\s]/u.test(v) },
+];
+const sports = [['BADMINTON','Cầu lông'],['PICKLEBALL','Pickleball'],['TENNIS','Tennis'],['FOOTBALL','Bóng đá']];
+type Mode = 'login' | 'register';
+export function AuthCard({ initialMode = 'login', onSuccess, destination }: { initialMode?: Mode; onSuccess?: (role?: string) => void; destination?: string }) {
   const { login, register } = useAuth();
-  const [redirectTo, setRedirectTo] = useState('/tournaments');
-
-  useEffect(() => {
-    const requested = new URLSearchParams(window.location.search).get('redirect');
-    if (!requested || !requested.startsWith('/') || requested.startsWith('//')) return;
-    try {
-      const destination = new URL(requested, window.location.origin);
-      if (destination.origin === window.location.origin) setRedirectTo(destination.pathname + destination.search + destination.hash);
-    } catch { /* Keep the default destination for invalid URLs. */ }
-  }, []);
-
-  const [mode, setMode] = useState<'login' | 'register'>(initialMode);
-
-  // Login State
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-
-  // Register State
-  const [regName, setRegName] = useState('');
-  const [regEmail, setRegEmail] = useState('');
-  const [regPhone, setRegPhone] = useState('');
-  const [regPassword, setRegPassword] = useState('');
-  const [regConfirmPassword, setRegConfirmPassword] = useState('');
-  const [role, setRole] = useState<UserRole>(UserRole.PLAYER);
-
-  // UI State
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    setMode(initialMode);
-    setError('');
-  }, [initialMode]);
-
-  const handleToggleMode = (newMode: 'login' | 'register') => {
-    setMode(newMode);
-    setError('');
-    window.history.replaceState(null, '', `${newMode === 'login' ? '/login' : '/register'}${redirectTo !== '/tournaments' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`);
+  const router = useRouter(); const id = useId();
+  const [mode, setMode] = useState(initialMode);
+  const [role, setRole] = useState(UserRole.PLAYER);
+  const [name, setName] = useState(''); const [email, setEmail] = useState('');
+  const [password, setPassword] = useState(''); const [confirm, setConfirm] = useState('');
+  const [visible, setVisible] = useState(false); const [confirmVisible, setConfirmVisible] = useState(false);
+  const [selectedSports, setSelectedSports] = useState<string[]>([]);
+  const [file, setFile] = useState<File | null>(null); const [preview, setPreview] = useState('');
+  const [dragging, setDragging] = useState(false); const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
+  const isRegister = mode === 'register'; const organizer = isRegister && role === UserRole.ORGANIZER;
+  const validPassword = rules.every(rule => rule.test(password));
+  useEffect(() => { setMode(initialMode); setError(''); }, [initialMode]);
+  useEffect(() => { if (!file) { setPreview(''); return; } const url = URL.createObjectURL(file); setPreview(url); return () => URL.revokeObjectURL(url); }, [file]);
+  const switchMode = (next: Mode) => { setMode(next); setPassword(''); setConfirm(''); setVisible(false); setConfirmVisible(false); setError(''); };
+  const selectFile = (next?: File) => {
+    if (!next) return;
+    if (!['image/jpeg','image/png','image/webp'].includes(next.type) || next.size > 5 * 1024 * 1024) { setError('Chọn ảnh JPG, PNG hoặc WebP, tối đa 5 MB.'); return; }
+    setFile(next); setError('');
   };
-
-  const handleLoginSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault(); if (busy) return; setError('');
+    if (isRegister && !validPassword) { setError('Mật khẩu chưa đáp ứng đủ các yêu cầu bên dưới.'); return; }
+    if (isRegister && password !== confirm) { setError('Mật khẩu xác nhận chưa khớp.'); return; }
+    if (organizer && (!file || !selectedSports.length)) { setError('Vui lòng tải giấy chứng nhận và chọn ít nhất một bộ môn.'); return; }
+    setBusy(true);
     try {
-      await login(loginEmail, loginPassword);
-      router.push(redirectTo);
-    } catch (err: any) {
-      setError(err.message || 'Đăng nhập không thành công');
-    } finally {
-      setLoading(false);
-    }
+      if (isRegister) {
+        const certificateUrl = organizer && file ? await uploadImageToCloudinary(file) : undefined;
+        await register(email.trim(), password, name.trim(), role, organizer ? { certificateUrl, sports: selectedSports } : undefined);
+      } else await login(email.trim(), password);
+
+      const stored = typeof window !== 'undefined' ? localStorage.getItem('courtmate_user') : null;
+      const loggedUser = stored ? JSON.parse(stored) : null;
+      const userRole = loggedUser?.role || (isRegister ? role : undefined);
+
+      if (onSuccess) { onSuccess(userRole); return; }
+      const requested = destination || new URLSearchParams(window.location.search).get('redirect');
+      if (requested?.startsWith('/') && !requested.startsWith('//') && !requested.startsWith('/\\')) router.push(requested);
+      else if (userRole === UserRole.ORGANIZER) router.push('/organizer');
+      else if (userRole === UserRole.SUPER_ADMIN || userRole === UserRole.REGIONAL_ADMIN) router.push('/admin');
+      else if (!onSuccess) router.push('/tournaments');
+    } catch (err: any) { setError(err.message || 'Không thể kết nối. Vui lòng thử lại.'); }
+    finally { setBusy(false); }
   };
-
-  const handleRegisterSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
-    if (regPassword !== regConfirmPassword) {
-      setError('Mật khẩu nhập lại không khớp. Vui lòng kiểm tra lại!');
-      return;
-    }
-
-    if (regPassword.length < 6) {
-      setError('Mật khẩu phải chứa ít nhất 6 ký tự.');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await register(regEmail, regPassword, regName, role);
-      router.push(redirectTo);
-    } catch (err: any) {
-      setError(err.message || 'Đăng ký tài khoản không thành công.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="w-full max-w-[480px] mx-auto">
-
-      {/* Header Logo */}
-      <div className="text-center mb-6">
-        <Link href="/" className="inline-flex items-center gap-3 mb-3 group">
-          <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-white shadow-lg  group- transition-transform">
-            <Trophy className="w-6 h-6" />
-          </div>
-          <span className="font-black text-3xl tracking-tight text-ink">
-            Court<span className="text-primary">Mate</span>
-          </span>
-        </Link>
+  const required = <span className={styles.required} aria-hidden="true">*</span>;
+  return <div className={styles.shell}>
+    <aside className={styles.intro} aria-hidden="true">
+      <div className={styles.brand}><img src="/courtMate_logo.png" alt="" /> CourtMate</div>
+      <div className={styles.introCopy}><div className={styles.sportMark}><Trophy size={52} strokeWidth={1.8}/></div><h2>Cùng đam mê.<br/>Cùng ra sân.</h2><p>Kết nối người chơi, khám phá giải đấu và tìm đồng đội của bạn.</p></div>
+      <div className={styles.sportLabels}><span>Cầu lông</span><span>Pickleball</span><span>Tennis</span></div>
+    </aside>
+    <section className={styles.main}>
+      <div className={styles.tabs} aria-label="Tài khoản">
+        <button type="button" disabled={busy} aria-pressed={!isRegister} onClick={() => switchMode('login')}>Đăng nhập</button>
+        <button type="button" disabled={busy} aria-pressed={isRegister} onClick={() => switchMode('register')}>Tạo tài khoản</button>
       </div>
-
-      {/* Main Card */}
-      <div className="bg-white rounded-feature p-6 sm:p-8 border border-slate-200/80 shadow-card relative overflow-hidden">
-
-        {/* Sliding Tab Indicator */}
-        <div className="relative bg-surface-dim p-1 rounded-full flex items-center mb-6">
-          <div
-            className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-white rounded-full shadow-sm transition-all duration-300 ease-out ${
-              mode === 'register' ? 'left-[calc(50%+2px)]' : 'left-1'
-            }`}
-          />
-          <button
-            type="button"
-            onClick={() => handleToggleMode('login')}
-            className={`cm-button relative z-10 w-1/2 py-2 rounded-full text-sm font-bold transition-colors text-center ${
-              mode === 'login' ? 'text-ink' : 'text-muted hover:text-ink'
-            }`}
-          >
-            Đăng nhập
-          </button>
-          <button
-            type="button"
-            onClick={() => handleToggleMode('register')}
-            className={`cm-button relative z-10 w-1/2 py-2 rounded-full text-sm font-bold transition-colors text-center ${
-              mode === 'register' ? 'text-ink' : 'text-muted hover:text-ink'
-            }`}
-          >
-            Tạo tài khoản
-          </button>
-        </div>
-
-        {/* Error Alert */}
-        {error && (
-          <div role="alert" className="mb-5 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2.5 animate-fadeIn">
-            <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
-
-        {/* Animated Container */}
-        <div className="relative overflow-hidden">
-
-          {/* LOGIN FORM */}
-          {mode === 'login' && (
-            <form
-              className="space-y-4 animate-fadeIn"
-              onSubmit={(e) => { e.preventDefault(); handleLoginSubmit(e); }}
-            >
-              <div>
-                <label className="block text-sm font-bold text-ink mb-1.5  ">
-                  Địa chỉ Email <span className="text-rose-500 font-bold">*</span>
-                </label>
-                <div className="relative">
-                  <Mail className="w-4 h-4 text-muted absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <input
-                    type="email"
-                    required
-                    id="loginEmail" aria-label="Email đăng nhập" autoComplete="email" value={loginEmail}
-                    onChange={(e) => setLoginEmail(e.target.value)}
-                    className="cm-control w-full pl-11 pr-4 py-3 text-sm bg-canvas border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-ink font-medium transition-all"
-                    placeholder="email@example.com"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-sm font-bold text-ink  ">
-                    Mật khẩu <span className="text-rose-500 font-bold">*</span>
-                  </label>
-
-                </div>
-                <div className="relative">
-                  <Lock className="w-4 h-4 text-muted absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    id="loginPassword" aria-label="Mật khẩu" autoComplete="current-password" value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    className="cm-control w-full pl-11 pr-16 py-3 text-sm bg-canvas border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-ink font-medium transition-all"
-                    placeholder="********"
-                  />
-                  <button
-                    type="button"
-                    aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} aria-pressed={showPassword} onClick={() => setShowPassword(!showPassword)}
-                    className="cm-button absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-slate-600"
-                  >
-                    {showPassword ? <EyeOff aria-hidden="true" className="w-4 h-4" /> : <Eye aria-hidden="true" className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleLoginSubmit}
-                disabled={loading}
-                className="cm-action cm-button w-full py-3.5 px-6 rounded-2xl bg-primary hover:bg-primary-dark text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 mt-2 disabled:opacity-60"
-              >
-                <span>{loading ? 'Đang xác thực...' : 'Đăng nhập'}</span>
-                {!loading && <ArrowRight className="w-4 h-4" />}
-              </button>
-            </form>
-          )}
-
-          {/* REGISTER FORM */}
-          {mode === 'register' && (
-            <form
-              className="space-y-4 animate-fadeIn"
-              onSubmit={(e) => { e.preventDefault(); handleRegisterSubmit(e); }}
-            >
-
-              {/* Role Toggle (Moved to Top) */}
-              <div>
-                <label className="block text-sm font-bold text-ink mb-1.5  ">
-                  Bạn muốn làm gì? <span className="text-rose-500 font-bold">*</span>
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setRole(UserRole.PLAYER)}
-                    className={`cm-button py-3 px-3 rounded-2xl text-xs font-bold border transition-all flex flex-col items-center justify-center gap-1 ${
-                      role === UserRole.PLAYER
-                        ? 'border-primary bg-primary/5 text-primary shadow-xs'
-                        : 'border-slate-200 bg-canvas text-slate-500 hover:bg-slate-100 hover:border-slate-300'
-                    }`}
-                  >
-                    <User className="w-5 h-5 mb-0.5" />
-                    <span>Người chơi</span>
-                    <span className="text-[10px] font-normal text-muted">Giao lưu & thi đấu</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRole(UserRole.ORGANIZER)}
-                    className={`cm-button py-3 px-3 rounded-2xl text-xs font-bold border transition-all flex flex-col items-center justify-center gap-1 ${
-                      role === UserRole.ORGANIZER
-                        ? 'border-primary bg-primary/5 text-primary shadow-xs'
-                        : 'border-slate-200 bg-canvas text-slate-500 hover:bg-slate-100 hover:border-slate-300'
-                    }`}
-                  >
-                    <Trophy className="w-5 h-5 mb-0.5" />
-                    <span>Ban tổ chức</span>
-                    <span className="text-[10px] font-normal text-muted">Tạo & quản lý giải</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Full Name */}
-              <div>
-                <label className="block text-sm font-bold text-ink mb-1.5  ">
-                  Họ và tên <span className="text-rose-500 font-bold">*</span>
-                </label>
-                <div className="relative">
-                  <User className="w-4 h-4 text-muted absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <input
-                    type="text"
-                    required
-                    id="regName" aria-label="Họ và tên" autoComplete="name" value={regName}
-                    onChange={(e) => setRegName(e.target.value)}
-                    className="cm-control w-full pl-11 pr-4 py-3 text-sm bg-canvas border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-ink font-medium transition-all"
-                    placeholder="Nguyễn Văn A"
-                  />
-                </div>
-              </div>
-
-              {/* Email & Phone grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-bold text-ink mb-1.5  ">
-                    Email <span className="text-rose-500 font-bold">*</span>
-                  </label>
-                  <div className="relative">
-                    <Mail className="w-4 h-4 text-muted absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <input
-                      type="email"
-                      required
-                      id="regEmail" aria-label="Email đăng ký" autoComplete="email" value={regEmail}
-                      onChange={(e) => setRegEmail(e.target.value)}
-                      className="cm-control w-full pl-10 pr-3 py-2.5 text-xs bg-canvas border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-ink font-medium"
-                      placeholder="name@email.com"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-ink mb-1.5  ">
-                    Số Điện Thoại <span className="text-muted font-normal lowercase text-[10px]">(không bắt buộc)</span>
-                  </label>
-                  <div className="relative">
-                    <Phone className="w-4 h-4 text-muted absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <input
-                      type="tel"
-                      id="regPhone" aria-label="Số điện thoại" autoComplete="tel" value={regPhone}
-                      onChange={(e) => setRegPhone(e.target.value)}
-                      className="cm-control w-full pl-10 pr-3 py-2.5 text-xs bg-canvas border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-ink font-medium"
-                      placeholder="0905 123 456"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Passwords */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-bold text-ink mb-1.5  ">
-                    Mật khẩu <span className="text-rose-500 font-bold">*</span> <span className="text-muted font-normal lowercase text-[10px]">(≥ 6 ký tự)</span>
-                  </label>
-                  <div className="relative">
-                    <Lock className="w-4 h-4 text-muted absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      required
-                      minLength={6}
-                      id="regPassword" aria-label="Mật khẩu mới" autoComplete="new-password" value={regPassword}
-                      onChange={(e) => setRegPassword(e.target.value)}
-                      className="cm-control w-full pl-10 pr-3 py-2.5 text-xs bg-canvas border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-ink font-medium"
-                      placeholder="••••••••"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-ink mb-1.5  ">
-                    Nhập lại mật khẩu <span className="text-rose-500 font-bold">*</span>
-                  </label>
-                  <div className="relative">
-                    <Lock className="w-4 h-4 text-muted absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      required
-                      id="regConfirmPassword" aria-label="Nhập lại mật khẩu" autoComplete="new-password" value={regConfirmPassword}
-                      onChange={(e) => setRegConfirmPassword(e.target.value)}
-                      className="cm-control w-full pl-10 pr-3 py-2.5 text-xs bg-canvas border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-ink font-medium"
-                      placeholder="••••••••"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Role Toggle removed from here (Moved to top) */}
-
-              <button
-                type="button"
-                onClick={handleRegisterSubmit}
-                disabled={loading}
-                className="cm-action cm-button w-full py-3.5 px-6 rounded-2xl bg-primary hover:bg-primary-dark text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 mt-2 disabled:opacity-60"
-              >
-                <span>{loading ? 'Đang tạo tài khoản...' : 'Tạo tài khoản'}</span>
-                {!loading && <ArrowRight className="w-4 h-4" />}
-              </button>
-            </form>
-          )}
-
-        </div>
-
-        {/* Divider */}
-        <div className="relative flex items-center justify-center my-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-200" />
-          </div>
-          <span className="relative bg-white px-3 text-[11px] font-bold text-muted uppercase tracking-wider">
-            {mode === 'login' ? 'Hoặc đăng nhập với' : 'Hoặc đăng ký nhanh với'}
-          </span>
-        </div>
-
-        {/* Real Google OAuth Login Button */}
-        <GoogleLoginButton
-          text={mode === 'login' ? 'Đăng nhập bằng Google' : 'Đăng ký bằng Google'}
-          redirectTo={redirectTo}
-        />
-
-
-
-      </div>
-    </div>
-  );
-};
+      <header className={styles.heading}><h1>{isRegister ? 'Bắt đầu cùng CourtMate' : 'Chào mừng trở lại!'}</h1><p>{isRegister ? 'Một tài khoản, thật nhiều cơ hội ra sân.' : 'Đăng nhập để tiếp tục hành trình thể thao của bạn.'}</p></header>
+      <form onSubmit={submit} className={styles.form}>
+        <fieldset disabled={busy} className={styles.fields} data-register={isRegister} data-organizer={organizer}>
+        {isRegister && <>
+          <fieldset className={styles.role}><legend>Bạn tham gia với vai trò {required}</legend><div>{[{value:UserRole.PLAYER,label:'Người chơi',Icon:Users},{value:UserRole.ORGANIZER,label:'Ban tổ chức',Icon:Trophy}].map(({value,label,Icon}) => <label key={value}><input type="radio" name={id+'role'} value={value} checked={role===value} onChange={() => setRole(value)}/><span><Icon size={18}/>{label}<Check size={16} className={styles.roleCheck}/></span></label>)}</div></fieldset>
+          <label className={`${styles.field} ${styles.nameField}`} htmlFor={id+'name'}>{organizer ? 'Tên ban tổ chức' : 'Họ và tên'} {required}<input id={id+'name'} required maxLength={120} autoComplete={organizer ? 'organization' : 'name'} value={name} onChange={e => setName(e.target.value)} placeholder={organizer ? 'Tên đơn vị hoặc câu lạc bộ' : 'Tên của bạn'}/></label>
+          {organizer && <>
+            <div className={styles.field}><label htmlFor={id+'certificate'}>Giấy chứng nhận {required}</label>
+              <div className={styles.drop} data-dragging={dragging} onDragOver={e=>{e.preventDefault();setDragging(true);}} onDragLeave={()=>setDragging(false)} onDrop={e=>{e.preventDefault();setDragging(false);if(!busy)selectFile(e.dataTransfer.files[0]);}}>
+                <input id={id+'certificate'} type="file" accept="image/jpeg,image/png,image/webp" aria-required="true" aria-label="Tải giấy chứng nhận" onChange={e=>selectFile(e.target.files?.[0])}/>
+                {preview ? <div className={styles.filePreview}><img src={preview} alt="Xem trước giấy chứng nhận"/><span>{file?.name}<small>Bấm hoặc kéo ảnh để thay thế</small></span></div> : <><Upload size={23}/><strong>Chọn ảnh hoặc kéo thả vào đây</strong><small>JPG, PNG, WebP · Tối đa 5 MB</small></>}
+              </div>{file && <button type="button" className={styles.remove} onClick={()=>setFile(null)}><X size={14}/> Xóa ảnh</button>}
+            </div>
+            <fieldset className={styles.sports}><legend>Bộ môn mong muốn đăng ký {required}</legend><div>{sports.map(([value,label])=><label key={value}><input type="checkbox" checked={selectedSports.includes(value)} onChange={e=>setSelectedSports(prev=>e.target.checked?[...prev,value]:prev.filter(item=>item!==value))}/><span>{label}</span></label>)}</div></fieldset>
+          </>}
+        </>}
+        <label className={`${styles.field} ${styles.emailField}`} htmlFor={id+'email'}>{organizer ? 'Gmail' : 'Email'} {required}<input id={id+'email'} required type="email" autoComplete="email" maxLength={254} value={email} onChange={e=>setEmail(e.target.value)} placeholder={organizer ? 'bantochuc@gmail.com' : 'ban@example.com'}/></label>
+        <div className={`${styles.field} ${styles.passwordField}`}><label htmlFor={id+'password'}>Mật khẩu {required}</label><div className={styles.password}><input id={id+'password'} required type={visible?'text':'password'} autoComplete={isRegister?'new-password':'current-password'} value={password} onChange={e=>setPassword(e.target.value)} aria-describedby={id+'rules'} placeholder={isRegister?'Tạo mật khẩu của bạn':'Nhập mật khẩu'}/><button type="button" aria-label={visible?'Ẩn mật khẩu':'Hiện mật khẩu'} aria-pressed={visible} onClick={()=>setVisible(!visible)}>{visible?<EyeOff size={19}/>:<Eye size={19}/>}</button></div></div>
+        {(isRegister || password.length>0) && <div id={id+'rules'} className={styles.requirements}><p>{isRegister?'Mật khẩu cần đáp ứng:':'Tiêu chuẩn mật khẩu hiện tại:'}</p><ul>{rules.map(rule=><li key={rule.label} data-met={rule.test(password)}><span>{rule.test(password)?<Check size={12}/>:null}</span>{rule.label}<span className={styles.srOnly}>{rule.test(password)?' — đã đạt':' — chưa đạt'}</span></li>)}</ul>{!isRegister && !validPassword && <small>Tài khoản cũ vẫn có thể đăng nhập bằng mật khẩu đã thiết lập.</small>}</div>}
+        {isRegister && <div className={`${styles.field} ${styles.confirmField}`}><label htmlFor={id+'confirm'}>Xác nhận mật khẩu {required}</label><div className={styles.password}><input id={id+'confirm'} required type={confirmVisible?'text':'password'} autoComplete="new-password" value={confirm} onChange={e=>setConfirm(e.target.value)} aria-invalid={confirm.length>0&&confirm!==password} aria-describedby={id+'match'} placeholder="Nhập lại mật khẩu"/><button type="button" aria-label={confirmVisible?'Ẩn mật khẩu xác nhận':'Hiện mật khẩu xác nhận'} aria-pressed={confirmVisible} onClick={()=>setConfirmVisible(!confirmVisible)}>{confirmVisible?<EyeOff size={19}/>:<Eye size={19}/>}</button></div>{confirm && <small id={id+'match'} className={confirm===password?styles.match:styles.required} role="status">{confirm===password?'Mật khẩu xác nhận đã khớp.':'Mật khẩu xác nhận chưa khớp.'}</small>}</div>}
+        </fieldset>
+        {error && <div className={styles.error} role="alert">{error}</div>}
+        <button type="submit" className={styles.submit} disabled={busy}>{busy?'Đang xử lý…':isRegister?'Tạo tài khoản':'Đăng nhập'}{!busy&&<ArrowRight size={19}/>}</button>
+      </form>
+      {!organizer && <><div className={styles.divider}><span>hoặc tiếp tục với</span></div><GoogleLoginButton text="Tiếp tục với Google" onSuccess={onSuccess} redirectTo={destination || '/tournaments'}/></>}
+      <p className={styles.note}>Các trường có dấu {required} là bắt buộc.</p>
+    </section>
+  </div>;
+}

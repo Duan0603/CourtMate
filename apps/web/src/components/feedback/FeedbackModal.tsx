@@ -105,7 +105,7 @@ export function FeedbackModal({ isOpen, onClose, onSuccess }: FeedbackModalProps
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top header bar */}
-        <div className="shrink-0 bg-gradient-to-r from-primary to-primary-dark text-white p-6 sm:p-7 relative">
+        <div className="shrink-0 bg-primary text-white p-6 sm:p-7 relative">
           <button
             onClick={onClose}
             type="button"
@@ -135,7 +135,7 @@ export function FeedbackModal({ isOpen, onClose, onSuccess }: FeedbackModalProps
         <div className="overflow-y-auto">
           {isSubmitted ? (
             <div className="p-10 flex flex-col items-center justify-center text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+              <div className="w-16 h-16 rounded-full bg-accent-baby text-primary flex items-center justify-center">
                 <CheckCircle2 size={36} />
               </div>
               <h4 className="text-xl font-bold text-ink">
@@ -148,15 +148,15 @@ export function FeedbackModal({ isOpen, onClose, onSuccess }: FeedbackModalProps
           ) : (
             <form onSubmit={handleSubmit} className="p-6 sm:p-7 space-y-5">
               {errorMsg && (
-                <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 text-red-700 text-xs font-semibold border border-red-200">
+                <div role="alert" className="flex items-center gap-2 p-3 rounded-xl bg-accent-tan text-primary text-xs font-semibold border border-ink">
                   <AlertCircle size={16} className="shrink-0" />
                   <span>{errorMsg}</span>
                 </div>
               )}
 
               {/* Rating Stars */}
-              <div className="flex flex-col items-center justify-center py-2.5 bg-slate-50 rounded-2xl border border-slate-100">
-                <span className="text-xs font-semibold text-[#667085] uppercase tracking-wider mb-2">
+              <div className="flex flex-col items-center justify-center py-2.5 bg-white rounded-2xl border border-ink">
+                <span className="text-xs font-semibold text-[#3f3f3f] uppercase tracking-wider mb-2">
                   Mức độ hài lòng của bạn
                 </span>
                 <div className="flex items-center gap-2">
@@ -165,6 +165,8 @@ export function FeedbackModal({ isOpen, onClose, onSuccess }: FeedbackModalProps
                     return (
                       <button
                         key={star}
+                        aria-label={`${star} sao`}
+                        aria-pressed={rating === star}
                         type="button"
                         onMouseEnter={() => setHoverRating(star)}
                         onMouseLeave={() => setHoverRating(0)}
@@ -175,22 +177,22 @@ export function FeedbackModal({ isOpen, onClose, onSuccess }: FeedbackModalProps
                           size={28}
                           className={`${
                             active
-                              ? 'fill-amber-400 text-amber-400 drop-shadow-card'
-                              : 'text-slate-300'
+                              ? 'fill-primary text-primary drop-shadow-card'
+                              : 'text-muted'
                           } transition-colors`}
                         />
                       </button>
                     );
                   })}
                 </div>
-                <span className="text-xs font-bold text-amber-600 mt-2">
+                <span className="text-xs font-bold text-primary mt-2">
                   {RATING_LABELS[hoverRating || rating]}
                 </span>
               </div>
 
               {/* Category selection */}
               <div>
-                <label className="block text-xs font-bold text-[#344054] uppercase tracking-wider mb-2">
+                <label className="block text-xs font-bold text-[#111111] uppercase tracking-wider mb-2">
                   Chủ đề góp ý
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -202,7 +204,7 @@ export function FeedbackModal({ isOpen, onClose, onSuccess }: FeedbackModalProps
                       className={`cm-button text-xs px-3 py-1.5 rounded-full font-medium transition-all ${
                         category === cat
                           ? 'bg-primary text-white shadow-sm'
-                          : 'bg-slate-100 text-muted hover:bg-slate-200'
+                          : 'bg-white text-muted hover:bg-white'
                       }`}
                     >
                       {cat}
@@ -214,21 +216,21 @@ export function FeedbackModal({ isOpen, onClose, onSuccess }: FeedbackModalProps
               {/* User Info Fields */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-[#344054] uppercase tracking-wider mb-1">
-                    Họ và tên <span className="text-red-500">*</span>
+                  <label className="block text-xs font-bold text-[#111111] uppercase tracking-wider mb-1">
+                    Họ và tên <span className="text-primary">*</span>
                   </label>
                   <input
                     type="text"
                     value={userName}
                     onChange={(e) => setUserName(e.target.value)}
                     placeholder="Ví dụ: Nguyễn Văn An"
-                    className="cm-control w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                    className="cm-control w-full px-3.5 py-2.5 rounded-xl border border-ink text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-[#344054] uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-[#111111] uppercase tracking-wider mb-1">
                     Môn thể thao / Vai trò
                   </label>
                   <input
@@ -236,22 +238,22 @@ export function FeedbackModal({ isOpen, onClose, onSuccess }: FeedbackModalProps
                     value={userRole}
                     onChange={(e) => setUserRole(e.target.value)}
                     placeholder="Ví dụ: Pickleball Sơn Trà"
-                    className="cm-control w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                    className="cm-control w-full px-3.5 py-2.5 rounded-xl border border-ink text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   />
                 </div>
               </div>
 
               {/* Comment Textarea */}
               <div>
-                <label className="block text-xs font-bold text-[#344054] uppercase tracking-wider mb-1">
-                  Nội dung cảm nhận <span className="text-red-500">*</span>
+                <label className="block text-xs font-bold text-[#111111] uppercase tracking-wider mb-1">
+                  Nội dung cảm nhận <span className="text-primary">*</span>
                 </label>
                 <textarea
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   rows={3}
                   placeholder="Chia sẻ trải nghiệm của bạn khi ghép trận, tìm đối thủ, đặt sân hoặc tham gia giải đấu trên CourtMate..."
-                  className="cm-control w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none"
+                  className="cm-control w-full px-3.5 py-2.5 rounded-xl border border-ink text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none"
                   required
                 />
               </div>
@@ -261,7 +263,7 @@ export function FeedbackModal({ isOpen, onClose, onSuccess }: FeedbackModalProps
                 <button
                   type="button"
                   onClick={onClose}
-                  className="cm-button px-5 py-2.5 rounded-full border border-slate-200 text-sm font-semibold text-muted hover:bg-slate-50 transition-colors"
+                  className="cm-button px-5 py-2.5 rounded-full border border-ink text-sm font-semibold text-muted hover:bg-white transition-colors"
                 >
                   Hủy
                 </button>

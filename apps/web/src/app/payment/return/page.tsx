@@ -114,12 +114,12 @@ function PaymentReturnContent() {
   if (!orderId && !tournamentId && !statusParam && !resultCode && !code) {
     return (
       <div className="bg-canvas min-h-screen py-20 px-4">
-        <div className="max-w-md mx-auto bg-surface shadow-card rounded-3xl border border-slate-200/80 p-8  text-center space-y-6">
-          <div className="w-16 h-16 rounded-full bg-slate-100 text-muted flex items-center justify-center mx-auto">
+        <div className="max-w-md mx-auto bg-surface shadow-card rounded-3xl border border-ink p-8  text-center space-y-6">
+          <div className="w-16 h-16 rounded-full bg-white text-muted flex items-center justify-center mx-auto">
             <AlertCircle className="w-8 h-8" />
           </div>
           <h1 className="text-xl font-bold text-navy">Không tìm thấy thông tin thanh toán</h1>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-muted">
             Chưa có giao dịch để hiển thị.
           </p>
           <Link
@@ -136,19 +136,19 @@ function PaymentReturnContent() {
 
   return (
     <div className="bg-canvas min-h-screen py-20 px-4">
-      <div className="max-w-md mx-auto bg-surface shadow-card rounded-3xl border border-slate-200/80 p-8  text-center space-y-6">
+      <div className="max-w-md mx-auto bg-surface shadow-card rounded-3xl border border-ink p-8  text-center space-y-6">
 
         {/* Status Icon */}
         {isSuccess ? (
-          <div className="w-20 h-20 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center mx-auto shadow-inner">
+          <div className="w-20 h-20 rounded-full bg-accent-baby text-primary flex items-center justify-center mx-auto shadow-inner">
             <CheckCircle2 className="w-10 h-10" />
           </div>
         ) : isCancelled ? (
-          <div className="w-20 h-20 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center mx-auto shadow-inner">
+          <div className="w-20 h-20 rounded-full bg-accent-tan text-primary flex items-center justify-center mx-auto shadow-inner">
             <AlertCircle className="w-10 h-10" />
           </div>
         ) : (
-          <div className="w-20 h-20 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mx-auto shadow-inner">
+          <div className="w-20 h-20 rounded-full bg-accent-tan text-primary flex items-center justify-center mx-auto shadow-inner">
             <XCircle className="w-10 h-10" />
           </div>
         )}
@@ -162,7 +162,7 @@ function PaymentReturnContent() {
               ? 'Đã hủy thanh toán'
               : 'Thanh toán chưa thành công'}
           </h1>
-          <p className="text-sm text-slate-500 mt-2">
+          <p className="text-sm text-muted mt-2">
             {isSuccess
               ? 'Đăng ký của bạn đã được ghi nhận.'
               : messageDisplay || (isCancelled
@@ -172,7 +172,7 @@ function PaymentReturnContent() {
         </div>
 
         {/* Transaction Card */}
-        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2 text-xs text-left">
+        <div className="p-4 rounded-2xl bg-white border border-ink space-y-2 text-xs text-left">
           {orderId && (
             <div className="flex justify-between py-1">
               <span className="text-muted">Mã đơn hàng:</span>
@@ -189,10 +189,10 @@ function PaymentReturnContent() {
             <span className="text-muted">Trạng thái:</span>
             <span className={`font-semibold ${
               isSuccess
-                ? 'text-emerald-600'
+                ? 'text-primary'
                 : isCancelled
-                ? 'text-amber-600'
-                : 'text-rose-600'
+                ? 'text-primary'
+                : 'text-primary'
             }`}>
               {statusDisplay}
             </span>
@@ -223,7 +223,7 @@ function PaymentReturnContent() {
 
           <Link
             href="/tournaments"
-            className="w-full py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs flex items-center justify-center gap-2 transition"
+            className="w-full py-3 rounded-xl bg-white hover:bg-white text-muted font-semibold text-xs flex items-center justify-center gap-2 transition"
           >
             <Home className="w-4 h-4" />
             <span>Xem giải đấu</span>

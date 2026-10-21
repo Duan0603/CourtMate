@@ -79,7 +79,7 @@ export class RegistrationsService {
     }
 
     // Send notification when registration is ACTUALLY approved (status changed to APPROVED)
-    if (status === RegistrationStatus.APPROVED && oldStatus !== RegistrationStatus.APPROVED) {
+    if (status !== oldStatus) {
       try {
         const DEFAULT_PLAYER_ID = '64957e841234567890abcdef';
         if (reg.playerId === DEFAULT_PLAYER_ID) {
@@ -87,12 +87,12 @@ export class RegistrationsService {
         } else {
           const tour = await this.tournamentModel.findById(reg.tournamentId).exec();
           await this.notificationsService.send({
-            type: 'REGISTRATION_APPROVED',
+            type: 'REGISTRATION_' + status,
             userId: reg.playerId,
-            title: 'Đăng ký được duyệt',
+            title: status === RegistrationStatus.APPROVED ? 'Đăng ký được duyệt' : 'Đăng ký có cập nhật',
             body: tour?.title
-              ? `Đơn đăng ký giải "${tour.title}" của bạn đã được duyệt`
-              : 'Đơn đăng ký của bạn đã được duyệt',
+              ? `Đơn đăng ký giải "${tour.title}" của bạn: ${status}`
+              : 'Đơn đăng ký của bạn: ' + status,
             link: `/tournaments/${reg.tournamentId}`,
           });
         }

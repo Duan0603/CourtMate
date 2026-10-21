@@ -86,4 +86,15 @@ export class UsersController {
     if (!user) throw new NotFoundException('User profile not found');
     return user;
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('re-apply-organizer')
+  async reApplyOrganizer(
+    @Req() req: any,
+    @Body() body: { name?: string; certificateUrl?: string; sports?: string[] },
+  ) {
+    const user = await this.usersService.reApplyOrganizer(req.user.email, body);
+    if (!user) throw new NotFoundException('User profile not found');
+    return user;
+  }
 }

@@ -30,17 +30,16 @@ export function SportsShowcase3D() {
   return (
     <div
       id="story-pin-container"
-      className="h-screen w-full relative overflow-hidden bg-[#FAFAFA]"
+      className="h-screen w-full relative overflow-hidden bg-white"
     >
       {/* Dynamic Background Radial Glow */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(30,90,168,0.12),transparent_70%)] z-0 pointer-events-none" />
 
       {/* 3D CANVAS */}
       <div className="absolute inset-0 z-10">
         <Canvas camera={{ position: [0, 0, 8.2], fov: 45 }}>
           <ambientLight intensity={1.3} />
           <directionalLight position={[6, 12, 6]} intensity={2.4} castShadow />
-          <directionalLight position={[-6, 4, 4]} intensity={1.0} color="#38bdf8" />
+          <directionalLight position={[-6, 4, 4]} intensity={1.0} color="#1848ff" />
           <Environment preset="city" />
           <Suspense fallback={null}>
             <Sports3DScene isAuthenticated={isAuthenticated} />

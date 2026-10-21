@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
+  ArrowLeft,
   MessageSquare,
   Search,
   Send,
@@ -46,6 +47,9 @@ const partnerOf = (roomId: string | undefined, myId: string) => {
 function ChatContent() {
   const { user, token, isAuthenticated } = useAuth();
   const [friends,setFriends] = useState<User[]>([]);
+  const [mobileConversationOpen, setMobileConversationOpen] = useState(false);
+  const mobileConversationOpenRef = useRef(false);
+  const messageStreamRef = useRef<HTMLDivElement>(null);
   const [activeFriend, setActiveFriend] = useState<User | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
@@ -70,6 +74,8 @@ function ChatContent() {
   const targetUserAvatar = searchParams.get('avatar');
   const targetUserRole = searchParams.get('role');
 
+  useEffect(() => { mobileConversationOpenRef.current = mobileConversationOpen; }, [mobileConversationOpen]);
+
   useEffect(() => {
     activeFriendRef.current = activeFriend;
   }, [activeFriend]);
@@ -80,7 +86,8 @@ function ChatContent() {
 
   const scrollToBottom = () => {
     setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      const stream = messageStreamRef.current;
+      stream?.scrollTo({ top: stream.scrollHeight, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
     }, 50);
   };
 
@@ -120,6 +127,7 @@ function ChatContent() {
         }
         setFriends((prev) => merge(prev, list));
         setActiveFriend(target!);
+        setMobileConversationOpen(true);
       } else {
         setFriends((prev) => merge(prev, list));
         if (list.length > 0 && !activeFriendRef.current) {
@@ -141,12 +149,21 @@ function ChatContent() {
   const markRoomSeen = useCallback(() => {
     const roomId = activeRoomRef.current;
     if (!roomId || document.visibilityState !== 'visible') return;
+    if (window.matchMedia('(max-width: 767px)').matches && !mobileConversationOpenRef.current) return;
     getSocket().emit('mark_seen', { roomId });
   }, []);
+
+  useEffect(() => {
+    if (!mobileConversationOpen) return;
+    markRoomSeen();
+    const stream = messageStreamRef.current;
+    stream?.scrollTo({ top: stream.scrollHeight });
+  }, [mobileConversationOpen, markRoomSeen]);
 
   const openConversation = useCallback((friend: User) => {
     const friendId = getUserId(friend);
     setActiveFriend(friend);
+    setMobileConversationOpen(true);
     setUnreadCountsMap((prev) => ({ ...prev, [friendId]: 0 }));
     setNewMessageBanner((banner) => (banner?.senderId === friendId ? null : banner));
   }, []);
@@ -275,7 +292,7 @@ function ChatContent() {
       });
       setUnreadCountsMap((prev) => {
         const map = { ...prev };
-        const activeId = getUserId(activeFriendRef.current);
+        const activeId = window.matchMedia('(max-width: 767px)').matches && !mobileConversationOpenRef.current ? '' : getUserId(activeFriendRef.current);
         chats.forEach((rc) => {
           map[getUserId(rc)] = getUserId(rc) === activeId ? 0 : rc.unreadCount || 0;
         });
@@ -304,7 +321,7 @@ function ChatContent() {
       });
 
       // Already looking at this conversation: receive_message handles the stream
-      if (getUserId(activeFriendRef.current) === senderId) return;
+      if (getUserId(activeFriendRef.current) === senderId && (!window.matchMedia('(max-width: 767px)').matches || mobileConversationOpenRef.current)) return;
 
       setUnreadCountsMap((prev) => ({ ...prev, [senderId]: (prev[senderId] || 0) + 1 }));
       setNewMessageBanner({
@@ -322,7 +339,7 @@ function ChatContent() {
           }}
           className={`${t.visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} transition-all duration-300 max-w-sm w-full bg-white shadow-2xl rounded-2xl border border-primary/30 p-3.5 flex items-center gap-3 cursor-pointer hover:border-primary hover:shadow-lg`}
         >
-          <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-full bg-accent-baby text-primary flex items-center justify-center shrink-0">
             <MessageSquare className="w-5 h-5 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
@@ -330,7 +347,7 @@ function ChatContent() {
               <p className="text-xs font-bold text-navy truncate">{incoming.senderName || 'Tin nhắn mới'}</p>
               <span className="text-[10px] text-primary font-bold ml-2 shrink-0">Xem ngay</span>
             </div>
-            <p className="text-xs text-slate-600 truncate mt-0.5">{incoming.content}</p>
+            <p className="text-xs text-muted truncate mt-0.5">{incoming.content}</p>
           </div>
         </div>
       ), { id: `chat-${senderId}`, duration: 5000 });
@@ -495,13 +512,13 @@ function ChatContent() {
 
   if (!isAuthenticated && !user) {
     return (
-      <div className="bg-[#F8FAFC] flex-1 flex items-center justify-center p-4 min-h-[calc(100vh-65px)]">
-        <div className="max-w-md w-full bg-white rounded-3xl border border-slate-200 p-8 text-center shadow-lg space-y-4">
-          <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
+      <div className="bg-white flex-1 flex items-center justify-center p-4 min-h-[calc(100dvh-var(--header-height))]">
+        <div className="max-w-md w-full bg-white rounded-3xl border border-ink p-8 text-center shadow-lg space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-accent-baby text-primary flex items-center justify-center mx-auto">
             <MessageSquare className="w-8 h-8" />
           </div>
           <h2 className="text-xl font-bold text-navy">Đăng Nhập Để Trò Chuyện</h2>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted">
             Bạn cần đăng nhập để kết nối và gửi tin nhắn trực tiếp đến bạn chơi và ban tổ chức giải đấu.
           </p>
           <a
@@ -518,44 +535,44 @@ function ChatContent() {
   const activeFriendId = activeFriend?.id || (activeFriend as any)?._id;
 
   return (
-    <div className="bg-[#F8FAFC] flex-1 flex flex-col h-[calc(100vh-65px)]">
-      <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4 flex-1 flex flex-col">
+    <div className="cm-chat bg-white flex-1 flex flex-col">
+      <div className="page-container py-4 flex-1 flex flex-col min-h-0">
         
         {/* Chat Desktop Split-view container */}
-        <div className="flex-1 bg-white rounded-3xl border border-slate-200/80 shadow-md flex overflow-hidden">
+        <div className="flex-1 min-h-0 min-w-0 bg-white rounded-3xl border border-ink shadow-md flex overflow-hidden">
           
           {/* Left Pane: Contacts & Search (350px width) */}
-          <div className="w-80 sm:w-96 border-r border-slate-200 flex flex-col bg-slate-50/50">
+          <div className={`${mobileConversationOpen ? 'hidden md:flex' : 'flex'} w-full md:w-80 lg:w-96 shrink-0 min-h-0 min-w-0 md:border-r border-ink flex-col bg-white`}>
             
             {/* Header & Search */}
-            <div className="p-4 border-b border-slate-200 bg-white space-y-3">
+            <div className="p-4 border-b border-ink bg-white space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-bold text-navy">Tin nhắn & Hội thoại</h2>
-                <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                  <span className={`w-2 h-2 rounded-full ${connected ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'}`} />
+                <div className="flex items-center gap-1.5 text-xs text-muted">
+                  <span className={`w-2 h-2 rounded-full ${connected ? 'bg-primary' : 'bg-primary animate-pulse'}`} />
                   <span>{connected ? 'Trực tuyến' : 'Sẵn sàng'}</span>
                 </div>
               </div>
 
               <div className="relative">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Search className="w-4 h-4 text-muted absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   placeholder="Tìm BTC, bạn bè hoặc người chơi..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-100 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-navy"
+                  className="w-full pl-9 pr-3 py-1.5 text-xs bg-white border border-ink rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-navy"
                 />
               </div>
             </div>
 
             {/* Contacts List */}
-            <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
+            <div className="flex-1 overflow-y-auto divide-y divide-ink">
               {filteredFriends.length === 0 && otherUsers.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center p-6 text-slate-400">
-                  <div className="w-full h-full border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center bg-slate-50/50 p-6">
-                    <MessageSquare className="w-10 h-10 mb-3 text-slate-300" />
-                    <p className="text-sm font-medium text-slate-500 text-center">Chưa có cuộc trò chuyện nào</p>
+                <div className="h-full flex flex-col items-center justify-center p-6 text-muted">
+                  <div className="w-full h-full border-2 border-dashed border-ink rounded-2xl flex flex-col items-center justify-center bg-white p-6">
+                    <MessageSquare className="w-10 h-10 mb-3 text-muted" />
+                    <p className="text-sm font-medium text-muted text-center">Chưa có cuộc trò chuyện nào</p>
                     <p className="text-xs text-center mt-1">Hãy bắt đầu nhắn tin để khởi động cuộc trò chuyện nhé!</p>
                   </div>
                 </div>
@@ -582,7 +599,7 @@ function ChatContent() {
                     key={`${friendId}-${index}`}
                     onClick={() => handleSelectFriend(friend)}
                     className={`w-full p-3.5 flex items-center gap-3 text-left transition relative ${
-                      isActive ? 'bg-[#EFF4FF]' : 'hover:bg-slate-100/80'
+                      isActive ? 'bg-white' : 'hover:bg-white'
                     }`}
                   >
                     <div className="relative shrink-0">
@@ -591,7 +608,7 @@ function ChatContent() {
                         alt={friend.name}
                         className="w-11 h-11 rounded-full object-cover ring-2 ring-white shadow-xs"
                       />
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white absolute bottom-0 right-0" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-primary border-2 border-white absolute bottom-0 right-0" />
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -600,18 +617,18 @@ function ChatContent() {
                           {friend.name}
                         </strong>
                         {displayTime && (
-                          <span className="text-[10px] text-slate-400 shrink-0 whitespace-nowrap">
+                          <span className="text-[10px] text-muted shrink-0 whitespace-nowrap">
                             {displayTime}
                           </span>
                         )}
                       </div>
 
                       <div className="flex items-center justify-between gap-2 mt-0.5">
-                        <p className={`text-[11px] truncate ${unreadCount > 0 ? 'text-primary font-bold' : (!friendLastMsg ? 'text-primary/70 italic' : 'text-slate-500')}`}>
+                        <p className={`text-[11px] truncate ${unreadCount > 0 ? 'text-primary font-bold' : (!friendLastMsg ? 'text-primary italic' : 'text-muted')}`}>
                           {displayLastMsg}
                         </p>
                         {unreadCount > 0 && (
-                          <span className="min-w-[18px] h-4.5 px-1.5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0 shadow-xs animate-pulse">
+                          <span className="min-w-[18px] h-4.5 px-1.5 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center shrink-0 shadow-xs animate-pulse">
                             {unreadCount > 9 ? '9+' : unreadCount}
                           </span>
                         )}
@@ -623,14 +640,14 @@ function ChatContent() {
 
                 {otherUsers.length > 0 && (
                   <div>
-                    <p className="px-3.5 pt-3 pb-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                    <p className="px-3.5 pt-3 pb-1.5 text-[10px] font-bold uppercase tracking-wide text-muted">
                       Người dùng khác
                     </p>
                     {otherUsers.map((u) => (
                       <button
                         key={`search-${getUserId(u)}`}
                         onClick={() => handleStartChat(u)}
-                        className="w-full p-3.5 flex items-center gap-3 text-left transition hover:bg-slate-100/80"
+                        className="w-full p-3.5 flex items-center gap-3 text-left transition hover:bg-white"
                       >
                         <img
                           src={u.avatarUrl || DEFAULT_AVATAR}
@@ -639,7 +656,7 @@ function ChatContent() {
                         />
                         <div className="flex-1 min-w-0">
                           <strong className="text-xs font-bold text-navy truncate block">{u.name}</strong>
-                          <p className="text-[11px] text-primary/70 italic mt-0.5">Bắt đầu trò chuyện</p>
+                          <p className="text-[11px] text-primary italic mt-0.5">Bắt đầu trò chuyện</p>
                         </div>
                       </button>
                     ))}
@@ -653,38 +670,39 @@ function ChatContent() {
 
           {/* Right Pane: Active Chat Room */}
           {activeFriend ? (
-            <div className="flex-1 flex flex-col bg-white">
+            <div className={`${mobileConversationOpen ? 'flex' : 'hidden md:flex'} flex-1 min-h-0 min-w-0 flex-col bg-white`}>
               
               {/* Chat Room Top Bar */}
-              <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-white/80 backdrop-blur-sm">
-                <div className="flex items-center gap-3">
+              <div className="p-3 sm:p-4 border-b border-ink flex items-center justify-between bg-white">
+                <div className="flex min-w-0 items-center gap-3">
+                  <button type="button" aria-label="Quay lại danh sách hội thoại" onClick={() => setMobileConversationOpen(false)} className="cm-button md:hidden shrink-0"><ArrowLeft size={18} aria-hidden="true" /></button>
                   <img
                     src={activeFriend.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80'}
                     alt={activeFriend.name}
                     className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/20"
                   />
-                  <div>
+                  <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <h3 className="font-bold text-navy text-sm">{activeFriend.name}</h3>
+                      <h3 className="font-bold text-navy text-sm truncate">{activeFriend.name}</h3>
                       {activeFriend.role === UserRole.ORGANIZER && (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-accent-tan text-primary">
                           BTC
                         </span>
                       )}
                     </div>
-                    <span className="text-[11px] text-emerald-600 font-medium">Đang hoạt động</span>
+                    <span className="text-[11px] text-primary font-medium">Đang hoạt động</span>
                   </div>
                 </div>
               </div>
 
               {/* Notification Banner when message arrives from another friend while chatting */}
               {newMessageBanner && newMessageBanner.senderId !== activeFriendId && (
-                <div className="mx-4 mt-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-2">
+                <div className="mx-4 mt-3 p-3 bg-canvas border border-ink rounded-2xl flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-2">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-ping shrink-0" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-primary animate-ping shrink-0" />
                     <div className="text-xs truncate">
                       <span className="font-bold text-navy">{newMessageBanner.senderName}: </span>
-                      <span className="text-slate-600 italic">&ldquo;{newMessageBanner.content}&rdquo;</span>
+                      <span className="text-muted italic">&ldquo;{newMessageBanner.content}&rdquo;</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0 ml-3">
@@ -701,7 +719,7 @@ function ChatContent() {
                     </button>
                     <button
                       onClick={() => setNewMessageBanner(null)}
-                      className="p-1 text-slate-400 hover:text-slate-600 rounded-lg"
+                      className="p-1 text-muted hover:text-muted rounded-lg"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -710,9 +728,9 @@ function ChatContent() {
               )}
 
               {/* Message Stream */}
-              <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-slate-50/40">
+              <div ref={messageStreamRef} className="cm-chat-stream flex-1 min-h-0 min-w-0 p-3 sm:p-6 overflow-y-auto space-y-4 bg-white">
                 {messages.length === 0 && (
-                  <div className="flex items-center gap-3 p-4 bg-[#23272F] rounded-2xl mx-auto max-w-sm mt-4 shadow-sm">
+                  <div className="flex items-center gap-3 p-4 bg-primary rounded-2xl mx-auto max-w-sm mt-4 shadow-sm">
                     <img
                       src={activeFriend.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80'}
                       alt={activeFriend.name}
@@ -734,11 +752,11 @@ function ChatContent() {
                       className={`flex flex-col ${isMine ? 'items-end' : 'items-start'}`}
                     >
                       <div
-                        className={`max-w-md px-4 py-2.5 rounded-2xl text-[15px] leading-snug whitespace-pre-wrap break-words ${
+                        className={`max-w-[85%] sm:max-w-md border-2 border-ink px-4 py-2.5 rounded-2xl text-[15px] leading-snug whitespace-pre-wrap break-words ${
                           isMine
-                            ? 'bg-[#3B82F6] text-white rounded-br-sm'
-                            : 'bg-[#303033] text-white rounded-bl-sm shadow-sm'
-                        } ${msg.status === 'sending' ? 'opacity-70' : ''} ${msg.status === 'failed' ? 'ring-2 ring-rose-400' : ''}`}
+                            ? 'bg-primary text-white rounded-br-sm'
+                            : 'bg-accent-baby text-ink rounded-bl-sm shadow-sm'
+                        } ${msg.status === 'sending' ? 'opacity-70' : ''} ${msg.status === 'failed' ? 'ring-2 ring-primary' : ''}`}
                       >
                         {msg.content}
                       </div>
@@ -748,12 +766,12 @@ function ChatContent() {
                         <button
                           type="button"
                           onClick={() => handleRetry(msg)}
-                          className="mt-1 mr-1 text-[11px] font-semibold text-rose-500 hover:underline"
+                          className="mt-1 mr-1 text-[11px] font-semibold text-primary hover:underline"
                         >
                           Gửi lỗi · Thử lại
                         </button>
                       ) : isLastMine && (
-                        <div className="flex items-center gap-1 mt-1 text-[11px] text-slate-500 font-medium mr-1">
+                        <div className="flex items-center gap-1 mt-1 text-[11px] text-muted font-medium mr-1">
                           <span>
                             {msg.status === 'sending'
                               ? 'Đang gửi...'
@@ -768,7 +786,7 @@ function ChatContent() {
               </div>
 
               {/* Bottom Message Input Bar */}
-              <div className="p-4 border-t border-slate-200 bg-white">
+              <div className="p-4 border-t border-ink bg-white">
                 <form onSubmit={handleSendMessage} className="flex items-center gap-2">
                   <input
                     type="text"
@@ -776,12 +794,14 @@ function ChatContent() {
                     value={inputText}
                     maxLength={MAX_MESSAGE_LENGTH}
                     onChange={(e) => setInputText(e.target.value)}
-                    className="flex-1 px-4 py-2.5 text-sm bg-slate-100 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white text-navy transition"
+                    aria-label="Nội dung tin nhắn"
+                    className="cm-control flex-1 min-w-0 px-4 py-2.5 text-sm bg-white border border-ink rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white text-navy transition"
                   />
                   <button
                     type="submit"
                     disabled={!inputText.trim()}
-                    className="w-10 h-10 rounded-2xl bg-primary hover:bg-primary-dark text-white flex items-center justify-center transition disabled:opacity-40 shadow-sm"
+                    aria-label="Gửi tin nhắn"
+                    className="cm-button h-12 w-12 shrink-0 rounded-2xl bg-primary hover:bg-primary-dark text-white flex items-center justify-center transition disabled:opacity-40 shadow-sm"
                   >
                     <Send className="w-4 h-4" />
                   </button>
@@ -790,13 +810,13 @@ function ChatContent() {
 
             </div>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center bg-slate-50 p-8">
-              <div className="w-full max-w-md border-2 border-dashed border-slate-200 rounded-3xl p-10 flex flex-col items-center justify-center bg-white shadow-sm">
-                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+            <div className="hidden md:flex flex-1 min-w-0 flex-col items-center justify-center bg-white p-8">
+              <div className="w-full max-w-md border-2 border-dashed border-ink rounded-3xl p-10 flex flex-col items-center justify-center bg-white shadow-sm">
+                <div className="w-16 h-16 rounded-full bg-accent-baby flex items-center justify-center mb-4">
                   <MessageSquare className="w-8 h-8 text-primary" />
                 </div>
                 <h3 className="text-lg font-bold text-navy mb-1 text-center">Chào mừng đến với Trò chuyện</h3>
-                <p className="text-sm text-slate-500 text-center">Hãy bắt đầu nhắn tin với Ban tổ chức để khởi động cuộc trò chuyện nhé!</p>
+                <p className="text-sm text-muted text-center">Hãy bắt đầu nhắn tin với Ban tổ chức để khởi động cuộc trò chuyện nhé!</p>
               </div>
             </div>
           )}

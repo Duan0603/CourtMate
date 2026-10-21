@@ -14,6 +14,7 @@
 .ctaCard {
   padding: clamp(24px, 3vw, 40px);
   border-radius: var(--cm-radius-feature);
+  border: 3px solid #111;
   background: rgb(var(--cm-primary));
   color: white;
   box-shadow: var(--cm-shadow-interactive);
@@ -31,8 +32,9 @@
   min-height: 52px;
   padding: 14px 20px;
   border-radius: var(--cm-radius-control);
-  background: white;
-  color: rgb(var(--cm-primary));
+  border: 2px solid #111;
+  background: rgb(var(--cm-baby));
+  color: #111;
   font-size: 16px;
   font-weight: 700;
   box-shadow: var(--cm-shadow-subtle);
@@ -45,3 +47,8 @@
   .ctaCard h2 { font-size: 26px; margin-bottom: 20px; }
 }
 @media (max-height: 550px) and (min-width: 768px) { .ctaCard { padding: 20px; } .ctaCard h2 { font-size: 26px; margin-bottom: 18px; } }
+
+.ctaButton { transition: translate var(--cm-duration) var(--cm-ease), box-shadow var(--cm-duration) var(--cm-ease); }
+.ctaButton:active:not(:disabled) { translate: 2px 2px; box-shadow: none; }
+.ctaButton:disabled { translate: none; box-shadow: none; opacity: .55; }
+@media (prefers-reduced-motion: reduce) { .ctaButton:active:not(:disabled) { translate: none; } }

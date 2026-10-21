@@ -1,9 +1,10 @@
 'use client';
 
+import { DirectoryEmptyState } from '../../components/shared/DirectoryEmptyState';
 import { PageContainer } from '../../components/layout/PageContainer';
 
 import { ContentSkeleton } from '../../components/loading/ContentSkeleton';
-import React, { useState, useEffect, Suspense, useRef } from 'react';
+import React, { useState, useEffect, Suspense, useRef, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
   Trophy,
@@ -16,18 +17,14 @@ import {
   SlidersHorizontal,
   Target,
   Check,
-  Sparkles,
-  Bell,
   RefreshCw,
   LayoutGrid,
   List as ListIcon
 } from 'lucide-react';
 import { Tournament, TournamentFilterDto, SportType, TournamentStatus } from '@courtmate/shared';
 import { tournamentsApi } from '../../lib/tournaments.api';
-import { emitFavoriteNotification } from '../../lib/notifications-api';
 import { TournamentCard } from '../../components/tournaments/TournamentCard';
 import { TournamentFilters } from '../../components/tournaments/TournamentFilters';
-import { notification } from 'antd';
 import { GuestActionModal } from '../../components/shared/GuestActionModal';
 import { useAuth } from '../../context/AuthContext';
 import { useSmartAsync } from '../../context/useSmartAsync';
@@ -43,19 +40,15 @@ const POPULAR_CITIES = [
 ];
 
 function TournamentsContent() {
-  const [notificationApi, notificationHolder] = notification.useNotification();
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user, isAuthenticated, toggleBookmark } = useAuth();
   const [loginOpen, setLoginOpen] = useState(false);
 
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const {
-    loading,
-    isThresholdElapsed,
-    error,
-    execute,
-  } = useSmartAsync({ initialLoading: true });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<any>(null);
+  const activeRequestIdRef = useRef(0);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -94,33 +87,43 @@ function TournamentsContent() {
 
   const bookmarkedIds = isAuthenticated ? user?.bookmarkedTournaments || [] : [];
 
-  // Fetch data
-  const fetchTournaments = async () => {
+  // Reliable Fetch
+  const fetchTournaments = useCallback(async () => {
+    const requestId = ++activeRequestIdRef.current;
+    setLoading(true);
+    setError(null);
     try {
-      await execute(async () => {
-        const filters: TournamentFilterDto = {};
-        if (keyword) filters.keyword = keyword;
-        if (sport) filters.sport = sport as any;
-        if (city && city !== 'Tất cả') filters.city = city;
-        if (status) filters.status = status as any;
+      const filters: TournamentFilterDto = {};
+      if (keyword.trim()) filters.keyword = keyword.trim();
+      if (sport && sport !== 'ALL') filters.sport = sport as any;
+      if (city && city !== 'Tất cả' && city !== 'Tất cả khu vực') filters.city = city;
+      if (status && status !== 'ALL') filters.status = status as any;
 
-        const res = await tournamentsApi.getTournaments(filters);
-        let list = res.data;
+      const res = await tournamentsApi.getTournaments(filters);
+      const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
 
-        // Default sorting by date
-        list = [...list].sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+      // Default sorting by date
+      const sorted = [...list].sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
 
-        setTournaments(list);
-        setCurrentPage(1); // Reset to page 1 on filter change
-      });
-    } catch (err) {
-      console.error('Error fetching tournaments:', err);
+      if (requestId === activeRequestIdRef.current) {
+        setTournaments(sorted);
+        setLoading(false);
+      }
+    } catch (err: any) {
+      if (requestId === activeRequestIdRef.current) {
+        console.error('Error fetching tournaments:', err);
+        setError(err);
+        setLoading(false);
+      }
     }
-  };
+  }, [keyword, sport, city, status]);
 
   useEffect(() => {
-    fetchTournaments();
-  }, [keyword, sport, city, status, level, maxFee, isFreeOnly]);
+    const timer = setTimeout(() => {
+      fetchTournaments();
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [fetchTournaments]);
 
   const handleResetFilters = () => {
     setSport('');
@@ -144,21 +147,7 @@ function TournamentsContent() {
     const saved = await toggleBookmark(id);
     if (saved === wasSaved) return;
 
-    if (saved) {
-      const tour = tournaments.find((t) => t.id === id);
-      void emitFavoriteNotification({
-        type: 'FAVORITE_TOURNAMENT',
-        title: 'Yêu thích giải đấu',
-        body: `Đã lưu giải đấu "${tour?.title || 'Giải đấu'}" vào danh sách yêu thích.`,
-        link: `/tournaments/${id}`,
-      });
-    }
 
-    notificationApi.success({
-      message: saved ? 'Đã lưu thành công' : 'Đã bỏ lưu thành công',
-      placement: 'topRight',
-      duration: 3,
-    });
   };
 
   const handlePageChange = (newPage: number) => {
@@ -185,11 +174,8 @@ function TournamentsContent() {
 
   return (
     <div className="bg-canvas min-h-screen page-section relative overflow-hidden">
-      {notificationHolder}
 
       {/* Background Decorative Blur Orbs */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-1/3 right-10 w-80 h-80 bg-sky-400/5 rounded-full blur-3xl pointer-events-none" />
 
       <PageContainer className="relative z-10">
 
@@ -204,15 +190,15 @@ function TournamentsContent() {
         <div className="flex flex-col sm:flex-row items-center gap-3 mb-8">
 
           {/* Main Search Bar Container */}
-          <div className="flex flex-1 items-center bg-surface shadow-card rounded-2xl sm:rounded-full border border-slate-200/90  hover:border-primary/40 transition-all p-2 w-full">
+          <div className="cm-searchbar flex flex-1 items-center bg-surface shadow-card rounded-2xl sm:rounded-full border border-ink  hover:border-primary/40 transition-all p-2 w-full">
 
             {/* Dropdown City Selector */}
             <div className="relative shrink-0" ref={cityRef}>
               <button
                 type="button"
                 onClick={() => setIsCityOpen(!isCityOpen)}
-                className={`cm-button flex items-center gap-2 bg-slate-100/80 hover:bg-slate-100 text-navy font-bold text-xs sm:text-sm pl-3.5 pr-3 py-2.5 rounded-xl sm:rounded-full outline-none transition-all border ${
-                  isCityOpen ? 'border-primary bg-slate-100' : 'border-slate-200/60'
+                className={`cm-button flex items-center gap-2 bg-white hover:bg-white text-navy font-bold text-xs sm:text-sm pl-3.5 pr-3 py-2.5 rounded-xl sm:rounded-full outline-none transition-all border ${
+                  isCityOpen ? 'border-primary bg-white' : 'border-ink'
                 }`}
               >
                 <MapPin className="w-4 h-4 text-primary" />
@@ -223,7 +209,7 @@ function TournamentsContent() {
               </button>
 
               {isCityOpen && (
-                <div className="absolute top-full left-0 mt-2 w-52 bg-surface shadow-card rounded-2xl  border border-slate-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
+                <div className="absolute top-full left-0 mt-2 w-52 bg-surface shadow-card rounded-2xl  border border-ink py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
                   {POPULAR_CITIES.map((c) => {
                     const isSelected = city === c.val || (c.val === 'Tất cả' && (city === 'Tất cả' || city === 'Tất cả khu vực'));
                     return (
@@ -236,8 +222,8 @@ function TournamentsContent() {
                         }}
                         className={`cm-button w-full flex items-center justify-between px-4 py-2.5 text-xs sm:text-sm transition-colors ${
                           isSelected
-                            ? 'bg-primary/10 text-primary font-bold'
-                            : 'text-muted hover:bg-slate-50 font-semibold'
+                            ? 'bg-accent-baby text-primary font-bold'
+                            : 'text-muted hover:bg-white font-semibold'
                         }`}
                       >
                         <div className="flex items-center gap-2.5">
@@ -253,7 +239,7 @@ function TournamentsContent() {
             </div>
 
             {/* Vertical Divider */}
-            <div className="w-[1px] h-6 bg-slate-200 mx-2 shrink-0 hidden sm:block" />
+            <div className="w-[1px] h-6 bg-white mx-2 shrink-0 hidden sm:block" />
 
             {/* Keyword Input */}
             <div className="relative flex-1 flex items-center">
@@ -274,7 +260,7 @@ function TournamentsContent() {
                     setKeyword('');
                     setCurrentPage(1);
                   }}
-                  className="cm-button mr-2 text-muted hover:text-slate-600"
+                  className="cm-button mr-2 text-muted hover:text-muted"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -288,7 +274,7 @@ function TournamentsContent() {
             className={`cm-button shrink-0 flex items-center gap-2 px-5 py-3 rounded-2xl sm:rounded-full text-xs sm:text-sm font-bold transition-all  ${
               activeDrawerFiltersCount > 0
                 ? 'bg-primary text-white hover:bg-primary-dark border border-primary'
-                : 'bg-surface shadow-card text-navy border border-slate-200 hover:bg-slate-50 hover:border-slate-300'
+                : 'bg-surface shadow-card text-navy border border-ink hover:bg-white hover:border-ink'
             }`}
           >
             <SlidersHorizontal className="w-4 h-4" />
@@ -306,247 +292,85 @@ function TournamentsContent() {
             )}
           </button>
 
-          {/* View Mode Toggle */}
-          <div className="shrink-0 flex items-center bg-surface shadow-card border border-slate-200/90 rounded-2xl sm:rounded-full p-1 ">
+          {/* View Mode Toggle - Synchronized with Matches (Ảnh 1) */}
+          <div className="shrink-0 flex items-center bg-white shadow-[3px_3px_0px_0px_#000] border-2 border-black rounded-xl p-1 gap-1">
             <button
               onClick={() => setViewMode('grid')}
-              className={`cm-button p-2 rounded-xl sm:rounded-full transition-all ${
+              className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
                 viewMode === 'grid'
-                  ? 'bg-primary/10 text-primary shadow-sm'
-                  : 'text-muted hover:text-slate-600 hover:bg-slate-50'
+                  ? 'bg-primary text-white border-2 border-black shadow-[2px_2px_0px_0px_#000]'
+                  : 'text-black hover:bg-accent-baby'
               }`}
               title="Xem dạng lưới (5 cột)"
             >
-              <LayoutGrid className="w-4 h-4" />
+              <LayoutGrid className="w-4 h-4 shrink-0" />
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`cm-button p-2 rounded-xl sm:rounded-full transition-all ${
+              className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
                 viewMode === 'list'
-                  ? 'bg-primary/10 text-primary shadow-sm'
-                  : 'text-muted hover:text-slate-600 hover:bg-slate-50'
+                  ? 'bg-primary text-white border-2 border-black shadow-[2px_2px_0px_0px_#000]'
+                  : 'text-black hover:bg-slate-100'
               }`}
               title="Xem dạng danh sách (2 cột)"
             >
-              <ListIcon className="w-4 h-4" />
+              <ListIcon className="w-4 h-4 shrink-0" />
             </button>
           </div>
         </div>
-
-        {/* ACTIVE FILTER CHIPS ROW */}
-        {(activeDrawerFiltersCount > 0 || (city && city !== 'Tất cả' && city !== 'Tất cả khu vực') || keyword) && (
-          <div className="flex flex-wrap items-center gap-2 mb-6">
-            {sport && (
-              <button
-                type="button"
-                onClick={() => setSport('')}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
-              >
-                <span>Môn: {sport === SportType.BADMINTON ? 'Cầu lông' : 'Pickleball'}</span>
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-            {city && city !== 'Tất cả' && city !== 'Tất cả khu vực' && (
-              <button
-                type="button"
-                onClick={() => setCity('Tất cả')}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
-              >
-                <span>Khu vực: {city}</span>
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-            {status && (
-              <button
-                type="button"
-                onClick={() => setStatus('')}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
-              >
-                <span>
-                  Trạng thái: {
-                    status === TournamentStatus.OPEN ? 'Mở đăng ký' :
-                    status === TournamentStatus.UPCOMING ? 'Sắp diễn ra' :
-                    status === TournamentStatus.FULL ? 'Đã đủ số lượng' :
-                    status === TournamentStatus.IN_PROGRESS ? 'Đang diễn ra' : status
-                  }
-                </span>
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-            {level && (
-              <button
-                type="button"
-                onClick={() => setLevel('')}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
-              >
-                <span>Trình độ: {level}</span>
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-            {isFreeOnly && (
-              <button
-                type="button"
-                onClick={() => setIsFreeOnly(false)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
-              >
-                <span>Miễn phí tham gia</span>
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-            {maxFee !== undefined && maxFee > 0 && !isFreeOnly && (
-              <button
-                type="button"
-                onClick={() => setMaxFee(undefined)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
-              >
-                <span>Phí tối đa: {maxFee.toLocaleString('vi-VN')}đ</span>
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-            {keyword && (
-              <button
-                type="button"
-                onClick={() => setKeyword('')}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
-              >
-                <span>Từ khóa: “{keyword}”</span>
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={handleClearAll}
-              className="text-xs font-semibold text-slate-500 hover:text-primary transition-colors ml-1 underline underline-offset-2"
-            >
-              Xóa tất cả
-            </button>
-          </div>
-        )}
 
         {/* Top Anchor for Scroll */}
         <div ref={listTopRef} className="scroll-mt-6" />
 
         {/* Tournaments Grid / Loading / Empty State */}
-        <SmartAsyncContainer
-          skeleton={<ContentSkeleton layout="tournaments" count={10} />}
-          loading={loading}
-          isThresholdElapsed={isThresholdElapsed}
-          error={error}
-          onRetry={fetchTournaments}
-          errorMessage="Không thể kết nối đến máy chủ để tải danh sách giải đấu."
-        >
-          {totalTournaments === 0 ? (
-          /* High-end Animated Empty State */
-          <div className="relative overflow-hidden bg-white/90 backdrop-blur-md rounded-3xl border border-slate-200/80 p-8 sm:p-14 text-center shadow-lg my-6 max-w-3xl mx-auto transition-all">
-            {/* Glowing Accent Effect */}
-            <div className="absolute -top-24 -left-24 w-48 h-48 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
-            <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-amber-400/15 rounded-full blur-2xl pointer-events-none" />
-
-            {/* Animated Pulsing Icon Ring */}
-            <div className="relative inline-flex items-center justify-center mb-6">
-              <div className="absolute inset-0 rounded-full bg-primary/15 animate-ping duration-1000 scale-125 pointer-events-none" />
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-primary/10 to-sky-100/60 border border-primary/20 flex items-center justify-center shadow-inner relative z-10">
-                <Trophy className="w-10 h-10 sm:w-12 sm:h-12 text-primary drop-shadow-xs" />
-              </div>
-            </div>
-
-            {/* Badge Indicator */}
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold mb-4">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-spin-slow" />
-              <span>Đang cập nhật giải đấu mới</span>
-            </div>
-
-            {/* Main Title & Subtitle */}
-            <h3 className="text-xl sm:text-2xl font-extrabold text-navy tracking-tight max-w-xl mx-auto leading-snug">
-              Chúng tôi đang cập nhật thêm các thông tin, xin vui lòng đợi các thông báo mới.
-            </h3>
-
-            <p className="text-slate-500 text-sm sm:text-sm mt-3 max-w-lg mx-auto leading-relaxed">
-              {city !== 'Tất cả' ? (
-                <>Hiện chưa có giải đấu nào chính thức mở cổng tại khu vực <strong className="text-navy">{city}</strong>.</>
-              ) : (
-                <>Không tìm thấy giải đấu phù hợp với từ khóa hoặc bộ lọc đã chọn.</>
-              )}
-              {' '}Ban tổ chức đang hoàn thiện các lịch trình thi đấu tiếp theo. Đăng ký thông báo để không bỏ lỡ cơ hội tham gia!
-            </p>
-
-            {/* Action Buttons */}
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-              {city !== 'Đà Nẵng' && (
-                <button
-                  onClick={() => {
-                    setCity('Đà Nẵng');
-                    setCurrentPage(1);
-                  }}
-                  className="cm-action cm-button px-5 py-2.5 rounded-full bg-primary hover:bg-primary-dark text-white text-xs sm:text-sm font-bold shadow-md  transition-all transform hover:-translate-y-0.5"
-                >
-                  Khám phá giải tại Đà Nẵng
-                </button>
-              )}
-
-              {city !== 'Tất cả' && (
-                <button
-                  onClick={() => {
-                    setCity('Tất cả');
-                    setCurrentPage(1);
-                  }}
-                  className="cm-button px-5 py-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-bold border border-slate-200 transition-all"
-                >
-                  Xem tất cả khu vực
-                </button>
-              )}
-
-              <button
-                onClick={handleClearAll}
-                className="cm-button px-5 py-2.5 rounded-full bg-white hover:bg-slate-50 text-slate-600 text-xs sm:text-sm font-bold border border-slate-200 transition-all flex items-center gap-1.5"
-              >
-                <RefreshCw className="w-3.5 h-3.5 text-muted" />
-                <span>Xóa tất cả bộ lọc</span>
-              </button>
-            </div>
+        {loading ? (
+          <ContentSkeleton layout="tournaments" count={10} />
+        ) : error ? (
+          <div role="alert" className="w-full max-w-xl mx-auto my-8 p-8 text-center bg-white border-2 border-black rounded-3xl shadow-[6px_6px_0px_0px_#000]">
+            <p className="text-sm font-bold text-red-600 mb-4">Không thể kết nối máy chủ để tải giải đấu.</p>
+            <button
+              onClick={fetchTournaments}
+              className="px-5 py-2.5 rounded-xl bg-primary text-white font-black text-xs border-2 border-black shadow-[3px_3px_0px_0px_#000]"
+            >
+              Thử lại ngay
+            </button>
           </div>
+        ) : totalTournaments === 0 ? (
+          <DirectoryEmptyState
+            kind="tournaments"
+            filtered={Boolean(keyword.trim() || sport || status || level || maxFee !== undefined || isFreeOnly || (city && city !== 'Tất cả'))}
+            onReset={handleClearAll}
+            onRefresh={fetchTournaments}
+          />
         ) : (
-          <>
-            {/* Tournaments Grid/List */}
-            <div className={`grid ${viewMode === 'grid' ? 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-5' : 'grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5'}`}>
-              {currentTournaments.map((tournament) => (
-                <TournamentCard
-                  key={tournament.id}
-                  tournament={tournament}
-                  viewMode={viewMode}
-                  onBookmarkToggle={handleBookmarkToggle}
-                  isBookmarked={bookmarkedIds.includes(tournament.id)}
-                />
-              ))}
-            </div>
-          </>
+          <div className={`grid ${viewMode === 'grid' ? 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-5' : 'grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5'}`}>
+            {currentTournaments.map((tournament) => (
+              <TournamentCard
+                key={tournament.id}
+                tournament={tournament}
+                viewMode={viewMode}
+                onBookmarkToggle={handleBookmarkToggle}
+                isBookmarked={bookmarkedIds.includes(tournament.id)}
+              />
+            ))}
+          </div>
         )}
-        </SmartAsyncContainer>
 
             {/* Pagination Controls (Only displayed when there are items) */}
-            {totalPages > 1 && (
-              <div className="mt-12 pt-6 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-4">
-
-                {/* Pagination Info */}
-                <span className="text-xs sm:text-sm font-semibold text-slate-500">
-                  Hiển thị <strong className="text-navy">{startIndex + 1}</strong> - <strong className="text-navy">{endIndex}</strong> trong tổng số <strong className="text-primary">{totalTournaments}</strong> giải đấu
-                </span>
-
+            {!loading && !error && totalPages > 1 && (
+              <div className="mt-12 pt-6 border-t-2 border-black flex items-center justify-end">
                 {/* Pagination Buttons */}
-                <div className="flex items-center gap-1.5 bg-surface shadow-card p-1.5 rounded-2xl border border-slate-200/90 ">
-                  {/* Prev Button */}
-                  <button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className={`cm-button p-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1 ${
-                      currentPage === 1
-                        ? 'text-slate-300 cursor-not-allowed'
-                        : 'text-slate-700 hover:bg-slate-100 hover:text-navy'
-                    }`}
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                    <span className="hidden sm:inline">Trước</span>
-                  </button>
+                <div className="flex items-center gap-1.5 bg-white shadow-[4px_4px_0px_0px_#000] p-1.5 rounded-2xl border-2 border-black">
+                  {/* Prev Button - Only visible when currentPage > 1 */}
+                  {currentPage > 1 && (
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      className="p-2 rounded-xl text-xs font-black transition-all flex items-center gap-1 border-2 border-transparent hover:border-black hover:bg-slate-100 text-black"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      <span className="hidden sm:inline">Trước</span>
+                    </button>
+                  )}
 
                   {/* Page Numbers */}
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
@@ -555,10 +379,10 @@ function TournamentsContent() {
                       <button
                         key={pageNum}
                         onClick={() => handlePageChange(pageNum)}
-                        className={`cm-button w-9 h-9 rounded-xl text-xs font-bold transition-all flex items-center justify-center ${
+                        className={`w-9 h-9 rounded-xl text-xs font-black transition-all flex items-center justify-center border-2 ${
                           isActive
-                            ? 'bg-primary text-white shadow-md  scale-105'
-                            : 'text-slate-600 hover:bg-slate-100 hover:text-navy'
+                            ? 'bg-primary text-white border-black shadow-[2px_2px_0px_0px_#000]'
+                            : 'text-black border-transparent hover:border-black hover:bg-slate-100'
                         }`}
                       >
                         {pageNum}
@@ -567,27 +391,23 @@ function TournamentsContent() {
                   })}
 
                   {/* Next Button */}
-                  <button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className={`cm-button p-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1 ${
-                      currentPage === totalPages
-                        ? 'text-slate-300 cursor-not-allowed'
-                        : 'text-slate-700 hover:bg-slate-100 hover:text-navy'
-                    }`}
-                  >
-                    <span className="hidden sm:inline">Sau</span>
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
+                  {currentPage < totalPages && (
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      className="p-2 rounded-xl text-xs font-black transition-all flex items-center gap-1 border-2 border-transparent hover:border-black hover:bg-slate-100 text-black"
+                    >
+                      <span className="hidden sm:inline">Sau</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
-
               </div>
             )}
       </PageContainer>
 
       {/* ─── FILTER DRAWER ─── */}
       <div
-        className={`fixed inset-0 bg-navy/40 backdrop-blur-sm z-[100] transition-opacity duration-300 ${
+        className={`fixed inset-0 bg-navy/40 z-[100] transition-opacity duration-300 ${
           isFilterOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         onClick={() => setIsFilterOpen(false)}

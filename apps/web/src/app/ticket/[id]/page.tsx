@@ -53,14 +53,14 @@ export default function TicketPage() {
     : '';
 
   return (
-    <div className="bg-[#F1F5F9] min-h-screen py-12 px-4">
+    <div className="bg-white min-h-screen py-12 px-4">
       <div className="max-w-md mx-auto">
 
         {/* Top bar */}
         <div className="flex items-center justify-between mb-6">
           <Link
             href="/tournaments"
-            className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-navy transition"
+            className="inline-flex items-center gap-2 text-xs font-semibold text-muted hover:text-navy transition"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Xem giải đấu</span>
@@ -68,7 +68,7 @@ export default function TicketPage() {
 
           <button
             onClick={handlePrint}
-            className="cm-button inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-navy hover:bg-slate-50 transition shadow-xs"
+            className="cm-button inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-ink text-xs font-semibold text-navy hover:bg-white transition shadow-xs"
           >
             <Printer className="w-3.5 h-3.5" />
             <span>In / Lưu PDF</span>
@@ -76,15 +76,15 @@ export default function TicketPage() {
         </div>
 
         {loading ? (
-          <div className="bg-surface shadow-card rounded-3xl p-12 text-center  border border-slate-200">
+          <div className="bg-surface shadow-card rounded-3xl p-12 text-center  border border-ink">
             <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-            <p className="text-slate-500 text-sm">Đang tải vé...</p>
+            <p className="text-muted text-sm">Đang tải vé...</p>
           </div>
         ) : !tournament ? (
-          <div className="bg-surface shadow-card rounded-3xl p-12 text-center  border border-slate-200">
-            <AlertCircle className="w-12 h-12 text-rose-500 mx-auto mb-3" />
+          <div className="bg-surface shadow-card rounded-3xl p-12 text-center  border border-ink">
+            <AlertCircle className="w-12 h-12 text-primary mx-auto mb-3" />
             <h2 className="text-lg font-bold text-navy">Không tìm thấy thông tin vé</h2>
-            <p className="text-sm text-slate-500 mt-1 mb-4">Mã vé hoặc giải đấu không tồn tại trong hệ thống.</p>
+            <p className="text-sm text-muted mt-1 mb-4">Mã vé hoặc giải đấu không tồn tại trong hệ thống.</p>
             <Link
               href="/tournaments"
               className="cm-action px-4 py-2 rounded-xl bg-primary text-white text-xs font-semibold hover:bg-primary-dark transition"
@@ -94,15 +94,15 @@ export default function TicketPage() {
           </div>
         ) : (
           /* E-Ticket Card with Cutout Dividers */
-          <div className="bg-surface shadow-card rounded-3xl  border border-slate-200/80 overflow-hidden">
+          <div className="bg-surface shadow-card rounded-3xl  border border-ink overflow-hidden">
 
             {/* Top Ticket Header */}
-            <div className="p-8 text-center bg-gradient-to-b from-slate-50 to-white">
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4 shadow-xs">
+            <div className="p-8 text-center bg-accent-baby">
+              <div className="w-16 h-16 rounded-2xl bg-accent-baby text-primary flex items-center justify-center mx-auto mb-4 shadow-xs">
                 <TicketIcon className="w-8 h-8" />
               </div>
 
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 mb-3">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-accent-baby text-primary mb-3">
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 Đã điểm danh
               </span>
@@ -115,7 +115,7 @@ export default function TicketPage() {
               </p>
 
               {/* Dynamic QR Code Container */}
-              <div className="mt-6 p-4 bg-surface shadow-card rounded-2xl border-2 border-dashed border-slate-200 inline-block ">
+              <div className="mt-6 p-4 bg-surface shadow-card rounded-2xl border-2 border-dashed border-ink inline-block ">
                 {qrUrl ? (
                   <img
                     src={qrUrl}
@@ -135,13 +135,13 @@ export default function TicketPage() {
 
             {/* Ticket Perforated Divider */}
             <div className="relative flex items-center justify-between px-4 py-1">
-              <div className="w-6 h-6 rounded-full bg-[#F1F5F9] -ml-7 border-r border-slate-200/80" />
-              <div className="w-full border-t-2 border-dashed border-slate-200" />
-              <div className="w-6 h-6 rounded-full bg-[#F1F5F9] -mr-7 border-l border-slate-200/80" />
+              <div className="w-6 h-6 rounded-full bg-white -ml-7 border-r border-ink" />
+              <div className="w-full border-t-2 border-dashed border-ink" />
+              <div className="w-6 h-6 rounded-full bg-white -mr-7 border-l border-ink" />
             </div>
 
             {/* Bottom Details Section */}
-            <div className="p-8 space-y-4 text-xs text-slate-600 bg-white">
+            <div className="p-8 space-y-4 text-xs text-muted bg-white">
               <div className="flex items-center gap-3">
                 <Calendar className="w-4 h-4 text-primary shrink-0" />
                 <div>
@@ -153,7 +153,7 @@ export default function TicketPage() {
               </div>
 
               <div className="flex items-center gap-3">
-                <MapPin className="w-4 h-4 text-rose-500 shrink-0" />
+                <MapPin className="w-4 h-4 text-primary shrink-0" />
                 <div>
                   <span className="text-muted block text-[11px]">Địa điểm thi đấu</span>
                   <strong className="text-navy text-sm font-semibold">
@@ -162,7 +162,7 @@ export default function TicketPage() {
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+              <div className="pt-4 border-t border-ink flex items-center justify-between">
                 <div>
                   <span className="text-muted block text-[11px]">Vận động viên</span>
                   <strong className="text-navy text-sm font-semibold">

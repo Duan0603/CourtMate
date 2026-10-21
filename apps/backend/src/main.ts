@@ -34,7 +34,7 @@ async function bootstrap() {
   );
 
   // Enable CORS
-  app.enableCors();
+  app.enableCors({ exposedHeaders: ['X-CourtMate-Notification'] });
 
   const port = process.env.PORT || 3000;
   await app.listen(port);

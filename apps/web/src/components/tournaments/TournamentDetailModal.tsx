@@ -78,7 +78,7 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({
       {/* Backdrop */}
       <div
         ref={backdropRef}
-        className="fixed inset-0 bg-ink/60 backdrop-blur-sm z-[110]"
+        className="fixed inset-0 bg-ink/60 z-[110]"
         onClick={onClose}
       />
 
@@ -86,7 +86,7 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({
       <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 sm:p-6 pointer-events-none">
         <div
           ref={modalRef}
-          className="bg-surface shadow-card rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col  pointer-events-auto border border-slate-200/60"
+          className="bg-surface shadow-card rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col  pointer-events-auto border border-ink"
         >
           {/* Header Image */}
           <div className="relative h-48 sm:h-64 w-full shrink-0">
@@ -100,17 +100,17 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({
               alt={tournament.title}
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+            <div className="absolute inset-0 bg-black/45" />
 
             <button
               onClick={onClose}
-              className="cm-button absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full text-white transition-colors"
+              className="cm-button absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/40 rounded-full text-white transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
 
             <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 right-4">
-              <span className="px-3 py-1 bg-white/20 backdrop-blur-md text-white text-xs font-bold rounded-full border border-white/30 uppercase tracking-wider mb-3 inline-block">
+              <span className="px-3 py-1 bg-white/20 text-white text-xs font-bold rounded-full border border-white/30 uppercase tracking-wider mb-3 inline-block">
                 {tournament.sport === 'BADMINTON' ? 'Cầu lông' : tournament.sport}
               </span>
               <h2 className="text-2xl sm:text-3xl font-black text-white leading-tight drop-shadow-md line-clamp-2">
@@ -120,7 +120,7 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({
           </div>
 
           {/* Scrollable Body */}
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-50/50">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-white">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
               {/* Left Col - Details */}
@@ -128,63 +128,63 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({
 
                 {/* Stats row */}
                 <div className="flex flex-wrap items-center gap-3">
-                  <div className="flex items-center gap-2 bg-surface shadow-card px-4 py-2.5 rounded-2xl border border-slate-200 ">
+                  <div className="flex items-center gap-2 bg-surface shadow-card px-4 py-2.5 rounded-2xl border border-ink ">
                     <Calendar className="w-5 h-5 text-primary" />
                     <div>
-                      <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Khởi tranh</div>
+                      <div className="text-[10px] text-muted font-medium uppercase tracking-wider">Khởi tranh</div>
                       <div className="text-sm font-bold text-navy">{startDateFormatted}</div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 bg-surface shadow-card px-4 py-2.5 rounded-2xl border border-slate-200 ">
-                    <MapPin className="w-5 h-5 text-rose-500" />
+                  <div className="flex items-center gap-2 bg-surface shadow-card px-4 py-2.5 rounded-2xl border border-ink ">
+                    <MapPin className="w-5 h-5 text-primary" />
                     <div>
-                      <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Địa điểm</div>
+                      <div className="text-[10px] text-muted font-medium uppercase tracking-wider">Địa điểm</div>
                       <div className="text-sm font-bold text-navy max-w-[120px] truncate">{tournament.city}</div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 bg-surface shadow-card px-4 py-2.5 rounded-2xl border border-slate-200 ">
-                    <Users className="w-5 h-5 text-amber-500" />
+                  <div className="flex items-center gap-2 bg-surface shadow-card px-4 py-2.5 rounded-2xl border border-ink ">
+                    <Users className="w-5 h-5 text-primary" />
                     <div>
-                      <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Quy mô</div>
+                      <div className="text-[10px] text-muted font-medium uppercase tracking-wider">Quy mô</div>
                       <div className="text-sm font-bold text-navy">{tournament.slotsLimit || 32} VĐV</div>
                     </div>
                   </div>
                 </div>
 
                 {/* About section */}
-                <div className="bg-surface shadow-card p-5 rounded-3xl border border-slate-200 ">
+                <div className="bg-surface shadow-card p-5 rounded-3xl border border-ink ">
                   <h3 className="flex items-center gap-2 text-base font-bold text-navy mb-3">
                     <Info className="w-4 h-4 text-primary" /> Thông tin giải đấu
                   </h3>
-                  <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
+                  <p className="text-sm text-muted leading-relaxed whitespace-pre-wrap">
                     {tournament.description || 'Chưa có thông tin chi tiết.'}
                   </p>
                 </div>
 
                 {/* Specific Location */}
-                <div className="bg-surface shadow-card p-5 rounded-3xl border border-slate-200 ">
+                <div className="bg-surface shadow-card p-5 rounded-3xl border border-ink ">
                   <h3 className="flex items-center gap-2 text-base font-bold text-navy mb-3">
-                    <MapPin className="w-4 h-4 text-rose-500" /> Địa chỉ thi đấu
+                    <MapPin className="w-4 h-4 text-primary" /> Địa chỉ thi đấu
                   </h3>
-                  <p className="text-sm text-slate-700 font-medium">{tournament.location}</p>
+                  <p className="text-sm text-muted font-medium">{tournament.location}</p>
                 </div>
 
               </div>
 
               {/* Right Col - Organizer & Actions */}
               <div className="space-y-4">
-                <div className="bg-surface shadow-card p-5 rounded-3xl border border-slate-200 ">
-                  <div className="text-xs text-slate-500 font-medium mb-1">Đơn vị tổ chức</div>
+                <div className="bg-surface shadow-card p-5 rounded-3xl border border-ink ">
+                  <div className="text-xs text-muted font-medium mb-1">Đơn vị tổ chức</div>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center shrink-0 border border-slate-200">
+                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shrink-0 border border-ink">
                       <Trophy className="w-5 h-5 text-primary" />
                     </div>
                     <div>
                       <div className="text-sm font-bold text-navy">{tournament.organizer.name}</div>
                       {tournament.organizer.isVerified && (
-                         <div className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-md inline-block mt-0.5">
+                         <div className="text-[10px] text-primary font-bold bg-accent-baby px-2 py-0.5 rounded-md inline-block mt-0.5">
                            ✓ Đã xác thực
                          </div>
                       )}
@@ -192,9 +192,9 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({
                   </div>
                 </div>
 
-                <div className="bg-surface shadow-card p-5 rounded-3xl border border-slate-200  flex flex-col justify-between">
+                <div className="bg-surface shadow-card p-5 rounded-3xl border border-ink  flex flex-col justify-between">
                   <div>
-                    <div className="text-xs text-slate-500 font-medium mb-1">Lệ phí đăng ký</div>
+                    <div className="text-xs text-muted font-medium mb-1">Lệ phí đăng ký</div>
                     <div className="text-2xl font-black text-ink">{formattedFee}</div>
                   </div>
 
@@ -204,7 +204,7 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({
                         Đăng ký ngay
                       </button>
                     ) : (
-                      <button className="cm-button w-full py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-sm font-bold shadow-md transition-all text-center">
+                      <button className="cm-button w-full py-3 px-4 rounded-xl bg-primary hover:bg-primary text-white text-sm font-bold shadow-md transition-all text-center">
                         Đăng nhập để đăng ký
                       </button>
                     )}
@@ -212,7 +212,7 @@ export const TournamentDetailModal: React.FC<TournamentDetailModalProps> = ({
                     {/* For SEO / direct link routing fallback */}
                     <Link
                       href={`/tournaments/${tournament.id}`}
-                      className="w-full py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold transition-all text-center"
+                      className="w-full py-3 px-4 rounded-xl bg-white hover:bg-white text-muted text-sm font-bold transition-all text-center"
                     >
                       Mở trang chi tiết
                     </Link>

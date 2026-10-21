@@ -184,6 +184,8 @@ export class NotificationsService {
     const notification = await this.notificationModel.findById(notificationId).exec();
     if (!notification) return;
 
+    if (notification.userId !== null && notification.userId !== userId) return;
+
     if (notification.userId === userId) {
       // Direct notification owned by user: remove completely
       await this.notificationModel.deleteOne({ _id: notificationId }).exec();

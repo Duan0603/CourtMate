@@ -4,7 +4,7 @@ import { PageContainer } from './PageContainer';
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="border-t border-slate-200/80 bg-white py-8 mt-auto">
+    <footer className="site-footer border-t border-ink bg-white py-8 mt-auto">
       <PageContainer className="flex flex-col md:flex-row justify-between items-start gap-6 text-sm text-muted">
         <div className="flex items-center gap-2">
           <img src="/courtMate_logo.png" alt="CourtMate" className="h-7 w-auto" />

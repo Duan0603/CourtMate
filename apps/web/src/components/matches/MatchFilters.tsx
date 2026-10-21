@@ -53,12 +53,12 @@ export const MatchFilters: React.FC<MatchFiltersProps> = ({
   return (
     <div className="flex flex-col h-full bg-white">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-ink shrink-0">
         <h3 className="font-extrabold text-navy text-lg">Bộ lọc</h3>
         <button
           type="button"
           onClick={onClose}
-          className="cm-button p-2 -mr-2 rounded-full hover:bg-slate-100 transition-colors text-slate-500"
+          className="cm-button p-2 -mr-2 rounded-full hover:bg-white transition-colors text-muted"
           aria-label="Đóng bộ lọc"
         >
           <X className="w-5 h-5" />
@@ -69,7 +69,7 @@ export const MatchFilters: React.FC<MatchFiltersProps> = ({
       <div className="flex-1 overflow-y-auto px-6 py-6 space-y-7 scrollbar-thin scrollbar-thumb-slate-200">
         {/* Sport Selector */}
         <div className="space-y-3">
-          <label className="text-sm font-bold text-slate-700 block">
+          <label className="text-sm font-bold text-muted block">
             Môn thể thao
           </label>
           <div className="flex flex-wrap gap-2.5">
@@ -82,8 +82,8 @@ export const MatchFilters: React.FC<MatchFiltersProps> = ({
                   onClick={() => updateFilter('sport', sport.value)}
                   className={`cm-button px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border ${
                     isSelected
-                      ? 'bg-primary/10 text-primary border-primary/30'
-                      : 'bg-white text-slate-600 border-slate-200 hover:border-primary/30 hover:bg-slate-50'
+                      ? 'bg-accent-baby text-primary border-primary/30'
+                      : 'bg-white text-muted border-ink hover:border-primary/30 hover:bg-white'
                   }`}
                 >
                   {sport.label}
@@ -95,7 +95,7 @@ export const MatchFilters: React.FC<MatchFiltersProps> = ({
 
         {/* Skill Level Selector */}
         <div className="space-y-3">
-          <label className="text-sm font-bold text-slate-700 block">
+          <label className="text-sm font-bold text-muted block">
             Trình độ yêu cầu
           </label>
           <div className="flex flex-wrap gap-2.5">
@@ -108,8 +108,8 @@ export const MatchFilters: React.FC<MatchFiltersProps> = ({
                   onClick={() => updateFilter('skill', opt.value)}
                   className={`cm-button px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200 border ${
                     isSelected
-                      ? 'bg-primary/10 text-primary border-primary/30'
-                      : 'bg-white text-slate-600 border-slate-200 hover:border-primary/30 hover:bg-slate-50'
+                      ? 'bg-accent-baby text-primary border-primary/30'
+                      : 'bg-white text-muted border-ink hover:border-primary/30 hover:bg-white'
                   }`}
                 >
                   {opt.label}
@@ -121,7 +121,7 @@ export const MatchFilters: React.FC<MatchFiltersProps> = ({
 
         {/* District Selector */}
         <div className="space-y-3">
-          <label className="text-sm font-bold text-slate-700 block">
+          <label className="text-sm font-bold text-muted block">
             Khu vực (Đà Nẵng)
           </label>
           <div className="flex flex-wrap gap-2.5">
@@ -134,8 +134,8 @@ export const MatchFilters: React.FC<MatchFiltersProps> = ({
                   onClick={() => updateFilter('district', d)}
                   className={`cm-button px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200 border ${
                     isSelected
-                      ? 'bg-primary/10 text-primary border-primary/30'
-                      : 'bg-white text-slate-600 border-slate-200 hover:border-primary/30 hover:bg-slate-50'
+                      ? 'bg-accent-baby text-primary border-primary/30'
+                      : 'bg-white text-muted border-ink hover:border-primary/30 hover:bg-white'
                   }`}
                 >
                   {d === 'Tất cả' ? 'Tất cả các quận' : `Q. ${d}`}
@@ -147,11 +147,11 @@ export const MatchFilters: React.FC<MatchFiltersProps> = ({
       </div>
 
       {/* Footer */}
-      <div className="p-4 sm:p-6 border-t border-slate-100 flex items-center justify-between gap-3 shrink-0 bg-slate-50/50">
+      <div className="p-4 sm:p-6 border-t border-ink flex items-center justify-between gap-3 shrink-0 bg-white">
         <button
           type="button"
           onClick={handleReset}
-          className="cm-button flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs sm:text-sm font-bold text-slate-500 hover:text-navy hover:bg-slate-100 transition-colors"
+          className="cm-button flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs sm:text-sm font-bold text-muted hover:text-navy hover:bg-white transition-colors"
         >
           <RotateCcw className="w-4 h-4" />
           <span>Đặt lại</span>
