@@ -2,6 +2,9 @@
  * Simulates real online users for local/demo environments:
  *  - Opens N fake authenticated sockets to the /notifications gateway, so
  *    "Đang online" and the live admin "online-count" push reflect real activity.
+ *    Each bot cycles online for SIM_ONLINE_MIN_MS–SIM_ONLINE_MAX_MS, then goes
+ *    offline for SIM_OFFLINE_MIN_MS–SIM_OFFLINE_MAX_MS, repeating — so the online
+ *    count drifts up and down instead of sitting flat at SIM_USERS forever.
  *  - Has each fake user randomly "browse" pages on an interval by POSTing to
  *    /analytics/page-view, so the admin "Trang được truy cập nhiều nhất" stat
  *    has real-looking data.
@@ -23,6 +26,7 @@
  * Usage:
  *   node scripts/simulate-online-traffic.js
  *   SIM_USERS=15 SIM_PAGE_VIEW_INTERVAL_MS=4000 SIM_REGISTER_INTERVAL_MS=20000 SIM_REGISTER_INITIAL_DELAY_MS=120000 node scripts/simulate-online-traffic.js
+ *   SIM_ONLINE_MIN_MS=45000 SIM_ONLINE_MAX_MS=180000 SIM_OFFLINE_MIN_MS=15000 SIM_OFFLINE_MAX_MS=90000 node scripts/simulate-online-traffic.js
  *
  * Stop with Ctrl+C.
  */
@@ -42,6 +46,17 @@ const PAGE_VIEW_INTERVAL_MS = Number(process.env.SIM_PAGE_VIEW_INTERVAL_MS || 50
 const REGISTER_INTERVAL_MS = Number(process.env.SIM_REGISTER_INTERVAL_MS || 20000);
 // Give the admin time to see "online users" build up before the first registration/notification fires.
 const REGISTER_INITIAL_DELAY_MS = Number(process.env.SIM_REGISTER_INITIAL_DELAY_MS || 120000);
+
+// Each bot cycles online/offline on random durations so the "Đang online" count
+// drifts up and down over time instead of sitting flat at SIM_USERS forever.
+const ONLINE_MIN_MS = Number(process.env.SIM_ONLINE_MIN_MS || 45000); // 45s
+const ONLINE_MAX_MS = Number(process.env.SIM_ONLINE_MAX_MS || 180000); // 3min
+const OFFLINE_MIN_MS = Number(process.env.SIM_OFFLINE_MIN_MS || 15000); // 15s
+const OFFLINE_MAX_MS = Number(process.env.SIM_OFFLINE_MAX_MS || 90000); // 1.5min
+
+function randomBetween(min, max) {
+  return min + Math.random() * (max - min);
+}
 
 // Real routes from the web app — kept in sync by hand with apps/web/src/app/**.
 const ROUTES = [
@@ -155,11 +170,15 @@ function startFakeUser(index, getTournaments) {
   const userId = `sim-user-${index}`;
   const name = randomVietnameseName();
   const token = makeToken(userId, name);
+  let stopped = false;
 
+  // Manual connect control: this bot connects/disconnects on random cycles below,
+  // instead of staying permanently online, so the live count actually fluctuates.
   const socket = io(`${API_URL}/notifications`, {
     auth: { token },
     transports: ['websocket', 'polling'],
     reconnection: true,
+    autoConnect: false,
   });
 
   const visitPage = (route) => {
@@ -170,22 +189,57 @@ function startFakeUser(index, getTournaments) {
     console.log(`[sim] ${name} (${userId}) -> ${route}`);
   };
 
-  socket.on('connect', () => {
-    console.log(`[sim] ${name} (${userId}) connected (socket ${socket.id})`);
+  let pageViewInterval = null;
+  let churnTimer = null;
+
+  const startBrowsing = () => {
     visitPage(randomItem(ROUTES));
+    const jitter = Math.floor(Math.random() * 2000);
+    pageViewInterval = setInterval(() => visitPage(randomItem(ROUTES)), PAGE_VIEW_INTERVAL_MS + jitter);
+  };
+
+  const stopBrowsing = () => {
+    clearInterval(pageViewInterval);
+    pageViewInterval = null;
+  };
+
+  const scheduleDisconnect = () => {
+    churnTimer = setTimeout(() => {
+      if (stopped) return;
+      socket.disconnect();
+    }, randomBetween(ONLINE_MIN_MS, ONLINE_MAX_MS));
+  };
+
+  const scheduleReconnect = () => {
+    churnTimer = setTimeout(() => {
+      if (stopped) return;
+      socket.connect();
+    }, randomBetween(OFFLINE_MIN_MS, OFFLINE_MAX_MS));
+  };
+
+  socket.on('connect', () => {
+    console.log(`[sim] ${name} (${userId}) online (socket ${socket.id})`);
+    startBrowsing();
+    scheduleDisconnect();
+  });
+
+  socket.on('disconnect', () => {
+    if (stopped) return;
+    console.log(`[sim] ${name} (${userId}) went offline`);
+    stopBrowsing();
+    scheduleReconnect();
   });
 
   socket.on('connect_error', (err) => {
     console.error(`[sim] ${name} (${userId}) connect_error:`, err.message);
   });
 
-  // "Browse" a new random page on an interval, with jitter so users don't all tick together.
-  const jitter = Math.floor(Math.random() * 2000);
-  const interval = setInterval(() => visitPage(randomItem(ROUTES)), PAGE_VIEW_INTERVAL_MS + jitter);
+  socket.connect();
 
   // Occasionally register for a real open tournament, with its own jitter.
   // First registration waits REGISTER_INITIAL_DELAY_MS (default 2 minutes) after start,
   // so the admin sees online users build up first; then it repeats on REGISTER_INTERVAL_MS.
+  // Runs on its own HTTP-only timer, independent of the online/offline cycle above.
   const registerJitter = Math.floor(Math.random() * 5000);
   let registerInterval;
   const registerTimeout = setTimeout(() => {
@@ -196,7 +250,9 @@ function startFakeUser(index, getTournaments) {
   }, REGISTER_INITIAL_DELAY_MS + registerJitter);
 
   return () => {
-    clearInterval(interval);
+    stopped = true;
+    stopBrowsing();
+    clearTimeout(churnTimer);
     clearTimeout(registerTimeout);
     clearInterval(registerInterval);
     socket.disconnect();
