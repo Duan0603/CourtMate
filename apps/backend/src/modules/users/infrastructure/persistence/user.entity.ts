@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import { normalizeName } from '../../normalize-name';
 
 @Schema()
 export class UserPreferencesSchema {
@@ -39,6 +40,10 @@ export class User extends Document {
   @Prop({ type: String, default: null })
   avatarUrl?: string;
 
+  // normalizeName(name), kept in sync by the hooks below; used for accent-insensitive search
+  @Prop({ type: String, default: '' })
+  nameNormalized!: string;
+
   @Prop({ required: true, enum: ['USER', 'PLAYER', 'ORGANIZER', 'REGIONAL_ADMIN', 'SUPER_ADMIN'], default: 'USER' })
   role!: string;
 
@@ -62,6 +67,18 @@ export class User extends Document {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+UserSchema.pre('save', function () {
+  if (this.isModified('name') || !this.nameNormalized) this.nameNormalized = normalizeName(this.name);
+});
+
+// Query updates bypass the save hook: derive the field when an update sets `name`
+UserSchema.pre(['findOneAndUpdate', 'updateOne', 'updateMany'], function () {
+  const update: any = this.getUpdate();
+  if (!update || Array.isArray(update)) return;
+  const name = update.$set?.name ?? update.name;
+  if (name !== undefined) this.set('nameNormalized', normalizeName(name));
+});
 
 // Indexes for Phase 8 queries
 UserSchema.index({ role: 1 });

@@ -6,14 +6,6 @@ import {
   MessageSquare,
   Search,
   Send,
-  CheckCheck,
-  ShieldCheck,
-  User as UserIcon,
-  Smile,
-  Paperclip,
-  Award,
-  Circle,
-  Bell,
   X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -22,320 +14,69 @@ import { useAuth } from '../../context/AuthContext';
 import { authApi } from '../../lib/auth.api';
 import { getSocket } from '../../lib/socket';
 
+const MAX_MESSAGE_LENGTH = 2000;
+const ACK_TIMEOUT_MS = 10000;
+const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80';
+
 interface ChatMessage {
   _id: string;
+  roomId?: string;
   senderId: string;
   senderName: string;
   content: string;
   createdAt: string;
+  readAt?: string | null;
+  // Client-only fields for optimistic messages
+  clientMsgId?: string;
+  status?: 'sending' | 'failed';
 }
 
+interface RecentChat extends User {
+  lastMessage?: ChatMessage;
+  unreadCount?: number;
+}
+
+const getUserId = (u: User | null | undefined): string => u?.id || (u as any)?._id || '';
+const dmRoomId = (a: string, b: string) => [a, b].sort().join('_');
+const partnerOf = (roomId: string | undefined, myId: string) => {
+  const ids = (roomId || '').split('_');
+  return ids.length === 2 ? (ids[0] === myId ? ids[1] : ids[0]) : '';
+};
+
 function ChatContent() {
-  const { user, isAuthenticated } = useAuth();
-  const [friends, setFriends] = useState<User[]>([]);
+  const { user, token, isAuthenticated } = useAuth();
+  const [friends,setFriends] = useState<User[]>([]);
   const [activeFriend, setActiveFriend] = useState<User | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<User[]>([]);
   const [connected, setConnected] = useState(false);
-  const [lastSeenByFriend, setLastSeenByFriend] = useState<string | null>(null);
   const [lastMessagesMap, setLastMessagesMap] = useState<Record<string, ChatMessage>>({});
   const [unreadCountsMap, setUnreadCountsMap] = useState<Record<string, number>>({});
   const [newMessageBanner, setNewMessageBanner] = useState<{ senderId: string; senderName: string; content: string } | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  // Use a ref to track activeFriend inside socket callbacks to avoid stale closures
+  // Refs mirror state for socket callbacks registered once per user (avoid stale closures)
   const activeFriendRef = useRef<User | null>(null);
-  const myId = user?.id || (user as any)?._id || '';
+  const activeRoomRef = useRef<string | null>(null);
+  const friendsRef = useRef<User[]>([]);
+  const ackTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const myId = getUserId(user);
 
   const searchParams = useSearchParams();
   const targetUserId = searchParams.get('userId');
   const targetUserName = searchParams.get('userName');
   const targetUserAvatar = searchParams.get('avatar');
+  const targetUserRole = searchParams.get('role');
 
-  // Keep the ref in sync
   useEffect(() => {
     activeFriendRef.current = activeFriend;
   }, [activeFriend]);
 
-  // Load chat partners / friends from API
   useEffect(() => {
-    async function loadFriends() {
-      try {
-        let list: User[] = [];
-        try {
-          list = await authApi.getFriends();
-        } catch (e) {
-          console.warn('Could not fetch friends from API, using fallback:', e);
-        }
-
-        if (targetUserId && targetUserId !== myId) {
-          const found = list.find((u) => u.id === targetUserId || (u as any)._id === targetUserId);
-          if (found) {
-            setFriends(list);
-            setActiveFriend(found);
-          } else {
-            const parsedName = targetUserName && targetUserName !== 'null' ? targetUserName : 'Ban tổ chức';
-            const mockTarget: User = {
-              id: targetUserId,
-              name: parsedName,
-              email: '',
-              role: UserRole.ORGANIZER,
-              avatarUrl: targetUserAvatar || undefined,
-            } as any;
-            list = [mockTarget, ...list];
-            setFriends(list);
-            setActiveFriend(mockTarget);
-          }
-        } else {
-          setFriends(list);
-          if (list.length > 0 && !activeFriendRef.current) {
-            setActiveFriend(list[0]);
-          }
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    }
-    loadFriends();
-  }, [targetUserId, targetUserName, targetUserAvatar, myId]);
-
-  // Helper to safely append a message without duplication
-  const appendMessageSafely = useCallback((incoming: ChatMessage) => {
-    setMessages((prev) => {
-      // 1. Check if message already exists by ID
-      if (prev.some(m => m._id === incoming._id)) return prev;
-
-      // 2. Check if matching optimistic message (same sender + same content within 5 seconds)
-      const matchingIdx = prev.findIndex(m =>
-        m.senderId === incoming.senderId &&
-        m.content === incoming.content &&
-        Math.abs(new Date(m.createdAt).getTime() - new Date(incoming.createdAt).getTime()) < 5000
-      );
-
-      if (matchingIdx !== -1) {
-        const next = [...prev];
-        next[matchingIdx] = incoming;
-        return next;
-      }
-
-      return [...prev, incoming];
-    });
-  }, []);
-
-  // Connect to Socket.IO — register once, use refs for activeFriend
-  useEffect(() => {
-    if (!myId) return;
-    const socket = getSocket();
-
-    const registerUser = () => {
-      setConnected(true);
-      socket.emit('register_user', { userId: myId });
-    };
-
-    if (socket.connected) {
-      registerUser();
-    } else {
-      socket.on('connect', registerUser);
-    }
-
-    socket.on('disconnect', () => setConnected(false));
-    socket.on('connect_error', () => setConnected(false));
-
-    // Chat history for the current room
-    socket.on('chat_history', (history: ChatMessage[]) => {
-      setMessages(history || []);
-      const currentFriend = activeFriendRef.current;
-      if (history && history.length > 0 && currentFriend) {
-        const friendId = currentFriend.id || (currentFriend as any)._id;
-        setLastMessagesMap(prev => ({
-          ...prev,
-          [friendId]: history[history.length - 1]
-        }));
-      }
-      scrollToBottom();
-    });
-
-    // Receive message in the current room
-    socket.on('receive_message', (incoming: ChatMessage) => {
-      // Ignore if it's from me (sender already did optimistic update)
-      if (incoming.senderId === myId) return;
-
-      const currentFriend = activeFriendRef.current;
-      const currentFriendId = currentFriend?.id || (currentFriend as any)?._id;
-
-      // If we are currently chatting with this person
-      if (currentFriend && (incoming.senderId === currentFriendId || (incoming as any).roomId?.includes(currentFriendId))) {
-        appendMessageSafely(incoming);
-        setLastMessagesMap(prev => ({
-          ...prev,
-          [currentFriendId]: incoming
-        }));
-        scrollToBottom();
-      }
-    });
-
-    // Server confirmed our sent message — update temporary optimistic ID
-    socket.on('message_ack', (savedMsg: ChatMessage) => {
-      setMessages((prev) =>
-        prev.map(m =>
-          (m.senderId === myId && m.content === savedMsg.content && m._id.startsWith('msg-') && !m._id.includes('-' + savedMsg._id))
-            ? { ...m, _id: savedMsg._id }
-            : m
-        )
-      );
-    });
-
-    socket.on('message_seen', ({ userId, lastMessageId }: { userId: string; lastMessageId: string }) => {
-      const currentFriend = activeFriendRef.current;
-      if (currentFriend && (currentFriend.id === userId || (currentFriend as any)._id === userId)) {
-        setLastSeenByFriend(lastMessageId);
-      }
-    });
-
-    // Handle recent chats loading
-    socket.on('recent_chats', (recentChats: any[]) => {
-      setFriends(prev => {
-        const newFriends = [...prev];
-        recentChats.forEach(rc => {
-          // NEVER add yourself as a chat partner
-          if (rc.id === myId || (rc as any)._id === myId) return;
-          if (!newFriends.find(f => f.id === rc.id || (f as any)._id === rc.id)) {
-            newFriends.push(rc);
-          }
-        });
-
-        setLastMessagesMap(prevMap => {
-          const map = { ...prevMap };
-          recentChats.forEach(rc => {
-            if (rc.id === myId || (rc as any)._id === myId) return;
-            if (rc.lastMessage) {
-              map[rc.id] = rc.lastMessage;
-            }
-          });
-          return map;
-        });
-
-        return newFriends;
-      });
-    });
-
-    // Global notification when a new message arrives from any user
-    socket.on('new_message_notification', (incoming: any) => {
-      const senderId = incoming.senderId;
-
-      // Ignore notifications from yourself
-      if (senderId === myId) return;
-
-      const currentFriend = activeFriendRef.current;
-      const currentFriendId = currentFriend?.id || (currentFriend as any)?._id;
-
-      // Update last messages map for the sidebar preview
-      setLastMessagesMap(prev => ({
-        ...prev,
-        [senderId]: incoming
-      }));
-
-      // If sender is not in friends list, add them to sidebar; move them to top
-      setFriends(prev => {
-        const exists = prev.some(f => (f.id || (f as any)._id) === senderId);
-        if (!exists) {
-          return [{
-            id: senderId,
-            name: incoming.senderName || 'Người dùng mới',
-            email: '',
-            avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80',
-            role: 'PLAYER' as any,
-          } as any, ...prev];
-        }
-        const senderFriend = prev.find(f => (f.id || (f as any)._id) === senderId);
-        const others = prev.filter(f => (f.id || (f as any)._id) !== senderId);
-        return senderFriend ? [senderFriend, ...others] : prev;
-      });
-
-      // CASE 1: We are ALREADY looking at this sender's chat
-      if (currentFriend && currentFriendId === senderId) {
-        appendMessageSafely(incoming);
-        scrollToBottom();
-      } else {
-        // CASE 2: Message from someone else (or no active chat)
-        // 1. Increment unread count badge for this sender
-        setUnreadCountsMap(prev => ({
-          ...prev,
-          [senderId]: (prev[senderId] || 0) + 1
-        }));
-
-        // 2. Set new message banner on top of the chat area
-        setNewMessageBanner({
-          senderId,
-          senderName: incoming.senderName || 'Người dùng',
-          content: incoming.content,
-        });
-
-        // 3. Show rich interactive Toast popup
-        toast.custom((t) => (
-          <div
-            onClick={() => {
-              setFriends(currentList => {
-                const target = currentList.find(f => (f.id || (f as any)._id) === senderId);
-                if (target) {
-                  setActiveFriend(target);
-                  setUnreadCountsMap(p => ({ ...p, [senderId]: 0 }));
-                  setNewMessageBanner(null);
-                }
-                return currentList;
-              });
-              toast.dismiss(t.id);
-            }}
-            className={`${t.visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} transition-all duration-300 max-w-sm w-full bg-surface shadow-card  rounded-2xl border border-primary/30 p-3.5 flex items-center gap-3 cursor-pointer hover:border-primary hover:`}
-          >
-            <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
-              <MessageSquare className="w-5 h-5 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-bold text-navy truncate">{incoming.senderName || 'Tin nhắn mới'}</p>
-                <span className="text-[10px] text-primary font-bold ml-2 shrink-0">Xem ngay</span>
-              </div>
-              <p className="text-sm text-slate-600 truncate mt-0.5">{incoming.content}</p>
-            </div>
-          </div>
-        ), { duration: 5000 });
-      }
-    });
-
-    return () => {
-      socket.off('connect', registerUser);
-      socket.off('disconnect');
-      socket.off('connect_error');
-      socket.off('chat_history');
-      socket.off('receive_message');
-      socket.off('message_ack');
-      socket.off('message_seen');
-      socket.off('new_message_notification');
-      socket.off('recent_chats');
-    };
-  }, [myId, appendMessageSafely]); // Only depend on myId, use activeFriendRef inside handlers
-
-  // Join room when active friend changes
-  useEffect(() => {
-    if (!activeFriend || !myId) return;
-    const friendId = activeFriend.id || (activeFriend as any)._id;
-
-    // NEVER join a room with yourself
-    if (friendId === myId) {
-      setActiveFriend(null);
-      return;
-    }
-
-    const roomId = [myId, friendId].sort().join('_');
-    const socket = getSocket();
-
-    socket.emit('join_room', { roomId });
-    socket.emit('mark_seen', { roomId, userId: myId, lastMessageId: 'all' });
-    setMessages([]);
-    setLastSeenByFriend(null);
-  }, [activeFriend, myId]);
+    friendsRef.current = friends;
+  }, [friends]);
 
   const scrollToBottom = () => {
     setTimeout(() => {
@@ -343,78 +84,425 @@ function ChatContent() {
     }, 50);
   };
 
-  const handleSelectFriend = (friend: User) => {
-    setActiveFriend(friend);
-    const friendId = friend.id || (friend as any)._id;
-    setUnreadCountsMap(prev => ({
-      ...prev,
-      [friendId]: 0,
-    }));
-    if (newMessageBanner?.senderId === friendId) {
-      setNewMessageBanner(null);
+  // Load chat partners / friends from API, plus the partner passed in the URL
+  useEffect(() => {
+    if (!myId) return;
+    let cancelled = false;
+
+    async function loadFriends() {
+      let list: User[] = [];
+      try {
+        list = await authApi.getFriends();
+      } catch (e) {
+        console.warn('Could not fetch friends from API:', e);
+      }
+      if (cancelled) return;
+
+      const merge = (prev: User[], next: User[]) => {
+        const merged = [...next];
+        prev.forEach((f) => {
+          if (!merged.some((m) => getUserId(m) === getUserId(f))) merged.push(f);
+        });
+        return merged;
+      };
+
+      if (targetUserId && targetUserId !== myId) {
+        let target = list.find((u) => getUserId(u) === targetUserId);
+        if (!target) {
+          target = {
+            id: targetUserId,
+            name: targetUserName && targetUserName !== 'null' ? targetUserName : 'Người dùng',
+            email: '',
+            role: targetUserRole === UserRole.ORGANIZER ? UserRole.ORGANIZER : undefined,
+            avatarUrl: targetUserAvatar || undefined,
+          } as any;
+          list = [target!, ...list];
+        }
+        setFriends((prev) => merge(prev, list));
+        setActiveFriend(target!);
+      } else {
+        setFriends((prev) => merge(prev, list));
+        if (list.length > 0 && !activeFriendRef.current) {
+          setActiveFriend(list[0]);
+        }
+      }
     }
+    loadFriends();
+    return () => {
+      cancelled = true;
+    };
+  }, [targetUserId, targetUserName, targetUserAvatar, targetUserRole, myId]);
+
+  // Append a message unless we already have it (same server id)
+  const appendMessageSafely = useCallback((incoming: ChatMessage) => {
+    setMessages((prev) => (prev.some((m) => m._id === incoming._id) ? prev : [...prev, incoming]));
+  }, []);
+
+  const markRoomSeen = useCallback(() => {
+    const roomId = activeRoomRef.current;
+    if (!roomId || document.visibilityState !== 'visible') return;
+    getSocket().emit('mark_seen', { roomId });
+  }, []);
+
+  const openConversation = useCallback((friend: User) => {
+    const friendId = getUserId(friend);
+    setActiveFriend(friend);
+    setUnreadCountsMap((prev) => ({ ...prev, [friendId]: 0 }));
+    setNewMessageBanner((banner) => (banner?.senderId === friendId ? null : banner));
+  }, []);
+
+  // Socket.IO wiring — registered once per user; handlers read the refs above
+  useEffect(() => {
+    if (!myId) return;
+    const socket = getSocket();
+
+    const handleConnect = () => {
+      setConnected(true);
+      socket.emit('register_user', {});
+      // Rooms are lost when the server restarts or the socket reconnects: re-join the open conversation
+      if (activeRoomRef.current) {
+        socket.emit('join_room', { roomId: activeRoomRef.current });
+        markRoomSeen();
+      }
+    };
+    const handleDisconnect = () => setConnected(false);
+
+    const handleAuthError = (data: { message?: string }) => {
+      setConnected(false);
+      toast.error(data?.message || 'Không thể kết nối trò chuyện, vui lòng đăng nhập lại');
+    };
+
+    const handleChatHistory = (payload: { roomId: string; messages: ChatMessage[] }) => {
+      if (!payload || payload.roomId !== activeRoomRef.current) return; // stale room
+      const history = payload.messages || [];
+      const historyIds = new Set(history.map((m) => m._id));
+      const historyClientIds = new Set(history.map((m) => m.clientMsgId).filter(Boolean));
+      // Optimistic messages the server already saved (ack lost on reconnect) are now confirmed
+      historyClientIds.forEach((id) => {
+        clearTimeout(ackTimersRef.current[id!]);
+        delete ackTimersRef.current[id!];
+      });
+      // Merge rather than replace: keep live messages that arrived while history was loading
+      // and optimistic messages the server hasn't saved yet
+      setMessages((prev) => [
+        ...history,
+        ...prev.filter(
+          (m) =>
+            m.roomId === payload.roomId &&
+            !historyIds.has(m._id) &&
+            !(m.clientMsgId && historyClientIds.has(m.clientMsgId)),
+        ),
+      ]);
+      const friendId = partnerOf(payload.roomId, myId);
+      if (history.length > 0 && friendId) {
+        setLastMessagesMap((prev) => ({ ...prev, [friendId]: history[history.length - 1] }));
+      }
+      scrollToBottom();
+    };
+
+    const handleChatError = (data: { message?: string }) => {
+      toast.error(data?.message || 'Không thể mở cuộc trò chuyện');
+    };
+
+    // New message in a room this socket is in (from the partner, or from my other tab)
+    const handleReceiveMessage = (incoming: ChatMessage) => {
+      const friendId = partnerOf(incoming.roomId, myId);
+      if (friendId) setLastMessagesMap((prev) => ({ ...prev, [friendId]: incoming }));
+      if (incoming.roomId !== activeRoomRef.current) return;
+      appendMessageSafely(incoming);
+      if (incoming.senderId !== myId) markRoomSeen();
+      scrollToBottom();
+    };
+
+    // Server confirmed our message: swap the optimistic copy for the saved one
+    const handleMessageAck = (saved: ChatMessage) => {
+      if (!saved.clientMsgId) return;
+      clearTimeout(ackTimersRef.current[saved.clientMsgId]);
+      delete ackTimersRef.current[saved.clientMsgId];
+      const isPending = (m: ChatMessage) => !!m.status && m.clientMsgId === saved.clientMsgId;
+      setMessages((prev) => {
+        // No pending copy: history already brought the saved one in, or another room is open
+        if (!prev.some(isPending)) return prev;
+        return prev.filter((m) => m._id !== saved._id).map((m) => (isPending(m) ? saved : m));
+      });
+      const friendId = partnerOf(saved.roomId, myId);
+      if (friendId) setLastMessagesMap((prev) => ({ ...prev, [friendId]: saved }));
+    };
+
+    const handleMessageError = (data: { clientMsgId?: string; message?: string }) => {
+      if (data?.clientMsgId) {
+        clearTimeout(ackTimersRef.current[data.clientMsgId]);
+        delete ackTimersRef.current[data.clientMsgId];
+        setMessages((prev) =>
+          prev.map((m) => (m.clientMsgId === data.clientMsgId ? { ...m, status: 'failed' } : m)),
+        );
+      }
+      toast.error(data?.message || 'Gửi tin nhắn thất bại');
+    };
+
+    const handleMessageSeen = ({ roomId, userId, seenAt }: { roomId: string; userId: string; seenAt: string }) => {
+      if (userId === myId) {
+        // Read from another tab of mine
+        const friendId = partnerOf(roomId, myId);
+        if (friendId) setUnreadCountsMap((prev) => ({ ...prev, [friendId]: 0 }));
+        return;
+      }
+      if (roomId !== activeRoomRef.current) return;
+      setMessages((prev) =>
+        prev.map((m) => (m.senderId === myId && !m.status && !m.readAt ? { ...m, readAt: seenAt } : m)),
+      );
+    };
+
+    const handleRecentChats = (recentChats: RecentChat[]) => {
+      const chats = (recentChats || []).filter((rc) => getUserId(rc) && getUserId(rc) !== myId);
+      setFriends((prev) => {
+        const next = prev.map((f) => {
+          const rc = chats.find((c) => getUserId(c) === getUserId(f));
+          // Server data has the real name/avatar; URL-provided placeholders get replaced
+          return rc ? { ...f, name: rc.name || f.name, avatarUrl: f.avatarUrl || rc.avatarUrl, role: f.role || rc.role } : f;
+        });
+        chats.forEach((rc) => {
+          if (!next.some((f) => getUserId(f) === getUserId(rc))) next.push(rc);
+        });
+        return next;
+      });
+      setLastMessagesMap((prev) => {
+        const map = { ...prev };
+        chats.forEach((rc) => {
+          if (rc.lastMessage) map[getUserId(rc)] = rc.lastMessage;
+        });
+        return map;
+      });
+      setUnreadCountsMap((prev) => {
+        const map = { ...prev };
+        const activeId = getUserId(activeFriendRef.current);
+        chats.forEach((rc) => {
+          map[getUserId(rc)] = getUserId(rc) === activeId ? 0 : rc.unreadCount || 0;
+        });
+        return map;
+      });
+    };
+
+    // Sent to my personal room for every message addressed to me, wherever I am
+    const handleNewMessageNotification = (incoming: ChatMessage) => {
+      const senderId = incoming.senderId;
+      if (senderId === myId) return;
+
+      setLastMessagesMap((prev) => ({ ...prev, [senderId]: incoming }));
+
+      // Add the sender to the sidebar if needed and move them to the top
+      setFriends((prev) => {
+        const existing = prev.find((f) => getUserId(f) === senderId);
+        const others = prev.filter((f) => getUserId(f) !== senderId);
+        const sender = existing || ({
+          id: senderId,
+          name: incoming.senderName || 'Người dùng mới',
+          email: '',
+          avatarUrl: DEFAULT_AVATAR,
+        } as any);
+        return [sender, ...others];
+      });
+
+      // Already looking at this conversation: receive_message handles the stream
+      if (getUserId(activeFriendRef.current) === senderId) return;
+
+      setUnreadCountsMap((prev) => ({ ...prev, [senderId]: (prev[senderId] || 0) + 1 }));
+      setNewMessageBanner({
+        senderId,
+        senderName: incoming.senderName || 'Người dùng',
+        content: incoming.content,
+      });
+
+      toast.custom((t) => (
+        <div
+          onClick={() => {
+            const target = friendsRef.current.find((f) => getUserId(f) === senderId);
+            if (target) openConversation(target);
+            toast.dismiss(t.id);
+          }}
+          className={`${t.visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} transition-all duration-300 max-w-sm w-full bg-white shadow-2xl rounded-2xl border border-primary/30 p-3.5 flex items-center gap-3 cursor-pointer hover:border-primary hover:shadow-lg`}
+        >
+          <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+            <MessageSquare className="w-5 h-5 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold text-navy truncate">{incoming.senderName || 'Tin nhắn mới'}</p>
+              <span className="text-[10px] text-primary font-bold ml-2 shrink-0">Xem ngay</span>
+            </div>
+            <p className="text-xs text-slate-600 truncate mt-0.5">{incoming.content}</p>
+          </div>
+        </div>
+      ), { id: `chat-${senderId}`, duration: 5000 });
+    };
+
+    // Mark the open conversation as read when the user comes back to the tab
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') markRoomSeen();
+    };
+
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
+    socket.on('connect_error', handleDisconnect);
+    socket.on('auth_error', handleAuthError);
+    socket.on('chat_history', handleChatHistory);
+    socket.on('chat_error', handleChatError);
+    socket.on('receive_message', handleReceiveMessage);
+    socket.on('message_ack', handleMessageAck);
+    socket.on('message_error', handleMessageError);
+    socket.on('message_seen', handleMessageSeen);
+    socket.on('recent_chats', handleRecentChats);
+    socket.on('new_message_notification', handleNewMessageNotification);
+    document.addEventListener('visibilitychange', handleVisibility);
+    if (socket.connected) handleConnect();
+
+    return () => {
+      // Pass the handlers so listeners owned by other components (e.g. Navbar badge) stay attached
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
+      socket.off('connect_error', handleDisconnect);
+      socket.off('auth_error', handleAuthError);
+      socket.off('chat_history', handleChatHistory);
+      socket.off('chat_error', handleChatError);
+      socket.off('receive_message', handleReceiveMessage);
+      socket.off('message_ack', handleMessageAck);
+      socket.off('message_error', handleMessageError);
+      socket.off('message_seen', handleMessageSeen);
+      socket.off('recent_chats', handleRecentChats);
+      socket.off('new_message_notification', handleNewMessageNotification);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+    // `token`: a new token means getSocket() builds a new socket, so listeners must move to it
+  }, [myId, token, appendMessageSafely, markRoomSeen, openConversation]);
+
+  useEffect(() => {
+    const timers = ackTimersRef.current;
+    return () => Object.values(timers).forEach(clearTimeout);
+  }, []);
+
+  // Join room when active friend changes
+  useEffect(() => {
+    if (!activeFriend || !myId) return;
+    const friendId = getUserId(activeFriend);
+
+    // NEVER join a room with yourself
+    if (friendId === myId) {
+      setActiveFriend(null);
+      return;
+    }
+
+    const roomId = dmRoomId(myId, friendId);
+    if (activeRoomRef.current === roomId) return;
+    activeRoomRef.current = roomId;
+    setMessages([]);
+    setUnreadCountsMap((prev) => ({ ...prev, [friendId]: 0 }));
+
+    const socket = getSocket();
+    socket.emit('join_room', { roomId });
+    markRoomSeen();
+  }, [activeFriend, myId, markRoomSeen]);
+
+  const handleSelectFriend = (friend: User) => {
+    openConversation(friend);
+  };
+
+  const emitMessage = (msg: ChatMessage) => {
+    const clientMsgId = msg.clientMsgId!;
+    getSocket().emit('send_message', { roomId: msg.roomId, content: msg.content, clientMsgId });
+    // No ack in time (server down, socket stuck): let the user retry
+    clearTimeout(ackTimersRef.current[clientMsgId]);
+    ackTimersRef.current[clientMsgId] = setTimeout(() => {
+      delete ackTimersRef.current[clientMsgId];
+      setMessages((prev) =>
+        prev.map((m) => (m.clientMsgId === clientMsgId && m.status === 'sending' ? { ...m, status: 'failed' } : m)),
+      );
+    }, ACK_TIMEOUT_MS);
   };
 
   const handleSendMessage = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!inputText.trim() || !activeFriend) return;
+    const content = inputText.trim();
+    if (!content || !activeFriend || !myId) return;
+    if (content.length > MAX_MESSAGE_LENGTH) {
+      toast.error(`Tin nhắn tối đa ${MAX_MESSAGE_LENGTH} ký tự`);
+      return;
+    }
 
-    const friendId = activeFriend.id || (activeFriend as any)._id;
-    const roomId = [myId, friendId].sort().join('_');
-    const socket = getSocket();
-
+    const friendId = getUserId(activeFriend);
+    const clientMsgId = `local-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
     const newMsg: ChatMessage = {
-      _id: `msg-${Date.now()}`,
+      _id: clientMsgId,
+      clientMsgId,
+      roomId: dmRoomId(myId, friendId),
       senderId: myId,
       senderName: user?.name || 'VĐV',
-      content: inputText.trim(),
+      content,
       createdAt: new Date().toISOString(),
+      status: 'sending',
     };
 
-    // Optimistic UI update with double-submit guard
-    setMessages((prev) => {
-      const isDuplicate = prev.some(m =>
-        m.senderId === myId &&
-        m.content === newMsg.content &&
-        Math.abs(new Date(m.createdAt).getTime() - new Date(newMsg.createdAt).getTime()) < 600
-      );
-      if (isDuplicate) return prev;
-      return [...prev, newMsg];
-    });
-    setLastMessagesMap(prev => ({
-      ...prev,
-      [friendId]: newMsg
-    }));
-
-    socket.emit('send_message', {
-      roomId,
-      senderId: myId,
-      senderName: user?.name || 'VĐV',
-      receiverId: friendId,
-      content: inputText.trim(),
-    });
+    setMessages((prev) => [...prev, newMsg]);
+    setLastMessagesMap((prev) => ({ ...prev, [friendId]: newMsg }));
+    emitMessage(newMsg);
 
     setInputText('');
     scrollToBottom();
   };
 
+  const handleRetry = (msg: ChatMessage) => {
+    const retry: ChatMessage = { ...msg, status: 'sending' };
+    setMessages((prev) => prev.map((m) => (m.clientMsgId === msg.clientMsgId ? retry : m)));
+    emitMessage(retry);
+  };
+
   const filteredFriends = friends.filter((f) => {
-    const fId = f.id || (f as any)._id;
     // Never show yourself in the contacts sidebar
-    if (fId === myId) return false;
+    if (getUserId(f) === myId) return false;
     return `${f.name} ${f.email}`.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
+  // People search on the server, so a conversation can start with anyone, not only existing contacts
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (!myId || q.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      try {
+        const users = await authApi.searchUsers(q);
+        if (!cancelled) setSearchResults(users);
+      } catch {
+        if (!cancelled) setSearchResults([]);
+      }
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [searchQuery, myId]);
+
+  const otherUsers = searchResults.filter(
+    (u) => getUserId(u) !== myId && !friends.some((f) => getUserId(f) === getUserId(u)),
+  );
+
+  const handleStartChat = (target: User) => {
+    setFriends((prev) => (prev.some((f) => getUserId(f) === getUserId(target)) ? prev : [target, ...prev]));
+    setSearchQuery('');
+    openConversation(target);
+  };
+
   if (!isAuthenticated && !user) {
     return (
-      <div className="bg-canvas flex-1 flex items-center justify-center p-4 min-h-[calc(100vh-65px)]">
-        <div className="max-w-md w-full bg-surface shadow-card rounded-3xl border border-slate-200 p-8 text-center  space-y-4">
+      <div className="bg-[#F8FAFC] flex-1 flex items-center justify-center p-4 min-h-[calc(100vh-65px)]">
+        <div className="max-w-md w-full bg-white rounded-3xl border border-slate-200 p-8 text-center shadow-lg space-y-4">
           <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
             <MessageSquare className="w-8 h-8" />
           </div>
-          <h2 className="text-xl font-bold text-navy">Đăng nhập để nhắn tin</h2>
-          <p className="text-sm text-slate-500">
-            Đăng nhập để nhắn tin với bạn chơi và ban tổ chức.
+          <h2 className="text-xl font-bold text-navy">Đăng Nhập Để Trò Chuyện</h2>
+          <p className="text-xs text-slate-500">
+            Bạn cần đăng nhập để kết nối và gửi tin nhắn trực tiếp đến bạn chơi và ban tổ chức giải đấu.
           </p>
           <a
             href="/login"
@@ -430,19 +518,19 @@ function ChatContent() {
   const activeFriendId = activeFriend?.id || (activeFriend as any)?._id;
 
   return (
-    <div className="bg-canvas flex-1 flex flex-col h-[calc(100vh-65px)]">
+    <div className="bg-[#F8FAFC] flex-1 flex flex-col h-[calc(100vh-65px)]">
       <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4 flex-1 flex flex-col">
-
+        
         {/* Chat Desktop Split-view container */}
-        <div className="flex-1 bg-surface shadow-card rounded-3xl border border-slate-200/80  flex overflow-hidden">
-
+        <div className="flex-1 bg-white rounded-3xl border border-slate-200/80 shadow-md flex overflow-hidden">
+          
           {/* Left Pane: Contacts & Search (350px width) */}
           <div className="w-80 sm:w-96 border-r border-slate-200 flex flex-col bg-slate-50/50">
-
+            
             {/* Header & Search */}
             <div className="p-4 border-b border-slate-200 bg-white space-y-3">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold text-navy">Tin nhắn</h2>
+                <h2 className="text-lg font-bold text-navy">Tin nhắn & Hội thoại</h2>
                 <div className="flex items-center gap-1.5 text-xs text-slate-500">
                   <span className={`w-2 h-2 rounded-full ${connected ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'}`} />
                   <span>{connected ? 'Trực tuyến' : 'Sẵn sàng'}</span>
@@ -450,37 +538,38 @@ function ChatContent() {
               </div>
 
               <div className="relative">
-                <Search className="w-4 h-4 text-muted absolute left-3 top-1/2 -translate-y-1/2" />
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
-                  placeholder="Tìm người hoặc ban tổ chức..."
+                  placeholder="Tìm BTC, bạn bè hoặc người chơi..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="cm-control w-full pl-9 pr-3 py-1.5 text-xs bg-slate-100 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-navy"
+                  className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-100 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-navy"
                 />
               </div>
             </div>
 
             {/* Contacts List */}
             <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
-              {filteredFriends.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center p-6 text-muted">
+              {filteredFriends.length === 0 && otherUsers.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center p-6 text-slate-400">
                   <div className="w-full h-full border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center bg-slate-50/50 p-6">
                     <MessageSquare className="w-10 h-10 mb-3 text-slate-300" />
                     <p className="text-sm font-medium text-slate-500 text-center">Chưa có cuộc trò chuyện nào</p>
-
+                    <p className="text-xs text-center mt-1">Hãy bắt đầu nhắn tin để khởi động cuộc trò chuyện nhé!</p>
                   </div>
                 </div>
               ) : (
-                filteredFriends.map((friend, index) => {
+                <>
+                {filteredFriends.map((friend, index) => {
                 const friendId = friend.id || (friend as any)._id;
                 const isActive = activeFriendId === friendId;
                 const unreadCount = unreadCountsMap[friendId] || 0;
-
+                
                 // Get display last message from map or fallback
                 let displayLastMsg = `Tin nhắn mới đến ${friend.name}`;
                 let displayTime = '';
-
+                
                 const friendLastMsg = lastMessagesMap[friendId];
                 if (friendLastMsg) {
                   const sender = friendLastMsg.senderId === myId ? 'Bạn' : friend.name.split(' ')[0];
@@ -492,7 +581,7 @@ function ChatContent() {
                   <button
                     key={`${friendId}-${index}`}
                     onClick={() => handleSelectFriend(friend)}
-                    className={`cm-button w-full p-3.5 flex items-center gap-3 text-left transition relative ${
+                    className={`w-full p-3.5 flex items-center gap-3 text-left transition relative ${
                       isActive ? 'bg-[#EFF4FF]' : 'hover:bg-slate-100/80'
                     }`}
                   >
@@ -511,7 +600,7 @@ function ChatContent() {
                           {friend.name}
                         </strong>
                         {displayTime && (
-                          <span className="text-[10px] text-muted shrink-0 whitespace-nowrap">
+                          <span className="text-[10px] text-slate-400 shrink-0 whitespace-nowrap">
                             {displayTime}
                           </span>
                         )}
@@ -530,7 +619,34 @@ function ChatContent() {
                     </div>
                   </button>
                 );
-              }))}
+              })}
+
+                {otherUsers.length > 0 && (
+                  <div>
+                    <p className="px-3.5 pt-3 pb-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                      Người dùng khác
+                    </p>
+                    {otherUsers.map((u) => (
+                      <button
+                        key={`search-${getUserId(u)}`}
+                        onClick={() => handleStartChat(u)}
+                        className="w-full p-3.5 flex items-center gap-3 text-left transition hover:bg-slate-100/80"
+                      >
+                        <img
+                          src={u.avatarUrl || DEFAULT_AVATAR}
+                          alt={u.name}
+                          className="w-11 h-11 rounded-full object-cover ring-2 ring-white shadow-xs shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <strong className="text-xs font-bold text-navy truncate block">{u.name}</strong>
+                          <p className="text-[11px] text-primary/70 italic mt-0.5">Bắt đầu trò chuyện</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                </>
+              )}
             </div>
 
           </div>
@@ -538,7 +654,7 @@ function ChatContent() {
           {/* Right Pane: Active Chat Room */}
           {activeFriend ? (
             <div className="flex-1 flex flex-col bg-white">
-
+              
               {/* Chat Room Top Bar */}
               <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-white/80 backdrop-blur-sm">
                 <div className="flex items-center gap-3">
@@ -579,13 +695,13 @@ function ChatContent() {
                           handleSelectFriend(target);
                         }
                       }}
-                      className="cm-action cm-button px-3 py-1 bg-primary text-white text-xs font-semibold rounded-xl hover:bg-primary-dark transition shadow-xs"
+                      className="px-3 py-1 bg-primary text-white text-xs font-semibold rounded-xl hover:bg-primary-dark transition shadow-xs"
                     >
                       Trả lời ngay
                     </button>
                     <button
                       onClick={() => setNewMessageBanner(null)}
-                      className="cm-button p-1 text-muted hover:text-slate-600 rounded-lg"
+                      className="p-1 text-slate-400 hover:text-slate-600 rounded-lg"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -610,6 +726,7 @@ function ChatContent() {
                 {messages.map((msg, index) => {
                   const isMine = msg.senderId === myId;
                   const isLastMine = isMine && index === messages.length - 1;
+                  const sentAt = new Date(msg.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 
                   return (
                     <div
@@ -617,27 +734,31 @@ function ChatContent() {
                       className={`flex flex-col ${isMine ? 'items-end' : 'items-start'}`}
                     >
                       <div
-                        className={`max-w-md px-4 py-2.5 rounded-2xl text-[15px] leading-snug ${
+                        className={`max-w-md px-4 py-2.5 rounded-2xl text-[15px] leading-snug whitespace-pre-wrap break-words ${
                           isMine
                             ? 'bg-[#3B82F6] text-white rounded-br-sm'
                             : 'bg-[#303033] text-white rounded-bl-sm shadow-sm'
-                        }`}
+                        } ${msg.status === 'sending' ? 'opacity-70' : ''} ${msg.status === 'failed' ? 'ring-2 ring-rose-400' : ''}`}
                       >
                         {msg.content}
                       </div>
 
-                      {/* Seen / Delivered receipt indicator */}
-                      {isLastMine && (
+                      {/* Failed messages always show a retry; otherwise the last one shows sent/seen */}
+                      {isMine && msg.status === 'failed' ? (
+                        <button
+                          type="button"
+                          onClick={() => handleRetry(msg)}
+                          className="mt-1 mr-1 text-[11px] font-semibold text-rose-500 hover:underline"
+                        >
+                          Gửi lỗi · Thử lại
+                        </button>
+                      ) : isLastMine && (
                         <div className="flex items-center gap-1 mt-1 text-[11px] text-slate-500 font-medium mr-1">
-                          {lastSeenByFriend ? (
-                            <>
-                              <span>{new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} - Đã đọc</span>
-                            </>
-                          ) : (
-                            <>
-                              <span>{new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} - Đã gửi</span>
-                            </>
-                          )}
+                          <span>
+                            {msg.status === 'sending'
+                              ? 'Đang gửi...'
+                              : `${sentAt} - ${msg.readAt ? 'Đã đọc' : 'Đã gửi'}`}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -653,13 +774,14 @@ function ChatContent() {
                     type="text"
                     placeholder="Nhập tin nhắn..."
                     value={inputText}
+                    maxLength={MAX_MESSAGE_LENGTH}
                     onChange={(e) => setInputText(e.target.value)}
-                    className="cm-control flex-1 px-4 py-2.5 text-sm bg-slate-100 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface shadow-card text-navy transition"
+                    className="flex-1 px-4 py-2.5 text-sm bg-slate-100 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white text-navy transition"
                   />
                   <button
-                    type="submit" aria-label="Gửi tin nhắn"
+                    type="submit"
                     disabled={!inputText.trim()}
-                    className="cm-action cm-button w-10 h-10 rounded-2xl bg-primary hover:bg-primary-dark text-white flex items-center justify-center transition disabled:opacity-40 shadow-sm"
+                    className="w-10 h-10 rounded-2xl bg-primary hover:bg-primary-dark text-white flex items-center justify-center transition disabled:opacity-40 shadow-sm"
                   >
                     <Send className="w-4 h-4" />
                   </button>
@@ -669,12 +791,12 @@ function ChatContent() {
             </div>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center bg-slate-50 p-8">
-              <div className="w-full max-w-md border-2 border-dashed border-slate-200 rounded-3xl p-10 flex flex-col items-center justify-center bg-surface shadow-card ">
+              <div className="w-full max-w-md border-2 border-dashed border-slate-200 rounded-3xl p-10 flex flex-col items-center justify-center bg-white shadow-sm">
                 <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                   <MessageSquare className="w-8 h-8 text-primary" />
                 </div>
-                <h3 className="text-lg font-bold text-navy mb-1 text-center">Chọn cuộc trò chuyện</h3>
-                <p className="text-sm text-slate-500 text-center">Chọn người ở danh sách bên trái để nhắn tin.</p>
+                <h3 className="text-lg font-bold text-navy mb-1 text-center">Chào mừng đến với Trò chuyện</h3>
+                <p className="text-sm text-slate-500 text-center">Hãy bắt đầu nhắn tin với Ban tổ chức để khởi động cuộc trò chuyện nhé!</p>
               </div>
             </div>
           )}

@@ -1,4 +1,4 @@
-import { Controller, Get, Put, Body, UseGuards, Req, NotFoundException, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Put, Body, UseGuards, Req, NotFoundException, Param, Delete, Query } from '@nestjs/common';
 import { UsersService } from './domains/services/users.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UserRole } from '@courtmate/shared';
@@ -21,6 +21,13 @@ export class UsersController {
   @Get('friends')
   async getFriends(@Req() req: any) {
     return this.usersService.getFriends(req.user.email);
+  }
+
+  /** People search for starting a direct chat. Returns public fields only. */
+  @UseGuards(JwtAuthGuard)
+  @Get('search')
+  async searchUsers(@Req() req: any, @Query('q') q?: string) {
+    return this.usersService.searchByName(q || '', String(req.user.sub));
   }
 
   @UseGuards(JwtAuthGuard)
