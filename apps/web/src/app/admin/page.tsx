@@ -93,12 +93,20 @@ export default function AdminDashboardPage() {
     const handleOnlineUsers = (payload: OnlineUserItem[]) => {
       setOnlineUsersList(payload);
     };
+    // Broadcast notifications (e.g. "X vừa đăng ký giải Y") have no userId — pop a toast
+    // right here since the admin header has no notification bell of its own.
+    const handleNotification = (payload: { userId: string | null; title: string; body: string }) => {
+      if (payload.userId) return;
+      toast(`${payload.title}: ${payload.body}`, { icon: '🔔' });
+    };
 
     socket.on('online-count', handleOnlineCount);
     socket.on('online-users', handleOnlineUsers);
+    socket.on('notification:new', handleNotification);
     return () => {
       socket.off('online-count', handleOnlineCount);
       socket.off('online-users', handleOnlineUsers);
+      socket.off('notification:new', handleNotification);
     };
   }, [user, isAuthenticated, authLoading]);
 

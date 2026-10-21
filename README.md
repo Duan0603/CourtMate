@@ -183,5 +183,6 @@ courtmate-monorepo/
 
 ```
 cd apps/backend
+$env:SIM_API_URL = "https://courtmate-backend-8t2s.onrender.com"
 npm run simulate:online-traffic
 ```
