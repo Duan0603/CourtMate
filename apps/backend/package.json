@@ -15,7 +15,8 @@
     "seed:danang-tournaments": "node scripts/seed-50-tournaments-danang.js",
     "seed:all-registrations": "node scripts/seed-registrations-for-all-tournaments.js",
     "seed:feedbacks": "node scripts/seed-feedbacks.js",
-    "test:auth": "npm run build && node --test test/auth-registration.test.cjs"
+    "test:auth": "npm run build && node --test test/auth-registration.test.cjs",
+    "simulate:online-traffic": "node scripts/simulate-online-traffic.js"
   },
   "dependencies": {
     "@courtmate/shared": "file:../../packages/shared",
@@ -45,7 +46,9 @@
     "@types/migrate-mongo": "^10.0.4",
     "@types/multer": "^2.1.0",
     "@types/node": "^20.0.0",
+    "jsonwebtoken": "^9.0.3",
     "nodemon": "^3.1.14",
+    "socket.io-client": "^4.8.4",
     "typescript": "^5.1.3"
   }
 }

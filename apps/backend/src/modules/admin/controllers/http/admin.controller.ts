@@ -26,6 +26,26 @@ export class AdminController {
   }
 
   /**
+   * GET /admin/online-users
+   * Live list of who's online right now and which page they're viewing.
+   */
+  @Get('online-users')
+  @Roles('REGIONAL_ADMIN', 'SUPER_ADMIN')
+  async getOnlineUsers() {
+    return this.adminService.getOnlineUsers();
+  }
+
+  /**
+   * GET /admin/top-pages
+   * Most-visited routes across the site (last 30 days).
+   */
+  @Get('top-pages')
+  @Roles('REGIONAL_ADMIN', 'SUPER_ADMIN')
+  async getTopPages() {
+    return this.adminService.getTopPages();
+  }
+
+  /**
    * GET /admin/users
    * Full user management list with role & online status.
    */

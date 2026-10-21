@@ -27,7 +27,24 @@ export class RegistrationsService {
       playerId,
       status: RegistrationStatus.PENDING,
     });
-    return newReg.save();
+    const saved = await newReg.save();
+
+    // Broadcast so everyone currently on the site sees "X vừa đăng ký giải Y".
+    try {
+      const tour = await this.tournamentModel.findById(dto.tournamentId).exec();
+      await this.notificationsService.send({
+        type: 'REGISTRATION_NEW',
+        title: 'Đăng ký mới',
+        body: tour?.title
+          ? `${dto.playerName} vừa đăng ký giải "${tour.title}"`
+          : `${dto.playerName} vừa đăng ký một giải đấu`,
+        link: `/tournaments/${dto.tournamentId}`,
+      });
+    } catch (error) {
+      console.error('[Notifications] Broadcast new-registration error:', error);
+    }
+
+    return saved;
   }
 
   async findByPlayer(playerId: string): Promise<Registration[]> {

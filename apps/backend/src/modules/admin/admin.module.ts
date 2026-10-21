@@ -8,6 +8,7 @@ import { UsersModule } from '../users/users.module';
 import { TournamentsModule } from '../tournaments/tournaments.module';
 import { MatchesModule } from '../matches/matches.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { AnalyticsModule } from '../analytics/analytics.module';
 import { AuthModule } from '../../core/auth/auth.module';
 
 @Module({
@@ -16,6 +17,7 @@ import { AuthModule } from '../../core/auth/auth.module';
     TournamentsModule,
     MatchesModule,
     NotificationsModule,
+    AnalyticsModule,
     AuthModule,
     // Register raw registrations collection for aggregation queries
     MongooseModule.forFeature([

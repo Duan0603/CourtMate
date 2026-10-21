@@ -4,7 +4,7 @@ CourtMate là ứng dụng di động đa nền tảng (React Native / Expo) và
 
 ---
 
-##  Bảng Phân Chia Công Việc (Team Assignments)
+## Bảng Phân Chia Công Việc (Team Assignments)
 
 Dự án được chia thành **8 phase** phát triển cho nhóm 4 thành viên. Mỗi thành viên chịu trách nhiệm chính **2 phase** (đan xen giữa Frontend và Backend):
 
@@ -21,7 +21,7 @@ Dự án được chia thành **8 phase** phát triển cho nhóm 4 thành viên
 
 ---
 
-##  Yêu Cầu Hệ Thống (Prerequisites)
+## Yêu Cầu Hệ Thống (Prerequisites)
 
 Trước khi bắt đầu, hãy đảm bảo máy tính của bạn đã cài đặt các công cụ sau:
 
@@ -31,7 +31,7 @@ Trước khi bắt đầu, hãy đảm bảo máy tính của bạn đã cài đ
 
 ---
 
-##  Các Bước Cài Đặt Dự Án (Setup Instructions)
+## Các Bước Cài Đặt Dự Án (Setup Instructions)
 
 Thực hiện các lệnh sau tại thư mục gốc (`d:\EXE101`):
 
@@ -84,7 +84,7 @@ npm run docker:down
 
 ---
 
-##  Quản Lý Database Migrations (Dữ liệu Mẫu & Schema)
+## Quản Lý Database Migrations (Dữ liệu Mẫu & Schema)
 
 Dự án sử dụng `migrate-mongo` để khởi tạo dữ liệu mẫu và đồng bộ cấu hình database.
 
@@ -124,7 +124,7 @@ Nếu bạn muốn thao tác trực tiếp, hãy chạy các lệnh sau ngay t�
 
 ---
 
-##  Chạy Ứng Dụng Trong Quá Trình Phát Triển (Development Run)
+## Chạy Ứng Dụng Trong Quá Trình Phát Triển (Development Run)
 
 Mở 2 cửa sổ terminal tại thư mục root và chạy song song:
 
@@ -151,7 +151,7 @@ Terminal sẽ hiển thị QR Code của Expo. Bạn có thể:
 
 ---
 
-##  Danh Sách Địa Chỉ & Cổng Dịch Vụ (Exposed Ports)
+## Danh Sách Địa Chỉ & Cổng Dịch Vụ (Exposed Ports)
 
 Khi các dịch vụ Docker và Apps đang chạy, bạn có thể truy cập:
 
@@ -163,7 +163,7 @@ Khi các dịch vụ Docker và Apps đang chạy, bạn có thể truy cập:
 
 ---
 
-##  Cấu Trúc Thư Mục Dự Án (Folder Structure)
+## Cấu Trúc Thư Mục Dự Án (Folder Structure)
 
 ```
 courtmate-monorepo/
@@ -177,4 +177,11 @@ courtmate-monorepo/
  ┃ ┗ shared/             # Thư viện TypeScript dùng chung (Enums, Types, Interfaces)
  ┣ docker-compose.yml    # Khởi tạo MongoDB, Redis & Mongo-Express
  ┗ package.json          # Quản lý Workspaces & Các Script chạy nhanh ở root
+```
+
+## Simulate user
+
+```
+cd apps/backend
+npm run simulate:online-traffic
 ```

@@ -29,9 +29,10 @@ import {
   BadgeCheck,
   LogOut
 } from 'lucide-react';
-import { adminApi, AdminDashboardOverview, AdminUserItem, OrganizerRequestItem } from '../../lib/admin.api';
+import { adminApi, AdminDashboardOverview, AdminUserItem, OrganizerRequestItem, TopPageItem, OnlineUserItem } from '../../lib/admin.api';
 import { useAuth } from '../../context/AuthContext';
 import { UserRole } from '@courtmate/shared';
+import { getNotificationSocket } from '../../lib/notification-socket';
 import toast from 'react-hot-toast';
 
 export default function AdminDashboardPage() {
@@ -48,6 +49,8 @@ export default function AdminDashboardPage() {
   const [usersList, setUsersList] = useState<AdminUserItem[]>([]);
   const [tournamentsList, setTournamentsList] = useState<any[]>([]);
   const [organizerRequests, setOrganizerRequests] = useState<OrganizerRequestItem[]>([]);
+  const [topPages, setTopPages] = useState<TopPageItem[]>([]);
+  const [onlineUsersList, setOnlineUsersList] = useState<OnlineUserItem[]>([]);
   const [activityLogs, setActivityLogs] = useState<{ id: string; time: string; admin: string; action: string; target: string; status: 'approved' | 'rejected' | 'role' | 'status' }[]>([]);
 
   const [loading, setLoading] = useState(true);
@@ -74,6 +77,29 @@ export default function AdminDashboardPage() {
     }
 
     loadDashboardData();
+  }, [user, isAuthenticated, authLoading]);
+
+  // Live online-user count pushed over the /notifications socket (admin room).
+  useEffect(() => {
+    if (authLoading || !isAuthenticated) return;
+    if (user && user.role !== UserRole.SUPER_ADMIN && user.role !== UserRole.REGIONAL_ADMIN) return;
+
+    const socket = getNotificationSocket();
+    if (!socket) return;
+
+    const handleOnlineCount = (payload: { count: number }) => {
+      setOverview((prev) => ({ ...prev, onlineUsers: payload.count }));
+    };
+    const handleOnlineUsers = (payload: OnlineUserItem[]) => {
+      setOnlineUsersList(payload);
+    };
+
+    socket.on('online-count', handleOnlineCount);
+    socket.on('online-users', handleOnlineUsers);
+    return () => {
+      socket.off('online-count', handleOnlineCount);
+      socket.off('online-users', handleOnlineUsers);
+    };
   }, [user, isAuthenticated, authLoading]);
 
   const loadDashboardData = async () => {
@@ -119,6 +145,26 @@ export default function AdminDashboardPage() {
         }
       } catch (err) {
         console.error('Failed to fetch organizer requests:', err);
+      }
+
+      // 5. Fetch most-visited pages (last 30 days)
+      try {
+        const pages = await adminApi.getTopPages();
+        if (pages && Array.isArray(pages)) {
+          setTopPages(pages);
+        }
+      } catch (err) {
+        console.error('Failed to fetch top pages:', err);
+      }
+
+      // 6. Fetch live online-users snapshot (name + current page)
+      try {
+        const online = await adminApi.getOnlineUsers();
+        if (online && Array.isArray(online)) {
+          setOnlineUsersList(online);
+        }
+      } catch (err) {
+        console.error('Failed to fetch online users:', err);
       }
     } finally {
       setLoading(false);
@@ -491,6 +537,83 @@ export default function AdminDashboardPage() {
 
             <div className="pt-3 border-t-2 border-black/10 text-xs font-bold text-slate-400">
               Phân quyền có hiệu lực tức thì trên toàn bộ hệ thống
+            </div>
+          </div>
+
+          {/* Bento Box 7: Most Visited Pages (2 Cols) */}
+          <div className="md:col-span-2 bg-white border-2 border-black rounded-3xl p-6 shadow-[5px_5px_0px_0px_#000] flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-black uppercase text-slate-500">Trang được truy cập nhiều nhất</span>
+              <span className="text-xs font-black text-black">30 ngày qua</span>
+            </div>
+
+            {topPages.length === 0 ? (
+              <div className="py-6 text-center text-xs font-bold text-slate-400">
+                Chưa có dữ liệu lượt xem trang
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2 py-2">
+                {topPages.map((page, index) => {
+                  const maxViews = topPages[0]?.views || 1;
+                  const widthPct = Math.max((page.views / maxViews) * 100, 6);
+                  return (
+                    <div key={page.route} className="flex items-center gap-3">
+                      <span className="w-5 text-xs font-black text-slate-400 shrink-0">#{index + 1}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-black text-black truncate">{page.route}</span>
+                          <span className="text-xs font-black text-primary shrink-0 ml-2">{page.views}</span>
+                        </div>
+                        <div className="h-2 rounded-full bg-slate-100 border border-black/10 overflow-hidden">
+                          <div
+                            className="h-full bg-primary rounded-full"
+                            style={{ width: `${widthPct}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="pt-3 border-t-2 border-black/10 text-[11px] font-bold text-slate-500">
+              Ghi nhận qua mọi lượt chuyển trang trên web (không tính trang admin)
+            </div>
+          </div>
+
+          {/* Bento Box 8: Live Online Users List (2 Cols) */}
+          <div className="md:col-span-2 bg-white border-2 border-black rounded-3xl p-6 shadow-[5px_5px_0px_0px_#000] flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-black uppercase text-slate-500">Người dùng đang online</span>
+              <span className="text-xs font-black text-black">{onlineUsersList.length} người</span>
+            </div>
+
+            {onlineUsersList.length === 0 ? (
+              <div className="py-6 text-center text-xs font-bold text-slate-400">
+                Chưa có ai online
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1.5 py-2 max-h-64 overflow-y-auto">
+                {onlineUsersList.map((u) => (
+                  <div
+                    key={u.userId}
+                    className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-slate-50 border border-black/10"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
+                      <span className="text-xs font-black text-black truncate">{u.name}</span>
+                    </div>
+                    <span className="text-[11px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full shrink-0 truncate max-w-[45%]">
+                      {u.currentRoute || 'Đang kết nối...'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="pt-3 border-t-2 border-black/10 text-[11px] font-bold text-slate-500">
+              Cập nhật trực tiếp qua WebSocket mỗi khi có người vào/ra hoặc chuyển trang
             </div>
           </div>
         </div>

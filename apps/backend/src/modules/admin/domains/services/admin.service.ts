@@ -8,6 +8,7 @@ import { TournamentsService } from '../../../tournaments/domains/services/tourna
 import { UsersService } from '../../../users/domains/services/users.service';
 import { MatchesService } from '../../../matches/matches.service';
 import { NotificationsGateway } from '../../../notifications/notifications.gateway';
+import { AnalyticsService } from '../../../analytics/domains/services/analytics.service';
 import { ModerateTournamentDto } from '../../dtos/moderate-tournament.dto';
 
 @Injectable()
@@ -17,6 +18,7 @@ export class AdminService {
     private readonly usersService: UsersService,
     private readonly matchesService: MatchesService,
     private readonly notificationsGateway: NotificationsGateway,
+    private readonly analyticsService: AnalyticsService,
     @InjectModel('registrations') private readonly registrationModel: Model<any>,
   ) {}
 
@@ -38,6 +40,20 @@ export class AdminService {
       totalTournaments,
       totalMatches,
     };
+  }
+
+  /**
+   * Get the live list of online users with their current page (for the admin dashboard).
+   */
+  getOnlineUsers() {
+    return this.notificationsGateway.getOnlineUsersDetailed();
+  }
+
+  /**
+   * Get most-visited routes across the site (last 30 days).
+   */
+  async getTopPages(limit = 10) {
+    return this.analyticsService.getTopPages(limit);
   }
 
   /**

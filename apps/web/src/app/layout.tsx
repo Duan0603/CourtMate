@@ -7,6 +7,7 @@ import { AuthProvider } from '../context/AuthContext';
 import { LoadingProvider } from '../context/LoadingContext';
 import { LayoutShell } from '../components/layout/LayoutShell';
 import { InitialPreloader, RouteTransitionLoader } from '../components/loading';
+import { PageViewTracker } from '../components/analytics/PageViewTracker';
 
 const inter = Inter({
   subsets: ['latin', 'vietnamese'],
@@ -47,6 +48,7 @@ export default function RootLayout({
             <LoadingProvider>
               <InitialPreloader />
               <RouteTransitionLoader />
+              <PageViewTracker />
               <AuthProvider>
                 <LayoutShell>{children}</LayoutShell>
               </AuthProvider>

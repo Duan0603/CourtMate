@@ -18,6 +18,17 @@ export interface AdminUserItem {
   isOnline: boolean;
 }
 
+export interface TopPageItem {
+  route: string;
+  views: number;
+}
+
+export interface OnlineUserItem {
+  userId: string;
+  name: string;
+  currentRoute: string | null;
+}
+
 export interface OrganizerRequestItem {
   id: string;
   name: string;
@@ -41,6 +52,14 @@ export const adminApi = {
 
   getTournaments: async (): Promise<any[]> => {
     return apiClient.get<any[]>('/admin/tournaments');
+  },
+
+  getTopPages: async (): Promise<TopPageItem[]> => {
+    return apiClient.get<TopPageItem[]>('/admin/top-pages');
+  },
+
+  getOnlineUsers: async (): Promise<OnlineUserItem[]> => {
+    return apiClient.get<OnlineUserItem[]>('/admin/online-users');
   },
 
   updateUserRole: async (userId: string, role: string): Promise<any> => {
