@@ -39,17 +39,17 @@ const jwt = require('jsonwebtoken');
 const { io } = require('socket.io-client');
 
 const API_URL = process.env.SIM_API_URL || `http://localhost:${process.env.PORT || 3000}`;
-const JWT_SECRET = process.env.JWT_SECRET || 'courtmate-secret-key-12345';
+const JWT_SECRET = process.env.JWT_SECRET || 'courtmate-jwt-secret-2024';
 
-const SIM_USERS = Number(process.env.SIM_USERS || 10);
-const PAGE_VIEW_INTERVAL_MS = Number(process.env.SIM_PAGE_VIEW_INTERVAL_MS || 5000);
+const SIM_USERS = Number(process.env.SIM_USERS || 8);
+const PAGE_VIEW_INTERVAL_MS = Number(process.env.SIM_PAGE_VIEW_INTERVAL_MS || 10000);
 const REGISTER_INTERVAL_MS = Number(process.env.SIM_REGISTER_INTERVAL_MS || 20000);
 // Give the admin time to see "online users" build up before the first registration/notification fires.
-const REGISTER_INITIAL_DELAY_MS = Number(process.env.SIM_REGISTER_INITIAL_DELAY_MS || 120000);
+const REGISTER_INITIAL_DELAY_MS = Number(process.env.SIM_REGISTER_INITIAL_DELAY_MS || 90000);
 
 // Each bot cycles online/offline on random durations so the "Đang online" count
 // drifts up and down over time instead of sitting flat at SIM_USERS forever.
-const ONLINE_MIN_MS = Number(process.env.SIM_ONLINE_MIN_MS || 45000); // 45s
+const ONLINE_MIN_MS = Number(process.env.SIM_ONLINE_MIN_MS || 30000); // 45s
 const ONLINE_MAX_MS = Number(process.env.SIM_ONLINE_MAX_MS || 180000); // 3min
 const OFFLINE_MIN_MS = Number(process.env.SIM_OFFLINE_MIN_MS || 15000); // 15s
 const OFFLINE_MAX_MS = Number(process.env.SIM_OFFLINE_MAX_MS || 90000); // 1.5min

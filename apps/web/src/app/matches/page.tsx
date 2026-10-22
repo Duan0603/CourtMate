@@ -205,7 +205,20 @@ export default function MatchesPage() {
       });
       const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
       if (requestId === activeRequestIdRef.current) {
-        setMatches(list);
+        // Lọc bỏ những trận đấu cũ đã kết thúc quá 1 ngày so với thời gian hiện tại
+        const now = Date.now();
+        const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
+        const validMatches = list.filter((m: Match) => {
+          const matchTimeStr = m.endTime || m.startTime;
+          if (!matchTimeStr) return true;
+          const matchTime = new Date(matchTimeStr).getTime();
+          if (isNaN(matchTime)) return true;
+          // Quá 1 ngày so với thời gian hiện tại: now - matchTime > ONE_DAY_MS
+          return now - matchTime <= ONE_DAY_MS;
+        });
+
+        setMatches(validMatches);
         setLoading(false);
       }
     } catch (err: any) {
