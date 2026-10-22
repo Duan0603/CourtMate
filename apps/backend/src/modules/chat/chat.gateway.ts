@@ -152,8 +152,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // Sidebar preview, unread badge and toast for the receiver wherever they are in the app
     this.server.to(personalRoom(receiverId)).emit('new_message_notification', saved);
     try {
-      await this.notifications.send({ userId: receiverId, type: 'MESSAGE_RECEIVED', title: 'Tin nhắn mới từ ' + me.name, body: content.slice(0, 160), link: '/chat?userId=' + me.id });
+      // Receiver has the conversation open: the message is already in front of them
+      if (await this.isViewingRoom(receiverId, roomId)) return;
+      await this.notifications.notifyChatMessage(receiverId, me.id, me.name, content);
     } catch (error) { this.logger.error('Could not persist message notification', error); }
+  }
+
+  private async isViewingRoom(userId: string, roomId: string): Promise<boolean> {
+    const sockets = await this.server.in(roomId).fetchSockets();
+    return sockets.some((socket) => socket.data.user?.id === userId);
   }
 
   @SubscribeMessage('mark_seen')
@@ -172,6 +179,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         .to(personalRoom(partnerId))
         .to(personalRoom(me.id))
         .emit('message_seen', { roomId, userId: me.id, seenAt });
+      await this.notifications.markChatRead(me.id, partnerId);
     } catch (e) {
       this.logger.error(`Failed to mark ${roomId} as seen`, e as Error);
     }
