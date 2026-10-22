@@ -44,7 +44,7 @@ export class User extends Document {
   @Prop({ type: String, default: '' })
   nameNormalized!: string;
 
-  @Prop({ required: true, enum: ['USER', 'PLAYER', 'COACH', 'ORGANIZER', 'REGIONAL_ADMIN', 'SUPER_ADMIN'], default: 'USER' })
+  @Prop({ required: true, enum: ['USER', 'PLAYER', 'COACH', 'ORGANIZER', 'COURT_OWNER', 'REGIONAL_ADMIN', 'SUPER_ADMIN'], default: 'USER' })
   role!: string;
 
   @Prop({ default: 'active', enum: ['active', 'disabled'] })
