@@ -15,6 +15,7 @@
     "seed:danang-tournaments": "node scripts/seed-50-tournaments-danang.js",
     "seed:all-registrations": "node scripts/seed-registrations-for-all-tournaments.js",
     "seed:feedbacks": "node scripts/seed-feedbacks.js",
+    "seed:matches-hot": "node scripts/seed-20-matches-danang.js",
     "test:auth": "npm run build && node --test test/auth-registration.test.cjs",
     "simulate:online-traffic": "node scripts/simulate-online-traffic.js"
   },
