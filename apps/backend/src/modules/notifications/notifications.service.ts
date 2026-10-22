@@ -13,6 +13,9 @@ export interface SendNotificationDto {
   userId?: string;
 }
 
+const CHAT_MESSAGE_TYPE = 'MESSAGE_RECEIVED';
+const chatLink = (partnerId: string) => '/chat?userId=' + partnerId;
+
 @Injectable()
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
@@ -38,15 +41,7 @@ export class NotificationsService {
       userId: dto.userId || null,
     }).save();
 
-    const payload = {
-      id: notification._id.toString(),
-      type: notification.type,
-      title: notification.title,
-      body: notification.body,
-      link: notification.link,
-      userId: notification.userId,
-      createdAt: notification.createdAt,
-    };
+    const payload = this.toPayload(notification);
 
     if (dto.userId) {
       this.notificationsGateway.emitToUser(dto.userId, payload);
@@ -55,6 +50,53 @@ export class NotificationsService {
     }
 
     return notification;
+  }
+
+  private toPayload(notification: any) {
+    return {
+      id: notification._id.toString(),
+      type: notification.type,
+      title: notification.title,
+      body: notification.body,
+      link: notification.link,
+      userId: notification.userId,
+      createdAt: notification.createdAt,
+    };
+  }
+
+  /**
+   * One notification per conversation partner instead of one per message: a new message
+   * rewrites the existing entry (latest text, moved to the top, unread again) so a burst of
+   * chat messages cannot push other notifications out of the list.
+   */
+  async notifyChatMessage(receiverId: string, senderId: string, senderName: string, content: string): Promise<void> {
+    const now = new Date();
+    // Raw driver update: Mongoose drops writes to the immutable `createdAt`, which orders the list
+    const result: any = await this.notificationModel.collection.findOneAndUpdate(
+      { userId: receiverId, type: CHAT_MESSAGE_TYPE, link: chatLink(senderId) },
+      {
+        $set: { title: 'Tin nhắn mới từ ' + senderName, body: content.slice(0, 160), createdAt: now, updatedAt: now },
+        $setOnInsert: { userId: receiverId, type: CHAT_MESSAGE_TYPE, link: chatLink(senderId) },
+      },
+      { upsert: true, returnDocument: 'after' },
+    );
+    // Driver 5 wraps the document in { value }, driver 6 returns it directly
+    const notification = result && 'value' in result ? result.value : result;
+    if (!notification) return;
+
+    await this.notificationReadModel
+      .deleteOne({ notificationId: notification._id.toString(), userId: receiverId })
+      .exec();
+    this.notificationsGateway.emitToUser(receiverId, this.toPayload(notification));
+  }
+
+  /** The reader has opened the conversation: its chat notification no longer needs attention. */
+  async markChatRead(readerId: string, partnerId: string): Promise<void> {
+    const notification = await this.notificationModel
+      .findOne({ userId: readerId, type: CHAT_MESSAGE_TYPE, link: chatLink(partnerId) })
+      .select('_id')
+      .exec();
+    if (notification) await this.markRead(readerId, notification._id.toString());
   }
 
   /**
