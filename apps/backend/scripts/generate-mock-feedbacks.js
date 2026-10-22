@@ -1,7 +1,7 @@
 /**
  * 50 Authentic Vietnamese mock feedbacks for CourtMate.
  * 100% focused EXCLUSIVELY on BADMINTON (Cầu lông) and PICKLEBALL in Da Nang & Vietnam.
- * Balanced realistic rating distribution: 20x 5★, 22x 4★, 8x 3★ (Average: ~4.24★ / 5.0★).
+ * Balanced realistic rating distribution: 20x 5, 22x 4, 8x 3 (Average: ~4.24 / 5.0).
  * Gender-matched avatars with 100% accuracy: 25 Males, 25 Females.
  */
 
@@ -41,7 +41,7 @@ const FEMALE_AVATARS = [
   'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=200&q=80',
 ];
 
-// Exactly 50 uniquely crafted Vietnamese feedback templates (25 Males, 25 Females, Average Rating ~4.24★)
+// Exactly 50 uniquely crafted Vietnamese feedback templates (25 Males, 25 Females, Average Rating ~4.24)
 const FEEDBACK_ITEMS = [
   // --- 1 to 10 ---
   {

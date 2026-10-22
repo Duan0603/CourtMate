@@ -1,147 +1,60 @@
 # CourtMate Design System (DESIGN.md)
 
-> Bản quy chuẩn thiết kế UI/UX và Hệ thống Design Tokens dành cho dự án **CourtMate** (Web Landing Page & Mobile React Native App).  
-> Giúp đồng bộ giao diện 100% giữa Web, App Mobile và tất cả các thành phần giao diện (Components).
+## Quy chuẩn layout web dùng chung
 
----
+Nguồn thực thi: `apps/web/src/app/globals.css` và `apps/web/src/components/layout/PageContainer.tsx`.
 
-## 1. 🌟 Triết lý Thiết kế (Design Philosophy)
+- Khung trang: `PageContainer`, tối đa **1280px**, bao gồm lề trong. Không đặt thêm `max-w-*`, `mx-auto` hoặc `px-*` trên khung này.
+- Lề ngang: **16px** dưới 640px, **24px** từ 640px, **40px** từ 1024px. Logo, menu header, nội dung và footer dùng cùng các token `--page-*`.
+- Khoảng đầu trang: `page-section`, **28 / 32 / 40px** theo cùng breakpoint; khoảng cuối trang **64px**. `LayoutShell` tự chừa chiều cao header **72px**, trang con không cộng thêm lần nữa.
+- Section cần nền tràn màn hình: nền ở wrapper ngoài; nội dung bên trong `PageContainer` hoặc phần tử semantic có class `page-container`.
+- Biểu mẫu: `FormContainer`, dùng khung trang chung và giới hạn nội dung bên trong ở **960px**. Đoạn văn, modal và ticket có thể có chiều rộng đọc riêng bên trong khung; không thay đổi lề ngoài của trang.
+- Trang đăng nhập/đăng ký tài khoản và bề mặt toàn màn hình như chat giữ bố cục chuyên biệt. Hero trang chủ có thể tràn màn hình; nội dung section thông thường vẫn theo khung chung.
+- Khi thêm trang hoặc section, dùng các component/class trên. Chỉ sửa token chung khi cần đổi hệ thống, không thêm breakpoint hoặc chiều rộng riêng cho từng trang.
 
-* **Sporty Premium & Modern Organic**: Kết hợp năng lượng thể thao sôi nổi với nét hiện đại, sang trọng, mềm mại (bo tròn hữu cơ, góc bo cắt tinh tế).
-* **Mobile-First & Single-Hand Touch Target**: Tất cả nút tương tác chính (CTA) có kích thước tối thiểu `48px`, hình hạt đậu/viên thuốc (`rounded-full`), nằm trong tầm với ngón cái.
-* **Tương phản & Độ rõ ràng (High Legibility)**: Sử dụng chữ cực đậm (`font-black` / `font-bold`) trên nền sáng dịu mắt, khoảng thở rộng rãi (`padding/gap` phóng khoáng).
-* **Chuyển động có mục đích (Purposeful Motion)**: Sử dụng GSAP & CSS keyframes tạo hiệu ứng nổi nhẹ (`float`), hiệu ứng kính mờ (`glassmorphism`) và phản hồi lập tức khi chạm/hover.
+## Sports print / neo-brutalism — web
 
----
+The user explicitly replaced claymorphism with flat saturated color blocks, thick black outlines, hard displaced black shadows, chunky display type and physical button presses. This is the visual authority for all web routes. Preserve CourtMate content, data, navigation and responsive page frames.
 
-## 2. 🎨 Hệ thống Design Tokens (Color Palette)
+### Sources of truth
 
-### 2.1 Bảng màu chính (Brand & Surface Colors)
+- Material and palette tokens: apps/web/src/styles/tokens.css.
+- Shared print components, typography and navigation: apps/web/src/styles/print.css, imported by globals.css.
+- Tailwind colors, radii, default border width and shadow aliases: apps/web/tailwind.config.js.
+- Ant Design seed and component tokens: apps/web/src/lib/antd-theme.tsx; print.css supplies outlined popup, table, input and button treatments.
+- Scoped comparison, favorites, coaches and 3D overlay CSS inherit the same tokens.
 
-| Token | Mã HEX | HSL / Opacity | Công dụng & Mô tả |
-| :--- | :--- | :--- | :--- |
-| `color-primary` | `#1E5AA8` | `hsl(215, 69.6%, 38.8%)` | **Royal Sporty Blue**: Màu thương hiệu chính, nút CTA chính, active state, logo accent. |
-| `color-primary-hover` | `#154687` | `hsl(215, 73.1%, 30.8%)` | Trạng thái Hover / Press của nút chính. |
-| `color-primary-light` | `#E8F1FA` | `rgba(30, 90, 168, 0.1)` | Nền Badge, Tag highlight, Active Tab. |
-| `color-bg-lp` | `#FFFBF7` | `hsl(33, 100%, 98.4%)` | **Warm Soft Off-White**: Màu nền Landing Page (ấm áp, dịu mắt). |
-| `color-bg-app` | `#F8FAFC` | `hsl(210, 40%, 98%)` | **Cool Neutral Light**: Màu nền App Shell & Dashboard. |
-| `color-surface` | `#FFFFFF` | `hsl(0, 0%, 100%)` | Nền Card, Modal, Header, Thẻ thông tin. |
-| `color-surface-subtle`| `#F2F4F7` | `hsl(216, 20%, 95.9%)` | Khung ảnh minh họa, Placeholder container. |
+### Palette and type
 
-### 2.2 Bảng màu Văn bản (Typography Colors)
+Canvas, header, footer and page backgrounds are pure white #FFFFFF. Neutral ink/outline is #111111 and secondary text #3F3F3F. The only decorative accents are tan #D2B48C, baby blue #8FD9FB and dark blue #1848FF (the existing review action blue). Use white text on dark blue and ink text on tan/baby blue. Do not add yellow, green, coral, purple, red or tinted page canvases. Status meanings must remain explicit in labels/icons rather than relying on extra colors. Photography, 3D materials and official sign-in provider artwork retain their content colors.
 
-| Token | Mã HEX | Tailwind Class | Công dụng |
-| :--- | :--- | :--- | :--- |
-| `text-main` | `#101828` | `text-[#101828]` | Tiêu đề H1, H2, H3, Logo, Văn bản quan trọng nhất. |
-| `text-muted` | `#475467` | `text-[#475467]` | Đoạn văn mô tả (Body text), Subtitle, Footer link, Helper text. |
-| `text-inverse` | `#FFFFFF` | `text-white` | Văn bản trên nền xanh hoặc nền tối. |
+Headings and display labels use Be Vietnam Pro 800/900, self-hosted by next/font, with Vietnamese glyphs. Body and data retain Inter; shared buttons use 14px and actions/fields use 16px. Line heights vary by component. Use balanced headings and letter spacing no tighter than -0.03em. Keep dense labels readable rather than making every line display type.
 
----
+### Outlines and elevation
 
-## 3. ✍️ Typography & Font System
+Controls and tags: 2px solid black. Feature panels: 3px solid black. Small/control/card/feature radii: 4/6/10/14px. Portrait images may remain round. Tables and internal rows stay flat.
 
-* **Primary Font Family**: `Inter`, `-apple-system`, `BlinkMacSystemFont`, `sans-serif`.
-* **Scale & Hierarchy**:
+All shadows are opaque #111 rectangles with zero blur and zero spread: subtle 2px 2px, action 4px 4px, card 6px 6px, overlay 8px 8px. Mobile cards/overlays reduce to 4px/5px. Never reintroduce inner highlights, inset shading, blurred elevation, colored glows or frosted glass. Image readability overlays can use one flat translucent black layer; carousel edge masks are functional fades, not surface materials.
 
-| Style Name | Size (Web / Mobile) | Weight | Line Height | Tracking |
-| :--- | :--- | :--- | :--- | :--- |
-| **Hero Title (H1)** | `clamp(2.5rem, 5.5vw, 5.5rem)` | `900` (`font-black`) | `1.15` | `-0.03em` |
-| **Section Title (H2)**| `36px - 48px` (`text-4xl`/`5xl`) | `900` (`font-black`) | `1.1` | `-0.02em` |
-| **Card Title (H3)** | `20px - 24px` (`text-xl`/`2xl`) | `700` (`font-bold`) | `1.25` | `-0.01em` |
-| **Body Large** | `18px - 20px` (`text-lg`/`xl`) | `500` (`font-medium`)| `1.6` | `0` |
-| **Body Regular** | `14px - 16px` (`text-sm`/`base`)| `400` / `500` | `1.5` | `0` |
-| **Badge / Label** | `12px - 14px` (`text-xs`/`sm`) | `700` (`font-bold`) | `1.0` | `0.15em uppercase` |
+Shared raised buttons shift by the same offset as their shadow when pressed; their shadow collapses to zero. Header buttons and the sports-overlay CTA use a 2px press, while shared raised actions use 4px. Use CSS translate independently of transforms so existing GSAP, card flips and centering transforms remain intact. Disabled buttons have no lift and no translation. Reduced motion removes press translation and nonessential animation. Keep visible focus rings and input errors.
 
----
+### Surface application
 
-## 4. 🔲 Bo tròn, Đổ bóng & Hiệu ứng (Shape, Shadows & Effects)
+Home: full-viewport white hero, dark-blue primary CTA, white secondary CTA and black/dark-blue display heading. Shared header and footer stay white with ink rules. The active route uses a baby-blue sticker. Header, footer and pages use the shared page tokens above. At widths up to 380px, the header hides the logo wordmark and uses an 8px container gap to preserve space for the 44px controls.
 
-### 4.1 Corner Radii (Bo tròn)
-* **Pill / Fully Rounded**: `9999px` (`rounded-full`) — Dùng cho nút CTA, Badge, Input tìm kiếm tròn.
-* **Large Card Radius**: `32px` (`rounded-[32px]`) — Dùng cho Thẻ tính năng, Banner minh họa.
-* **Section / Modal Radius**: `40px` (`rounded-[40px]`) — Dùng cho Khối CTA lớn, Modal chính.
-* **Organic Cut-Corner**: Đường cắt góc lõm mượt ở Header / Card nổi bật (`nav-right-block::before`).
+About: stat and founder cards use baby blue, tan or white. Comparison cards have baby-blue fronts, dark-blue backs, flip transforms and hard token shadows. The completion card has a 3px dashed black border and baby-blue fill. Preserve vertical touch scrolling and reduced motion.
 
-### 4.2 Elevation & Shadows (Đổ bóng)
-* **Card Elevation**: `0 32px 80px rgba(0,0,0,0.08)` — Bóng đổ mỏng rộng tạo cảm giác bồng bềnh nhẹ.
-* **Primary Button Shadow**: `0 10px 25px rgba(30, 90, 168, 0.25)` — Glossy Blue Glow cho nút CTA.
-* **Floating Header Shadow**: `0 4px 40px rgba(0,0,0,0.03)`.
+Favorites: category selector sits separately at the right, with a baby-blue outlined indicator that slides between the two categories. The selector is at most 360px wide. Reduced motion removes indicator transitions and results arrival animation.
 
-### 4.3 Glassmorphism (Hiệu ứng kính mờ)
-```css
-.glass {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-}
-```
+Directory, detail, profile, authentication, chat, organizer and admin pages inherit outlined controls and paper panels. Keep native and Ant Design APIs, loading states, validation and backend actions unchanged. This system targets the web app; it does not restyle the separate mobile application.
 
----
+### Forms, overlays and chat
 
-## 5. 🧩 Quy chuẩn Component (Component Specifications)
+All native and Ant Design inputs, selects, number fields, popups, modals and drawers use white surfaces, black 2–3px outlines and opaque zero-blur offset shadows. Popups use only the shared accents. Modals constrain width and scroll their body on short/mobile screens. Remove blurred decorative blobs and text halos, including on empty states and authentication backgrounds.
 
-### 5.1 Nút bấm (Button Variants)
+Chat uses a white canvas and white panels, dark-blue outgoing bubbles and baby-blue incoming bubbles. Below 768px, show either the contacts pane or the conversation pane, with a labeled back control. Preserve unread state when the conversation is hidden and scroll only the message stream, not the page. Composer controls have 44px+ targets and 16px input text.
 
-1. **Primary Button (Nút chính)**:
-   - Style: `bg-[#1E5AA8] text-white px-8 py-4 rounded-full font-bold shadow-md hover:bg-[#154687] hover:scale-[1.02] transition-all`
-   - Kích thước Touch Target: Chiều cao tối thiểu `48px` - `56px`.
+`npm run test:styles --prefix apps/web` checks all web route/component source for non-palette color utilities, the exact white/three-accent tokens and legacy clay blur/inset shadows.
 
-2. **Secondary Button (Nút phụ / Ghost)**:
-   - Style: `bg-white text-[#1E5AA8] border border-[#1E5AA8]/20 px-6 py-3 rounded-full font-bold hover:bg-[#1E5AA8]/5 transition-colors`
-
-3. **CTA Floating Button (Mobile & Final Call-to-Action)**:
-   - Style: `bg-white text-[#1E5AA8] px-10 py-5 rounded-full font-bold text-lg hover:scale-105 shadow-xl`
-
-### 5.2 Thẻ thông tin (Card Specs)
-- Background: `#FFFFFF` hoặc `#F2F4F7`
-- Border-radius: `32px`
-- Overflow: `hidden`
-- Padding: `2rem` (32px) cho nội dung bên trong
-
-### 5.3 Badge / Tag
-- Style: `px-4 py-1.5 bg-[#1E5AA8]/10 text-[#1E5AA8] rounded-full text-xs font-bold tracking-[0.15em] uppercase inline-block`
-
----
-
-## 6. 🎬 Hiệu ứng Chuyển động (Motion & Animation Rules)
-
-* **Hero Floating Icons Animation**:
-  - `floatY`: Di chuyển từ dưới lên 100vh trong 15s - 25s, opacity 0.06.
-  - `floatX`: Xoay lắc nhẹ từ -15deg đến 15deg.
-* **Scroll-driven Entrance**:
-  - Sử dụng GSAP `ScrollTrigger` với `duration: 1`, `ease: 'power3.out'`.
-  - Giảm thiểu chuyển động khi người dùng bật `prefers-reduced-motion`.
-
----
-
-## 7. 📱 Quy chuẩn React Native / Mobile App
-
-Để ứng dụng di động đồng bộ 100% với Web Landing Page:
-
-```typescript
-export const Theme = {
-  colors: {
-    primary: '#1E5AA8',
-    primaryPressed: '#154687',
-    primaryLight: 'rgba(30, 90, 168, 0.1)',
-    background: '#FFFBF7',
-    backgroundApp: '#F8FAFC',
-    surface: '#FFFFFF',
-    textMain: '#101828',
-    textMuted: '#475467',
-  },
-  radii: {
-    full: 9999,
-    card: 32,
-    modal: 40,
-  },
-  typography: {
-    fontFamily: 'Inter',
-  },
-};
-```
-
----
-
-> **Lưu ý thực thi:** Mọi component mới được tạo trên Web hoặc App Mobile cần đọc trực tiếp từ bộ Design Tokens trên để đảm bảo trải nghiệm người dùng nhất quán tuyệt đối!
+### Authentication dialogs
+Login and registration open over the current page, with the same form available from direct /login and /register links. Desktop pairs a baby-blue sports panel with a white form; mobile reduces the panel to the brand row. Required marks and inline form errors use #B42318, an explicit user-requested semantic exception to the three-accent palette. Password criteria update while typing; new registrations require 8+ characters, a letter, uppercase, number and special character. Existing account passwords remain valid for login. Organizer registration requires an uploaded image certificate and at least one supported sport; these are saved with the account.

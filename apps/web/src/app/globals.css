@@ -1,21 +1,123 @@
-@tailwind base;
+@import '../styles/tokens.css';
+@import '../styles/print.css';
+@layer tailwind-base, antd;
+
+@layer tailwind-base {
+  @tailwind base;
+}
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
+    --background: 0 0% 100%;
+    --foreground: 0 0% 7%;
+    --page-max-width: 1280px;
+    --page-form-width: 960px;
+    --page-gutter: 16px;
+    --page-space-top: 28px;
+    --page-space-bottom: 64px;
+    --header-height: 72px;
+    --page-edge: max(var(--page-gutter), calc((100% - var(--page-max-width)) / 2 + var(--page-gutter)));
   }
 
   html {
-    scroll-behavior: smooth;
+    /* Prevent native smooth scroll collision with GSAP ScrollSmoother */
+    scroll-behavior: auto !important;
   }
 
   body {
-    @apply bg-[#F8FAFC] text-[#00102F] antialiased min-h-screen selection:bg-primary/20 selection:text-primary;
+    @apply bg-canvas text-ink antialiased min-h-screen selection:bg-accent-baby selection:text-primary;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
+}
+
+/* Native controls complement the existing Ant Design controls without changing APIs. */
+@layer base {
+  :where(button, a, input, textarea, select, summary, [tabindex]):focus-visible {
+    outline: 2px solid rgb(var(--cm-primary));
+    outline-offset: 3px;
+  }
+  :where(button, input, textarea, select) {
+    transition: background-color var(--cm-duration) var(--cm-ease), border-color var(--cm-duration) var(--cm-ease), box-shadow var(--cm-duration) var(--cm-ease), color var(--cm-duration) var(--cm-ease);
+  }
+  :where(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]), textarea, select) {
+    border-radius: var(--cm-radius-control);
+    caret-color: rgb(var(--cm-primary));
+  }
+  :where(input, textarea, select):hover:not(:disabled) { border-color: rgb(var(--cm-primary) / .45); }
+  :where(input, textarea, select)[aria-invalid=true] { border-color: var(--cm-error); }
+  :where(input[type=checkbox], input[type=radio], input[type=range]) { accent-color: rgb(var(--cm-primary)); }
+  :where(button, input, textarea, select):disabled { cursor: not-allowed; opacity: .55; }
+  :where(button):active:not(:disabled) { box-shadow: var(--cm-shadow-pressed); }
+  :where(h1, h2, h3) { text-wrap: balance; }
+  :where(th, td, time) { font-variant-numeric: tabular-nums; }
+  :where(table) { width: 100%; }
+  :where(th) { color: rgb(var(--cm-muted)); background: rgb(var(--cm-surface-muted)); }
+  :where(td, th) { border-color: rgb(var(--cm-border)); }
+  :where(a) { text-underline-offset: 3px; }
+}
+
+.cm-toast {
+  background: rgb(var(--cm-surface));
+  color: rgb(var(--cm-text));
+  border-radius: var(--cm-radius-control);
+  box-shadow: var(--cm-shadow-elevated);
+  font-size: 14px;
+}
+
+/* Shared native component API. Existing component props and handlers stay intact. */
+.cm-control:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]) {
+  border-radius: var(--cm-radius-control);
+  min-height: 48px;
+  min-width: 0;
+  font-size: 16px;
+}
+.cm-control:is(textarea) { min-height: 112px; }
+.cm-control[aria-invalid=true] { border-color: var(--cm-error); }
+.cm-control:disabled { background-color: rgb(var(--cm-surface-muted)); }
+.cm-button { border-radius: var(--cm-radius-control); min-height: 44px; min-width: 44px; font-size: 14px; }
+.cm-action { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 12px 20px; font-size: 16px; font-weight: 600; line-height: 1.5; }
+.cm-link { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-size: 14px; }
+.cm-button:disabled { box-shadow: none; transform: none; }
+.cm-button.bg-primary { box-shadow: var(--cm-shadow-interactive); }
+.cm-button.bg-primary:active:not(:disabled) { box-shadow: var(--cm-shadow-pressed); }
+.cm-button.bg-transparent { box-shadow: none; }
+.cm-button:focus-visible, .cm-control:focus-visible {
+  outline: 2px solid rgb(var(--cm-primary));
+  outline-offset: 3px;
+}
+
+/* CSS-based decorative motion also respects the operating system preference. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* One frame for navigation, page content and footer. Keep full-bleed surfaces outside it. */
+.page-container {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--page-max-width);
+  margin-inline: auto;
+  padding-inline: var(--page-gutter);
+}
+.page-section {
+  padding-block: var(--page-space-top) var(--page-space-bottom);
+}
+.page-form { width: 100%; max-width: var(--page-form-width); margin-inline: auto; }
+.site-main { padding-top: var(--header-height); }
+.site-menu-toggle { right: var(--page-edge); }
+.site-mobile-menu { left: var(--page-edge); right: var(--page-edge); top: var(--header-height); }
+@media (min-width: 640px) {
+  :root { --page-gutter: 24px; --page-space-top: 32px; }
+}
+@media (min-width: 1024px) {
+  :root { --page-gutter: 40px; --page-space-top: 40px; }
 }
 
 /* Custom scrollbars */
@@ -25,39 +127,28 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #ffffff;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #ffffff;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #3f3f3f;
 }
 
-/* Glassmorphism helpers */
-.glass {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-}
-
-.glass-dark {
-  background: rgba(0, 16, 47, 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
+/* Legacy utility names now use the shared opaque print surfaces. */
+.glass { background: rgb(var(--cm-surface)); border: 3px solid #111; }
+.glass-dark { background: rgb(var(--cm-primary)); border: 3px solid #111; color: white; }
 
 /* Sports Court Pattern background */
 .court-grid-pattern {
   background-size: 32px 32px;
-  background-image: 
-    linear-gradient(to right, rgba(0, 119, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0, 119, 255, 0.04) 1px, transparent 1px);
+  background-image:
+    linear-gradient(to right, rgb(var(--cm-primary) / .04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(var(--cm-primary) / .04) 1px, transparent 1px);
 }
 
 @keyframes fadeIn {
@@ -76,41 +167,35 @@
 }
 
 /* Navbar Styles */
-.cm-nav-right {
-  position: fixed;
-  top: 0;
-  right: 0;
-  background: #FFFFFF;
-  height: 72px;
-  display: flex;
-  align-items: center;
-  padding: 0 32px;
-  gap: 28px;
-  z-index: 50;
-  border-bottom-left-radius: 24px;
-  box-shadow: 0 4px 40px rgba(0,0,0,0.04);
+.cm-header {
+  height: var(--header-height);
 }
-.cm-nav-right::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -24px;
-  width: 24px;
-  height: 24px;
-  border-top-right-radius: 24px;
-  box-shadow: 12px -12px 0 12px #FFFFFF;
-  pointer-events: none;
+
+
+/* ─── Founder Card Micro-Interactions (Inspired by image 1) ─── */
+.founder-card {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.cm-nav-link {
-  color: #475467;
-  font-weight: 600;
-  font-size: 0.9rem;
-  transition: color 0.2s;
+
+.founder-card .profile-image svg {
+  stroke: #ffffff;
+  transition: stroke 0.35s ease, transform 0.35s ease;
 }
-.cm-nav-link:hover, .cm-nav-link.active {
-  color: #101828;
+
+.founder-card:hover .profile-image svg {
+  stroke: rgb(110, 252, 205);
 }
-@media (max-width: 1023px) {
-  .cm-nav-right { display: none; }
+
+.founder-card .card-content-desc {
+  white-space: pre-line;
+  margin-left: 2px;
+  transform: translateY(16px);
+  opacity: 0;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+
+.founder-card:hover .card-content-desc {
+  opacity: 1;
+  transform: translateY(0);
 }
 

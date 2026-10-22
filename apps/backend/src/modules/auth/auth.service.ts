@@ -1,8 +1,8 @@
 import * as crypto from 'crypto';
-import { Injectable, UnauthorizedException, OnModuleInit, ConflictException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, OnModuleInit, ConflictException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/domains/services/users.service';
-import { UserRole } from '@courtmate/shared';
+import { UserRole, SportType } from '@courtmate/shared';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -65,8 +65,13 @@ export class AuthService implements OnModuleInit {
     return crypto.createHash('sha256').update(password).digest('hex');
   }
 
-  async register(email: string, password: string, name: string, role?: UserRole): Promise<{ token: string; user: any }> {
+  async register(email: string, password: string, name: string, role?: UserRole, organizer?: { certificateUrl?: string; sports: string[] }): Promise<{ token: string; user: any }> {
     const cleanEmail = email.toLowerCase().trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail) || !name?.trim()) throw new BadRequestException('Vui lòng nhập tên và email hợp lệ.');
+    if (password.length < 8 || !/\p{L}/u.test(password) || !/\p{Lu}/u.test(password) || !/[0-9]/.test(password) || !/[^\p{L}\p{N}\s]/u.test(password)) throw new BadRequestException('Mật khẩu cần ít nhất 8 ký tự, chữ cái, chữ in hoa, số và ký tự đặc biệt.');
+    if (role === UserRole.ORGANIZER) {
+      if (!organizer?.certificateUrl || !/^https:\/\//.test(organizer.certificateUrl) || !Array.isArray(organizer.sports) || !organizer.sports.length || organizer.sports.some(sport => !Object.values(SportType).includes(sport as SportType))) throw new BadRequestException('Vui lòng cung cấp giấy chứng nhận và bộ môn hợp lệ.');
+    }
     const existingUser = await this.usersService.findByEmail(cleanEmail);
     if (existingUser) {
       throw new ConflictException('Email này đã được đăng ký sử dụng');
@@ -75,7 +80,7 @@ export class AuthService implements OnModuleInit {
       const passwordHash = this.hashPassword(password);
       // Validate role: self-registration only allows PLAYER or ORGANIZER
       const assignedRole = role === UserRole.ORGANIZER ? UserRole.ORGANIZER : UserRole.PLAYER;
-      const user = await this.usersService.createWithPassword(cleanEmail, passwordHash, name, assignedRole);
+      const user = await this.usersService.createWithPassword(cleanEmail, passwordHash, name.trim(), assignedRole, assignedRole === UserRole.ORGANIZER ? organizer : undefined);
       
       const payload = { email: user.email, sub: user._id, role: user.role, name: user.name };
       const token = this.jwtService.sign(payload);

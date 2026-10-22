@@ -132,7 +132,7 @@ export function AnimeCharacter({
           {/* Cap Crown (Half sphere sitting snugly on head) */}
           <mesh position={[0, 0.1, 0]} scale={[1.04, 0.95, 1.04]}>
             <sphereGeometry args={[0.48, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
-            <meshStandardMaterial color="#1E5AA8" roughness={0.35} />
+            <meshStandardMaterial color="#1848FF" roughness={0.35} />
           </mesh>
 
           {/* Curved Cap Visor / Brim (pointing forward stylishly) */}
@@ -176,7 +176,7 @@ export function AnimeCharacter({
       <group position={[0, 0.72, 0]}>
         {/* Rounded Chubby Athletic Jersey */}
         <RoundedBox args={[0.78, 0.82, 0.54]} radius={0.22} smoothness={8} position={[0, 0, 0]}>
-          <meshStandardMaterial color="#1E5AA8" roughness={0.3} metalness={0.08} />
+          <meshStandardMaterial color="#1848FF" roughness={0.3} metalness={0.08} />
         </RoundedBox>
 
         {/* White Sport Collar */}
@@ -199,7 +199,7 @@ export function AnimeCharacter({
         <group position={[-0.48, 0.2, 0]} rotation={[0.2, 0.1, 0.45]}>
           {/* Upper Arm & Sleeve */}
           <RoundedBox args={[0.22, 0.48, 0.22]} radius={0.1} smoothness={4} position={[0, -0.15, 0]}>
-            <meshStandardMaterial color="#1E5AA8" roughness={0.3} />
+            <meshStandardMaterial color="#1848FF" roughness={0.3} />
           </RoundedBox>
           {/* Forearm (Skin) */}
           <mesh position={[0, -0.38, 0]}>
@@ -222,7 +222,7 @@ export function AnimeCharacter({
         <group position={[0.48, 0.2, 0]} rotation={[-0.3, 0.1, -0.35]}>
           {/* Sleeve */}
           <RoundedBox args={[0.22, 0.48, 0.22]} radius={0.1} smoothness={4} position={[0, -0.15, 0]}>
-            <meshStandardMaterial color="#1E5AA8" roughness={0.3} />
+            <meshStandardMaterial color="#1848FF" roughness={0.3} />
           </RoundedBox>
           {/* Forearm */}
           <mesh position={[0, -0.38, 0]}>

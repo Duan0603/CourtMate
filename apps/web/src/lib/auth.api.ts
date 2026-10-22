@@ -11,8 +11,8 @@ export const authApi = {
     return apiClient.post<AuthResponse>('/auth/login', { email, password });
   },
 
-  async register(email: string, password: string, name: string, role: UserRole = UserRole.PLAYER): Promise<AuthResponse> {
-    return apiClient.post<AuthResponse>('/auth/register', { email, password, name, role });
+  async register(email: string, password: string, name: string, role: UserRole = UserRole.PLAYER, organizer?: { certificateUrl?: string; sports: string[] }): Promise<AuthResponse> {
+    return apiClient.post<AuthResponse>('/auth/register', { email, password, name, role, organizer });
   },
 
   async googleLogin(idToken: string): Promise<AuthResponse> {
@@ -25,6 +25,27 @@ export const authApi = {
 
   async updateProfile(profileData: Partial<User>): Promise<User> {
     return apiClient.put<User>('/users/profile', profileData);
+  },
+
+  async addBookmark(tournamentId: string): Promise<User> {
+    return apiClient.put<User>(`/users/bookmarks/${tournamentId}`);
+  },
+
+  async removeBookmark(tournamentId: string): Promise<User> {
+    return apiClient.delete<User>(`/users/bookmarks/${tournamentId}`);
+  },
+
+  async addCoachBookmark(coachId: string): Promise<User> {
+    return apiClient.put<User>(`/users/coach-bookmarks/${encodeURIComponent(coachId)}`);
+  },
+
+  async removeCoachBookmark(coachId: string): Promise<User> {
+    return apiClient.delete<User>(`/users/coach-bookmarks/${encodeURIComponent(coachId)}`);
+  },
+
+  async searchUsers(query: string): Promise<User[]> {
+    const users = await apiClient.get<User[]>(`/users/search?q=${encodeURIComponent(query)}`);
+    return users || [];
   },
 
   async getFriends(): Promise<User[]> {

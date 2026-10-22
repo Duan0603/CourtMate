@@ -69,7 +69,7 @@ export class NotificationsService {
       .limit(limit)
       .exec();
 
-    // Get read status for these notifications
+    // Get read and deleted status for these notifications
     const notificationIds = notifications.map((n) => n._id.toString());
     const reads = await this.notificationReadModel
       .find({
@@ -77,18 +77,26 @@ export class NotificationsService {
         userId,
       })
       .exec();
-    const readSet = new Set(reads.map((r) => r.notificationId));
 
-    return notifications.map((n) => ({
-      id: n._id.toString(),
-      type: n.type,
-      title: n.title,
-      body: n.body,
-      link: n.link,
-      userId: n.userId,
-      createdAt: n.createdAt,
-      read: readSet.has(n._id.toString()),
-    }));
+    const readSet = new Set(
+      reads.filter((r) => !r.isDeleted).map((r) => r.notificationId),
+    );
+    const deletedSet = new Set(
+      reads.filter((r) => r.isDeleted).map((r) => r.notificationId),
+    );
+
+    return notifications
+      .filter((n) => !deletedSet.has(n._id.toString()))
+      .map((n) => ({
+        id: n._id.toString(),
+        type: n.type,
+        title: n.title,
+        body: n.body,
+        link: n.link,
+        userId: n.userId,
+        createdAt: n.createdAt,
+        read: readSet.has(n._id.toString()),
+      }));
   }
 
   /**
@@ -107,12 +115,22 @@ export class NotificationsService {
     const ids = recentNotifications.map((n) => n._id.toString());
     if (ids.length === 0) return 0;
 
-    const readCount = await this.notificationReadModel.countDocuments({
-      notificationId: { $in: ids },
-      userId,
-    });
+    const reads = await this.notificationReadModel
+      .find({
+        notificationId: { $in: ids },
+        userId,
+      })
+      .exec();
 
-    return ids.length - readCount;
+    const deletedSet = new Set(
+      reads.filter((r) => r.isDeleted).map((r) => r.notificationId),
+    );
+    const readSet = new Set(
+      reads.filter((r) => !r.isDeleted).map((r) => r.notificationId),
+    );
+
+    const activeIds = ids.filter((id) => !deletedSet.has(id));
+    return activeIds.filter((id) => !readSet.has(id)).length;
   }
 
   /**
@@ -127,7 +145,7 @@ export class NotificationsService {
 
     await this.notificationReadModel.updateOne(
       { notificationId, userId },
-      { $setOnInsert: { notificationId, userId, readAt: new Date() } },
+      { $set: { readAt: new Date() }, $setOnInsert: { notificationId, userId, isDeleted: false } },
       { upsert: true },
     );
   }
@@ -146,7 +164,66 @@ export class NotificationsService {
     const ops = unreadNotifications.map((n) => ({
       updateOne: {
         filter: { notificationId: n._id.toString(), userId },
-        update: { $setOnInsert: { notificationId: n._id.toString(), userId, readAt: new Date() } },
+        update: {
+          $set: { readAt: new Date() },
+          $setOnInsert: { notificationId: n._id.toString(), userId, isDeleted: false },
+        },
+        upsert: true,
+      },
+    }));
+
+    if (ops.length > 0) {
+      await this.notificationReadModel.bulkWrite(ops);
+    }
+  }
+
+  /**
+   * Delete / dismiss a single notification for a user.
+   */
+  async deleteOne(userId: string, notificationId: string): Promise<void> {
+    const notification = await this.notificationModel.findById(notificationId).exec();
+    if (!notification) return;
+
+    if (notification.userId !== null && notification.userId !== userId) return;
+
+    if (notification.userId === userId) {
+      // Direct notification owned by user: remove completely
+      await this.notificationModel.deleteOne({ _id: notificationId }).exec();
+      await this.notificationReadModel.deleteMany({ notificationId, userId }).exec();
+    } else {
+      // Broadcast notification: mark deleted specifically for this user
+      await this.notificationReadModel.updateOne(
+        { notificationId, userId },
+        { $set: { isDeleted: true, readAt: new Date() }, $setOnInsert: { notificationId, userId } },
+        { upsert: true },
+      );
+    }
+  }
+
+  /**
+   * Delete all notifications for a user (clear list).
+   */
+  async deleteAll(userId: string): Promise<void> {
+    // 1. Delete all personal notifications owned by this user
+    const userNotifications = await this.notificationModel.find({ userId }).select('_id').exec();
+    const userNotificationIds = userNotifications.map((n) => n._id.toString());
+
+    await this.notificationModel.deleteMany({ userId }).exec();
+    if (userNotificationIds.length > 0) {
+      await this.notificationReadModel.deleteMany({
+        notificationId: { $in: userNotificationIds },
+      }).exec();
+    }
+
+    // 2. Mark all broadcast notifications as deleted for this user
+    const broadcasts = await this.notificationModel.find({ userId: null }).select('_id').exec();
+    const ops = broadcasts.map((b) => ({
+      updateOne: {
+        filter: { notificationId: b._id.toString(), userId },
+        update: {
+          $set: { isDeleted: true, readAt: new Date() },
+          $setOnInsert: { notificationId: b._id.toString(), userId },
+        },
         upsert: true,
       },
     }));

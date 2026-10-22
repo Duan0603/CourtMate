@@ -1,0 +1,5 @@
+# Personal BMAD settings
+config.user.toml
+
+# Generated skill snapshots
+render/

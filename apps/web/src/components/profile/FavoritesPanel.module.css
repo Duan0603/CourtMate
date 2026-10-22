@@ -1,0 +1,7 @@
+.switcher { position: relative; display: grid; grid-template-columns: 1fr 1fr; width: min(100%, 360px); margin-left: auto; padding: 4px; border: 2px solid #111; border-radius: var(--cm-radius-control); background: rgb(var(--cm-surface-muted)); }
+.indicator { position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); border: 2px solid #111; border-radius: 3px; background: rgb(var(--cm-baby)); box-shadow: var(--cm-shadow-subtle); transition: transform 240ms cubic-bezier(.2,.7,.2,1); }
+.tab { position: relative; min-height: 44px; padding: 8px; font-size: 13px; font-weight: 600; color: rgb(var(--cm-muted)); }
+.tab[aria-selected="true"] { color: #111; }
+.results { animation: favorites-arrive 220ms ease-out; }
+@keyframes favorites-arrive { from { transform: translateY(6px); } to { transform: translateY(0); } }
+@media(prefers-reduced-motion: reduce) { .indicator { transition: none; } .results { animation: none; } }

@@ -12,6 +12,7 @@ export declare enum ActivityType {
 export declare enum UserRole {
     USER = "USER",
     PLAYER = "PLAYER",
+    COACH = "COACH",
     ORGANIZER = "ORGANIZER",
     REGIONAL_ADMIN = "REGIONAL_ADMIN",
     SUPER_ADMIN = "SUPER_ADMIN"
@@ -37,6 +38,7 @@ export interface User {
     preferences: UserPreferences;
     avatarUrl?: string;
     bookmarkedTournaments?: string[];
+    bookmarkedCoaches?: string[];
     isVerified: boolean;
     createdAt: Date;
 }
@@ -225,4 +227,196 @@ export interface CreatePlatformFeedbackDto {
     rating: number;
     comment: string;
     category?: string;
+}
+export declare enum BadmintonSkillLevel {
+    YEU = "YEU",// Yếu / Mới chơi
+    TBY = "TBY",// Trung bình yếu
+    TB = "TB",// Trung bình
+    TB_PLUS = "TB_PLUS",// Trung bình khá
+    KHA = "KHA",// Khá
+    KHA_PLUS = "KHA_PLUS"
+}
+export declare const BADMINTON_SKILL_LABELS: Record<BadmintonSkillLevel, {
+    label: string;
+    description: string;
+    color: string;
+}>;
+export declare enum MatchStatus {
+    OPEN = "OPEN",// Đang tuyển người
+    FULL = "FULL",// Đã đủ slot
+    COMPLETED = "COMPLETED",// Đã hoàn thành
+    CANCELLED = "CANCELLED"
+}
+export interface MatchPlayer {
+    userId: string;
+    name: string;
+    phone?: string;
+    avatarUrl?: string;
+    skillLevel?: BadmintonSkillLevel | SkillLevel;
+    joinedAt: Date | string;
+}
+export interface Match {
+    id: string;
+    _id?: string;
+    hostId: string;
+    hostName: string;
+    hostAvatar?: string;
+    hostPhone?: string;
+    sport: SportType;
+    title: string;
+    venueId?: string;
+    venueName: string;
+    venueAddress: string;
+    district: string;
+    city: string;
+    courtNumber?: string;
+    startTime: string;
+    endTime: string;
+    totalSlots: number;
+    joinedCount: number;
+    players: MatchPlayer[];
+    minSkillLevel: BadmintonSkillLevel;
+    maxSkillLevel: BadmintonSkillLevel;
+    estimatedCostText: string;
+    notes?: string;
+    shuttleType?: string;
+    status: MatchStatus;
+    shareCode?: string;
+    createdAt: Date | string;
+    updatedAt?: Date | string;
+}
+export interface CreateMatchDto {
+    sport: SportType;
+    title: string;
+    venueId?: string;
+    venueName: string;
+    venueAddress: string;
+    district: string;
+    city?: string;
+    courtNumber?: string;
+    startTime: string;
+    endTime: string;
+    totalSlots: number;
+    minSkillLevel: BadmintonSkillLevel;
+    maxSkillLevel: BadmintonSkillLevel;
+    estimatedCostText?: string;
+    notes?: string;
+    shuttleType?: string;
+}
+export interface MatchFilterDto {
+    sport?: SportType;
+    district?: string;
+    city?: string;
+    skillLevel?: BadmintonSkillLevel;
+    status?: MatchStatus;
+    date?: string;
+    keyword?: string;
+}
+export declare enum CoachVerificationStatus {
+    PENDING = "PENDING",
+    APPROVED = "APPROVED",
+    REJECTED = "REJECTED"
+}
+export declare enum CoachBookingType {
+    HOURLY = "HOURLY",
+    COURSE = "COURSE"
+}
+export declare enum CoachBookingStatus {
+    PENDING = "PENDING",
+    CONFIRMED = "CONFIRMED",
+    CANCELLED = "CANCELLED",
+    COMPLETED = "COMPLETED",
+    REJECTED = "REJECTED"
+}
+export interface CoachCertificate {
+    id?: string;
+    title: string;
+    issuedBy: string;
+    year: number;
+    imageUrl?: string;
+}
+export interface CoachReview {
+    id: string;
+    coachId: string;
+    userId: string;
+    userName: string;
+    userAvatar?: string;
+    rating: number;
+    comment: string;
+    bookingType: CoachBookingType;
+    createdAt: Date | string;
+}
+export interface CoachCourse {
+    id: string;
+    coachId: string;
+    title: string;
+    sport: SportType;
+    level: string;
+    price: number;
+    totalSessions: number;
+    durationPerSession: number;
+    scheduleDescription: string;
+    maxStudents: number;
+    enrolledCount: number;
+    location: string;
+    description: string;
+    syllabus?: string[];
+    status: 'OPEN' | 'FULL' | 'COMPLETED';
+    createdAt?: Date | string;
+}
+export interface CoachProfile {
+    id: string;
+    _id?: string;
+    userId: string;
+    fullName: string;
+    headline: string;
+    avatarUrl?: string;
+    coverUrl?: string;
+    phone?: string;
+    email?: string;
+    sports: SportType[];
+    bio: string;
+    experienceYears: number;
+    certificates: CoachCertificate[];
+    hourlyRate: number;
+    city: string;
+    districts: string[];
+    preferredCourts: string[];
+    rating: number;
+    reviewCount: number;
+    verificationStatus: CoachVerificationStatus;
+    reviews?: CoachReview[];
+    courses?: CoachCourse[];
+    availableSlots?: {
+        dayOfWeek: number;
+        startTime: string;
+        endTime: string;
+    }[];
+    createdAt?: Date | string;
+    updatedAt?: Date | string;
+}
+export interface CoachBooking {
+    id: string;
+    _id?: string;
+    coachId: string;
+    coachName?: string;
+    coachAvatar?: string;
+    userId: string;
+    userName: string;
+    userPhone?: string;
+    userEmail?: string;
+    bookingType: CoachBookingType;
+    courseId?: string;
+    courseTitle?: string;
+    sport: SportType;
+    bookingDate: string;
+    startTime?: string;
+    endTime?: string;
+    durationHours?: number;
+    courtLocation: string;
+    totalPrice: number;
+    notes?: string;
+    status: CoachBookingStatus;
+    paymentStatus: 'UNPAID' | 'PAID' | 'REFUNDED';
+    createdAt: Date | string;
 }

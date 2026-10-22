@@ -4,10 +4,9 @@ import { useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { SplitText } from 'gsap/SplitText';
 
 if (typeof window !== 'undefined') {
-  gsap.registerPlugin(ScrollTrigger, SplitText);
+  gsap.registerPlugin(ScrollTrigger);
 }
 
 export interface SportsSceneRefs {
@@ -63,7 +62,7 @@ export function useSportsTimeline(refs: SportsSceneRefs, isAuthenticated: boolea
       return;
     }
 
-    const splitInstances: any[] = [];
+    const compactStory = window.matchMedia('(max-width: 767px)').matches;
 
     const ctx = gsap.context(() => {
       // ──────────────────────────────────────────────────────────────────────
@@ -230,9 +229,6 @@ export function useSportsTimeline(refs: SportsSceneRefs, isAuthenticated: boolea
       if (feat01) {
         const heading = feat01.querySelector('.feature-heading') as HTMLElement;
         const para = feat01.querySelector('.feature-para') as HTMLElement;
-        const splitHeading = new SplitText(heading, { type: 'words' });
-        const splitPara = new SplitText(para, { type: 'chars,words' });
-        splitInstances.push(splitHeading, splitPara);
 
         tl.fromTo(
           feat01,
@@ -241,13 +237,13 @@ export function useSportsTimeline(refs: SportsSceneRefs, isAuthenticated: boolea
           '<+=0.3',
         );
         tl.fromTo(
-          splitHeading.words,
+          heading,
           { opacity: 0.15, y: 15 },
           { opacity: 1, y: 0, stagger: 0.08, duration: 0.8 },
           '<',
         );
         tl.fromTo(
-          splitPara.chars,
+          para,
           { opacity: 0, y: -12 },
           { opacity: 1, y: 0, stagger: 0.012, duration: 0.8 },
           '<+=0.2',
@@ -300,9 +296,6 @@ export function useSportsTimeline(refs: SportsSceneRefs, isAuthenticated: boolea
       if (feat02) {
         const heading = feat02.querySelector('.feature-heading') as HTMLElement;
         const para = feat02.querySelector('.feature-para') as HTMLElement;
-        const splitHeading = new SplitText(heading, { type: 'words' });
-        const splitPara = new SplitText(para, { type: 'chars,words' });
-        splitInstances.push(splitHeading, splitPara);
 
         tl.fromTo(
           feat02,
@@ -311,13 +304,13 @@ export function useSportsTimeline(refs: SportsSceneRefs, isAuthenticated: boolea
           '<+=0.3',
         );
         tl.fromTo(
-          splitHeading.words,
+          heading,
           { opacity: 0.15, y: 15 },
           { opacity: 1, y: 0, stagger: 0.08, duration: 0.8 },
           '<',
         );
         tl.fromTo(
-          splitPara.chars,
+          para,
           { opacity: 0, y: -12 },
           { opacity: 1, y: 0, stagger: 0.012, duration: 0.8 },
           '<+=0.2',
@@ -381,9 +374,6 @@ export function useSportsTimeline(refs: SportsSceneRefs, isAuthenticated: boolea
       if (feat03) {
         const heading = feat03.querySelector('.feature-heading') as HTMLElement;
         const para = feat03.querySelector('.feature-para') as HTMLElement;
-        const splitHeading = new SplitText(heading, { type: 'words' });
-        const splitPara = new SplitText(para, { type: 'chars,words' });
-        splitInstances.push(splitHeading, splitPara);
 
         tl.fromTo(
           feat03,
@@ -392,13 +382,13 @@ export function useSportsTimeline(refs: SportsSceneRefs, isAuthenticated: boolea
           '<+=0.3',
         );
         tl.fromTo(
-          splitHeading.words,
+          heading,
           { opacity: 0.15, y: 15 },
           { opacity: 1, y: 0, stagger: 0.08, duration: 0.8 },
           '<',
         );
         tl.fromTo(
-          splitPara.chars,
+          para,
           { opacity: 0, y: -12 },
           { opacity: 1, y: 0, stagger: 0.012, duration: 0.8 },
           '<+=0.2',
@@ -442,7 +432,8 @@ export function useSportsTimeline(refs: SportsSceneRefs, isAuthenticated: boolea
       // ──────────────────────────────────────────────────────────────────────
       tl.set(animeCharacterRef.current!, { visible: true });
       tl.set(animeCharacterRef.current!.position, { x: -10, y: -0.9, z: 0.5 });
-      tl.set(animeCharacterRef.current!.scale, { x: 1.25, y: 1.25, z: 1.25 });
+      const characterScale = compactStory ? 0.8 : 1.25;
+      tl.set(animeCharacterRef.current!.scale, { x: characterScale, y: characterScale, z: characterScale });
       if (animeMouthNeutralRef.current) {
         tl.set(animeMouthNeutralRef.current.scale, { x: 1, y: 1, z: 1 });
       }
@@ -451,8 +442,8 @@ export function useSportsTimeline(refs: SportsSceneRefs, isAuthenticated: boolea
       }
 
       tl.to(animeCharacterRef.current!.position, {
-        x: -2.3,
-        y: -0.9,
+        x: compactStory ? 0 : -2.3,
+        y: compactStory ? 0.6 : -0.9,
         z: 0.5,
         duration: 1.4,
         ease: 'power2.out',
@@ -472,13 +463,13 @@ export function useSportsTimeline(refs: SportsSceneRefs, isAuthenticated: boolea
       tl.to(
         '.story-cta',
         {
-          opacity: 1,
+          autoAlpha: 1,
           pointerEvents: 'auto',
           scale: 1,
           x: 0,
           y: 0,
           duration: 1.0,
-          ease: 'back.out(1.2)',
+          ease: 'power2.out',
         },
         '<+=0.3',
       );
@@ -493,7 +484,7 @@ export function useSportsTimeline(refs: SportsSceneRefs, isAuthenticated: boolea
       // ──────────────────────────────────────────────────────────────────────
       // 1. Cái bảng kia down xuống
       tl.to('.story-cta', {
-        opacity: 0,
+        autoAlpha: 0,
         y: 350,
         scale: 0.95,
         pointerEvents: 'none',
@@ -562,7 +553,6 @@ export function useSportsTimeline(refs: SportsSceneRefs, isAuthenticated: boolea
     });
 
     return () => {
-      splitInstances.forEach((inst) => inst.revert());
       ctx.revert();
     };
   }, [isAuthenticated, refs]);

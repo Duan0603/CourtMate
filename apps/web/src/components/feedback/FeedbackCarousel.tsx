@@ -114,7 +114,7 @@ export function FeedbackCarousel() {
   const infiniteRow2 = [...row2, ...row2];
 
   return (
-    <section id="feedback-section" className="py-20 md:py-28 relative overflow-hidden bg-gradient-to-b from-[white] via-white to-[white]">
+    <section id="feedback-section" className="py-20 md:py-28 relative overflow-hidden bg-canvas">
       {/* ─── STYLES FOR MARQUEE ANIMATION & HOVER SLOWDOWN ─── */}
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes scrollLeft {
@@ -155,9 +155,6 @@ export function FeedbackCarousel() {
         }
       `}} />
 
-      {/* Decorative background glows */}
-      <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-[#1E5AA8]/5 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-amber-400/5 rounded-full blur-[140px] pointer-events-none" />
 
       {/* Section Header (Redesigned like Image 5) */}
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 mb-16 md:mb-20 relative z-10">
@@ -165,45 +162,45 @@ export function FeedbackCarousel() {
           
           {/* Left Column */}
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#1E5AA8] text-white text-xs font-bold uppercase tracking-widest mb-6 shadow-sm">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-bold uppercase tracking-widest mb-6 shadow-sm">
               <MessageSquarePlus size={14} />
               100+ Đánh Giá Từ Người Dùng
             </div>
-            <h2 className="text-4xl sm:text-5xl lg:text-7xl font-black text-[#101828] uppercase tracking-tighter leading-[0.95]">
+            <h2 className="text-4xl sm:text-5xl lg:text-7xl font-black text-ink uppercase tracking-tighter leading-[0.95]">
               Cộng Đồng Người Chơi Nói Gì Về <br className="hidden lg:block"/> CourtMate?
             </h2>
           </div>
 
           {/* Right Column */}
           <div className="space-y-8">
-            <p className="text-[#475467] text-lg lg:text-xl font-medium leading-relaxed">
+            <p className="text-muted text-lg lg:text-xl font-medium leading-relaxed">
               Tổng hợp 100 trải nghiệm thực tế từ các vận động viên, người chơi phong trào và ban tổ chức giải đấu trên khắp Đà Nẵng.
             </p>
             
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 pt-6 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 pt-6 border-t border-ink">
               {/* Rating */}
               <div>
                 <div className="flex items-center gap-1 mb-2">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 fill-amber-400 text-amber-400" />
+                    <Star key={i} className="w-5 h-5 fill-primary text-primary" />
                   ))}
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-3xl font-bold text-[#101828]">{(stats.averageRating || 5.0).toFixed(1)}/5</span>
-                  <span className="text-[#667085] text-sm font-medium whitespace-nowrap">Hơn +100 khách hàng</span>
+                  <span className="text-3xl font-bold text-ink">{(stats.averageRating || 5.0).toFixed(1)}/5</span>
+                  <span className="text-[#3f3f3f] text-sm font-medium whitespace-nowrap">Hơn +100 khách hàng</span>
                 </div>
               </div>
 
               {/* Separator */}
-              <div className="hidden sm:block w-px h-12 bg-gray-200 mx-4"></div>
+              <div className="hidden sm:block w-px h-12 bg-white mx-4"></div>
 
               {/* Avatars */}
               <div className="flex items-center gap-4">
-                <div className="flex -space-x-3 bg-gray-100 p-1.5 rounded-full border border-gray-200">
+                <div className="flex -space-x-3 bg-white p-1.5 rounded-full border border-ink">
                   <img className="w-10 h-10 shrink-0 rounded-full border-2 border-white object-cover shadow-sm" src="https://i.pravatar.cc/100?img=1" alt="Avatar" />
                   <img className="w-10 h-10 shrink-0 rounded-full border-2 border-white object-cover shadow-sm" src="https://i.pravatar.cc/100?img=2" alt="Avatar" />
                   <img className="w-10 h-10 shrink-0 rounded-full border-2 border-white object-cover shadow-sm" src="https://i.pravatar.cc/100?img=3" alt="Avatar" />
-                  <div className="w-10 h-10 shrink-0 rounded-full border-2 border-white bg-[#1E5AA8] text-white flex items-center justify-center text-xs font-bold shadow-sm z-10 relative">
+                  <div className="w-10 h-10 shrink-0 rounded-full border-2 border-white bg-primary text-white flex items-center justify-center text-xs font-bold shadow-sm z-10 relative">
                     +99
                   </div>
                 </div>
@@ -223,7 +220,7 @@ export function FeedbackCarousel() {
         onTouchEnd={handleMouseLeave}
       >
         {/* Left & Right gradient fade masks for seamless infinite look */}
-        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-r from-[white] to-transparent z-20" />
+        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-16 sm:w-32 bg-canvas z-20" />
         <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-l from-[white] to-transparent z-20" />
 
         {/* ROW 1: Scrolls to the Left */}

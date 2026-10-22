@@ -23,19 +23,31 @@ class ApiClient {
     return headers;
   }
 
+  private async readResponse<T>(response: Response): Promise<T> {
+    const notification = response.headers.get('X-CourtMate-Notification');
+    if (notification && typeof window !== 'undefined') {
+      try {
+        const payload = JSON.parse(decodeURIComponent(notification));
+        window.dispatchEvent(new CustomEvent('local-notification:new', { detail: payload }));
+      } catch { /* A malformed optional header must not fail the user's successful action. */ }
+    }
+    return response.json();
+  }
+
   async get<T>(path: string, headers?: Record<string, string>): Promise<T> {
     const url = path.startsWith('http') ? path : `${this.baseUrl}${path}`;
     const response = await fetch(url, {
       method: 'GET',
       headers: this.getHeaders(headers),
+      signal: AbortSignal.timeout(15000),
     });
 
     if (!response.ok) {
       const errorBody = await response.json().catch(() => null);
-      throw new Error(errorBody?.message || `Lỗi tải dữ liệu (${response.status})`);
+      throw Object.assign(new Error(errorBody?.message || `Lỗi tải dữ liệu (${response.status})`), { status: response.status });
     }
 
-    return response.json();
+    return this.readResponse<T>(response);
   }
 
   async post<T>(path: string, body?: any, headers?: Record<string, string>): Promise<T> {
@@ -51,7 +63,7 @@ class ApiClient {
       throw new Error(errorBody?.message || `Lỗi gửi dữ liệu (${response.status})`);
     }
 
-    return response.json();
+    return this.readResponse<T>(response);
   }
 
   async put<T>(path: string, body?: any, headers?: Record<string, string>): Promise<T> {
@@ -67,7 +79,7 @@ class ApiClient {
       throw new Error(errorBody?.message || `Lỗi cập nhật (${response.status})`);
     }
 
-    return response.json();
+    return this.readResponse<T>(response);
   }
 
   async patch<T>(path: string, body?: any, headers?: Record<string, string>): Promise<T> {
@@ -83,7 +95,7 @@ class ApiClient {
       throw new Error(errorBody?.message || `Lỗi cập nhật (${response.status})`);
     }
 
-    return response.json();
+    return this.readResponse<T>(response);
   }
 
   async delete<T>(path: string, headers?: Record<string, string>): Promise<T> {
@@ -98,7 +110,7 @@ class ApiClient {
       throw new Error(errorBody?.message || `Lỗi xóa (${response.status})`);
     }
 
-    return response.json();
+    return this.readResponse<T>(response);
   }
 
   async postFormData<T>(path: string, formData: FormData): Promise<T> {
@@ -123,7 +135,7 @@ class ApiClient {
       throw new Error(errorBody?.message || `Lỗi tải lên tệp (${response.status})`);
     }
 
-    return response.json();
+    return this.readResponse<T>(response);
   }
 }
 

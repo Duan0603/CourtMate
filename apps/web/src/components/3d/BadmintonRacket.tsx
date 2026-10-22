@@ -132,7 +132,7 @@ export function BadmintonRacket({
           <mesh>
             <cylinderGeometry args={[0.03, 0.03, 0.16, 16]} />
             <meshStandardMaterial
-              color="#1E5AA8"
+              color="#1848FF"
               metalness={0.6}
               roughness={0.25}
             />
@@ -142,7 +142,7 @@ export function BadmintonRacket({
           <mesh>
             <cylinderGeometry args={[0.03, 0.03, 0.16, 16]} />
             <meshStandardMaterial
-              color="#1E5AA8"
+              color="#1848FF"
               metalness={0.6}
               roughness={0.25}
             />
@@ -195,7 +195,7 @@ export function BadmintonRacket({
       </mesh>
       <mesh position={[0, -0.92, 0]}>
         <cylinderGeometry args={[0.036, 0.036, 0.025, 20]} />
-        <meshStandardMaterial color="#1E5AA8" roughness={0.3} />
+        <meshStandardMaterial color="#1848FF" roughness={0.3} />
       </mesh>
 
       {/* ─── 5. ATHLETIC GRIP HANDLE ─── */}

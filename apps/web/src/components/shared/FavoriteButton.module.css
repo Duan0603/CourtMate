@@ -1,0 +1,20 @@
+.button {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: white;
+  color: #3f3f3f;
+  cursor: pointer;
+  transition: color .2s ease, background .2s ease;
+}
+.button:hover { color: rgb(var(--cm-primary)); background: rgb(var(--cm-primary-light)); }
+.button[aria-pressed=true] { color: rgb(var(--cm-primary)); }
+.button:focus-visible { outline: 2px solid rgb(var(--cm-primary)); outline-offset: 3px; }
+.button:disabled { cursor: wait; opacity: .55; }
+.icon, .icon:hover, .onImage, .onImage:hover { background: transparent; border: 0; box-shadow: none; }
+.onImage { color: white; }
+.onImage:hover, .onImage[aria-pressed=true] { color: #8fd9fb; }
+@media (prefers-reduced-motion: reduce) { .button { transition: none; } }
