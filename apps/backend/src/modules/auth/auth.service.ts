@@ -19,14 +19,14 @@ export class AuthService implements OnModuleInit {
       console.log('[AuthService] Checking & seeding test accounts...');
       
       const seedAccounts = [
-        { email: 'test@courtmate.com', name: 'Test Player', role: UserRole.PLAYER },
-        { email: 'player1@courtmate.com', name: 'Nguyễn Văn Hùng (VĐV Cầu lông)', role: UserRole.PLAYER },
-        { email: 'player2@courtmate.com', name: 'Trần Thị Mai (VĐV Pickleball)', role: UserRole.PLAYER },
-        { email: 'player3@courtmate.com', name: 'Lê Hoàng Nam (VĐV Tennis)', role: UserRole.PLAYER },
-        { email: 'organizer@courtmate.com', name: 'Test Organizer (BTC)', role: UserRole.ORGANIZER },
-        { email: 'btc.danang@courtmate.com', name: 'CLB Cầu Lông Đà Nẵng (BTC)', role: UserRole.ORGANIZER },
-        { email: 'admin@courtmate.com', name: 'Test Regional Admin', role: UserRole.REGIONAL_ADMIN },
-        { email: 'superadmin@courtmate.com', name: 'Test Super Admin', role: UserRole.SUPER_ADMIN },
+        { email: 'test@gmail.com', name: 'Test Player', role: UserRole.PLAYER },
+        { email: 'player1@gmail.com', name: 'Nguyễn Văn Hùng (VĐV Cầu lông)', role: UserRole.PLAYER },
+        { email: 'player2@gmail.com', name: 'Trần Thị Mai (VĐV Pickleball)', role: UserRole.PLAYER },
+        { email: 'player3@gmail.com', name: 'Lê Hoàng Nam (VĐV Tennis)', role: UserRole.PLAYER },
+        { email: 'organizer@gmail.com', name: 'Test Organizer (BTC)', role: UserRole.ORGANIZER },
+        { email: 'btc.danang@gmail.com', name: 'CLB Cầu Lông Đà Nẵng (BTC)', role: UserRole.ORGANIZER },
+        { email: 'admin@gmail.com', name: 'Test Regional Admin', role: UserRole.REGIONAL_ADMIN },
+        { email: 'superadmin@gmail.com', name: 'Test Super Admin', role: UserRole.SUPER_ADMIN },
       ];
 
       const defaultPasswordHash = this.hashPassword('Password123');

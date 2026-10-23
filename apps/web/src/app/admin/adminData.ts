@@ -38,7 +38,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-admin-01',
     name: 'Test Super Admin',
-    email: 'superadmin@courtmate.com',
+    email: 'superadmin@gmail.com',
     role: 'SUPER_ADMIN',
     status: 'active',
     location: 'Toàn quốc',
@@ -48,7 +48,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-admin-02',
     name: 'Test Regional Admin',
-    email: 'admin@courtmate.com',
+    email: 'admin@gmail.com',
     role: 'REGIONAL_ADMIN',
     status: 'active',
     location: 'Đà Nẵng',
@@ -60,7 +60,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-owner-01',
     name: 'Nguyễn Tùng Giang',
-    email: 'tunggiang.court@courtmate.com',
+    email: 'tunggiang.court@gmail.com',
     role: 'COURT_OWNER',
     status: 'active',
     location: 'Hải Châu, Đà Nẵng',
@@ -70,7 +70,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-owner-02',
     name: 'Hồ Trọng Nghĩa',
-    email: 'trongnghia.pickleball@courtmate.com',
+    email: 'trongnghia.pickleball@gmail.com',
     role: 'COURT_OWNER',
     status: 'active',
     location: 'Cẩm Lệ, Đà Nẵng',
@@ -82,7 +82,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-btc-01',
     name: 'CLB Cầu Lông Đà Nẵng (BTC)',
-    email: 'btc.danang@courtmate.com',
+    email: 'btc.danang@gmail.com',
     role: 'ORGANIZER',
     status: 'active',
     location: 'Hải Châu, Đà Nẵng',
@@ -92,7 +92,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-btc-02',
     name: 'Test Organizer (BTC CourtMate)',
-    email: 'organizer@courtmate.com',
+    email: 'organizer@gmail.com',
     role: 'ORGANIZER',
     status: 'active',
     location: 'Sơn Trà, Đà Nẵng',
@@ -102,7 +102,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-btc-03',
     name: 'Hội Pickleball Sông Hàn (BTC)',
-    email: 'pickleball.danang@courtmate.com',
+    email: 'pickleball.danang@gmail.com',
     role: 'ORGANIZER',
     status: 'active',
     location: 'Hải Châu, Đà Nẵng',
@@ -112,7 +112,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-btc-04',
     name: 'CLB Tennis Bán Đảo Sơn Trà (BTC)',
-    email: 'tennis.sontra@courtmate.com',
+    email: 'tennis.sontra@gmail.com',
     role: 'ORGANIZER',
     status: 'active',
     location: 'Sơn Trà, Đà Nẵng',
@@ -122,7 +122,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-btc-05',
     name: 'Giải Cầu Lông Trẻ Đà Nẵng (BTC)',
-    email: 'youth.badminton@courtmate.com',
+    email: 'youth.badminton@gmail.com',
     role: 'ORGANIZER',
     status: 'active',
     location: 'Thanh Khê, Đà Nẵng',
@@ -132,7 +132,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-btc-06',
     name: 'Ban Tổ Chức Thể Thao Miền Trung (BTC)',
-    email: 'central.sports@courtmate.com',
+    email: 'central.sports@gmail.com',
     role: 'ORGANIZER',
     status: 'active',
     location: 'Ngũ Hành Sơn, Đà Nẵng',
@@ -144,7 +144,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-coach-01',
     name: 'Nguyễn Văn Hùng (HLV Cầu lông)',
-    email: 'coach.hung@courtmate.com',
+    email: 'coach.hung@gmail.com',
     role: 'COACH',
     status: 'active',
     location: 'Hải Châu, Đà Nẵng',
@@ -154,7 +154,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-coach-02',
     name: 'Trần Quang Huy (HLV Pickleball)',
-    email: 'coach.huy@courtmate.com',
+    email: 'coach.huy@gmail.com',
     role: 'COACH',
     status: 'active',
     location: 'Sơn Trà, Đà Nẵng',
@@ -164,7 +164,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-coach-03',
     name: 'Lê Quốc Bảo (HLV Tennis)',
-    email: 'coach.bao@courtmate.com',
+    email: 'coach.bao@gmail.com',
     role: 'COACH',
     status: 'active',
     location: 'Ngũ Hành Sơn, Đà Nẵng',
@@ -174,7 +174,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-coach-04',
     name: 'Đặng Minh Tuấn (HLV Cầu lông)',
-    email: 'coach.tuan@courtmate.com',
+    email: 'coach.tuan@gmail.com',
     role: 'COACH',
     status: 'active',
     location: 'Thanh Khê, Đà Nẵng',
@@ -184,7 +184,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-coach-05',
     name: 'Phan Thanh Sơn (HLV Pickleball)',
-    email: 'coach.son@courtmate.com',
+    email: 'coach.son@gmail.com',
     role: 'COACH',
     status: 'active',
     location: 'Liên Chiểu, Đà Nẵng',
@@ -194,7 +194,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-coach-06',
     name: 'Vũ Hoàng Long (HLV Tennis)',
-    email: 'coach.long@courtmate.com',
+    email: 'coach.long@gmail.com',
     role: 'COACH',
     status: 'active',
     location: 'Cẩm Lệ, Đà Nẵng',
@@ -206,7 +206,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-01',
     name: 'Nguyễn Văn Thành',
-    email: 'thanh.nguyen@courtmate.com',
+    email: 'thanh.nguyen@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Hải Châu, Đà Nẵng',
@@ -216,7 +216,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-02',
     name: 'Lê Anh Huân',
-    email: 'huan.le@courtmate.com',
+    email: 'huan.le@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Thanh Khê, Đà Nẵng',
@@ -226,7 +226,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-03',
     name: 'Trần Thị Thảo Ngân',
-    email: 'thaongan@courtmate.com',
+    email: 'thaongan@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Sơn Trà, Đà Nẵng',
@@ -236,7 +236,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-04',
     name: 'Nguyễn Hoàng Lâm',
-    email: 'lam.nguyen@courtmate.com',
+    email: 'lam.nguyen@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Ngũ Hành Sơn, Đà Nẵng',
@@ -246,7 +246,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-05',
     name: 'Hoàng Phúc',
-    email: 'phuc.hoang@courtmate.com',
+    email: 'phuc.hoang@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Hải Châu, Đà Nẵng',
@@ -256,7 +256,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-06',
     name: 'Vũ Minh Trí',
-    email: 'minhtri.vu@courtmate.com',
+    email: 'minhtri.vu@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Cẩm Lệ, Đà Nẵng',
@@ -266,7 +266,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-07',
     name: 'Phạm Mai Linh',
-    email: 'mailinh.pham@courtmate.com',
+    email: 'mailinh.pham@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Hải Châu, Đà Nẵng',
@@ -276,7 +276,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-08',
     name: 'Đặng Quốc Tuấn',
-    email: 'quoctuan.dang@courtmate.com',
+    email: 'quoctuan.dang@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Thanh Khê, Đà Nẵng',
@@ -286,7 +286,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-09',
     name: 'Bùi Hải Yến',
-    email: 'haiyen.bui@courtmate.com',
+    email: 'haiyen.bui@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Sơn Trà, Đà Nẵng',
@@ -296,7 +296,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-10',
     name: 'Đỗ Đức Huy',
-    email: 'duchuy.do@courtmate.com',
+    email: 'duchuy.do@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Liên Chiểu, Đà Nẵng',
@@ -306,7 +306,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-11',
     name: 'Hoàng Phương Thảo',
-    email: 'phuongthao.hoang@courtmate.com',
+    email: 'phuongthao.hoang@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Hải Châu, Đà Nẵng',
@@ -316,7 +316,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-12',
     name: 'Ngô Tấn Tài',
-    email: 'tantai.ngo@courtmate.com',
+    email: 'tantai.ngo@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Cẩm Lệ, Đà Nẵng',
@@ -326,7 +326,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-13',
     name: 'Dương Gia Bảo',
-    email: 'giabao.duong@courtmate.com',
+    email: 'giabao.duong@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Ngũ Hành Sơn, Đà Nẵng',
@@ -336,7 +336,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-14',
     name: 'Lý Kim Ngân',
-    email: 'kimngan.ly@courtmate.com',
+    email: 'kimngan.ly@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Hải Châu, Đà Nẵng',
@@ -346,7 +346,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-15',
     name: 'Trịnh Hữu Phước',
-    email: 'huuphuoc.trinh@courtmate.com',
+    email: 'huuphuoc.trinh@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Thanh Khê, Đà Nẵng',
@@ -356,7 +356,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-16',
     name: 'Cao Thị Diệu Linh',
-    email: 'dieulinh.cao@courtmate.com',
+    email: 'dieulinh.cao@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Sơn Trà, Đà Nẵng',
@@ -366,7 +366,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-17',
     name: 'Hà Văn Đông',
-    email: 'vandong.ha@courtmate.com',
+    email: 'vandong.ha@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Liên Chiểu, Đà Nẵng',
@@ -376,7 +376,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-18',
     name: 'Mai Thanh Tùng',
-    email: 'thanhtung.mai@courtmate.com',
+    email: 'thanhtung.mai@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Hải Châu, Đà Nẵng',
@@ -386,7 +386,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-19',
     name: 'Tạ Minh Khang',
-    email: 'minhkhang.ta@courtmate.com',
+    email: 'minhkhang.ta@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Ngũ Hành Sơn, Đà Nẵng',
@@ -396,7 +396,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-20',
     name: 'Đinh Tuyết Mai',
-    email: 'tuyetmai.dinh@courtmate.com',
+    email: 'tuyetmai.dinh@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Cẩm Lệ, Đà Nẵng',
@@ -406,7 +406,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-21',
     name: 'Lương Văn Quyết',
-    email: 'vanquyet.luong@courtmate.com',
+    email: 'vanquyet.luong@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Thanh Khê, Đà Nẵng',
@@ -416,7 +416,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-22',
     name: 'Châu Ngọc Hân',
-    email: 'ngochan.chau@courtmate.com',
+    email: 'ngochan.chau@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Sơn Trà, Đà Nẵng',
@@ -426,7 +426,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-23',
     name: 'Tô Vĩnh Khoa',
-    email: 'vinhkhoa.to@courtmate.com',
+    email: 'vinhkhoa.to@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Hải Châu, Đà Nẵng',
@@ -436,7 +436,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-24',
     name: 'Võ Ánh Dương',
-    email: 'anhduong.vo@courtmate.com',
+    email: 'anhduong.vo@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Liên Chiểu, Đà Nẵng',
@@ -446,7 +446,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-25',
     name: 'Kiều Anh Quân',
-    email: 'anhquan.kieu@courtmate.com',
+    email: 'anhquan.kieu@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Ngũ Hành Sơn, Đà Nẵng',
@@ -456,7 +456,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-26',
     name: 'Lê Thùy Trang',
-    email: 'thuytrang.le@courtmate.com',
+    email: 'thuytrang.le@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Cẩm Lệ, Đà Nẵng',
@@ -466,7 +466,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-27',
     name: 'Phan Gia Khiêm',
-    email: 'giakhiem.phan@courtmate.com',
+    email: 'giakhiem.phan@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Thanh Khê, Đà Nẵng',
@@ -476,7 +476,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-28',
     name: 'Nguyễn Khánh Vân',
-    email: 'khanhvan.nguyen@courtmate.com',
+    email: 'khanhvan.nguyen@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Hải Châu, Đà Nẵng',
@@ -486,7 +486,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-29',
     name: 'Trần Bách Hợp',
-    email: 'bachhop.tran@courtmate.com',
+    email: 'bachhop.tran@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Sơn Trà, Đà Nẵng',
@@ -496,7 +496,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-30',
     name: 'Đoàn Hữu Trí',
-    email: 'huutri.doan@courtmate.com',
+    email: 'huutri.doan@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Liên Chiểu, Đà Nẵng',
@@ -506,7 +506,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-31',
     name: 'Hồ Thảo Uyên',
-    email: 'thaouyen.ho@courtmate.com',
+    email: 'thaouyen.ho@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Ngũ Hành Sơn, Đà Nẵng',
@@ -516,7 +516,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-32',
     name: 'Lâm Kiến Văn',
-    email: 'kienvan.lam@courtmate.com',
+    email: 'kienvan.lam@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Cẩm Lệ, Đà Nẵng',
@@ -526,7 +526,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-33',
     name: 'Dương Ngọc Khánh',
-    email: 'ngockhanh.duong@courtmate.com',
+    email: 'ngockhanh.duong@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Hải Châu, Đà Nẵng',
@@ -536,7 +536,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-34',
     name: 'Vũ Cẩm Ly',
-    email: 'camly.vu@courtmate.com',
+    email: 'camly.vu@gmail.com',
     role: 'PLAYER',
     status: 'active',
     location: 'Thanh Khê, Đà Nẵng',

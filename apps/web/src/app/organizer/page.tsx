@@ -57,7 +57,7 @@ function OrganizerHeaderBar({ user, logout }: { user: any; logout: () => void })
               BAN TỔ CHỨC
             </span>
             <span className="text-xs font-bold text-slate-500 hidden sm:inline">
-              {user?.email || 'organizer@courtmate.com'}
+              {user?.email || 'organizer@gmail.com'}
             </span>
           </div>
         </div>
