@@ -86,3 +86,17 @@ test('HTTP fallback delivers the same saved notification id as realtime', async 
   await lastValueFrom(interceptor.intercept(ctx, { handle: () => of({ name: 'Updated' }) }));
   assert.equal(JSON.parse(decodeURIComponent(header)).id, 'stored-id');
 });
+
+test('chat messages keep one notification per conversation, unread again on every new message', async () => {
+  const stored = { _id: 'chat-notification', userId: 'receiver', type: 'MESSAGE_RECEIVED', link: '/chat?userId=sender' };
+  const updates = [], unread = [], emitted = [];
+  const model = { collection: { findOneAndUpdate: async (filter, update, options) => { updates.push([filter, update, options]); return { value: { ...stored, ...update.$set } }; } } };
+  const reads = { deleteOne: query => ({ exec: async () => unread.push(query) }) };
+  const service = new NotificationsService(model, reads, { emitToUser: (id, payload) => emitted.push([id, payload]) });
+  await service.notifyChatMessage('receiver', 'sender', 'An', 'tin 1');
+  await service.notifyChatMessage('receiver', 'sender', 'An', 'tin 2');
+  assert.deepEqual(updates[0][0], { userId: 'receiver', type: 'MESSAGE_RECEIVED', link: '/chat?userId=sender' });
+  assert.equal(updates[0][2].upsert, true);
+  assert.deepEqual(unread, [{ notificationId: 'chat-notification', userId: 'receiver' }, { notificationId: 'chat-notification', userId: 'receiver' }]);
+  assert.deepEqual(emitted.map(([id, payload]) => [id, payload.id, payload.body]), [['receiver', 'chat-notification', 'tin 1'], ['receiver', 'chat-notification', 'tin 2']]);
+});

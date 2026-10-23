@@ -39,8 +39,11 @@ export function useNotifications() {
       if (!active || (item.userId && item.userId !== user?.id)) return;
       revision.current++;
       setNotifications(previous => {
-        if (previous.some(existing => existing.id === item.id)) return previous;
-        const next = [{ ...item, read: false }, ...previous];
+        const existing = previous.find(entry => entry.id === item.id);
+        // Same delivery twice (socket + HTTP header): nothing changed
+        if (existing && existing.createdAt === item.createdAt) return previous;
+        // A rewritten entry (chat notification per conversation) moves to the top as unread
+        const next = [{ ...item, read: false }, ...previous.filter(entry => entry.id !== item.id)];
         saveCache(next);
         return next;
       });
