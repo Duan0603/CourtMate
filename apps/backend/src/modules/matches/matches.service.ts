@@ -49,8 +49,8 @@ export class MatchesService {
       throw new BadRequestException('Thời gian kết thúc phải sau thời gian bắt đầu');
     }
 
-    if (dto.totalSlots < 2 || dto.totalSlots > 20) {
-      throw new BadRequestException('Tổng số người tham gia phải từ 2 đến 20 người');
+    if (dto.totalSlots < 2 || dto.totalSlots > 8) {
+      throw new BadRequestException('Tổng số người tham gia phải từ 2 đến 8 người');
     }
 
     // Sinh share code ngẫu nhiên ngắn gọn (ví dụ: CM-7K9Q)

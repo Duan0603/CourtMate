@@ -3,7 +3,7 @@ import { X, RotateCcw } from 'lucide-react';
 import { SportType, BadmintonSkillLevel } from '@courtmate/shared';
 
 export interface MatchFilterState {
-  sport: SportType;
+  sport: SportType | 'ALL';
   district: string;
   skill: BadmintonSkillLevel | 'ALL';
 }
@@ -39,13 +39,13 @@ export const MatchFilters: React.FC<MatchFiltersProps> = ({
 
   const handleReset = () => {
     setFilters({
-      sport: SportType.BADMINTON,
+      sport: 'ALL',
       district: 'Tất cả',
       skill: 'ALL',
     });
   };
 
-  const sports = [
+  const sports: { value: SportType | 'ALL'; label: string }[] = [ { value: 'ALL', label: 'Tất cả bộ môn' },
     { value: SportType.BADMINTON, label: 'Cầu lông' },
     { value: SportType.PICKLEBALL, label: 'Pickleball' },
   ];

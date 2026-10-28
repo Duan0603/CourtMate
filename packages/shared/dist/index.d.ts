@@ -14,6 +14,7 @@ export declare enum UserRole {
     PLAYER = "PLAYER",
     COACH = "COACH",
     ORGANIZER = "ORGANIZER",
+    COURT_OWNER = "COURT_OWNER",
     REGIONAL_ADMIN = "REGIONAL_ADMIN",
     SUPER_ADMIN = "SUPER_ADMIN"
 }

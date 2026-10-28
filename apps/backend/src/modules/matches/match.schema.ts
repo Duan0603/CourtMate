@@ -69,7 +69,7 @@ export class Match {
   @Prop({ required: true, type: Date })
   endTime!: Date;
 
-  @Prop({ required: true, min: 2, max: 20, default: 4 })
+  @Prop({ required: true, min: 2, max: 8, default: 8 })
   totalSlots!: number;
 
   @Prop({ required: true, default: 1 })

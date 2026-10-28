@@ -90,7 +90,7 @@ export default function MatchesPage() {
   const activeRequestIdRef = useRef(0);
 
   // Filters
-  const [selectedSport, setSelectedSport] = useState<SportType>(SportType.BADMINTON);
+  const [selectedSport, setSelectedSport] = useState<SportType | 'ALL'>('ALL');
   const [selectedDistrict, setSelectedDistrict] = useState('Tất cả');
   const [selectedSkill, setSelectedSkill] = useState<BadmintonSkillLevel | 'ALL'>('ALL');
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -118,10 +118,10 @@ export default function MatchesPage() {
   };
 
   const activeDrawerFiltersCount =
-    (selectedSport !== SportType.BADMINTON ? 1 : 0) +
+    (selectedSport !== 'ALL' ? 1 : 0) +
     (selectedSkill !== 'ALL' ? 1 : 0);
   const hasActiveFilters =
-    selectedSport !== SportType.BADMINTON ||
+    selectedSport !== 'ALL' ||
     selectedDistrict !== 'Tất cả' ||
     selectedSkill !== 'ALL' ||
     Boolean(searchKeyword.trim());
@@ -148,7 +148,7 @@ export default function MatchesPage() {
     courtNumber: 'Sân 1',
     startTime: '',
     endTime: '',
-    totalSlots: 4,
+    totalSlots: 8,
     minSkillLevel: BadmintonSkillLevel.TBY,
     maxSkillLevel: BadmintonSkillLevel.TB_PLUS,
     estimatedCostText: 'Chia đều tiền sân tại chỗ (~40k/người)',
@@ -198,7 +198,7 @@ export default function MatchesPage() {
     setError(null);
     try {
       const res = await matchesApi.getMatches({
-        sport: selectedSport,
+        sport: selectedSport !== 'ALL' ? selectedSport : undefined,
         district: selectedDistrict !== 'Tất cả' ? selectedDistrict : undefined,
         skillLevel: selectedSkill !== 'ALL' ? selectedSkill : undefined,
         keyword: searchKeyword.trim() || undefined,
@@ -232,7 +232,7 @@ export default function MatchesPage() {
   };
 
   const handleResetFilters = () => {
-    setSelectedSport(SportType.BADMINTON);
+    setSelectedSport('ALL');
     setSelectedDistrict('Tất cả');
     setSelectedSkill('ALL');
     setSearchKeyword('');
@@ -997,9 +997,9 @@ export default function MatchesPage() {
                 </label>
                 <InputNumber
                   min={2}
-                  max={12}
+                  max={8}
                   value={formData.totalSlots}
-                  onChange={(val) => setFormData({ ...formData, totalSlots: Number(val) || 4 })}
+                  onChange={(val) => setFormData({ ...formData, totalSlots: Math.min(8, Math.max(2, Number(val) || 8)) })}
                   size="large"
                   className="w-full rounded-xl"
                 />

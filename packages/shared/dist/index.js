@@ -21,6 +21,7 @@ var UserRole;
     UserRole["PLAYER"] = "PLAYER";
     UserRole["COACH"] = "COACH";
     UserRole["ORGANIZER"] = "ORGANIZER";
+    UserRole["COURT_OWNER"] = "COURT_OWNER";
     UserRole["REGIONAL_ADMIN"] = "REGIONAL_ADMIN";
     UserRole["SUPER_ADMIN"] = "SUPER_ADMIN";
 })(UserRole || (exports.UserRole = UserRole = {}));
