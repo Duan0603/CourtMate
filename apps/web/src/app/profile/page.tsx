@@ -26,6 +26,7 @@ import {
   Compass
 } from 'lucide-react';
 import { FavoritesPanel } from '../../components/profile/FavoritesPanel';
+import { PersonalCalendar } from '../../components/profile/PersonalCalendar';
 import { useAuth } from '../../context/AuthContext';
 import { SportType } from '@courtmate/shared';
 import { registrationsApi } from '../../lib/registrations.api';
@@ -36,14 +37,18 @@ import toast from 'react-hot-toast';
 
 export default function ProfilePage() {
   const { user, token, updateProfile } = useAuth();
-  const [activeTab, setActiveTab] = useState<'my-tournaments' | 'saved' | 'edit'>('edit');
+  const [activeTab, setActiveTab] = useState<'schedule' | 'my-tournaments' | 'saved' | 'edit'>('schedule');
   const [myRegistrations, setMyRegistrations] = useState<any[]>([]);
   const [savedTournaments, setSavedTournaments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const favoriteCount = (user?.bookmarkedTournaments?.length || 0) + (user?.bookmarkedCoaches?.length || 0);
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('tab') === 'favorites') setActiveTab('saved');
+    const tabParam = new URLSearchParams(window.location.search).get('tab');
+    if (tabParam === 'favorites') setActiveTab('saved');
+    else if (tabParam === 'tournaments') setActiveTab('my-tournaments');
+    else if (tabParam === 'edit') setActiveTab('edit');
+    else if (tabParam === 'schedule') setActiveTab('schedule');
   }, []);
 
   // Avatar Upload State
@@ -287,6 +292,25 @@ export default function ProfilePage() {
                     <span>Cập nhật hồ sơ</span>
                   </div>
                   <ChevronRight className={`w-4 h-4 ${activeTab === 'edit' ? 'text-white/70' : 'text-white'}`} />
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('schedule')}
+                  className={`cm-button w-full px-4 py-3 text-xs sm:text-sm font-bold rounded-2xl transition-all flex items-center justify-between ${
+                    activeTab === 'schedule'
+                      ? 'bg-primary text-white shadow-md'
+                      : 'text-muted hover:bg-white hover:text-ink'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Calendar className={`w-4 h-4 ${activeTab === 'schedule' ? 'text-white' : 'text-[#1848FF]'}`} />
+                    <span className="font-black">Lịch trình cá nhân</span>
+                  </div>
+                  <span className={`px-2 py-0.5 text-[10px] font-black rounded-full ${
+                    activeTab === 'schedule' ? 'bg-white/20 text-white' : 'bg-blue-100 text-[#1848FF]'
+                  }`}>
+                    Calendar
+                  </span>
                 </button>
 
                 <button
@@ -545,37 +569,39 @@ export default function ProfilePage() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
-                        {reg.status === 'PAID' || reg.status === 'APPROVED' ? (
-                          <Link
-                            href={`/ticket/${reg.tournamentId}`}
-                            className="cm-action w-full sm:w-auto px-4 py-2.5 rounded-2xl bg-primary hover:bg-primary text-white font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-xs"
-                          >
-                            <Ticket className="w-4 h-4" />
-                            <span>Xem vé QR</span>
-                          </Link>
-                        ) : reg.status === 'PENDING' ? (
+                      <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto shrink-0">
+                        <Link
+                          href={`/ticket/${reg.tournamentId || (reg.tournament as any)?._id || reg.id}`}
+                          className="cm-button cm-action w-full sm:w-auto px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-dark text-white font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-xs"
+                        >
+                          <Ticket className="w-4 h-4" />
+                          <span>Xem vé QR</span>
+                        </Link>
+                        {reg.status === 'PENDING' && (
                           <Link
                             href={`/tournaments/${reg.tournamentId}/register`}
-                            className="w-full sm:w-auto px-4 py-2.5 rounded-2xl bg-primary hover:bg-primary text-white font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-xs"
+                            className="cm-button w-full sm:w-auto px-3.5 py-2.5 rounded-xl bg-accent-tan text-primary font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-xs"
                           >
                             <CreditCard className="w-4 h-4" />
-                            <span>Thanh toán ngay</span>
-                          </Link>
-                        ) : (
-                          <Link
-                            href={`/tournaments/${reg.tournamentId}/register`}
-                            className="w-full sm:w-auto px-4 py-2.5 rounded-2xl bg-white hover:bg-white text-muted font-bold text-xs flex items-center justify-center gap-1.5 transition"
-                          >
-                            <RotateCcw className="w-4 h-4" />
-                            <span>Đăng ký lại</span>
+                            <span>Thanh toán</span>
                           </Link>
                         )}
+                        <Link
+                          href={`/tournaments/${reg.tournamentId}`}
+                          className="cm-button w-full sm:w-auto px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-ink font-bold text-xs flex items-center justify-center gap-1.5 transition border border-ink shadow-xs"
+                        >
+                          <span>Giải đấu</span>
+                          <ChevronRight className="w-3.5 h-3.5 text-muted" />
+                        </Link>
                       </div>
                     </div>
                   ))
                 )}
               </div>
+            )}
+
+            {activeTab === 'schedule' && (
+              <PersonalCalendar user={user} />
             )}
 
             {activeTab === 'saved' && <FavoritesPanel tournaments={savedTournaments} loading={loading} />}

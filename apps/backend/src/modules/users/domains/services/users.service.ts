@@ -76,7 +76,7 @@ export class UsersService implements OnModuleInit {
     return newUser.save();
   }
 
-  async createWithPassword(email: string, passwordHash: string, name: string = '', role: UserRole = UserRole.USER, organizer?: { certificateUrl?: string; sports: string[] }): Promise<User> {
+  async createWithPassword(email: string, passwordHash: string, name: string = '', role: UserRole = UserRole.USER, organizer?: { certificateUrl?: string; sports: string[] }, phone?: string): Promise<User> {
     const isOrg = role === UserRole.ORGANIZER;
     const newUser = new this.userModel({
       email: email.toLowerCase(),
@@ -87,6 +87,7 @@ export class UsersService implements OnModuleInit {
       organizerSubmittedAt: isOrg ? new Date() : undefined,
       password: passwordHash,
       name,
+      phone: phone || undefined,
       role,
       preferences: { sports: organizer?.sports || [] },
       isVerified: !isOrg, // Organizer requires admin approval before verified
@@ -99,6 +100,7 @@ export class UsersService implements OnModuleInit {
     updateDto: {
       name?: string;
       role?: UserRole;
+      phone?: string;
       preferences?: {
         sports?: any[];
         location?: string;

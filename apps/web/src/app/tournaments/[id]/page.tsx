@@ -24,6 +24,7 @@ import {
   Check,
   Award,
   CircleAlert,
+  ExternalLink,
 } from 'lucide-react';
 import { Tournament, TournamentStatus, SportType, UserRole } from '@courtmate/shared';
 import { getTournamentStatus, tournamentStatusLabel } from '../../../lib/tournament-status';
@@ -184,7 +185,17 @@ export default function TournamentDetailPage() {
 
   const endDateFormatted = tournament.endDate
     ? new Date(tournament.endDate).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
-    : 'Đang cập nhật';
+    : '';
+
+  const isSingleDay =
+    !tournament.endDate ||
+    !tournament.startDate ||
+    startDateFormatted === endDateFormatted ||
+    new Date(tournament.startDate).toDateString() === new Date(tournament.endDate).toDateString();
+
+  const dateRangeDisplay = isSingleDay
+    ? startDateFormatted
+    : `${startDateFormatted} - ${endDateFormatted}`;
 
   const slotsLimit = tournament.slotsLimit || 50;
   const slotsLeft = Math.max(0, slotsLimit - confirmedParticipants.length);
@@ -281,7 +292,7 @@ export default function TournamentDetailPage() {
               </div>
               <div className="flex items-center gap-1.5">
                 <Calendar className="w-4 h-4 text-primary shrink-0" />
-                <span>{startDateFormatted} - {endDateFormatted}</span>
+                <span>{dateRangeDisplay}</span>
               </div>
             </div>
           </div>
@@ -351,6 +362,47 @@ export default function TournamentDetailPage() {
                     </button>
                   </div>
 
+                  {/* Official Poster Showcase */}
+                  {tournament.coverImage && (
+                    <div>
+                      <h3 className="text-base sm:text-lg font-black text-ink mb-3 flex items-center gap-2">
+                        <Trophy className="w-5 h-5 text-primary" />
+                        Poster chính thức giải đấu
+                      </h3>
+                      <div className="rounded-2xl overflow-hidden border border-ink shadow-card bg-surface p-4 flex flex-col md:flex-row gap-5 items-center">
+                        <div className="relative w-full max-w-xs shrink-0 rounded-xl overflow-hidden border border-ink/40 shadow-md bg-black">
+                          <img
+                            src={tournament.coverImage}
+                            alt={`Poster ${tournament.title}`}
+                            className="w-full h-auto object-cover max-h-[380px] hover:scale-105 transition-transform duration-300"
+                          />
+                        </div>
+                        <div className="flex-1 space-y-3">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-blue-50 text-blue-700 border border-blue-200">
+                            <Sparkles className="w-3.5 h-3.5" /> Áp phích chính thức FPTU Winter Championship
+                          </span>
+                          <h4 className="text-base sm:text-lg font-black text-ink">
+                            FPTU Badminton Winter Championship Lần V – 2026
+                          </h4>
+                          <p className="text-xs sm:text-sm text-muted leading-relaxed">
+                            Chào mừng tân sinh viên K22 và cộng đồng FPTU Đà Nẵng tham gia tranh tài tại giải đấu mùa đông lần thứ V. Đăng ký trực tiếp ngay trên CourtMate!
+                          </p>
+                          <div className="flex flex-wrap gap-2 pt-1">
+                            <a
+                              href={tournament.coverImage}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-ink bg-white hover:bg-slate-50 text-ink text-xs font-bold shadow-sm transition-all"
+                            >
+                              <span>Phóng to xem Poster</span>
+                              <ExternalLink className="w-3.5 h-3.5 text-primary" />
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Description Section */}
                   <div>
                     <h3 className="text-base sm:text-lg font-black text-ink mb-3 flex items-center gap-2">
@@ -376,7 +428,9 @@ export default function TournamentDetailPage() {
                           {startDateFormatted}
                         </div>
                         <div className="text-muted text-xs mt-0.5">
-                          Đến hết ngày {endDateFormatted}
+                          {isSingleDay
+                            ? ((tournament as any).time || 'Diễn ra trọn vẹn trong ngày')
+                            : `Đến hết ngày ${endDateFormatted}`}
                         </div>
                       </div>
                     </div>
@@ -397,6 +451,34 @@ export default function TournamentDetailPage() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Official Schedule Timeline if available */}
+                  {(tournament as any).schedule && (tournament as any).schedule.length > 0 && (
+                    <div className="pt-2">
+                      <h3 className="text-base sm:text-lg font-black text-ink mb-3 flex items-center gap-2">
+                        <Clock className="w-5 h-5 text-primary" />
+                        Lịch trình giải đấu chi tiết
+                      </h3>
+                      <div className="bg-white p-5 rounded-2xl border border-ink space-y-3">
+                        {(tournament as any).schedule.map((item: string, idx: number) => {
+                          const parts = item.split(': ');
+                          const timePart = parts[0];
+                          const contentPart = parts.slice(1).join(': ') || item;
+                          return (
+                            <div key={idx} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 rounded-xl bg-slate-50 border border-ink/20">
+                              <span className="font-bold text-primary shrink-0 bg-blue-50 text-blue-700 px-2.5 py-1 rounded-lg border border-blue-200 text-xs inline-flex items-center gap-1.5 self-start">
+                                <Clock className="w-3.5 h-3.5" />
+                                {timePart}
+                              </span>
+                              <span className="text-ink font-semibold text-xs sm:text-sm">
+                                {contentPart}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -483,11 +565,31 @@ export default function TournamentDetailPage() {
                           className="p-4 rounded-xl border border-ink bg-white flex items-center justify-between"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-full bg-accent-baby text-primary font-bold text-xs flex items-center justify-center shrink-0">
-                              #{idx + 1}
-                            </div>
+                            {(reg as any).playerAvatar ? (
+                              <img
+                                src={(reg as any).playerAvatar}
+                                alt={reg.playerName}
+                                className="w-10 h-10 rounded-full object-cover border-2 border-black shrink-0 shadow-xs"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 rounded-full bg-accent-baby text-primary font-bold text-xs flex items-center justify-center shrink-0 border border-ink">
+                                #{idx + 1}
+                              </div>
+                            )}
                             <div>
-                              <div className="font-bold text-ink text-sm">{reg.playerName}</div>
+                              <div className="font-bold text-ink text-sm flex items-center gap-1.5">
+                                <span>{reg.playerName}</span>
+                                {(reg as any).gender === 'FEMALE' ? (
+                                  <span className="text-[9px] font-black bg-pink-100 text-pink-700 px-1.5 py-0.2 rounded-full border border-pink-300">Nữ</span>
+                                ) : (reg as any).gender === 'MALE' ? (
+                                  <span className="text-[9px] font-black bg-blue-100 text-blue-700 px-1.5 py-0.2 rounded-full border border-blue-300">Nam</span>
+                                ) : null}
+                              </div>
+                              {(reg as any).categoryName && (
+                                <div className="text-[11px] font-semibold text-slate-500">
+                                  {(reg as any).categoryName}
+                                </div>
+                              )}
                               {reg.partnerName && (
                                 <div className="text-[11px] text-muted font-medium">
                                   Cùng: {reg.partnerName}

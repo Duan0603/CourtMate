@@ -67,6 +67,7 @@ export class AdminService {
       id: String(u._id),
       name: u.name || 'Người dùng',
       email: u.email,
+      phone: u.phone || u.preferences?.phone || '',
       role: u.role || 'PLAYER',
       status: u.status || 'active',
       location: u.preferences?.location || 'Đà Nẵng',

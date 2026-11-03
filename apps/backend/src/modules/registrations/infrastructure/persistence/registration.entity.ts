@@ -33,6 +33,15 @@ export class Registration extends Document {
   @Prop({ required: false })
   partnerName?: string;
 
+  @Prop({ required: false })
+  playerAvatar?: string;
+
+  @Prop({ required: false })
+  gender?: string;
+
+  @Prop({ required: false })
+  categoryName?: string;
+
   @Prop({ required: true })
   contactPhone!: string;
 

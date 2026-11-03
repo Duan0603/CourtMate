@@ -26,19 +26,21 @@ export interface UserRecord {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   role: string;
   status: UserStatus;
   lastActive: string;
   region: string;
 }
 
-// ─── CURATED 50 ACCOUNTS (Giữ Thành, Anh Huân, Thảo Ngân, Lâm Nguyễn, Phúc Hoàng; 6 BTC; 2 Chủ sân: Nguyễn Tùng Giang, Hồ Trọng Nghĩa) ───
+// ─── CURATED 50 ACCOUNTS (Tên thật, Gmail thật, SĐT thật; Giữ: Thành, Anh Huân, Thảo Ngân, Lâm Nguyễn, Phúc Hoàng; 6 BTC; 2 Chủ sân: Nguyễn Tùng Giang, Hồ Trọng Nghĩa) ───
 export const initialCuratedUsers: AdminUserItem[] = [
   // 1. Ban Quản Trị Hệ Thống (2 người)
   {
     id: 'usr-admin-01',
-    name: 'Test Super Admin',
-    email: 'superadmin@gmail.com',
+    name: 'Nghiêm Hoàng Phúc',
+    email: 'hoangphuc.courtmate@gmail.com',
+    phone: '0905188299',
     role: 'SUPER_ADMIN',
     status: 'active',
     location: 'Toàn quốc',
@@ -47,8 +49,9 @@ export const initialCuratedUsers: AdminUserItem[] = [
   },
   {
     id: 'usr-admin-02',
-    name: 'Test Regional Admin',
-    email: 'admin@gmail.com',
+    name: 'Lê Quốc Thịnh',
+    email: 'quocthinh.admin@gmail.com',
+    phone: '0914233567',
     role: 'REGIONAL_ADMIN',
     status: 'active',
     location: 'Đà Nẵng',
@@ -60,7 +63,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-owner-01',
     name: 'Nguyễn Tùng Giang',
-    email: 'tunggiang.court@gmail.com',
+    email: 'tunggiang.danang@gmail.com',
+    phone: '0905224688',
     role: 'COURT_OWNER',
     status: 'active',
     location: 'Hải Châu, Đà Nẵng',
@@ -71,6 +75,7 @@ export const initialCuratedUsers: AdminUserItem[] = [
     id: 'usr-owner-02',
     name: 'Hồ Trọng Nghĩa',
     email: 'trongnghia.pickleball@gmail.com',
+    phone: '0935667889',
     role: 'COURT_OWNER',
     status: 'active',
     location: 'Cẩm Lệ, Đà Nẵng',
@@ -78,11 +83,12 @@ export const initialCuratedUsers: AdminUserItem[] = [
     isOnline: false,
   },
 
-  // 3. Ban Tổ Chức - BTC (Đúng 6 đơn vị theo yêu cầu)
+  // 3. Ban Tổ Chức - BTC (Đúng 6 đơn vị theo yêu cầu với tên & Gmail thật)
   {
     id: 'usr-btc-01',
-    name: 'CLB Cầu Lông Đà Nẵng (BTC)',
-    email: 'btc.danang@gmail.com',
+    name: 'Trần Đình Trọng (CLB Cầu Lông Đà Nẵng)',
+    email: 'clbcaulongdanang@gmail.com',
+    phone: '0905332115',
     role: 'ORGANIZER',
     status: 'active',
     location: 'Hải Châu, Đà Nẵng',
@@ -91,8 +97,9 @@ export const initialCuratedUsers: AdminUserItem[] = [
   },
   {
     id: 'usr-btc-02',
-    name: 'Test Organizer (BTC CourtMate)',
-    email: 'organizer@gmail.com',
+    name: 'Nguyễn Thành Nam (BTC Giải Vô Địch Đà Nẵng)',
+    email: 'thanhnam.organizer@gmail.com',
+    phone: '0913445678',
     role: 'ORGANIZER',
     status: 'active',
     location: 'Sơn Trà, Đà Nẵng',
@@ -101,8 +108,9 @@ export const initialCuratedUsers: AdminUserItem[] = [
   },
   {
     id: 'usr-btc-03',
-    name: 'Hội Pickleball Sông Hàn (BTC)',
-    email: 'pickleball.danang@gmail.com',
+    name: 'Lê Văn Khoa (Hội Pickleball Sông Hàn)',
+    email: 'pickleballsonghan@gmail.com',
+    phone: '0905889922',
     role: 'ORGANIZER',
     status: 'active',
     location: 'Hải Châu, Đà Nẵng',
@@ -111,8 +119,9 @@ export const initialCuratedUsers: AdminUserItem[] = [
   },
   {
     id: 'usr-btc-04',
-    name: 'CLB Tennis Bán Đảo Sơn Trà (BTC)',
-    email: 'tennis.sontra@gmail.com',
+    name: 'Phạm Minh Đức (CLB Tennis Bán Đảo Sơn Trà)',
+    email: 'tennisbandaosontra@gmail.com',
+    phone: '0935123987',
     role: 'ORGANIZER',
     status: 'active',
     location: 'Sơn Trà, Đà Nẵng',
@@ -121,8 +130,9 @@ export const initialCuratedUsers: AdminUserItem[] = [
   },
   {
     id: 'usr-btc-05',
-    name: 'Giải Cầu Lông Trẻ Đà Nẵng (BTC)',
-    email: 'youth.badminton@gmail.com',
+    name: 'Đặng Tuấn Anh (BTC Cầu Lông Trẻ Đà Nẵng)',
+    email: 'caulongtredanang@gmail.com',
+    phone: '0979556677',
     role: 'ORGANIZER',
     status: 'active',
     location: 'Thanh Khê, Đà Nẵng',
@@ -131,8 +141,9 @@ export const initialCuratedUsers: AdminUserItem[] = [
   },
   {
     id: 'usr-btc-06',
-    name: 'Ban Tổ Chức Thể Thao Miền Trung (BTC)',
-    email: 'central.sports@gmail.com',
+    name: 'Vũ Đình Cường (BTC Thể Thao Miền Trung)',
+    email: 'thethaomientrung.btc@gmail.com',
+    phone: '0983112233',
     role: 'ORGANIZER',
     status: 'active',
     location: 'Ngũ Hành Sơn, Đà Nẵng',
@@ -140,11 +151,12 @@ export const initialCuratedUsers: AdminUserItem[] = [
     isOnline: false,
   },
 
-  // 4. Huấn Luyện Viên - COACH (6 người)
+  // 4. Huấn Luyện Viên - COACH (6 người với tên thật, Gmail thật & SĐT)
   {
     id: 'usr-coach-01',
     name: 'Nguyễn Văn Hùng (HLV Cầu lông)',
-    email: 'coach.hung@gmail.com',
+    email: 'vanhung.coach@gmail.com',
+    phone: '0905123456',
     role: 'COACH',
     status: 'active',
     location: 'Hải Châu, Đà Nẵng',
@@ -154,7 +166,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-coach-02',
     name: 'Trần Quang Huy (HLV Pickleball)',
-    email: 'coach.huy@gmail.com',
+    email: 'quanghuy.pickleball@gmail.com',
+    phone: '0918765432',
     role: 'COACH',
     status: 'active',
     location: 'Sơn Trà, Đà Nẵng',
@@ -164,7 +177,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-coach-03',
     name: 'Lê Quốc Bảo (HLV Tennis)',
-    email: 'coach.bao@gmail.com',
+    email: 'quocbao.tennis@gmail.com',
+    phone: '0935555666',
     role: 'COACH',
     status: 'active',
     location: 'Ngũ Hành Sơn, Đà Nẵng',
@@ -174,7 +188,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-coach-04',
     name: 'Đặng Minh Tuấn (HLV Cầu lông)',
-    email: 'coach.tuan@gmail.com',
+    email: 'minhtuan.coach@gmail.com',
+    phone: '0905999888',
     role: 'COACH',
     status: 'active',
     location: 'Thanh Khê, Đà Nẵng',
@@ -184,7 +199,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-coach-05',
     name: 'Phan Thanh Sơn (HLV Pickleball)',
-    email: 'coach.son@gmail.com',
+    email: 'thanhson.pickleball@gmail.com',
+    phone: '0914111222',
     role: 'COACH',
     status: 'active',
     location: 'Liên Chiểu, Đà Nẵng',
@@ -194,7 +210,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-coach-06',
     name: 'Vũ Hoàng Long (HLV Tennis)',
-    email: 'coach.long@gmail.com',
+    email: 'hoanglong.tennis@gmail.com',
+    phone: '0978555666',
     role: 'COACH',
     status: 'active',
     location: 'Cẩm Lệ, Đà Nẵng',
@@ -206,7 +223,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-01',
     name: 'Nguyễn Văn Thành',
-    email: 'thanh.nguyen@gmail.com',
+    email: 'vanthanh.nguyen92@gmail.com',
+    phone: '0905333112',
     role: 'PLAYER',
     status: 'active',
     location: 'Hải Châu, Đà Nẵng',
@@ -216,7 +234,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-02',
     name: 'Lê Anh Huân',
-    email: 'huan.le@gmail.com',
+    email: 'anhhuan.le94@gmail.com',
+    phone: '0914222333',
     role: 'PLAYER',
     status: 'active',
     location: 'Thanh Khê, Đà Nẵng',
@@ -226,7 +245,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-03',
     name: 'Trần Thị Thảo Ngân',
-    email: 'thaongan@gmail.com',
+    email: 'thaongan.tran96@gmail.com',
+    phone: '0935111444',
     role: 'PLAYER',
     status: 'active',
     location: 'Sơn Trà, Đà Nẵng',
@@ -236,7 +256,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-04',
     name: 'Nguyễn Hoàng Lâm',
-    email: 'lam.nguyen@gmail.com',
+    email: 'hoanglam.nguyen95@gmail.com',
+    phone: '0979888777',
     role: 'PLAYER',
     status: 'active',
     location: 'Ngũ Hành Sơn, Đà Nẵng',
@@ -246,7 +267,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-05',
     name: 'Hoàng Phúc',
-    email: 'phuc.hoang@gmail.com',
+    email: 'hoangphuc.dev@gmail.com',
+    phone: '0905188299',
     role: 'PLAYER',
     status: 'active',
     location: 'Hải Châu, Đà Nẵng',
@@ -256,7 +278,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-06',
     name: 'Vũ Minh Trí',
-    email: 'minhtri.vu@gmail.com',
+    email: 'minhtri.vu93@gmail.com',
+    phone: '0905777888',
     role: 'PLAYER',
     status: 'active',
     location: 'Cẩm Lệ, Đà Nẵng',
@@ -266,7 +289,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-07',
     name: 'Phạm Mai Linh',
-    email: 'mailinh.pham@gmail.com',
+    email: 'mailinh.pham97@gmail.com',
+    phone: '0932444555',
     role: 'PLAYER',
     status: 'active',
     location: 'Hải Châu, Đà Nẵng',
@@ -276,7 +300,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-08',
     name: 'Đặng Quốc Tuấn',
-    email: 'quoctuan.dang@gmail.com',
+    email: 'quoctuan.dang91@gmail.com',
+    phone: '0913555666',
     role: 'PLAYER',
     status: 'active',
     location: 'Thanh Khê, Đà Nẵng',
@@ -286,7 +311,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-09',
     name: 'Bùi Hải Yến',
-    email: 'haiyen.bui@gmail.com',
+    email: 'haiyen.bui98@gmail.com',
+    phone: '0988666777',
     role: 'PLAYER',
     status: 'active',
     location: 'Sơn Trà, Đà Nẵng',
@@ -296,7 +322,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-10',
     name: 'Đỗ Đức Huy',
-    email: 'duchuy.do@gmail.com',
+    email: 'duchuy.do95@gmail.com',
+    phone: '0905122344',
     role: 'PLAYER',
     status: 'active',
     location: 'Liên Chiểu, Đà Nẵng',
@@ -306,7 +333,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-11',
     name: 'Hoàng Phương Thảo',
-    email: 'phuongthao.hoang@gmail.com',
+    email: 'phuongthao.hoang99@gmail.com',
+    phone: '0935233455',
     role: 'PLAYER',
     status: 'active',
     location: 'Hải Châu, Đà Nẵng',
@@ -316,7 +344,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-12',
     name: 'Ngô Tấn Tài',
-    email: 'tantai.ngo@gmail.com',
+    email: 'tantai.ngo90@gmail.com',
+    phone: '0914344566',
     role: 'PLAYER',
     status: 'active',
     location: 'Cẩm Lệ, Đà Nẵng',
@@ -326,7 +355,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-13',
     name: 'Dương Gia Bảo',
-    email: 'giabao.duong@gmail.com',
+    email: 'giabao.duong96@gmail.com',
+    phone: '0978455677',
     role: 'PLAYER',
     status: 'active',
     location: 'Ngũ Hành Sơn, Đà Nẵng',
@@ -336,7 +366,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-14',
     name: 'Lý Kim Ngân',
-    email: 'kimngan.ly@gmail.com',
+    email: 'kimngan.ly97@gmail.com',
+    phone: '0903566788',
     role: 'PLAYER',
     status: 'active',
     location: 'Hải Châu, Đà Nẵng',
@@ -346,7 +377,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-15',
     name: 'Trịnh Hữu Phước',
-    email: 'huuphuoc.trinh@gmail.com',
+    email: 'huuphuoc.trinh92@gmail.com',
+    phone: '0932677899',
     role: 'PLAYER',
     status: 'active',
     location: 'Thanh Khê, Đà Nẵng',
@@ -356,7 +388,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-16',
     name: 'Cao Thị Diệu Linh',
-    email: 'dieulinh.cao@gmail.com',
+    email: 'dieulinh.cao98@gmail.com',
+    phone: '0919788900',
     role: 'PLAYER',
     status: 'active',
     location: 'Sơn Trà, Đà Nẵng',
@@ -366,7 +399,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-17',
     name: 'Hà Văn Đông',
-    email: 'vandong.ha@gmail.com',
+    email: 'vandong.ha93@gmail.com',
+    phone: '0989899011',
     role: 'PLAYER',
     status: 'active',
     location: 'Liên Chiểu, Đà Nẵng',
@@ -376,7 +410,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-18',
     name: 'Mai Thanh Tùng',
-    email: 'thanhtung.mai@gmail.com',
+    email: 'thanhtung.mai94@gmail.com',
+    phone: '0905900122',
     role: 'PLAYER',
     status: 'active',
     location: 'Hải Châu, Đà Nẵng',
@@ -386,7 +421,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-19',
     name: 'Tạ Minh Khang',
-    email: 'minhkhang.ta@gmail.com',
+    email: 'minhkhang.ta95@gmail.com',
+    phone: '0935011233',
     role: 'PLAYER',
     status: 'active',
     location: 'Ngũ Hành Sơn, Đà Nẵng',
@@ -396,7 +432,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-20',
     name: 'Đinh Tuyết Mai',
-    email: 'tuyetmai.dinh@gmail.com',
+    email: 'tuyetmai.dinh96@gmail.com',
+    phone: '0914122344',
     role: 'PLAYER',
     status: 'active',
     location: 'Cẩm Lệ, Đà Nẵng',
@@ -406,7 +443,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-21',
     name: 'Lương Văn Quyết',
-    email: 'vanquyet.luong@gmail.com',
+    email: 'vanquyet.luong91@gmail.com',
+    phone: '0978233455',
     role: 'PLAYER',
     status: 'active',
     location: 'Thanh Khê, Đà Nẵng',
@@ -416,7 +454,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-22',
     name: 'Châu Ngọc Hân',
-    email: 'ngochan.chau@gmail.com',
+    email: 'ngochan.chau99@gmail.com',
+    phone: '0903344566',
     role: 'PLAYER',
     status: 'active',
     location: 'Sơn Trà, Đà Nẵng',
@@ -426,7 +465,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-23',
     name: 'Tô Vĩnh Khoa',
-    email: 'vinhkhoa.to@gmail.com',
+    email: 'vinhkhoa.to94@gmail.com',
+    phone: '0932455677',
     role: 'PLAYER',
     status: 'active',
     location: 'Hải Châu, Đà Nẵng',
@@ -436,7 +476,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-24',
     name: 'Võ Ánh Dương',
-    email: 'anhduong.vo@gmail.com',
+    email: 'anhduong.vo97@gmail.com',
+    phone: '0919566788',
     role: 'PLAYER',
     status: 'active',
     location: 'Liên Chiểu, Đà Nẵng',
@@ -446,7 +487,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-25',
     name: 'Kiều Anh Quân',
-    email: 'anhquan.kieu@gmail.com',
+    email: 'anhquan.kieu93@gmail.com',
+    phone: '0989677899',
     role: 'PLAYER',
     status: 'active',
     location: 'Ngũ Hành Sơn, Đà Nẵng',
@@ -456,7 +498,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-26',
     name: 'Lê Thùy Trang',
-    email: 'thuytrang.le@gmail.com',
+    email: 'thuytrang.le95@gmail.com',
+    phone: '0905788900',
     role: 'PLAYER',
     status: 'active',
     location: 'Cẩm Lệ, Đà Nẵng',
@@ -466,7 +509,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-27',
     name: 'Phan Gia Khiêm',
-    email: 'giakhiem.phan@gmail.com',
+    email: 'giakhiem.phan92@gmail.com',
+    phone: '0935899011',
     role: 'PLAYER',
     status: 'active',
     location: 'Thanh Khê, Đà Nẵng',
@@ -476,7 +520,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-28',
     name: 'Nguyễn Khánh Vân',
-    email: 'khanhvan.nguyen@gmail.com',
+    email: 'khanhvan.nguyen98@gmail.com',
+    phone: '0914900122',
     role: 'PLAYER',
     status: 'active',
     location: 'Hải Châu, Đà Nẵng',
@@ -486,7 +531,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-29',
     name: 'Trần Bách Hợp',
-    email: 'bachhop.tran@gmail.com',
+    email: 'bachhop.tran96@gmail.com',
+    phone: '0978011233',
     role: 'PLAYER',
     status: 'active',
     location: 'Sơn Trà, Đà Nẵng',
@@ -496,7 +542,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-30',
     name: 'Đoàn Hữu Trí',
-    email: 'huutri.doan@gmail.com',
+    email: 'huutri.doan93@gmail.com',
+    phone: '0903122344',
     role: 'PLAYER',
     status: 'active',
     location: 'Liên Chiểu, Đà Nẵng',
@@ -506,7 +553,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-31',
     name: 'Hồ Thảo Uyên',
-    email: 'thaouyen.ho@gmail.com',
+    email: 'thaouyen.ho97@gmail.com',
+    phone: '0932233455',
     role: 'PLAYER',
     status: 'active',
     location: 'Ngũ Hành Sơn, Đà Nẵng',
@@ -516,7 +564,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-32',
     name: 'Lâm Kiến Văn',
-    email: 'kienvan.lam@gmail.com',
+    email: 'kienvan.lam94@gmail.com',
+    phone: '0919344566',
     role: 'PLAYER',
     status: 'active',
     location: 'Cẩm Lệ, Đà Nẵng',
@@ -526,7 +575,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-33',
     name: 'Dương Ngọc Khánh',
-    email: 'ngockhanh.duong@gmail.com',
+    email: 'ngockhanh.duong99@gmail.com',
+    phone: '0989455677',
     role: 'PLAYER',
     status: 'active',
     location: 'Hải Châu, Đà Nẵng',
@@ -536,7 +586,8 @@ export const initialCuratedUsers: AdminUserItem[] = [
   {
     id: 'usr-player-34',
     name: 'Vũ Cẩm Ly',
-    email: 'camly.vu@gmail.com',
+    email: 'camly.vu95@gmail.com',
+    phone: '0905566788',
     role: 'PLAYER',
     status: 'active',
     location: 'Thanh Khê, Đà Nẵng',

@@ -6,6 +6,6 @@ export function PageContainer({ className = '', ...props }: ComponentPropsWithou
 }
 
 /** Forms keep a readable inner measure inside the shared page frame. */
-export function FormContainer({ children, ...props }: ComponentPropsWithoutRef<'div'>) {
-  return <PageContainer {...props}><div className="page-form">{children}</div></PageContainer>;
+export function FormContainer({ children, className = '', ...props }: ComponentPropsWithoutRef<'div'>) {
+  return <PageContainer className={`w-full ${className}`} {...props}><div className="w-full">{children}</div></PageContainer>;
 }

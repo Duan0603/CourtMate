@@ -11,6 +11,7 @@ export interface AdminUserItem {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   role: string;
   status: 'active' | 'disabled';
   location: string;
@@ -33,6 +34,7 @@ export interface OrganizerRequestItem {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   organizerApprovalStatus?: 'PENDING' | 'APPROVED' | 'REJECTED';
   organizerCertificateUrl?: string;
   organizerSports?: string[];

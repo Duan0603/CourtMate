@@ -97,6 +97,7 @@ export class TournamentsController {
         matchDates: (t as any).matchDates,
         sourceName: t.sourceName,
         sourceUrl: t.sourceUrl,
+        isFeatured: Boolean((t as any).isFeatured),
       })),
       meta: {
         isFallback,

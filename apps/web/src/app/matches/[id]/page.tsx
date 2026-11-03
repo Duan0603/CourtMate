@@ -157,8 +157,43 @@ export default function MatchDetailPage() {
     try {
       const updated = await matchesApi.joinMatch(match.id || match._id!, selectedSkill);
       setMatch(updated);
+
+      // Đồng bộ ngay lập tức vào Lịch trình cá nhân (Personal Calendar)
+      try {
+        const raw = localStorage.getItem('courtmate_personal_schedule');
+        const list = raw ? JSON.parse(raw) : [];
+        const matchEv = {
+          id: `match-${match.id || match._id}`,
+          title: match.title || `Giao lưu ${match.sport}`,
+          type: 'match',
+          sport: match.sport || 'BADMINTON',
+          venueName: match.venueName || 'Sân thể thao',
+          courtNumber: match.courtNumber || 'Sân 1',
+          address: match.venueAddress || match.district || 'Đà Nẵng',
+          startTime: match.startTime,
+          endTime: match.endTime || new Date(new Date(match.startTime).getTime() + 2 * 3600 * 1000).toISOString(),
+          linkUrl: `/matches/${match.id || match._id}`,
+          notes: `Kèo giao lưu: ${match.title} • Trình độ: ${BADMINTON_SKILL_LABELS[selectedSkill] || 'Tiêu chuẩn'}`,
+        };
+        const filtered = list.filter((e: any) => e.id !== matchEv.id);
+        filtered.push(matchEv);
+        localStorage.setItem('courtmate_personal_schedule', JSON.stringify(filtered));
+
+        // Lưu danh sách id đã tham gia
+        const joinedRaw = localStorage.getItem('courtmate_joined_matches');
+        const joinedList = joinedRaw ? JSON.parse(joinedRaw) : [];
+        if (!joinedList.includes(match.id || match._id)) {
+          joinedList.push(match.id || match._id);
+          localStorage.setItem('courtmate_joined_matches', JSON.stringify(joinedList));
+        }
+
+        window.dispatchEvent(new Event('courtmate_schedule_updated'));
+      } catch (errSched) {
+        console.warn('Lỗi lưu lịch trình cá nhân:', errSched);
+      }
+
       setStatusMsg({
-        text: 'Tham gia giữ slot thành công! Hẹn gặp bạn ở sân đấu.',
+        text: 'Tham gia giữ slot thành công! Kèo đã được tự động thêm vào Lịch trình cá nhân của bạn.',
         type: 'success',
       });
     } catch (err: any) {
@@ -176,6 +211,25 @@ export default function MatchDetailPage() {
     try {
       const updated = await matchesApi.leaveMatch(match.id || match._id!);
       setMatch(updated);
+
+      try {
+        const raw = localStorage.getItem('courtmate_personal_schedule');
+        if (raw) {
+          const list = JSON.parse(raw);
+          const filtered = list.filter((e: any) => e.id !== `match-${match.id || match._id}`);
+          localStorage.setItem('courtmate_personal_schedule', JSON.stringify(filtered));
+        }
+        const joinedRaw = localStorage.getItem('courtmate_joined_matches');
+        if (joinedRaw) {
+          const joinedList = JSON.parse(joinedRaw);
+          const filteredJoined = joinedList.filter((id: string) => id !== (match.id || match._id));
+          localStorage.setItem('courtmate_joined_matches', JSON.stringify(filteredJoined));
+        }
+        window.dispatchEvent(new Event('courtmate_schedule_updated'));
+      } catch (errSched) {
+        console.warn('Lỗi cập nhật lịch trình:', errSched);
+      }
+
       setStatusMsg({ text: 'Đã rút lui khỏi kèo đấu thành công.', type: 'success' });
     } catch (err: any) {
       setStatusMsg({ text: err.message || 'Không thể rút lui', type: 'error' });

@@ -69,7 +69,7 @@ export default function CreateTournamentPage() {
         title,
         description,
         sport,
-        time: `${startDate} - ${endDate}`,
+        time: startDate === endDate ? startDate : `${startDate} - ${endDate}`,
         location,
         city,
         categories,

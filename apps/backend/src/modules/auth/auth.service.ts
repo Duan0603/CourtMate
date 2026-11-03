@@ -19,14 +19,21 @@ export class AuthService implements OnModuleInit {
       console.log('[AuthService] Checking & seeding test accounts...');
       
       const seedAccounts = [
-        { email: 'test@gmail.com', name: 'Test Player', role: UserRole.PLAYER },
-        { email: 'player1@gmail.com', name: 'Nguyễn Văn Hùng (VĐV Cầu lông)', role: UserRole.PLAYER },
-        { email: 'player2@gmail.com', name: 'Trần Thị Mai (VĐV Pickleball)', role: UserRole.PLAYER },
-        { email: 'player3@gmail.com', name: 'Lê Hoàng Nam (VĐV Tennis)', role: UserRole.PLAYER },
-        { email: 'organizer@gmail.com', name: 'Test Organizer (BTC)', role: UserRole.ORGANIZER },
-        { email: 'btc.danang@gmail.com', name: 'CLB Cầu Lông Đà Nẵng (BTC)', role: UserRole.ORGANIZER },
-        { email: 'admin@gmail.com', name: 'Test Regional Admin', role: UserRole.REGIONAL_ADMIN },
-        { email: 'superadmin@gmail.com', name: 'Test Super Admin', role: UserRole.SUPER_ADMIN },
+        { email: 'hoangphuc.courtmate@gmail.com', name: 'Nghiêm Hoàng Phúc', role: UserRole.SUPER_ADMIN, phone: '0905188299' },
+        { email: 'quocthinh.admin@gmail.com', name: 'Lê Quốc Thịnh', role: UserRole.REGIONAL_ADMIN, phone: '0914233567' },
+        { email: 'clbcaulongdanang@gmail.com', name: 'CLB Cầu Lông Đà Nẵng', role: UserRole.ORGANIZER, phone: '0905332115' },
+        { email: 'thanhnam.organizer@gmail.com', name: 'Nguyễn Thành Nam (BTC)', role: UserRole.ORGANIZER, phone: '0913445678' },
+        { email: 'vanhung.coach@gmail.com', name: 'Nguyễn Văn Hùng (HLV Cầu lông)', role: UserRole.COACH, phone: '0905123456' },
+        { email: 'vanthanh.nguyen92@gmail.com', name: 'Nguyễn Văn Thành', role: UserRole.PLAYER, phone: '0905333112' },
+        { email: 'anhhuan.le94@gmail.com', name: 'Lê Anh Huân', role: UserRole.PLAYER, phone: '0914222333' },
+        { email: 'thaongan.tran96@gmail.com', name: 'Trần Thị Thảo Ngân', role: UserRole.PLAYER, phone: '0935111444' },
+        { email: 'hoanglam.nguyen95@gmail.com', name: 'Nguyễn Hoàng Lâm', role: UserRole.PLAYER, phone: '0979888777' },
+        { email: 'hoangphuc.dev@gmail.com', name: 'Nghiêm Hoàng Phúc', role: UserRole.PLAYER, phone: '0905188299' },
+        // Giữ alias tương thích hệ thống
+        { email: 'superadmin@gmail.com', name: 'Nghiêm Hoàng Phúc', role: UserRole.SUPER_ADMIN, phone: '0905188299' },
+        { email: 'admin@gmail.com', name: 'Lê Quốc Thịnh', role: UserRole.REGIONAL_ADMIN, phone: '0914233567' },
+        { email: 'organizer@gmail.com', name: 'Nguyễn Thành Nam (BTC)', role: UserRole.ORGANIZER, phone: '0913445678' },
+        { email: 'test@gmail.com', name: 'Nguyễn Văn Thành', role: UserRole.PLAYER, phone: '0905333112' },
       ];
 
       const defaultPasswordHash = this.hashPassword('Password123');
@@ -34,10 +41,10 @@ export class AuthService implements OnModuleInit {
       for (const acc of seedAccounts) {
         let existing = await this.usersService.findByEmail(acc.email);
         if (!existing) {
-          await this.usersService.createWithPassword(acc.email, defaultPasswordHash, acc.name, acc.role);
+          await this.usersService.createWithPassword(acc.email, defaultPasswordHash, acc.name, acc.role, undefined, acc.phone);
           console.log(`[AuthService] Seeded test account: ${acc.email} / Password123 (${acc.name})`);
         } else if (existing.name !== acc.name) {
-          await this.usersService.updateProfile(acc.email, { name: acc.name, role: acc.role });
+          await this.usersService.updateProfile(acc.email, { name: acc.name, role: acc.role, phone: acc.phone } as any);
         }
       }
 

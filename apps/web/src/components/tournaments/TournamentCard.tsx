@@ -23,6 +23,7 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
 }) => {
   const { isAuthenticated } = useAuth();
   const favorite = isAuthenticated && isBookmarked;
+  const tournamentId = tournament.id || (tournament as any)._id;
 
   const getSportBadge = (sport: SportType) => {
     switch (sport) {
@@ -77,7 +78,7 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
   if (viewMode === 'list') {
     return (
       <Link
-        href={`/tournaments/${tournament.id}`}
+        href={`/tournaments/${tournamentId}`}
         className="group bg-surface shadow-card rounded-2xl border border-ink overflow-hidden  hover:shadow-interactive hover:border-primary/40 transition-all duration-300 flex cursor-pointer"
       >
         {/* Horizontal Layout Cover Image */}
@@ -136,7 +137,7 @@ export const TournamentCard: React.FC<TournamentCardProps> = ({
   // Grid Mode (Compact, for 5 items per row)
   return (
     <Link
-      href={`/tournaments/${tournament.id}`}
+      href={`/tournaments/${tournamentId}`}
       className="group bg-surface shadow-card rounded-2xl border border-ink overflow-hidden  hover:shadow-interactive hover:border-primary/50 transition-all duration-300 flex flex-col cursor-pointer h-full relative"
     >
       {/* Cover Image & Badges */}

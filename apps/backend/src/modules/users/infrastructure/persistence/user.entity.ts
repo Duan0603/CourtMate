@@ -37,6 +37,9 @@ export class User extends Document {
   @Prop({ required: false, default: '' })
   name!: string;
 
+  @Prop({ required: false, default: '' })
+  phone?: string;
+
   @Prop({ type: String, default: null })
   avatarUrl?: string;
 
