@@ -102,8 +102,15 @@ function TournamentsContent() {
       const res = await tournamentsApi.getTournaments(filters);
       const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
 
-      // Default sorting by date
-      const sorted = [...list].sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+      // Default sorting: Featured first, then Open status, then date
+      const sorted = [...list].sort((a, b) => {
+        if (a.isFeatured && !b.isFeatured) return -1;
+        if (!a.isFeatured && b.isFeatured) return 1;
+        const aOpen = a.status === 'OPEN' ? -1 : 1;
+        const bOpen = b.status === 'OPEN' ? -1 : 1;
+        if (aOpen !== bOpen) return aOpen - bOpen;
+        return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+      });
 
       if (requestId === activeRequestIdRef.current) {
         setTournaments(sorted);

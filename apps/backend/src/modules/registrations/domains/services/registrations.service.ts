@@ -25,7 +25,7 @@ export class RegistrationsService {
     const newReg = new this.registrationModel({
       ...dto,
       playerId,
-      status: RegistrationStatus.PENDING,
+      status: RegistrationStatus.APPROVED,
     });
     const saved = await newReg.save();
 
@@ -47,11 +47,26 @@ export class RegistrationsService {
     return saved;
   }
 
-  async findByPlayer(playerId: string): Promise<Registration[]> {
-    return this.registrationModel
+  async findByPlayer(playerId: string): Promise<any[]> {
+    const regs = await this.registrationModel
       .find({ playerId })
       .sort({ createdAt: -1 })
+      .lean()
       .exec();
+
+    const tourIds = regs.map((r: any) => r.tournamentId).filter(Boolean);
+    const tours = await this.tournamentModel.find({ _id: { $in: tourIds } }).lean().exec();
+    const tourMap = new Map(tours.map((t: any) => [t._id.toString(), t]));
+
+    return regs.map((r: any) => {
+      const tour = tourMap.get(r.tournamentId?.toString());
+      return {
+        ...r,
+        id: r._id?.toString() || r.id,
+        tournamentTitle: tour?.title || '',
+        tournament: tour || null,
+      };
+    });
   }
 
   async findByTournament(tournamentId: string, status?: string): Promise<Registration[]> {

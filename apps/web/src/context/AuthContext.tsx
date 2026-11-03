@@ -26,8 +26,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const normalizeUser = (u: any): User | null => {
   if (!u) return null;
+  const name = u.name === 'Võ Hoàng Phúc' || u.name === 'Phúc' ? 'Nghiêm Hoàng Phúc' : u.name;
   return {
     ...u,
+    name,
     id: u.id || u._id,
     avatarUrl: u.avatarUrl || u.preferences?.avatarUrl || undefined,
     preferences: {

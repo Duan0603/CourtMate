@@ -417,7 +417,7 @@ export default function CoachesPage() {
                 {resultCount === 0 && <div className={styles.empty}><Search size={28} /><h2>Chưa tìm thấy kết quả phù hợp</h2><p>Thử một từ khóa khác hoặc mở rộng bộ môn, khu vực và ngân sách.</p><button onClick={reset}>Xóa bộ lọc <ArrowRight size={16} /></button></div>}
               </div>
             </SmartAsyncContainer>
-            <p className={styles.demoNote}>Hồ sơ và khóa học hiện là dữ liệu minh họa.</p>
+
           </section>
         </div>
       </PageContainer>

@@ -133,15 +133,19 @@ export class TournamentsService {
 
     let tournaments = await this.tournamentModel
       .find(filterObj)
-      .sort({ startDate: 1 })
+      .sort({ createdAt: -1 })
       .exec();
 
-    // Sort to prioritize Open For Registration
+    // Sort to prioritize Featured and Open For Registration
     return tournaments.sort((a, b) => {
+      const aFeatured = (a as any).isFeatured ? -1 : 1;
+      const bFeatured = (b as any).isFeatured ? -1 : 1;
+      if (aFeatured !== bFeatured) return aFeatured - bFeatured;
+
       const aIsOpen = a.status === TournamentStatus.OPEN ? -1 : 1;
       const bIsOpen = b.status === TournamentStatus.OPEN ? -1 : 1;
       if (aIsOpen !== bIsOpen) return aIsOpen - bIsOpen;
-      return 0; // maintain chronological order for same status
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
     });
   }
 

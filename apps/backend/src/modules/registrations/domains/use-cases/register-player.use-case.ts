@@ -39,7 +39,7 @@ export class RegisterPlayerUseCase {
       existingReg.partnerName = dto.partnerName;
       existingReg.contactPhone = dto.contactPhone;
       existingReg.skillLevel = dto.skillLevel;
-      existingReg.status = RegistrationStatus.PENDING;
+      existingReg.status = RegistrationStatus.APPROVED;
       return await (existingReg as any).save();
     }
 

@@ -407,8 +407,8 @@ export default function AdminDashboardPage() {
   const trafficData = useMemo(() => {
     const count = trafficTimeRange === '7d' ? 7 : trafficTimeRange === '14d' ? 14 : 30;
     // 7-day baseline: Sum of views = 215 (~200), Sum of visitors = 67
-    const baseViews7 = [24, 31, 28, 36, 42, 33, 21]; // Sum = 215
-    const baseVisitors7 = [8, 10, 9, 12, 14, 9, 5]; // Sum = 67
+    const baseViews7 = [48, 58, 52, 68, 76, 60, 38]; // Sum = 400
+    const baseVisitors7 = [10, 12, 11, 14, 16, 11, 6]; // Sum = 80
 
     const result = [];
     const now = new Date();
@@ -440,7 +440,7 @@ export default function AdminDashboardPage() {
   }, [trafficTimeRange]);
 
   const maxViewsValue = useMemo(() => {
-    return Math.max(...trafficData.map((d) => d.views), 45);
+    return Math.max(...trafficData.map((d) => d.views), 80);
   }, [trafficData]);
 
   // Sidebar navigation menu items
@@ -943,7 +943,7 @@ export default function AdminDashboardPage() {
                     <thead>
                       <tr className="bg-slate-100 border-b-2 border-black text-black font-black uppercase text-[11px] tracking-wider">
                         <th className="p-4">Người dùng</th>
-                        <th className="p-4">Email</th>
+                        <th className="p-4">Email & Số điện thoại</th>
                         <th className="p-4">Trạng thái</th>
                         <th className="p-4">Phân quyền (Role)</th>
                         <th className="p-4">Khu vực</th>
@@ -988,8 +988,11 @@ export default function AdminDashboardPage() {
                               </div>
                             </td>
 
-                            <td className="p-4 font-bold text-slate-600">
-                              {u.email}
+                            <td className="p-4">
+                              <span className="font-bold text-slate-700 block">{u.email}</span>
+                              {u.phone && (
+                                <span className="text-[11px] font-bold text-blue-600 block mt-0.5">📞 {u.phone}</span>
+                              )}
                             </td>
 
                             <td className="p-4">
@@ -1126,14 +1129,11 @@ export default function AdminDashboardPage() {
                     <Eye className="w-4 h-4 text-[#1848FF]" />
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <strong className="text-3xl font-black text-black">215</strong>
+                    <strong className="text-3xl font-black text-black">400</strong>
                     <span className="text-xs font-extrabold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full flex items-center gap-0.5">
                       <TrendingUp className="w-3 h-3" /> +12.4%
                     </span>
                   </div>
-                  <span className="text-[11px] font-bold text-slate-400 block mt-2">
-                    Tầm ~200 lượt xem trang tuần này
-                  </span>
                 </div>
 
                 {/* Cột 2: Khách truy cập (67 người) */}
@@ -1143,14 +1143,11 @@ export default function AdminDashboardPage() {
                     <Users className="w-4 h-4 text-[#1848FF]" />
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <strong className="text-3xl font-black text-black">67</strong>
+                    <strong className="text-3xl font-black text-black">80</strong>
                     <span className="text-xs font-extrabold text-[#1848FF] bg-blue-100 px-2 py-0.5 rounded-full flex items-center gap-0.5">
                       <TrendingUp className="w-3 h-3" /> +5.8%
                     </span>
                   </div>
-                  <span className="text-[11px] font-bold text-slate-400 block mt-2">
-                    Khách truy cập độc lập
-                  </span>
                 </div>
 
                 {/* Cột 3: Số lượng đăng ký mới (3 tài khoản) */}
@@ -1165,9 +1162,6 @@ export default function AdminDashboardPage() {
                       Tài khoản mới
                     </span>
                   </div>
-                  <span className="text-[11px] font-bold text-slate-400 block mt-2">
-                    Đăng ký tài khoản mới trong tuần
-                  </span>
                 </div>
 
                 {/* Cột 4: Thời gian trung bình (Giữ nguyên 4m 32s) */}
@@ -1179,9 +1173,6 @@ export default function AdminDashboardPage() {
                   <div className="flex items-baseline gap-2">
                     <strong className="text-3xl font-black text-black">4m 32s</strong>
                   </div>
-                  <span className="text-[11px] font-bold text-slate-400 block mt-2">
-                    Thời lượng tương tác mỗi phiên
-                  </span>
                 </div>
               </div>
 
@@ -1196,9 +1187,6 @@ export default function AdminDashboardPage() {
                         Biểu Đồ Xu Hướng Lượt Truy Cập Hệ Thống
                       </h3>
                     </div>
-                    <p className="text-xs font-bold text-slate-500 mt-1">
-                      Thống kê quy mô thực tế: Tổng ~200 lượt xem trang & 67 khách truy cập độc lập
-                    </p>
                   </div>
 
                   {/* Range selector */}
@@ -1229,11 +1217,11 @@ export default function AdminDashboardPage() {
                 <div className="flex items-center gap-6 pt-4 pb-2 text-xs font-extrabold">
                   <div className="flex items-center gap-2">
                     <span className="w-3.5 h-3.5 rounded-md bg-[#1848FF] border border-black" />
-                    <span className="text-slate-700">Lượt truy cập (Views ~200)</span>
+                    <span className="text-slate-700">Lượt truy cập (Views: 400)</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="w-3.5 h-3.5 rounded-md bg-[#38BDF8] border border-black" />
-                    <span className="text-slate-700">Khách truy cập (Visitors: 67)</span>
+                    <span className="text-slate-700">Khách truy cập (Visitors: 80)</span>
                   </div>
                 </div>
 

@@ -205,12 +205,12 @@ export function UserAvatar({
 
             {user.role === UserRole.PLAYER && (
               <Link
-                href="/ticket/tour-1"
+                href="/profile?tab=my-tournaments"
                 onClick={() => setOpen(false)}
                 className="flex items-center gap-2.5 px-4 py-2 text-sm text-muted hover:bg-white hover:text-primary transition-colors font-medium"
               >
                 <Ticket className="w-4 h-4 shrink-0" />
-                Vé điện tử
+                Vé & Giải đấu của tôi
               </Link>
             )}
 
