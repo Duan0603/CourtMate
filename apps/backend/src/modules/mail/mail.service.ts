@@ -129,6 +129,76 @@ export class MailService {
   }
 
   /**
+   * Send email using Brevo (Sendinblue) Transactional HTTP API (v3)
+   * Completely bypasses cloud port blocking (e.g. Render / AWS / GCP)
+   */
+  private async sendViaBrevoApi(params: {
+    toEmail: string;
+    playerName: string;
+    organizer: { name: string; email: string };
+    subject: string;
+    html: string;
+    text: string;
+  }): Promise<{ messageId?: string }> {
+    const apiKey = this.config.get<string>('BREVO_API_KEY')?.trim();
+    if (!apiKey) {
+      throw new Error('BREVO_API_KEY is not configured');
+    }
+
+    const configuredSenderEmail =
+      this.config.get<string>('BREVO_SENDER_EMAIL')?.trim() ||
+      this.config.get<string>('SMTP_USER')?.trim();
+
+    if (!configuredSenderEmail) {
+      throw new Error('BREVO_SENDER_EMAIL (hoặc SMTP_USER) chưa được cấu hình để gửi qua Brevo');
+    }
+
+    const defaultSenderName = this.config.get<string>('BREVO_SENDER_NAME')?.trim() || 'CourtMate';
+    const senderName = params.organizer.name
+      ? `${params.organizer.name} (${defaultSenderName})`
+      : defaultSenderName;
+
+    const payload = {
+      sender: {
+        name: senderName,
+        email: configuredSenderEmail,
+      },
+      to: [
+        {
+          email: params.toEmail,
+          name: params.playerName,
+        },
+      ],
+      replyTo: {
+        email: params.organizer.email,
+        name: params.organizer.name,
+      },
+      subject: params.subject,
+      htmlContent: params.html,
+      textContent: params.text,
+    };
+
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        accept: 'application/json',
+        'api-key': apiKey,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = (await response.json().catch(() => ({}))) as any;
+
+    if (!response.ok) {
+      const errMsg = data?.message || response.statusText || 'Unknown Brevo error';
+      throw new Error(`Brevo API error (${response.status}): ${errMsg}`);
+    }
+
+    return { messageId: data?.messageId };
+  }
+
+  /**
    * Create or return Nodemailer transporter (uses configured Gmail/SMTP or falls back to Ethereal test SMTP)
    */
   private async getTransporter(): Promise<{ transporter: nodemailer.Transporter; isTestAccount: boolean }> {
@@ -433,6 +503,32 @@ export class MailService {
       .join('\n');
 
     try {
+      const brevoApiKey = this.config.get<string>('BREVO_API_KEY')?.trim();
+
+      if (brevoApiKey) {
+        // Priority 1: Brevo HTTP REST API (Recommended for Cloud / Render)
+        this.logger.log(`[MailService] Đang gửi email qua Brevo Transactional API tới "${toEmail}"...`);
+        const result = await this.sendViaBrevoApi({
+          toEmail,
+          playerName,
+          organizer,
+          subject,
+          html,
+          text,
+        });
+
+        this.logger.log(
+          `[MailService] Đã gửi thành công email xác nhận qua Brevo tới "${toEmail}" (messageId=${result.messageId})`,
+        );
+
+        return {
+          sent: true,
+          to: toEmail,
+          from: `${organizer.name} <${organizer.email}>`,
+        };
+      }
+
+      // Priority 2: Standard SMTP / Nodemailer (fallback)
       const { transporter, isTestAccount } = await this.getTransporter();
       const info = await transporter.sendMail({
         from: fromHeader,
