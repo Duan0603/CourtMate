@@ -31,6 +31,9 @@ export class Registration extends Document {
   playerName!: string;
 
   @Prop({ required: false })
+  email?: string;
+
+  @Prop({ required: false })
   partnerName?: string;
 
   @Prop({ required: false })

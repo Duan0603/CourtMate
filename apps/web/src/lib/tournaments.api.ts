@@ -47,6 +47,8 @@ export const tournamentsApi = {
     if (data.slotsLimit) formData.append('slotsLimit', String(data.slotsLimit));
     if (data.rulesText) formData.append('rulesText', data.rulesText);
     if (data.coverImage) formData.append('coverImage', data.coverImage);
+    if (data.organizerName) formData.append('organizerName', data.organizerName);
+    if (data.organizerEmail) formData.append('organizerEmail', data.organizerEmail);
     if (coverFile) formData.append('coverImageFile', coverFile);
     if (rulesFile) formData.append('rulesFile', rulesFile);
 

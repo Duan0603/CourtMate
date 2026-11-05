@@ -13,6 +13,9 @@ export class OrganizerInfo {
   name!: string;
 
   @Prop({ required: false })
+  email?: string;
+
+  @Prop({ required: false })
   avatar?: string;
 
   @Prop({ required: true, default: false })

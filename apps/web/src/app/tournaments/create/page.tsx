@@ -34,6 +34,8 @@ export default function CreateTournamentPage() {
   const [endDate, setEndDate] = useState('2026-10-22');
   const [description, setDescription] = useState('');
   const [coverImage, setCoverImage] = useState('https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=1200&q=80');
+  const [organizerName, setOrganizerName] = useState('');
+  const [organizerEmail, setOrganizerEmail] = useState('');
 
   // Categories
   const [categories, setCategories] = useState<Array<{ name: string; fee: number; maxParticipants: number }>>([
@@ -77,6 +79,8 @@ export default function CreateTournamentPage() {
         slotsLimit: categories.reduce((sum, c) => sum + (c.maxParticipants || 0), 0) || 50,
         rulesText,
         coverImage,
+        organizerName: organizerName.trim() || undefined,
+        organizerEmail: organizerEmail.trim() || undefined,
       };
 
       const created = await tournamentsApi.createTournament(dto);
@@ -156,6 +160,39 @@ export default function CreateTournamentPage() {
                   placeholder="Ví dụ: Giải Cầu Lông Mùa Hè Đà Nẵng Open 2026"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
+                  className="cm-control w-full px-3.5 py-2.5 text-sm bg-white border border-ink rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-navy"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-muted mb-1.5">
+                    Tên Ban Tổ Chức hiển thị
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ví dụ: CLB Cầu Lông Đà Nẵng"
+                    value={organizerName}
+                    onChange={(e) => setOrganizerName(e.target.value)}
+                    className="cm-control w-full px-3.5 py-2.5 text-sm bg-white border border-ink rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-navy"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-muted mb-1.5">
+                    Email Ban Tổ Chức (gửi vé cho VĐV) <span className="text-primary">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="Ví dụ: giaiABC@gmail.com"
+                    value={organizerEmail}
+                    onChange={(e) => setOrganizerEmail(e.target.value)}
+                    className="cm-control w-full px-3.5 py-2.5 text-sm bg-white border border-ink rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-navy"
+                  />
+                </div>
+              </div>
+              <div className="hidden">
+                <input
                   className="cm-control w-full px-3.5 py-2.5 text-sm bg-white border border-ink rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-navy"
                 />
               </div>

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Ip, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Ip, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { CreatePaymentDto } from './payment.dto';
 import { PaymentsService } from './payments.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -9,8 +9,18 @@ export class PaymentsController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  create(@Body() dto: CreatePaymentDto, @Ip() ipAddress: string, @Req() request: any) {
-    return this.payments.createPayment(dto, ipAddress.replace('::ffff:', ''), String(request.user.sub));
+  create(
+    @Body() dto: CreatePaymentDto,
+    @Ip() ipAddress: string,
+    @Req() request: any,
+    @Headers('origin') origin?: string,
+  ) {
+    return this.payments.createPayment(
+      dto,
+      ipAddress.replace('::ffff:', ''),
+      String(request.user.sub),
+      origin,
+    );
   }
 
   @Post('payos/ipn')
@@ -29,14 +39,13 @@ export class PaymentsController {
   }
 
   @Get(':orderId')
-  @UseGuards(JwtAuthGuard)
-  status(@Param('orderId') orderId: string, @Req() request: any) {
-    return this.payments.getStatus(orderId, String(request.user.sub));
+  status(@Param('orderId') orderId: string) {
+    return this.payments.getStatus(orderId);
   }
 
   @Post(':orderId/cancel')
-  @UseGuards(JwtAuthGuard)
   cancel(@Param('orderId') orderId: string, @Req() request: any) {
-    return this.payments.cancelPayment(orderId, String(request.user.sub));
+    const playerId = request.user?.sub ? String(request.user.sub) : undefined;
+    return this.payments.cancelPayment(orderId, playerId);
   }
 }

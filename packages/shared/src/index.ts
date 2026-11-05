@@ -99,6 +99,7 @@ export interface Tournament {
   organizer: {
     id: string;
     name: string;
+    email?: string;
     avatar?: string;
     isVerified: boolean;
   };
@@ -110,7 +111,9 @@ export interface Tournament {
   registrationFee?: number;
   slotsLimit?: number;
   schedule?: string[]; // Basic array of strings for schedule items
-  matchDates?: Date[]; // Specific dates when matches are played
+  matchDates?: Date[];
+  organizerName?: string;
+  organizerEmail?: string; // Specific dates when matches are played
   registrationLink?: string;
   sourceName?: string;
   sourceUrl?: string;
@@ -137,6 +140,8 @@ export interface CreateTournamentDto {
   coverImage?: string;
   rulesFileUrl?: string;
   matchDates?: Date[];
+  organizerName?: string;
+  organizerEmail?: string;
   // rulesFile will be handled as multipart/form-data on the backend
 }
 
@@ -215,7 +220,9 @@ export interface Registration {
   tournamentId: string;
   playerId: string;
   playerName: string;
+  email?: string;
   partnerName?: string;
+  categoryName?: string;
   contactPhone: string;
   skillLevel: SkillLevel;
   status: RegistrationStatus;
@@ -225,7 +232,9 @@ export interface Registration {
 export interface CreateRegistrationDto {
   tournamentId: string;
   playerName: string;
+  email?: string;
   partnerName?: string;
+  categoryName?: string;
   contactPhone: string;
   skillLevel: SkillLevel;
 }

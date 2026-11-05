@@ -88,6 +88,7 @@ export interface Tournament {
     organizer: {
         id: string;
         name: string;
+        email?: string;
         avatar?: string;
         isVerified: boolean;
     };
@@ -100,6 +101,8 @@ export interface Tournament {
     slotsLimit?: number;
     schedule?: string[];
     matchDates?: Date[];
+    organizerName?: string;
+    organizerEmail?: string;
     registrationLink?: string;
     sourceName?: string;
     sourceUrl?: string;
@@ -125,6 +128,8 @@ export interface CreateTournamentDto {
     coverImage?: string;
     rulesFileUrl?: string;
     matchDates?: Date[];
+    organizerName?: string;
+    organizerEmail?: string;
 }
 export interface CreateReportDto {
     targetId: string;
@@ -185,7 +190,9 @@ export interface Registration {
     tournamentId: string;
     playerId: string;
     playerName: string;
+    email?: string;
     partnerName?: string;
+    categoryName?: string;
     contactPhone: string;
     skillLevel: SkillLevel;
     status: RegistrationStatus;
@@ -194,7 +201,9 @@ export interface Registration {
 export interface CreateRegistrationDto {
     tournamentId: string;
     playerName: string;
+    email?: string;
     partnerName?: string;
+    categoryName?: string;
     contactPhone: string;
     skillLevel: SkillLevel;
 }

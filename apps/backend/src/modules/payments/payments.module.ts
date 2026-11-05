@@ -7,13 +7,19 @@ import { PaymentTransaction, PaymentTransactionSchema } from './payment.entity';
 import { PaymentsController } from './payments.controller';
 import { PaymentsService } from './payments.service';
 import { AuthModule } from '../auth/auth.module';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
-  imports: [NotificationsModule, AuthModule, MongooseModule.forFeature([
-    { name: PaymentTransaction.name, schema: PaymentTransactionSchema },
-    { name: Registration.name, schema: RegistrationSchema },
-    { name: TournamentStub.name, schema: TournamentStubSchema },
-  ])],
+  imports: [
+    NotificationsModule,
+    AuthModule,
+    MailModule,
+    MongooseModule.forFeature([
+      { name: PaymentTransaction.name, schema: PaymentTransactionSchema },
+      { name: Registration.name, schema: RegistrationSchema },
+      { name: TournamentStub.name, schema: TournamentStubSchema },
+    ]),
+  ],
   controllers: [PaymentsController],
   providers: [PaymentsService],
 })

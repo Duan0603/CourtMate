@@ -164,7 +164,7 @@ function PaymentReturnContent() {
           </h1>
           <p className="text-sm text-muted mt-2">
             {isSuccess
-              ? 'Đăng ký của bạn đã được ghi nhận.'
+              ? 'Đăng ký của bạn đã được ghi nhận. Email xác nhận & Vé điện tử từ Ban Tổ Chức giải đấu đã được gửi vào hộp thư của bạn.'
               : messageDisplay || (isCancelled
                 ? 'Bạn đã hủy giao dịch thanh toán. Bạn có thể thực hiện lại bất kỳ lúc nào.'
                 : 'Đã có lỗi xảy ra trong quá trình xử lý giao dịch. Vui lòng thử lại.')}

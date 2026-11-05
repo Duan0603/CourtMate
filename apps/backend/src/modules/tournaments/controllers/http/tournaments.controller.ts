@@ -66,6 +66,7 @@ export class TournamentsController {
     const organizer = {
       id: user?.sub || 'org-123',
       name: user?.name || body.organizerName || 'Ban tổ chức giải đấu',
+      email: body.organizerEmail || user?.email || undefined,
       isVerified: Boolean(user?.isVerified),
     };
 

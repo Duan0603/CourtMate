@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsEnum, Matches } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsEnum, IsEmail, Matches } from 'class-validator';
 import { SkillLevel } from '@courtmate/shared';
 
 export class CreateRegistrationDto {
@@ -10,9 +10,17 @@ export class CreateRegistrationDto {
   @IsNotEmpty()
   playerName!: string;
 
+  @IsEmail({}, { message: 'Địa chỉ email không hợp lệ' })
+  @IsOptional()
+  email?: string;
+
   @IsString()
   @IsOptional()
   partnerName?: string;
+
+  @IsString()
+  @IsOptional()
+  categoryName?: string;
 
   @IsString()
   @IsNotEmpty()

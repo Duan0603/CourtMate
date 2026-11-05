@@ -10,6 +10,9 @@ export class TournamentOrganizerSchema {
   name!: string;
 
   @Prop({ required: false })
+  email?: string;
+
+  @Prop({ required: false })
   avatar?: string;
 
   @Prop({ default: false })

@@ -123,7 +123,9 @@ export default function TournamentRegisterPage() {
         {
           tournamentId,
           playerName,
+          email,
           partnerName: isDoublesCategory ? partnerName : undefined,
+          categoryName: selectedCategory.name,
           contactPhone,
           skillLevel,
         },
@@ -436,7 +438,14 @@ export default function TournamentRegisterPage() {
 
               <div className="p-3.5 rounded-2xl bg-white border border-ink flex items-center gap-2.5 text-xs text-muted">
                 <ShieldCheck className="w-4 h-4 text-primary shrink-0" />
-                <span className="font-medium">Vé điện tử & mã QR được kích hoạt ngay sau khi đăng ký</span>
+                <span className="font-medium">
+                  Vé điện tử &amp; mã QR sẽ được gửi qua email từ BTC{' '}
+                  <strong className="text-ink">
+                    {tournament?.organizer?.name || 'Giải đấu'}
+                    {tournament?.organizer?.email ? ` (${tournament.organizer.email})` : ''}
+                  </strong>{' '}
+                  ngay sau khi thanh toán
+                </span>
               </div>
 
             </div>

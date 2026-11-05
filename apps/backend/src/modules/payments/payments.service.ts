@@ -2,7 +2,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException, ServiceUnavailableException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
-import { createHmac, randomUUID, timingSafeEqual } from 'crypto';
+import { createHmac, timingSafeEqual } from 'crypto';
 const { PayOS } = require('@payos/node');
 import { Model } from 'mongoose';
 import { RegistrationStatus } from '@courtmate/shared';
@@ -10,6 +10,7 @@ import { Registration } from '../registrations/infrastructure/persistence/regist
 import { TournamentStub } from '../registrations/infrastructure/persistence/tournament-stub.entity';
 import { CreatePaymentDto } from './payment.dto';
 import { PaymentTransaction } from './payment.entity';
+import { MailService } from '../mail/mail.service';
 
 type Query = Record<string, string | number | undefined>;
 
@@ -25,6 +26,7 @@ export class PaymentsService {
     @InjectModel(TournamentStub.name) private readonly tournaments: Model<TournamentStub>,
     private readonly config: ConfigService,
     private readonly notifications: NotificationsService,
+    private readonly mailService: MailService,
   ) {
     this.payos = new PayOS({
       clientId: this.config.get<string>('PAYOS_CLIENT_ID') || 'client-id',
@@ -33,7 +35,7 @@ export class PaymentsService {
     });
   }
 
-  async createPayment(dto: CreatePaymentDto, ipAddress: string, playerId: string) {
+  async createPayment(dto: CreatePaymentDto, ipAddress: string, playerId: string, origin?: string) {
     this.logger.log(`Khởi tạo thanh toán: registrationId=${dto.registrationId}, provider=${dto.provider}, playerId=${playerId}`);
     
     const registration = await this.registrations.findById(dto.registrationId).exec();
@@ -42,7 +44,7 @@ export class PaymentsService {
       throw new NotFoundException('Không tìm thấy hồ sơ đăng ký');
     }
     
-    if (registration.playerId !== playerId) {
+    if (registration.playerId && playerId && registration.playerId !== playerId) {
       this.logger.error(`Sai chủ hồ sơ: registration.playerId=${registration.playerId}, request.playerId=${playerId}`);
       throw new ForbiddenException('Bạn không có quyền thanh toán hồ sơ này');
     }
@@ -90,7 +92,7 @@ export class PaymentsService {
 
     try {
       const gateway = dto.provider === 'PAYOS'
-        ? await this.createPayosPayment(transaction)
+        ? await this.createPayosPayment(transaction, origin)
         : await this.createMomoPayment(transaction);
       transaction.payUrl = gateway.payUrl;
       transaction.gatewayResponse = gateway.raw;
@@ -105,11 +107,14 @@ export class PaymentsService {
     }
   }
 
-  async getStatus(orderId: string, playerId: string) {
+  async getStatus(orderId: string, playerId?: string) {
     const transaction = await this.payments.findOne({ orderId }).exec();
     if (!transaction) throw new NotFoundException('Không tìm thấy giao dịch');
-    const registration = await this.registrations.findById(transaction.registrationId).select('playerId').exec();
-    if (!registration || registration.playerId !== playerId) throw new ForbiddenException('Bạn không có quyền xem giao dịch này');
+    const registration = await this.registrations.findById(transaction.registrationId).exec();
+    if (!registration) throw new NotFoundException('Không tìm thấy hồ sơ đăng ký');
+    if (playerId && registration.playerId !== playerId) {
+      throw new ForbiddenException('Bạn không có quyền xem giao dịch này');
+    }
 
     if (transaction.status === 'PENDING' && transaction.provider === 'PAYOS') {
       try {
@@ -157,10 +162,17 @@ export class PaymentsService {
     return { resultCode: 0, message: 'Success' };
   }
 
-  private async createPayosPayment(transaction: PaymentTransaction) {
+  private async createPayosPayment(transaction: PaymentTransaction, origin?: string) {
     const orderCode = Number(transaction.orderId);
-    const returnUrl = this.config.get('PAYOS_RETURN_URL', 'https://courtmate-v.vercel.app/payment/return');
-    const cancelUrl = this.config.get('PAYOS_CANCEL_URL', 'https://courtmate-v.vercel.app/payment/return?cancel=true');
+    const cleanOrigin = origin && (origin.startsWith('http://') || origin.startsWith('https://'))
+      ? origin.replace(/\/$/, '')
+      : null;
+    const returnUrl = cleanOrigin
+      ? `${cleanOrigin}/payment/return`
+      : this.config.get('PAYOS_RETURN_URL', 'https://courtmate-v.vercel.app/payment/return');
+    const cancelUrl = cleanOrigin
+      ? `${cleanOrigin}/payment/return?cancel=true`
+      : this.config.get('PAYOS_CANCEL_URL', 'https://courtmate-v.vercel.app/payment/return?cancel=true');
     
     const body = {
       orderCode,
@@ -212,30 +224,44 @@ export class PaymentsService {
     transaction.processedAt = new Date();
     await transaction.save();
 
+    let updatedRegistration: Registration | null = null;
+
     if (success) {
-      const registration = await this.registrations.findByIdAndUpdate(
+      updatedRegistration = await this.registrations.findByIdAndUpdate(
         transaction.registrationId,
         { $set: { status: RegistrationStatus.PAID, paymentTransactionId: transaction.orderId } },
         { new: true }
       ).exec();
       
-      if (registration) {
+      if (updatedRegistration && previousStatus !== 'PAID') {
         // Increment joinedSlots in the tournaments collection (which TournamentStub points to)
-        await this.tournaments.findByIdAndUpdate(
-          registration.tournamentId,
-          { $inc: { joinedSlots: 1 } }
+        const tournament = await this.tournaments.findByIdAndUpdate(
+          updatedRegistration.tournamentId,
+          { $inc: { joinedSlots: 1 } },
+          { new: true }
         ).exec();
+
+        // Send confirmation email from the tournament organizer's email to the registrant
+        try {
+          await this.mailService.sendTournamentRegistrationPaidEmail({
+            registration: updatedRegistration,
+            tournament,
+            transaction,
+          });
+        } catch (mailError) {
+          this.logger.error('Không thể gửi email xác nhận đăng ký giải đấu', mailError);
+        }
       }
     } else {
       // If payment failed or was cancelled, mark registration as REJECTED so it does not appear in official roster
-      await this.registrations.findByIdAndUpdate(
+      updatedRegistration = await this.registrations.findByIdAndUpdate(
         transaction.registrationId,
         { $set: { status: RegistrationStatus.REJECTED } },
         { new: true }
       ).exec();
     }
     if (previousStatus !== transaction.status) {
-      const registration = await this.registrations.findById(transaction.registrationId).exec();
+      const registration = updatedRegistration || await this.registrations.findById(transaction.registrationId).exec();
       if (registration) {
         try {
           await this.notifications.send({ userId: registration.playerId, type: 'PAYMENT_UPDATED', title: success ? 'Thanh toán thành công' : 'Thanh toán chưa hoàn tất', body: success ? 'Thanh toán đăng ký giải đấu của bạn đã được xác nhận.' : 'Thanh toán đã thất bại hoặc bị hủy. Bạn có thể kiểm tra lại đăng ký.', link: '/tournaments/' + registration.tournamentId });
@@ -244,11 +270,14 @@ export class PaymentsService {
     }
   }
 
-  async cancelPayment(orderId: string, playerId: string) {
+  async cancelPayment(orderId: string, playerId?: string) {
     const transaction = await this.payments.findOne({ orderId }).exec();
     if (!transaction) throw new NotFoundException('Không tìm thấy giao dịch');
     const registration = await this.registrations.findById(transaction.registrationId).exec();
-    if (!registration || registration.playerId !== playerId) {
+    if (!registration) {
+      throw new NotFoundException('Không tìm thấy hồ sơ đăng ký');
+    }
+    if (playerId && registration.playerId !== playerId) {
       throw new ForbiddenException('Bạn không có quyền thao tác trên giao dịch này');
     }
     if (transaction.status === 'PENDING') {
