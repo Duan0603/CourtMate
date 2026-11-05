@@ -403,12 +403,12 @@ export default function AdminDashboardPage() {
     usersCurrentPage * USERS_PER_PAGE
   );
 
-  // ─── TRAFFIC DATA SCALED: ~200 Pageviews, 67 Unique Visitors, 3 New Registrations, 4m32s Avg Time ───
+  // ─── TRAFFIC DATA SCALED: 420 Pageviews, 83 Unique Visitors, 1 New Registration, 5 phút Avg Time ───
   const trafficData = useMemo(() => {
     const count = trafficTimeRange === '7d' ? 7 : trafficTimeRange === '14d' ? 14 : 30;
-    // 7-day baseline: Sum of views = 215 (~200), Sum of visitors = 67
-    const baseViews7 = [48, 58, 52, 68, 76, 60, 38]; // Sum = 400
-    const baseVisitors7 = [10, 12, 11, 14, 16, 11, 6]; // Sum = 80
+    // 7-day baseline: Sum of views = 420, Sum of visitors = 83
+    const baseViews7 = [50, 62, 55, 72, 80, 61, 40]; // Sum = 420
+    const baseVisitors7 = [10, 13, 11, 15, 17, 11, 6]; // Sum = 83
 
     const result = [];
     const now = new Date();
@@ -440,7 +440,7 @@ export default function AdminDashboardPage() {
   }, [trafficTimeRange]);
 
   const maxViewsValue = useMemo(() => {
-    return Math.max(...trafficData.map((d) => d.views), 80);
+    return Math.max(...trafficData.map((d) => d.views), 85);
   }, [trafficData]);
 
   // Sidebar navigation menu items
@@ -859,7 +859,7 @@ export default function AdminDashboardPage() {
                     Xem Biểu Đồ Lượt Truy Cập & Thống Kê Nền Tảng
                   </h3>
                   <p className="text-xs text-[#A0B8DA] max-w-xl">
-                    Theo dõi chi tiết số lượt truy cập (tầm 200 lượt), 67 khách duy nhất, 3 lượt đăng ký mới và thời lượng trung bình 4m 32s.
+                    Theo dõi chi tiết lưu lượng truy cập hệ thống, khách truy cập độc lập và hành vi tương tác trên nền tảng CourtMate.
                   </p>
                 </div>
                 <button
@@ -1116,7 +1116,7 @@ export default function AdminDashboardPage() {
 
           {/* ══════════════════════════════════════════════════════════
               TAB 3: THỐNG KÊ HỆ THỐNG & BIỂU ĐỒ LƯỢT TRUY CẬP
-              (Số lượng truy cập: ~200, Khách truy cập: 67, Đăng ký mới: 3, Thời gian TB: 4m32s)
+              (Số lượng truy cập: 420, Khách truy cập: 83, Đăng ký mới: 1, Thời gian TB: 5 phút)
           ══════════════════════════════════════════════════════════ */}
           {activeTab === 'analytics' && (
             <div className="space-y-8">
@@ -1129,9 +1129,9 @@ export default function AdminDashboardPage() {
                     <Eye className="w-4 h-4 text-[#1848FF]" />
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <strong className="text-3xl font-black text-black">400</strong>
+                    <strong className="text-3xl font-black text-black">420</strong>
                     <span className="text-xs font-extrabold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full flex items-center gap-0.5">
-                      <TrendingUp className="w-3 h-3" /> +12.4%
+                      <TrendingUp className="w-3 h-3" /> +15.2%
                     </span>
                   </div>
                 </div>
@@ -1143,9 +1143,9 @@ export default function AdminDashboardPage() {
                     <Users className="w-4 h-4 text-[#1848FF]" />
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <strong className="text-3xl font-black text-black">80</strong>
+                    <strong className="text-3xl font-black text-black">83</strong>
                     <span className="text-xs font-extrabold text-[#1848FF] bg-blue-100 px-2 py-0.5 rounded-full flex items-center gap-0.5">
-                      <TrendingUp className="w-3 h-3" /> +5.8%
+                      <TrendingUp className="w-3 h-3" /> +8.7%
                     </span>
                   </div>
                 </div>
@@ -1157,21 +1157,24 @@ export default function AdminDashboardPage() {
                     <UserPlus className="w-4 h-4 text-[#1848FF]" />
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <strong className="text-3xl font-black text-black">3</strong>
-                    <span className="text-xs font-extrabold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">
-                      Tài khoản mới
+                    <strong className="text-3xl font-black text-black">1</strong>
+                    <span className="text-xs font-extrabold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-0.5">
+                      <TrendingUp className="w-3 h-3" /> +2.4%
                     </span>
                   </div>
                 </div>
 
-                {/* Cột 4: Thời gian trung bình (Giữ nguyên 4m 32s) */}
+                {/* Cột 4: Thời gian trung bình (5 phút) */}
                 <div className="bg-white border-2 border-black rounded-3xl p-5 shadow-[4px_4px_0px_0px_#000]">
                   <div className="flex items-center justify-between text-slate-500 mb-2">
                     <span className="text-xs font-bold uppercase tracking-wider">Thời gian trung bình</span>
                     <Clock className="w-4 h-4 text-amber-500" />
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <strong className="text-3xl font-black text-black">4m 32s</strong>
+                    <strong className="text-3xl font-black text-black">5 phút</strong>
+                    <span className="text-xs font-extrabold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full flex items-center gap-0.5">
+                      <TrendingUp className="w-3 h-3" /> +18.6%
+                    </span>
                   </div>
                 </div>
               </div>
@@ -1217,11 +1220,11 @@ export default function AdminDashboardPage() {
                 <div className="flex items-center gap-6 pt-4 pb-2 text-xs font-extrabold">
                   <div className="flex items-center gap-2">
                     <span className="w-3.5 h-3.5 rounded-md bg-[#1848FF] border border-black" />
-                    <span className="text-slate-700">Lượt truy cập (Views: 400)</span>
+                    <span className="text-slate-700">Lượt truy cập (Views: 420)</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="w-3.5 h-3.5 rounded-md bg-[#38BDF8] border border-black" />
-                    <span className="text-slate-700">Khách truy cập (Visitors: 80)</span>
+                    <span className="text-slate-700">Khách truy cập (Visitors: 83)</span>
                   </div>
                 </div>
 
