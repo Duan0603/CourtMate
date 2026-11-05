@@ -133,7 +133,7 @@ export interface CreateTournamentDto {
 }
 export interface CreateReportDto {
     targetId: string;
-    targetType: 'FEED_ITEM' | 'TOURNAMENT';
+    targetType: "FEED_ITEM" | "TOURNAMENT";
     reason: string;
     notes?: string;
 }
@@ -168,7 +168,7 @@ export interface AdminStats {
 }
 export interface ModerationRecord {
     targetId: string;
-    targetType: 'TOURNAMENT' | 'USER';
+    targetType: "TOURNAMENT" | "USER";
     action: ModerationAction;
     adminId: string;
     reason: string;
@@ -371,7 +371,7 @@ export interface CoachCourse {
     location: string;
     description: string;
     syllabus?: string[];
-    status: 'OPEN' | 'FULL' | 'COMPLETED';
+    status: "OPEN" | "FULL" | "COMPLETED";
     createdAt?: Date | string;
 }
 export interface CoachProfile {
@@ -427,6 +427,6 @@ export interface CoachBooking {
     totalPrice: number;
     notes?: string;
     status: CoachBookingStatus;
-    paymentStatus: 'UNPAID' | 'PAID' | 'REFUNDED';
+    paymentStatus: "UNPAID" | "PAID" | "REFUNDED";
     createdAt: Date | string;
 }

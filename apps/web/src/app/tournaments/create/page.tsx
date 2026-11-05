@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { FormContainer } from '../../../components/layout/PageContainer';
+import { FormContainer } from "../../../components/layout/PageContainer";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import React, { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Trophy,
   ArrowLeft,
@@ -15,10 +15,10 @@ import {
   FileText,
   Image as ImageIcon,
   CheckCircle2,
-  ChevronRight
-} from 'lucide-react';
-import { SportType, CreateTournamentDto } from '@courtmate/shared';
-import { tournamentsApi } from '../../../lib/tournaments.api';
+  ChevronRight,
+} from "lucide-react";
+import { SportType, CreateTournamentDto } from "@courtmate/shared";
+import { tournamentsApi } from "../../../lib/tournaments.api";
 
 export default function CreateTournamentPage() {
   const router = useRouter();
@@ -26,29 +26,36 @@ export default function CreateTournamentPage() {
   const [submitting, setSubmitting] = useState(false);
 
   // Form State
-  const [title, setTitle] = useState('');
+  const [title, setTitle] = useState("");
   const [sport, setSport] = useState<SportType>(SportType.BADMINTON);
-  const [city, setCity] = useState('Đà Nẵng');
-  const [location, setLocation] = useState('');
-  const [startDate, setStartDate] = useState('2026-10-20');
-  const [endDate, setEndDate] = useState('2026-10-22');
-  const [description, setDescription] = useState('');
-  const [coverImage, setCoverImage] = useState('https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=1200&q=80');
-  const [organizerName, setOrganizerName] = useState('');
-  const [organizerEmail, setOrganizerEmail] = useState('');
+  const [city, setCity] = useState("Đà Nẵng");
+  const [location, setLocation] = useState("");
+  const [startDate, setStartDate] = useState("2026-10-20");
+  const [endDate, setEndDate] = useState("2026-10-22");
+  const [description, setDescription] = useState("");
+  const [coverImage, setCoverImage] = useState(
+    "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=1200&q=80",
+  );
+  const [organizerName, setOrganizerName] = useState("");
+  const [organizerEmail, setOrganizerEmail] = useState("");
 
   // Categories
-  const [categories, setCategories] = useState<Array<{ name: string; fee: number; maxParticipants: number }>>([
-    { name: 'Đơn Nam Nâng Cao', fee: 250000, maxParticipants: 32 },
-    { name: 'Đôi Nam Nữ Phong Trào', fee: 400000, maxParticipants: 24 },
+  const [categories, setCategories] = useState<
+    Array<{ name: string; fee: number; maxParticipants: number }>
+  >([
+    { name: "Đơn Nam Nâng Cao", fee: 250000, maxParticipants: 32 },
+    { name: "Đôi Nam Nữ Phong Trào", fee: 400000, maxParticipants: 24 },
   ]);
 
   const [rulesText, setRulesText] = useState(
-    '1. VĐV có mặt trước giờ thi đấu 20 phút.\n2. Thể thức loại trực tiếp chạm 21 điểm.\n3. Tuân thủ quyết định của tổ trọng tài.'
+    "1. VĐV có mặt trước giờ thi đấu 20 phút.\n2. Thể thức loại trực tiếp chạm 21 điểm.\n3. Tuân thủ quyết định của tổ trọng tài.",
   );
 
   const addCategory = () => {
-    setCategories([...categories, { name: 'Hạng mục mới', fee: 200000, maxParticipants: 16 }]);
+    setCategories([
+      ...categories,
+      { name: "Hạng mục mới", fee: 200000, maxParticipants: 16 },
+    ]);
   };
 
   const removeCategory = (index: number) => {
@@ -76,7 +83,9 @@ export default function CreateTournamentPage() {
         city,
         categories,
         registrationFee: categories[0]?.fee || 200000,
-        slotsLimit: categories.reduce((sum, c) => sum + (c.maxParticipants || 0), 0) || 50,
+        slotsLimit:
+          categories.reduce((sum, c) => sum + (c.maxParticipants || 0), 0) ||
+          50,
         rulesText,
         coverImage,
         organizerName: organizerName.trim() || undefined,
@@ -84,10 +93,10 @@ export default function CreateTournamentPage() {
       };
 
       const created = await tournamentsApi.createTournament(dto);
-      alert('Tạo giải đấu thành công!');
+      alert("Tạo giải đấu thành công!");
       router.push(`/tournaments/${created.id}`);
     } catch (err: any) {
-      alert(err.message || 'Lỗi khi tạo giải đấu');
+      alert(err.message || "Lỗi khi tạo giải đấu");
     } finally {
       setSubmitting(false);
     }
@@ -96,7 +105,6 @@ export default function CreateTournamentPage() {
   return (
     <div className="bg-canvas min-h-screen page-section">
       <FormContainer>
-
         {/* Back Link */}
         <Link
           href="/tournaments"
@@ -112,22 +120,24 @@ export default function CreateTournamentPage() {
             Tạo giải đấu
           </h1>
 
-
           <div className="mt-6 flex items-center justify-between relative">
             <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-1 bg-white -z-0" />
             {[
-              { num: 1, label: 'Thông tin chung' },
-              { num: 2, label: 'Hạng mục & Lệ phí' },
-              { num: 3, label: 'Điều lệ & Hoàn tất' },
+              { num: 1, label: "Thông tin chung" },
+              { num: 2, label: "Hạng mục & Lệ phí" },
+              { num: 3, label: "Điều lệ & Hoàn tất" },
             ].map((s) => (
-              <div key={s.num} className="relative z-10 flex flex-col items-center">
+              <div
+                key={s.num}
+                className="relative z-10 flex flex-col items-center"
+              >
                 <button
                   type="button"
                   onClick={() => setStep(s.num)}
                   className={`cm-button w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition ${
                     step >= s.num
-                      ? 'bg-primary text-white shadow-md '
-                      : 'bg-white text-muted border border-ink'
+                      ? "bg-primary text-white shadow-md "
+                      : "bg-white text-muted border border-ink"
                   }`}
                 >
                   {s.num}
@@ -141,8 +151,10 @@ export default function CreateTournamentPage() {
         </div>
 
         {/* Wizard Form */}
-        <form onSubmit={handleSubmit} className="bg-surface shadow-card rounded-2xl border border-ink p-6 sm:p-8  space-y-6">
-
+        <form
+          onSubmit={handleSubmit}
+          className="bg-surface shadow-card rounded-2xl border border-ink p-6 sm:p-8  space-y-6"
+        >
           {/* STEP 1: General Info */}
           {step === 1 && (
             <div className="space-y-4">
@@ -179,7 +191,8 @@ export default function CreateTournamentPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-muted mb-1.5">
-                    Email Ban Tổ Chức (gửi vé cho VĐV) <span className="text-primary">*</span>
+                    Email Ban Tổ Chức (gửi vé cho VĐV){" "}
+                    <span className="text-primary">*</span>
                   </label>
                   <input
                     type="email"
@@ -192,9 +205,7 @@ export default function CreateTournamentPage() {
                 </div>
               </div>
               <div className="hidden">
-                <input
-                  className="cm-control w-full px-3.5 py-2.5 text-sm bg-white border border-ink rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-navy"
-                />
+                <input className="cm-control w-full px-3.5 py-2.5 text-sm bg-white border border-ink rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-navy" />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -316,7 +327,10 @@ export default function CreateTournamentPage() {
 
               <div className="space-y-3">
                 {categories.map((cat, idx) => (
-                  <div key={idx} className="p-4 rounded-xl border border-ink bg-white space-y-3">
+                  <div
+                    key={idx}
+                    className="p-4 rounded-xl border border-ink bg-white space-y-3"
+                  >
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-navy uppercase tracking-wider">
                         Hạng mục {idx + 1}
@@ -341,7 +355,9 @@ export default function CreateTournamentPage() {
                           type="text"
                           required
                           value={cat.name}
-                          onChange={(e) => updateCategory(idx, 'name', e.target.value)}
+                          onChange={(e) =>
+                            updateCategory(idx, "name", e.target.value)
+                          }
                           className="cm-control w-full px-3 py-1.5 text-xs bg-white border border-ink rounded-lg text-navy"
                         />
                       </div>
@@ -354,7 +370,9 @@ export default function CreateTournamentPage() {
                           type="number"
                           required
                           value={cat.fee}
-                          onChange={(e) => updateCategory(idx, 'fee', Number(e.target.value))}
+                          onChange={(e) =>
+                            updateCategory(idx, "fee", Number(e.target.value))
+                          }
                           className="cm-control w-full px-3 py-1.5 text-xs bg-white border border-ink rounded-lg text-navy"
                         />
                       </div>
@@ -367,7 +385,13 @@ export default function CreateTournamentPage() {
                           type="number"
                           required
                           value={cat.maxParticipants}
-                          onChange={(e) => updateCategory(idx, 'maxParticipants', Number(e.target.value))}
+                          onChange={(e) =>
+                            updateCategory(
+                              idx,
+                              "maxParticipants",
+                              Number(e.target.value),
+                            )
+                          }
                           className="cm-control w-full px-3 py-1.5 text-xs bg-white border border-ink rounded-lg text-navy"
                         />
                       </div>
@@ -416,7 +440,11 @@ export default function CreateTournamentPage() {
                 />
                 {coverImage && (
                   <div className="mt-2 h-36 w-full rounded-xl overflow-hidden border border-ink">
-                    <img src={coverImage} alt="Cover preview" className="w-full h-full object-cover" />
+                    <img
+                      src={coverImage}
+                      alt="Cover preview"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 )}
               </div>
@@ -459,9 +487,7 @@ export default function CreateTournamentPage() {
               </div>
             </div>
           )}
-
         </form>
-
       </FormContainer>
     </div>
   );

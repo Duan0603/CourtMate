@@ -48,11 +48,11 @@ var ModerationAction;
     ModerationAction["VERIFY_ORGANIZER"] = "VERIFY_ORGANIZER";
     ModerationAction["REVOKE_VERIFICATION"] = "REVOKE_VERIFICATION";
 })(ModerationAction || (exports.ModerationAction = ModerationAction = {}));
-exports.SUPPORTED_CITIES = ['Da Nang', 'Ha Noi', 'Ho Chi Minh'];
+exports.SUPPORTED_CITIES = ["Da Nang", "Ha Noi", "Ho Chi Minh"];
 exports.REGION_CONFIGS = [
-    { city: 'Da Nang', displayName: 'Đà Nẵng', isActive: true },
-    { city: 'Ha Noi', displayName: 'Hà Nội', isActive: true },
-    { city: 'Ho Chi Minh', displayName: 'TP. Hồ Chí Minh', isActive: true },
+    { city: "Da Nang", displayName: "Đà Nẵng", isActive: true },
+    { city: "Ha Noi", displayName: "Hà Nội", isActive: true },
+    { city: "Ho Chi Minh", displayName: "TP. Hồ Chí Minh", isActive: true },
 ];
 var SkillLevel;
 (function (SkillLevel) {
@@ -79,34 +79,34 @@ var BadmintonSkillLevel;
 })(BadmintonSkillLevel || (exports.BadmintonSkillLevel = BadmintonSkillLevel = {}));
 exports.BADMINTON_SKILL_LABELS = {
     [BadmintonSkillLevel.YEU]: {
-        label: 'Yếu (Mới chơi)',
-        description: 'Đang tập phát cầu, đánh qua lại căn bản',
-        color: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        label: "Yếu (Mới chơi)",
+        description: "Đang tập phát cầu, đánh qua lại căn bản",
+        color: "bg-emerald-50 text-emerald-700 border-emerald-200",
     },
     [BadmintonSkillLevel.TBY]: {
-        label: 'Trung bình yếu (TBY)',
-        description: 'Đã nắm luật, đánh được qua lại nhưng phản xạ còn chậm',
-        color: 'bg-teal-50 text-teal-700 border-teal-200',
+        label: "Trung bình yếu (TBY)",
+        description: "Đã nắm luật, đánh được qua lại nhưng phản xạ còn chậm",
+        color: "bg-teal-50 text-teal-700 border-teal-200",
     },
     [BadmintonSkillLevel.TB]: {
-        label: 'Trung bình (TB)',
-        description: 'Nắm vững kỹ thuật, phông/chặt/đập ổn định, hiểu ý đồng đội',
-        color: 'bg-blue-50 text-blue-700 border-blue-200',
+        label: "Trung bình (TB)",
+        description: "Nắm vững kỹ thuật, phông/chặt/đập ổn định, hiểu ý đồng đội",
+        color: "bg-blue-50 text-blue-700 border-blue-200",
     },
     [BadmintonSkillLevel.TB_PLUS]: {
-        label: 'Trung bình khá (TB+)',
-        description: 'Lực cổ tay tốt, bao sân nhanh, bắt lưới và tấn công tốt',
-        color: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+        label: "Trung bình khá (TB+)",
+        description: "Lực cổ tay tốt, bao sân nhanh, bắt lưới và tấn công tốt",
+        color: "bg-indigo-50 text-indigo-700 border-indigo-200",
     },
     [BadmintonSkillLevel.KHA]: {
-        label: 'Khá',
-        description: 'Phong trào lâu năm, thể lực dồi dào, chiến thuật đôi rõ ràng',
-        color: 'bg-purple-50 text-purple-700 border-purple-200',
+        label: "Khá",
+        description: "Phong trào lâu năm, thể lực dồi dào, chiến thuật đôi rõ ràng",
+        color: "bg-purple-50 text-purple-700 border-purple-200",
     },
     [BadmintonSkillLevel.KHA_PLUS]: {
-        label: 'Khá+ (Bán chuyên)',
-        description: 'Từng tập năng khiếu hoặc đánh giải phong trào có thành tích',
-        color: 'bg-rose-50 text-rose-700 border-rose-200',
+        label: "Khá+ (Bán chuyên)",
+        description: "Từng tập năng khiếu hoặc đánh giải phong trào có thành tích",
+        color: "bg-rose-50 text-rose-700 border-rose-200",
     },
 };
 var MatchStatus;
