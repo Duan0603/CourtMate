@@ -1,6 +1,6 @@
 /**
- * Seed realistic payment transactions for all tournament registrations
- * and distribute them evenly over time matching the registrations timeline.
+ * Scale down online payment transactions to ~75 (between 70 and 80)
+ * reflecting realistic online portal adoption while keeping the rest as APPROVED offline registrations.
  */
 
 const dns = require('dns');
@@ -18,40 +18,47 @@ async function run() {
   const tournaments = await db.collection('tournaments').find({}).toArray();
   const tMap = new Map(tournaments.map(t => [t._id.toString(), t]));
 
-  const registrations = await db.collection('registrations').find({}).toArray();
-  const existingPayments = await db.collection('payment_transactions').find({}).toArray();
-  const paidRegMap = new Map(existingPayments.map(p => [p.registrationId, p]));
+  // Get all registrations excluding REJECTED
+  const allRegs = await db.collection('registrations').find({ status: { $ne: 'REJECTED' } }).toArray();
+  console.log(`Found ${allRegs.length} active registrations across ${tournaments.length} tournaments.`);
 
-  console.log(`- Tournaments count: ${tournaments.length}`);
-  console.log(`- Total registrations in DB: ${registrations.length}`);
-  console.log(`- Existing payments in DB: ${existingPayments.length}`);
+  // Target count: 76 transactions (realistic 70-80 range)
+  const TARGET_COUNT = 76;
 
-  const newPayments = [];
-  const regBulkOps = [];
-  const now = new Date('2026-11-06T10:30:00.000Z');
+  // Sort registrations by createdAt ascending
+  allRegs.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
-  for (const reg of registrations) {
-    const regIdStr = reg._id.toString();
-    const existing = paidRegMap.get(regIdStr);
+  // Step sampling to ensure smooth, natural distribution across the entire timeline
+  const step = allRegs.length / TARGET_COUNT;
+  const selectedRegs = [];
+  const selectedIds = new Set();
 
-    if (existing) {
-      // If already has payment, make sure registration links to its orderId
-      if (!reg.paymentTransactionId || reg.paymentTransactionId !== existing.orderId) {
-        regBulkOps.push({
-          updateOne: {
-            filter: { _id: reg._id },
-            update: {
-              $set: {
-                paymentTransactionId: existing.orderId,
-                status: existing.status === 'PAID' ? 'PAID' : reg.status
-              }
-            }
-          }
-        });
-      }
-      continue;
+  for (let i = 0; i < TARGET_COUNT; i++) {
+    const idx = Math.min(Math.floor(i * step + (Math.random() * 2 - 1)), allRegs.length - 1);
+    const chosen = allRegs[Math.max(0, idx)];
+    if (!selectedIds.has(chosen._id.toString())) {
+      selectedIds.add(chosen._id.toString());
+      selectedRegs.push(chosen);
     }
+  }
 
+  while (selectedRegs.length < TARGET_COUNT) {
+    const randomPick = allRegs[Math.floor(Math.random() * allRegs.length)];
+    if (!selectedIds.has(randomPick._id.toString())) {
+      selectedIds.add(randomPick._id.toString());
+      selectedRegs.push(randomPick);
+    }
+  }
+
+  // Re-sort selected by createdAt
+  selectedRegs.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+  const now = new Date('2026-11-06T10:30:00.000Z');
+  const paymentDocs = [];
+  const paidRegUpdates = [];
+
+  for (let i = 0; i < selectedRegs.length; i++) {
+    const reg = selectedRegs[i];
     const t = tMap.get(reg.tournamentId);
     const catFees = (t?.categories || []).map(c => Number(c.fee)).filter(Number.isFinite);
     let amount = Number(t?.registrationFee || (catFees.length > 0 ? catFees[0] : 100000));
@@ -60,21 +67,15 @@ async function run() {
     }
 
     const provider = Math.random() < 0.65 ? 'PAYOS' : 'MOMO';
-    const isRejected = reg.status === 'REJECTED';
-    const status = isRejected ? 'FAILED' : 'PAID';
 
-    // Spread timing based on registration time
-    let regTime = reg.createdAt ? new Date(reg.createdAt) : new Date(now.getTime() - 10 * 86400000);
-    // User initiates payment 1 to 20 minutes after registration
-    let payTimeMs = regTime.getTime() + Math.floor((1 + Math.random() * 19) * 60 * 1000);
-
-    // Ensure timestamp does not exceed current time
+    let regTime = reg.createdAt ? new Date(reg.createdAt) : new Date(now.getTime() - 15 * 86400000);
+    let payTimeMs = regTime.getTime() + Math.floor((2 + Math.random() * 18) * 60 * 1000);
     if (payTimeMs > now.getTime()) {
-      payTimeMs = now.getTime() - Math.floor(Math.random() * 2 * 86400000 + 3600000);
+      payTimeMs = now.getTime() - Math.floor(Math.random() * 2 * 86400000 + 1800000);
     }
 
     const payCreatedAt = new Date(payTimeMs);
-    const processedAt = new Date(payTimeMs + Math.floor((25 + Math.random() * 95) * 1000));
+    const processedAt = new Date(payTimeMs + Math.floor((30 + Math.random() * 75) * 1000));
     const orderId = String(payTimeMs).slice(-9) + String(Math.floor(100000 + Math.random() * 900000));
 
     let gatewayTransactionId;
@@ -84,8 +85,8 @@ async function run() {
       gatewayTransactionId = 'POS' + Math.floor(1000000000 + Math.random() * 9000000000);
       gatewayResponse = {
         provider: 'PAYOS',
-        code: status === 'PAID' ? '00' : '01',
-        desc: status === 'PAID' ? 'Thành công' : 'Giao dịch bị hủy bởi người dùng'
+        code: '00',
+        desc: 'Thành công'
       };
     } else {
       gatewayTransactionId = String(payTimeMs + Math.floor(Math.random() * 1000));
@@ -94,17 +95,17 @@ async function run() {
         orderId,
         requestId: orderId,
         amount,
-        resultCode: status === 'PAID' ? 0 : 1006,
-        message: status === 'PAID' ? 'Thành công.' : 'Giao dịch bị từ chối bởi người dùng.'
+        resultCode: 0,
+        message: 'Thành công.'
       };
     }
 
-    newPayments.push({
+    paymentDocs.push({
       orderId,
-      registrationId: regIdStr,
+      registrationId: reg._id.toString(),
       provider,
       amount,
-      status,
+      status: 'PAID',
       gatewayTransactionId,
       gatewayResponse,
       processedAt,
@@ -112,12 +113,12 @@ async function run() {
       updatedAt: processedAt
     });
 
-    regBulkOps.push({
+    paidRegUpdates.push({
       updateOne: {
         filter: { _id: reg._id },
         update: {
           $set: {
-            status: isRejected ? 'REJECTED' : 'PAID',
+            status: 'PAID',
             paymentTransactionId: orderId,
             updatedAt: processedAt
           }
@@ -126,28 +127,27 @@ async function run() {
     });
   }
 
-  console.log(`\nInserting ${newPayments.length} new payment transactions...`);
-  if (newPayments.length > 0) {
-    const batchSize = 500;
-    for (let i = 0; i < newPayments.length; i += batchSize) {
-      const batch = newPayments.slice(i, i + batchSize);
-      await db.collection('payment_transactions').insertMany(batch, { ordered: false });
-      console.log(`  Inserted payments ${i + 1} to ${Math.min(i + batchSize, newPayments.length)}`);
-    }
-  }
+  // 1. Reset payment_transactions collection and insert exactly the 76 transactions
+  console.log(`\nDeleting existing payment transactions and inserting ${paymentDocs.length} curated payments...`);
+  await db.collection('payment_transactions').deleteMany({});
+  await db.collection('payment_transactions').insertMany(paymentDocs);
 
-  console.log(`Updating ${regBulkOps.length} registrations with payment info...`);
-  if (regBulkOps.length > 0) {
-    const batchSize = 500;
-    for (let i = 0; i < regBulkOps.length; i += batchSize) {
-      const batch = regBulkOps.slice(i, i + batchSize);
-      await db.collection('registrations').bulkWrite(batch, { ordered: false });
-      console.log(`  Updated registrations ${i + 1} to ${Math.min(i + batchSize, regBulkOps.length)}`);
+  // 2. Update the other registrations to APPROVED status and clear paymentTransactionId
+  console.log('Resetting non-online registrations to APPROVED status...');
+  await db.collection('registrations').updateMany(
+    { _id: { $nin: Array.from(selectedIds).map(id => new ObjectId(id)) }, status: { $ne: 'REJECTED' } },
+    {
+      $set: { status: 'APPROVED' },
+      $unset: { paymentTransactionId: '' }
     }
-  }
+  );
 
-  // Recount joinedSlots for all tournaments based on active/paid registrations
-  console.log('\nSynchronizing joinedSlots for all tournaments...');
+  // 3. Update the 76 selected registrations to PAID with their paymentTransactionId
+  console.log(`Marking ${paidRegUpdates.length} selected registrations as PAID...`);
+  await db.collection('registrations').bulkWrite(paidRegUpdates);
+
+  // 4. Ensure joinedSlots for all tournaments matches (PAID + APPROVED)
+  console.log('Verifying joinedSlots on all tournaments...');
   const regCounts = await db.collection('registrations').aggregate([
     {
       $match: { status: { $in: ['PAID', 'APPROVED'] } }
@@ -155,7 +155,7 @@ async function run() {
     {
       $group: {
         _id: '$tournamentId',
-        paidCount: { $sum: 1 }
+        confirmedCount: { $sum: 1 }
       }
     }
   ]).toArray();
@@ -163,65 +163,57 @@ async function run() {
   for (const rc of regCounts) {
     await db.collection('tournaments').updateOne(
       { _id: new ObjectId(rc._id) },
-      { $set: { joinedSlots: rc.paidCount, updatedAt: new Date() } }
+      { $set: { joinedSlots: rc.confirmedCount } }
     );
   }
 
-  // Final summary stats
-  const finalPaymentsCount = await db.collection('payment_transactions').countDocuments();
-  const paymentStats = await db.collection('payment_transactions').aggregate([
-    {
-      $group: {
-        _id: '$status',
-        count: { $sum: 1 },
-        totalRevenue: { $sum: '$amount' }
-      }
-    }
+  // Verification & statistics
+  const finalPayments = await db.collection('payment_transactions').countDocuments();
+  const finalRevenue = await db.collection('payment_transactions').aggregate([
+    { $group: { _id: null, total: { $sum: '$amount' } } }
   ]).toArray();
 
-  const providerStats = await db.collection('payment_transactions').aggregate([
-    {
-      $group: {
-        _id: '$provider',
-        count: { $sum: 1 },
-        totalAmount: { $sum: '$amount' }
-      }
-    }
+  const providerCounts = await db.collection('payment_transactions').aggregate([
+    { $group: { _id: '$provider', count: { $sum: 1 }, total: { $sum: '$amount' } } }
+  ]).toArray();
+
+  const regStatusCounts = await db.collection('registrations').aggregate([
+    { $group: { _id: '$status', count: { $sum: 1 } } }
   ]).toArray();
 
   const timeRange = await db.collection('payment_transactions').aggregate([
     {
       $group: {
         _id: null,
-        earliestPayment: { $min: '$createdAt' },
-        latestPayment: { $max: '$createdAt' }
+        earliest: { $min: '$createdAt' },
+        latest: { $max: '$createdAt' }
       }
     }
   ]).toArray();
 
-  const finalRegStats = await db.collection('registrations').aggregate([
+  const dailyDistribution = await db.collection('payment_transactions').aggregate([
     {
-      $group: {
-        _id: '$status',
-        count: { $sum: 1 }
+      $project: {
+        day: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
       }
-    }
+    },
+    { $group: { _id: '$day', count: { $sum: 1 } } },
+    { $sort: { _id: 1 } }
   ]).toArray();
 
   console.log('\n======================================================');
-  console.log(' SEEDING COMPLETED SUCCESSFULLY!');
+  console.log(' PAYMENT REDUCTION & SEEDING COMPLETED!');
   console.log('======================================================');
-  console.log(`Total Payment Transactions: ${finalPaymentsCount}`);
-  console.log('Status breakdown:', paymentStats);
-  console.log('Provider breakdown:', providerStats);
+  console.log(`Total Payment Transactions: ${finalPayments} (Tầm 70-80 chuẩn thực tế)`);
+  console.log(`Total Revenue from Web:     ${finalRevenue[0]?.total?.toLocaleString('vi-VN')} VNĐ`);
+  console.log('Provider breakdown:', providerCounts);
+  console.log('Registrations breakdown:', regStatusCounts);
   console.log('Payment Time Range:', timeRange);
-  console.log('Registrations Status Breakdown:', finalRegStats);
+  console.log(`Spanning ${dailyDistribution.length} different days across September, October, and November.`);
+  console.log('Daily breakdown sample:', dailyDistribution.slice(0, 10));
   console.log('======================================================\n');
 
   await client.close();
 }
 
-run().catch(err => {
-  console.error('Fatal error seeding payments:', err);
-  process.exit(1);
-});
+run().catch(console.error);
